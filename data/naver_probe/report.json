@@ -1,0 +1,32 @@
+{
+ "list": {
+  "status": 200,
+  "ctype": "text/html; charset=utf-8",
+  "len": 129897
+ },
+ "detail": {
+  "status": 200,
+  "ctype": "text/html; charset=utf-8",
+  "len": 129903
+ },
+ "m_industry": {
+  "status": 200,
+  "ctype": "application/json;charset=UTF-8",
+  "len": 2267
+ },
+ "m_industry2": {
+  "status": 404,
+  "ctype": "application/json; charset=utf-8",
+  "len": 115
+ },
+ "m_upjong": {
+  "status": 404,
+  "ctype": "text/html;charset=UTF-8",
+  "len": 4115
+ },
+ "m_domestic": {
+  "status": 200,
+  "ctype": "text/html; charset=utf-8",
+  "len": 41806
+ }
+}
