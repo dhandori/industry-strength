@@ -107,9 +107,23 @@ def fetch_stooq(code: str) -> tuple[pd.Series, pd.Series] | None:
     return df["Close"], df.get("Volume", pd.Series(0, index=df.index))
 
 
+def market_entries(mkey: str, m: dict) -> list[dict]:
+    """수집 대상: 벤치마크 + 모든 바구니 구성 종목(중복 제거). 열 이름은 티커, 벤치마크는 '__bench__'."""
+    out = [{"id": "__bench__", "ticker": m["benchmark"]["ticker"], "code": m["benchmark"]["code"]}]
+    seen = {m["benchmark"]["ticker"]}
+    for it in m["items"]:
+        for mb in it["members"]:
+            if mb["ticker"] in seen:
+                continue
+            seen.add(mb["ticker"])
+            code = mb["code"] if mkey == "KR" else f"{mb['ticker'].lower().replace('.', '-')}.us"
+            out.append({"id": mb["ticker"], "ticker": mb["ticker"], "code": code})
+    return out
+
+
 def fetch_market(mkey: str, m: dict) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
-    """시장 하나의 종가·거래량 표(열 = id, 벤치마크는 '__bench__')."""
-    entries = [{"id": "__bench__", **m["benchmark"]}] + m["items"]
+    """시장 하나의 종가·거래량 표(열 = 티커, 벤치마크는 '__bench__')."""
+    entries = market_entries(mkey, m)
     by_ticker = {e["ticker"]: e for e in entries}
     source = {}
     try:
@@ -134,6 +148,9 @@ def fetch_market(mkey: str, m: dict) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
         else:
             source[e["id"]] = "failed"
     log(mkey, "수집 결과", {k: sum(1 for s in source.values() if s == k) for k in set(source.values())})
+    failed = [k for k, v in source.items() if v == "failed"]
+    if failed:
+        log(mkey, "수집 실패 종목", failed)
     c, v = drop_intraday(mkey, pd.DataFrame(closes), pd.DataFrame(vols))
     return c, v, source
 
@@ -163,7 +180,7 @@ def merge_store(mkey: str, new_c: pd.DataFrame, new_v: pd.DataFrame, store: Path
     store.mkdir(parents=True, exist_ok=True)
     out = []
     for kind, new in (("close", new_c), ("volume", new_v)):
-        f = store / f"{mkey}_{kind}.csv"
+        f = store / f"{mkey}_stocks_{kind}.csv"
         old = pd.read_csv(f, index_col=0, parse_dates=True) if f.exists() else pd.DataFrame()
         if new is not None and not new.empty:
             new = new.copy()
@@ -187,14 +204,14 @@ def merge_store(mkey: str, new_c: pd.DataFrame, new_v: pd.DataFrame, store: Path
 def synthetic(m: dict, seed: int) -> tuple[pd.DataFrame, pd.DataFrame]:
     rng = np.random.default_rng(seed)
     idx = pd.bdate_range(end=pd.Timestamp.today().normalize(), periods=500)
-    ids = ["__bench__"] + [i["id"] for i in m["items"]]
+    ids = [e["id"] for e in market_entries("KR" if m["label"] == "한국" else "US", m)]
     data, vol = {}, {}
     for k, i in enumerate(ids):
         drift = rng.normal(0.0004, 0.0008)
         regime = np.where(np.arange(len(idx)) > 420, rng.normal(0, 0.003), 0)
         r = rng.normal(drift, 0.015, len(idx)) + regime
         p = 10000 * np.exp(np.cumsum(r))
-        start = 300 if k % 9 == 4 else 0      # 일부는 상장 이력이 짧게
+        start = 300 if k % 23 == 4 else 0     # 일부는 상장 이력이 짧게
         s = pd.Series(p, index=idx)
         s.iloc[:start] = np.nan
         data[i] = s
@@ -231,6 +248,79 @@ def stage_of(close, ma50, ma150, ma200, ma200_up, dist_high) -> str:
     if close > ma50 and close > ma200:
         return "상승 전환 시도"
     return "바닥 다지기"
+
+
+def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
+    """구성 종목 동일가중 바구니 지수(시작 100)와 종목별 지표를 만든다.
+
+    매일 그날 가격이 있는 구성 종목들의 하루 수익률을 단순 평균해 지수에 곱한다(매일 같은 비중으로 재조정).
+    상장 전·거래정지로 가격이 없는 종목은 그날 평균에서 빠진다. 2종목 이상 가격이 있는 날부터 지수를 만든다.
+    """
+    bench = close["__bench__"].dropna()
+    cal = bench.index
+    px = close.reindex(cal).drop(columns="__bench__").ffill(limit=3)
+    rets = px.pct_change(fill_method=None)
+    idx = {}
+    for it in m["items"]:
+        cols = [mb["ticker"] for mb in it["members"] if mb["ticker"] in px.columns]
+        if not cols:
+            continue
+        rr = rets[cols]
+        cnt = rr.notna().sum(axis=1)
+        avg = rr.mean(axis=1).where(cnt >= 2)
+        start = avg.first_valid_index()
+        if start is None:
+            continue
+        lvl = (1 + avg.loc[start:].fillna(0)).cumprod() * 100
+        lvl.iloc[0] = 100.0
+        idx[it["id"]] = lvl.reindex(cal)
+    basket = pd.DataFrame(idx)
+    basket["__bench__"] = bench
+
+    # 종목별 지표
+    ma50 = px.rolling(50, min_periods=50).mean()
+    ma150 = px.rolling(150, min_periods=150).mean()
+    ma200 = px.rolling(200, min_periods=200).mean()
+    up200 = ma200 > ma200.shift(20)
+    hi = px.rolling(252, min_periods=60).max()
+    dist = px / hi - 1
+    rs = px.div(bench, axis=0)
+    rs_ma = rs.rolling(50, min_periods=50).mean()
+    k = {w: px / px.shift(w) - 1 for w in (1, 5, 20, 60)}
+    last = cal[-1]
+    members = {}
+    for it in m["items"]:
+        rows = []
+        for mb in it["members"]:
+            t = mb["ticker"]
+            if t not in px.columns:
+                rows.append({"name": mb["name"], "code": mb["code"], "ticker": t, "missing": True})
+                continue
+            c = px.at[last, t]
+            lv = px[t].last_valid_index()
+            rows.append({
+                "name": mb["name"], "code": mb["code"], "ticker": t,
+                "close": r(c, 2), "chg1": r(k[1].at[last, t] * 100), "ret5": r(k[5].at[last, t] * 100),
+                "ret20": r(k[20].at[last, t] * 100), "ret60": r(k[60].at[last, t] * 100),
+                "dist_high": r(dist.at[last, t] * 100),
+                "above50": None if pd.isna(ma50.at[last, t]) else bool(c > ma50.at[last, t]),
+                "rs_up": None if pd.isna(rs_ma.at[last, t]) else bool(rs.at[last, t] > rs_ma.at[last, t]),
+                "stage": stage_of(c, ma50.at[last, t], ma150.at[last, t], ma200.at[last, t], bool(up200.at[last, t]), dist.at[last, t]),
+                "stale": lv is None or lv < last,
+                "path": mb.get("path"),
+            })
+        valid = [x for x in rows if not x.get("missing")]
+        rows.sort(key=lambda x: (x.get("ret20") is None, -(x.get("ret20") or 0)))
+        a50 = [x["above50"] for x in valid if x.get("above50") is not None]
+        members[it["id"]] = {
+            "members": rows,
+            "breadth50": r(sum(a50) / len(a50) * 100, 0) if a50 else None,
+            "near_high": sum(1 for x in valid if x.get("dist_high") is not None and x["dist_high"] >= -5),
+            "uptrend": sum(1 for x in valid if x.get("stage") == "상승 추세"),
+            "n": len(valid),
+            "leader": rows[0]["name"] if rows else None,
+        }
+    return basket, members
 
 
 def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, source: dict | None) -> tuple[dict, dict]:
@@ -331,7 +421,8 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
         v60 = vol[i].iloc[-60:].mean() if i in vol else np.nan
 
         out_items.append({
-            "id": i, "name": it["name"], "group": it["group"], "etf": it["etf"], "ticker": it["ticker"],
+            "id": i, "name": it["name"], "group": it["group"],
+            "etf": it.get("etf") or f"{len(it.get('members', []))}개 종목 동일가중", "ticker": it.get("ticker", ""),
             "close": r(c, 2), "chg1": r(rets[1].at[last, i] * 100),
             "ret5": r(rets[5].at[last, i] * 100), "ret20": r(rets[20].at[last, i] * 100),
             "ret60": r(rets[60].at[last, i] * 100), "ret120": r(rets[120].at[last, i] * 100),
@@ -440,7 +531,7 @@ def main():
     ap.add_argument("--markets", default="KR,US")
     a = ap.parse_args()
 
-    cfg = json.loads((ROOT / "config/universe.json").read_text(encoding="utf-8"))
+    cfg = json.loads((ROOT / "config/baskets.json").read_text(encoding="utf-8"))
     out_dir = ROOT / ("tmp/docs/data" if a.synthetic else "docs/data")
     store = ROOT / ("tmp/prices" if a.synthetic else "data/prices")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -462,8 +553,19 @@ def main():
             status["markets"][mkey] = {"ok": False, "reason": "벤치마크 가격 부족"}
             fatal = True
             continue
-        summary, series = compute(mkey, m, c, v, source)
+        basket, mem = build_baskets(m, c)
+        summary, series = compute(mkey, m, basket, pd.DataFrame(index=basket.index), None)
+        for it in summary["items"]:
+            extra = mem.get(it["id"], {})
+            it.update({k: extra.get(k) for k in ("members", "breadth50", "near_high", "uptrend", "n", "leader")})
+            it["vol_ratio"] = None
+            if (it.get("breadth50") or 0) >= 70 and (it.get("n") or 0) >= 3:
+                it["tags"].append("종목 확산")
+        failed = sorted({mb["name"] for it in summary["items"] for mb in (it.get("members") or []) if mb.get("missing") or mb.get("stale")})
+        summary["n_stocks"] = sum(it.get("n") or 0 for it in summary["items"])
         probs = sanity(summary)
+        if failed:
+            probs.append(f"최신 가격이 없는 종목 {len(failed)}개: " + ", ".join(failed[:12]) + (" 외" if len(failed) > 12 else ""))
         summary["warnings"] = probs
         (out_dir / f"{mkey}.json").write_text(json.dumps(summary, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         (out_dir / f"{mkey}_series.json").write_text(json.dumps(series, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

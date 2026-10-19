@@ -113,7 +113,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 
 /* table */
 .table-wrap { overflow-x: auto; margin: 0 -16px; padding: 0 16px; -webkit-overflow-scrolling: touch; }
-.rank-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; min-width: 860px; }
+.rank-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; min-width: 940px; }
 .rank-table th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 8px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; line-height: 1.25; position: sticky; top: 0; background: var(--surface); }
 .rank-table th.num, .rank-table td.num { text-align: right; }
 .rank-table td { padding: 9px 8px; border-bottom: 1px solid var(--grid); vertical-align: middle; white-space: nowrap; font-variant-numeric: tabular-nums; }
@@ -202,6 +202,13 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .d-stats div { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; }
 .d-stats .k { font-size: 11.5px; color: var(--muted); }
 .d-stats .v { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mem-wrap { overflow-x: auto; margin-top: 6px; }
+.mem-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 520px; }
+.mem-table th { text-align: left; font-size: 11.5px; color: var(--muted); font-weight: 600; padding: 6px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.mem-table td { padding: 7px 6px; border-bottom: 1px solid var(--grid); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mem-table th.num, .mem-table td.num { text-align: right; }
+.mem-table td b { font-weight: 650; }
+.ok { color: var(--good); font-weight: 650; } .no { color: var(--muted); }
 .d-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 
 .tip { position: fixed; z-index: 60; pointer-events: none; background: var(--ink); color: var(--surface); font-size: 12px; padding: 6px 9px; border-radius: 8px; white-space: nowrap; box-shadow: 0 4px 14px rgba(0,0,0,.2); }

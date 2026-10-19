@@ -1,0 +1,5811 @@
+{
+ "_note": "세부 산업 = 구성 종목 동일가중 바구니 지수. 한국은 global-high-radar 산업 분류표(제품 단위) 기준, 미국은 직접 분류 후 미국 상장 종목 목록으로 티커 확인.",
+ "markets": {
+  "KR": {
+   "label": "한국",
+   "currency": "원",
+   "benchmark": {
+    "name": "코스피200",
+    "etf": "KODEX 200",
+    "ticker": "069500.KS",
+    "code": "069500"
+   },
+   "items": [
+    {
+     "id": "kr_00",
+     "name": "메모리",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "005930",
+       "name": "삼성전자",
+       "ticker": "005930.KS",
+       "market": "KOSPI",
+       "mcap_eok": 15755720,
+       "path": "반도체 > 메모리 > 메모리 반도체 제품"
+      },
+      {
+       "code": "000660",
+       "name": "SK하이닉스",
+       "ticker": "000660.KS",
+       "market": "KOSPI",
+       "mcap_eok": 13097728,
+       "path": "반도체 > 메모리 > 고대역폭 메모리 생산"
+      }
+     ]
+    },
+    {
+     "id": "kr_01",
+     "name": "전공정 장비(증착·식각·세정)",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "036930",
+       "name": "주성엔지니어링",
+       "ticker": "036930.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 90452,
+       "path": "반도체 > 증착장비 > 원자층·화학기상 증착"
+      },
+      {
+       "code": "240810",
+       "name": "원익IPS",
+       "ticker": "240810.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 56839,
+       "path": "반도체 > 제조장비 > 반도체 공정장비"
+      },
+      {
+       "code": "403870",
+       "name": "HPSP",
+       "ticker": "403870.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 43865,
+       "path": "반도체 > 열처리장비 > 고압 수소 어닐링"
+      },
+      {
+       "code": "319660",
+       "name": "피에스케이",
+       "ticker": "319660.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 36353,
+       "path": "반도체 > 표면처리장비 > 건식 박리·세정"
+      },
+      {
+       "code": "084370",
+       "name": "유진테크",
+       "ticker": "084370.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 31692,
+       "path": "반도체 > 증착장비 > 원자층·화학기상 증착"
+      },
+      {
+       "code": "095610",
+       "name": "테스",
+       "ticker": "095610.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 28672,
+       "path": "반도체 > 증착장비 > 원자층·화학기상 증착"
+      },
+      {
+       "code": "089970",
+       "name": "브이엠",
+       "ticker": "089970.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 13452,
+       "path": "반도체 > 식각장비 > 반도체 식각"
+      },
+      {
+       "code": "281820",
+       "name": "케이씨텍",
+       "ticker": "281820.KS",
+       "market": "KOSPI",
+       "mcap_eok": 13324,
+       "path": "반도체 > 제조장비 > 반도체 공정장비"
+      }
+     ]
+    },
+    {
+     "id": "kr_02",
+     "name": "후공정 장비",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "042700",
+       "name": "한미반도체",
+       "ticker": "042700.KS",
+       "market": "KOSPI",
+       "mcap_eok": 233038,
+       "path": "반도체 > 후공정장비 > 반도체 패키징 공정장비"
+      },
+      {
+       "code": "039030",
+       "name": "이오테크닉스",
+       "ticker": "039030.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 55006,
+       "path": "정밀가공 장비 > 레이저 > 레이저 마킹·가공"
+      },
+      {
+       "code": "031980",
+       "name": "피에스케이홀딩스",
+       "ticker": "031980.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 31588,
+       "path": "반도체 > 후공정장비 > 반도체 패키징 공정장비"
+      },
+      {
+       "code": "053610",
+       "name": "프로텍",
+       "ticker": "053610.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5463,
+       "path": "정밀가공 장비 > 도포장비 > 디스펜서·공압장비"
+      }
+     ]
+    },
+    {
+     "id": "kr_03",
+     "name": "검사·계측 장비",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "098460",
+       "name": "고영",
+       "ticker": "098460.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 18517,
+       "path": "반도체 > 검사장비 > 광학·외관·납도포 검사"
+      },
+      {
+       "code": "140860",
+       "name": "파크시스템스",
+       "ticker": "140860.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 18381,
+       "path": "측정·검사장비 > 나노계측 > 원자현미경"
+      },
+      {
+       "code": "089030",
+       "name": "테크윙",
+       "ticker": "089030.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 17118,
+       "path": "반도체 > 검사장비 > 테스트 핸들러"
+      },
+      {
+       "code": "420770",
+       "name": "기가비스",
+       "ticker": "420770.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 12485,
+       "path": "반도체 > 기판 검사장비 > 반도체 기판 광학검사·수리"
+      },
+      {
+       "code": "232140",
+       "name": "와이씨",
+       "ticker": "232140.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 9427,
+       "path": "반도체 > 검사장비 > 웨이퍼 테스터"
+      },
+      {
+       "code": "003160",
+       "name": "디아이",
+       "ticker": "003160.KS",
+       "market": "KOSPI",
+       "mcap_eok": 8546,
+       "path": "반도체 > 검사장비 > 반도체 전기검사"
+      },
+      {
+       "code": "064290",
+       "name": "인텍플러스",
+       "ticker": "064290.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5345,
+       "path": "반도체 > 검사장비 > 광학·외관·납도포 검사"
+      }
+     ]
+    },
+    {
+     "id": "kr_04",
+     "name": "테스트 소켓·프로브",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "058470",
+       "name": "리노공업",
+       "ticker": "058470.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 52509,
+       "path": "반도체 > 검사부품 > 테스트 소켓·접촉핀"
+      },
+      {
+       "code": "095340",
+       "name": "ISC",
+       "ticker": "095340.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 38790,
+       "path": "반도체 > 검사부품 > 테스트 소켓·접촉핀"
+      },
+      {
+       "code": "131290",
+       "name": "티에스이",
+       "ticker": "131290.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 28317,
+       "path": "반도체 > 검사부품 > 테스트 소켓·접촉핀"
+      },
+      {
+       "code": "252990",
+       "name": "샘씨엔에스",
+       "ticker": "252990.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7665,
+       "path": "전자부품 > 세라믹 기판 > 다층 세라믹 기판"
+      },
+      {
+       "code": "425420",
+       "name": "티에프이",
+       "ticker": "425420.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6395,
+       "path": "반도체 > 검사부품 > 테스트 소켓·접촉핀"
+      }
+     ]
+    },
+    {
+     "id": "kr_05",
+     "name": "공정 소모부품",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "064760",
+       "name": "티씨케이",
+       "ticker": "064760.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 29569,
+       "path": "반도체 > 공정 소모부품 > 고순도 흑연 부품"
+      },
+      {
+       "code": "183300",
+       "name": "코미코",
+       "ticker": "183300.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 14201,
+       "path": "반도체 > 부품 서비스 > 반도체 부품 세정·코팅"
+      },
+      {
+       "code": "166090",
+       "name": "하나머티리얼즈",
+       "ticker": "166090.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 10165,
+       "path": "반도체 > 공정 소모부품 > 실리콘·세라믹 부품"
+      },
+      {
+       "code": "074600",
+       "name": "원익QnC",
+       "ticker": "074600.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6953,
+       "path": "반도체 > 공정 소모부품 > 석영유리 부품"
+      },
+      {
+       "code": "388210",
+       "name": "씨엠티엑스",
+       "ticker": "388210.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6883,
+       "path": "반도체 > 공정 소모부품 > 반도체·디스플레이 장비부품"
+      },
+      {
+       "code": "059090",
+       "name": "미코",
+       "ticker": "059090.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6045,
+       "path": "반도체 > 공정 소모부품 > 반도체·디스플레이 장비부품"
+      }
+     ]
+    },
+    {
+     "id": "kr_06",
+     "name": "반도체 소재",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "357780",
+       "name": "솔브레인",
+       "ticker": "357780.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 25319,
+       "path": "반도체 소재 > 공정용 화학재료 > 반도체·디스플레이 화학재료"
+      },
+      {
+       "code": "014680",
+       "name": "한솔케미칼",
+       "ticker": "014680.KS",
+       "market": "KOSPI",
+       "mcap_eok": 21372,
+       "path": "화학 > 정밀화학 > 과산화수소·라텍스"
+      },
+      {
+       "code": "005290",
+       "name": "동진쎄미켐",
+       "ticker": "005290.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 20744,
+       "path": "반도체 소재 > 노광 소재 > 감광제·봉지제"
+      },
+      {
+       "code": "101490",
+       "name": "에스앤에스텍",
+       "ticker": "101490.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 8640,
+       "path": "반도체 소재 > 노광 소재 > 블랭크마스크"
+      },
+      {
+       "code": "281740",
+       "name": "레이크머티리얼즈",
+       "ticker": "281740.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7230,
+       "path": "반도체 소재 > 전자재료 > 반도체 소재·촉매"
+      },
+      {
+       "code": "102710",
+       "name": "이엔에프테크놀로지",
+       "ticker": "102710.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6058,
+       "path": "반도체 소재 > 공정용 화학재료 > 반도체·디스플레이 화학재료"
+      },
+      {
+       "code": "121600",
+       "name": "나노신소재",
+       "ticker": "121600.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5671,
+       "path": "반도체 소재 > 연마 소재 > 화학기계연마 슬러리"
+      },
+      {
+       "code": "036810",
+       "name": "에프에스티",
+       "ticker": "036810.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5423,
+       "path": "반도체 소재 > 노광 소재 > 펠리클"
+      }
+     ]
+    },
+    {
+     "id": "kr_07",
+     "name": "패키지 기판",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "353200",
+       "name": "대덕전자",
+       "ticker": "353200.KS",
+       "market": "KOSPI",
+       "mcap_eok": 49367,
+       "path": "전자부품 > 인쇄회로기판 > 회로기판 제조"
+      },
+      {
+       "code": "222800",
+       "name": "심텍",
+       "ticker": "222800.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 46252,
+       "path": "반도체 > 패키징 기판 > 반도체 패키지용 기판"
+      },
+      {
+       "code": "007810",
+       "name": "코리아써키트",
+       "ticker": "007810.KS",
+       "market": "KOSPI",
+       "mcap_eok": 12231,
+       "path": "전자부품 > 인쇄회로기판 > 회로기판 제조"
+      },
+      {
+       "code": "195870",
+       "name": "해성디에스",
+       "ticker": "195870.KS",
+       "market": "KOSPI",
+       "mcap_eok": 8449,
+       "path": "반도체 > 패키징 기판 > 반도체 패키지용 기판"
+      }
+     ]
+    },
+    {
+     "id": "kr_08",
+     "name": "AI·메모리 고다층 기판",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "007660",
+       "name": "이수페타시스",
+       "ticker": "007660.KS",
+       "market": "KOSPI",
+       "mcap_eok": 80970,
+       "path": "전자부품 > 인쇄회로기판 > 다층 인쇄회로기판"
+      },
+      {
+       "code": "356860",
+       "name": "티엘비",
+       "ticker": "356860.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 8805,
+       "path": "전자부품 > 인쇄회로기판 > 메모리·저장장치 모듈 기판"
+      }
+     ]
+    },
+    {
+     "id": "kr_09",
+     "name": "후공정 외주(OSAT·테스트)",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "067310",
+       "name": "하나마이크론",
+       "ticker": "067310.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 23703,
+       "path": "반도체 > 후공정서비스 > 패키징 수탁"
+      },
+      {
+       "code": "131970",
+       "name": "두산테스나",
+       "ticker": "131970.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 15655,
+       "path": "반도체 > 후공정서비스 > 반도체 테스트 수탁"
+      },
+      {
+       "code": "036540",
+       "name": "SFA반도체",
+       "ticker": "036540.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 9933,
+       "path": "반도체 > 후공정서비스 > 패키징 수탁"
+      },
+      {
+       "code": "033640",
+       "name": "네패스",
+       "ticker": "033640.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5096,
+       "path": "반도체 > 첨단 패키징 > 팬아웃 반도체 패키징"
+      }
+     ]
+    },
+    {
+     "id": "kr_10",
+     "name": "비메모리 설계·파운드리",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "000990",
+       "name": "DB하이텍",
+       "ticker": "000990.KS",
+       "market": "KOSPI",
+       "mcap_eok": 44983,
+       "path": "반도체 > 반도체 제조 > 세부 반도체 제품 확인 불가"
+      },
+      {
+       "code": "440110",
+       "name": "파두",
+       "ticker": "440110.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 35578,
+       "path": "반도체 > 설계 > 저장장치 컨트롤러"
+      },
+      {
+       "code": "080220",
+       "name": "제주반도체",
+       "ticker": "080220.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 25143,
+       "path": "반도체 > 메모리 > 메모리 반도체 제품"
+      },
+      {
+       "code": "218410",
+       "name": "RFHIC",
+       "ticker": "218410.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 12596,
+       "path": "반도체 > 무선통신 반도체 > 질화갈륨 트랜지스터"
+      },
+      {
+       "code": "094170",
+       "name": "동운아나텍",
+       "ticker": "094170.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5854,
+       "path": "반도체 > 설계 > 아날로그 반도체"
+      },
+      {
+       "code": "108320",
+       "name": "LX세미콘",
+       "ticker": "108320.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5700,
+       "path": "반도체 > 설계 > 디스플레이 구동 반도체"
+      },
+      {
+       "code": "490470",
+       "name": "세미파이브",
+       "ticker": "490470.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5420,
+       "path": "반도체 > 설계서비스 > 반도체 설계 서비스"
+      }
+     ]
+    },
+    {
+     "id": "kr_11",
+     "name": "반도체 공장설비",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "030530",
+       "name": "원익홀딩스",
+       "ticker": "030530.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 17417,
+       "path": "반도체 공장설비 > 가스공급 > 가스 캐비닛"
+      },
+      {
+       "code": "083450",
+       "name": "GST",
+       "ticker": "083450.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7878,
+       "path": "전자 공장설비 > 환경·온도제어 > 가스 스크러버·칠러"
+      },
+      {
+       "code": "045100",
+       "name": "한양이엔지",
+       "ticker": "045100.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5267,
+       "path": "반도체 공장설비 > 배관 > 반도체 배관설비"
+      }
+     ]
+    },
+    {
+     "id": "kr_12",
+     "name": "MLCC·수동소자",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "009150",
+       "name": "삼성전기",
+       "ticker": "009150.KS",
+       "market": "KOSPI",
+       "mcap_eok": 1023303,
+       "path": "전자부품 > 수동소자 > 콘덴서·인덕터·저항"
+      },
+      {
+       "code": "001820",
+       "name": "삼화콘덴서",
+       "ticker": "001820.KS",
+       "market": "KOSPI",
+       "mcap_eok": 11611,
+       "path": "전자부품 > 수동소자 > 콘덴서·인덕터·저항"
+      }
+     ]
+    },
+    {
+     "id": "kr_13",
+     "name": "카메라·스마트폰 부품",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "011070",
+       "name": "LG이노텍",
+       "ticker": "011070.KS",
+       "market": "KOSPI",
+       "mcap_eok": 128985,
+       "path": "전자부품 > 전자부품 > 기타 전자부품 제조"
+      },
+      {
+       "code": "204270",
+       "name": "제이앤티씨",
+       "ticker": "204270.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 11656,
+       "path": "전자부품 > 커버유리·연결부품 > 강화유리·커넥터"
+      },
+      {
+       "code": "090460",
+       "name": "비에이치",
+       "ticker": "090460.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6631,
+       "path": "전자부품 > 인쇄회로기판 > 연성 인쇄회로기판"
+      },
+      {
+       "code": "033240",
+       "name": "자화전자",
+       "ticker": "033240.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6114,
+       "path": "전자부품 > 자성·구동부품 > 자석·진동 모터"
+      }
+     ]
+    },
+    {
+     "id": "kr_14",
+     "name": "동박·기판 소재",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "000150",
+       "name": "두산",
+       "ticker": "000150.KS",
+       "market": "KOSPI",
+       "mcap_eok": 201937,
+       "path": "전자재료 > 기판 소재 > 동박적층판"
+      },
+      {
+       "code": "011790",
+       "name": "SKC",
+       "ticker": "011790.KS",
+       "market": "KOSPI",
+       "mcap_eok": 43001,
+       "path": "이차전지 소재 > 집전체 > 전지용 동박"
+      },
+      {
+       "code": "020150",
+       "name": "롯데에너지머티리얼즈",
+       "ticker": "020150.KS",
+       "market": "KOSPI",
+       "mcap_eok": 19113,
+       "path": "전자재료 > 동박 > 회로기판·전자용 동박"
+      },
+      {
+       "code": "336370",
+       "name": "솔루스첨단소재",
+       "ticker": "336370.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5090,
+       "path": "전자재료 > 동박 > 회로기판·전자용 동박"
+      }
+     ]
+    },
+    {
+     "id": "kr_15",
+     "name": "통신장비",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "178320",
+       "name": "서진시스템",
+       "ticker": "178320.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 22287,
+       "path": "통신장비 > 통신부품 > 통신장비·휴대폰 부품"
+      },
+      {
+       "code": "189300",
+       "name": "인텔리안테크",
+       "ticker": "189300.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6667,
+       "path": "통신장비 > 위성통신 장비 > 위성통신 안테나"
+      },
+      {
+       "code": "032500",
+       "name": "케이엠더블유",
+       "ticker": "032500.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6193,
+       "path": "통신장비 > 무선망 장비 > 무선 부품·중계기"
+      },
+      {
+       "code": "050890",
+       "name": "쏠리드",
+       "ticker": "050890.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5000,
+       "path": "통신장비 > 무선망 장비 > 무선 부품·중계기"
+      }
+     ]
+    },
+    {
+     "id": "kr_16",
+     "name": "광통신 부품",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "010170",
+       "name": "대한광통신",
+       "ticker": "010170.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 21301,
+       "path": "광통신 > 광섬유·광케이블 > 광통신 전송소재"
+      },
+      {
+       "code": "327260",
+       "name": "RF머트리얼즈",
+       "ticker": "327260.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6206,
+       "path": "전자부품 > 통신 반도체 패키지 > 광통신·무선통신용 패키지"
+      }
+     ]
+    },
+    {
+     "id": "kr_17",
+     "name": "디스플레이",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "034220",
+       "name": "LG디스플레이",
+       "ticker": "034220.KS",
+       "market": "KOSPI",
+       "mcap_eok": 44700,
+       "path": "디스플레이 > 패널 > 고부가 디스플레이 패널"
+      },
+      {
+       "code": "213420",
+       "name": "덕산네오룩스",
+       "ticker": "213420.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7610,
+       "path": "디스플레이 소재 > 유기발광 소재 > 정공층·발광층 소재"
+      },
+      {
+       "code": "171090",
+       "name": "선익시스템",
+       "ticker": "171090.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6805,
+       "path": "디스플레이 > 증착장비 > 유기발광 패널 증착"
+      }
+     ]
+    },
+    {
+     "id": "kr_18",
+     "name": "변압기·전력기기",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "010120",
+       "name": "LS ELECTRIC",
+       "ticker": "010120.KS",
+       "market": "KOSPI",
+       "mcap_eok": 300750,
+       "path": "전력기기 > 변압기 > 전력 변환·송배전용 변압기"
+      },
+      {
+       "code": "298040",
+       "name": "효성중공업",
+       "ticker": "298040.KS",
+       "market": "KOSPI",
+       "mcap_eok": 264257,
+       "path": "전력기기 > 변압기 > 전력 변환·송배전용 변압기"
+      },
+      {
+       "code": "267260",
+       "name": "HD현대일렉트릭",
+       "ticker": "267260.KS",
+       "market": "KOSPI",
+       "mcap_eok": 262423,
+       "path": "전력기기 > 변압기 > 전력 변환·송배전용 변압기"
+      },
+      {
+       "code": "062040",
+       "name": "산일전기",
+       "ticker": "062040.KS",
+       "market": "KOSPI",
+       "mcap_eok": 61592,
+       "path": "전력기기 > 변압기 > 전력 변환·송배전용 변압기"
+      },
+      {
+       "code": "103590",
+       "name": "일진전기",
+       "ticker": "103590.KS",
+       "market": "KOSPI",
+       "mcap_eok": 32426,
+       "path": "전력기기 > 변압기 > 전력 변환·송배전용 변압기"
+      },
+      {
+       "code": "033100",
+       "name": "제룡전기",
+       "ticker": "033100.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7228,
+       "path": "전력기기 > 변압기 > 전력 변환·송배전용 변압기"
+      }
+     ]
+    },
+    {
+     "id": "kr_19",
+     "name": "전선·케이블",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "006260",
+       "name": "LS",
+       "ticker": "006260.KS",
+       "market": "KOSPI",
+       "mcap_eok": 94380,
+       "path": "산업지주 > 전력·소재 산업지주 > 전선·전력기기 등 자회사 지분관리"
+      },
+      {
+       "code": "000500",
+       "name": "가온전선",
+       "ticker": "000500.KS",
+       "market": "KOSPI",
+       "mcap_eok": 67744,
+       "path": "전선·케이블 > 전력케이블 > 전력선 제조"
+      },
+      {
+       "code": "001440",
+       "name": "대한전선",
+       "ticker": "001440.KS",
+       "market": "KOSPI",
+       "mcap_eok": 56347,
+       "path": "전선·케이블 > 전력케이블 > 전력선 제조"
+      },
+      {
+       "code": "060370",
+       "name": "LS마린솔루션",
+       "ticker": "060370.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 16115,
+       "path": "전력·통신 인프라 > 해저케이블 > 시공·유지보수"
+      },
+      {
+       "code": "229640",
+       "name": "LS에코에너지",
+       "ticker": "229640.KS",
+       "market": "KOSPI",
+       "mcap_eok": 14286,
+       "path": "전선·케이블 > 전력케이블 > 전력선 제조"
+      },
+      {
+       "code": "006340",
+       "name": "대원전선",
+       "ticker": "006340.KS",
+       "market": "KOSPI",
+       "mcap_eok": 10233,
+       "path": "전선·케이블 > 전력케이블 > 전력선 제조"
+      }
+     ]
+    },
+    {
+     "id": "kr_20",
+     "name": "원전",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "034020",
+       "name": "두산에너빌리티",
+       "ticker": "034020.KS",
+       "market": "KOSPI",
+       "mcap_eok": 573302,
+       "path": "발전기기 > 터빈·엔진 > 기관·터빈 제조"
+      },
+      {
+       "code": "052690",
+       "name": "한전기술",
+       "ticker": "052690.KS",
+       "market": "KOSPI",
+       "mcap_eok": 54501,
+       "path": "발전기기 > 원전 설계 > 원자력발전소 설계"
+      },
+      {
+       "code": "051600",
+       "name": "한전KPS",
+       "ticker": "051600.KS",
+       "market": "KOSPI",
+       "mcap_eok": 21802,
+       "path": "발전기기 > 발전설비 정비 > 설비 점검·유지보수"
+      },
+      {
+       "code": "032820",
+       "name": "우리기술",
+       "ticker": "032820.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 20405,
+       "path": "시스템기술 > 시스템 사업 > 시스템·정보통신 사업"
+      }
+     ]
+    },
+    {
+     "id": "kr_21",
+     "name": "발전설비·분산전원",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "336260",
+       "name": "두산퓨얼셀",
+       "ticker": "336260.KS",
+       "market": "KOSPI",
+       "mcap_eok": 32255,
+       "path": "발전기기 > 연료전지 > 발전용 연료전지"
+      },
+      {
+       "code": "083650",
+       "name": "비에이치아이",
+       "ticker": "083650.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 20361,
+       "path": "플랜트기기 > 열교환·폐열회수 > 열교환기·폐열회수장치"
+      },
+      {
+       "code": "077970",
+       "name": "STX엔진",
+       "ticker": "077970.KS",
+       "market": "KOSPI",
+       "mcap_eok": 9414,
+       "path": "발전기기 > 터빈·엔진 > 기관·터빈 제조"
+      },
+      {
+       "code": "100840",
+       "name": "SNT에너지",
+       "ticker": "100840.KS",
+       "market": "KOSPI",
+       "mcap_eok": 7569,
+       "path": "플랜트기기 > 열교환·폐열회수 > 열교환기·폐열회수장치"
+      },
+      {
+       "code": "119850",
+       "name": "지엔씨에너지",
+       "ticker": "119850.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7369,
+       "path": "발전기기 > 발전기 > 비상·분산형 발전기"
+      }
+     ]
+    },
+    {
+     "id": "kr_22",
+     "name": "신재생에너지",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "112610",
+       "name": "씨에스윈드",
+       "ticker": "112610.KS",
+       "market": "KOSPI",
+       "mcap_eok": 20389,
+       "path": "신재생에너지 기기 > 풍력타워 > 풍력발전용 타워"
+      },
+      {
+       "code": "475150",
+       "name": "SK이터닉스",
+       "ticker": "475150.KS",
+       "market": "KOSPI",
+       "mcap_eok": 17374,
+       "path": "재생에너지 > 발전사업 > 태양광·풍력 발전사업 개발·운영"
+      },
+      {
+       "code": "322000",
+       "name": "HD현대에너지솔루션",
+       "ticker": "322000.KS",
+       "market": "KOSPI",
+       "mcap_eok": 15008,
+       "path": "신재생에너지 기기 > 태양광 > 태양전지 셀·모듈·시스템"
+      },
+      {
+       "code": "100090",
+       "name": "SK오션플랜트",
+       "ticker": "100090.KS",
+       "market": "KOSPI",
+       "mcap_eok": 8053,
+       "path": "신재생에너지 기기 > 풍력 하부구조물 > 해상풍력용 구조물"
+      },
+      {
+       "code": "456040",
+       "name": "OCI",
+       "ticker": "456040.KS",
+       "market": "KOSPI",
+       "mcap_eok": 7161,
+       "path": "화학 > 전자·태양광 소재 > 폴리실리콘"
+      }
+     ]
+    },
+    {
+     "id": "kr_23",
+     "name": "전력·가스 공기업·유틸리티",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "015760",
+       "name": "한국전력",
+       "ticker": "015760.KS",
+       "market": "KOSPI",
+       "mcap_eok": 218909,
+       "path": "전력 > 전력공급 > 발전·송전"
+      },
+      {
+       "code": "036460",
+       "name": "한국가스공사",
+       "ticker": "036460.KS",
+       "market": "KOSPI",
+       "mcap_eok": 32678,
+       "path": "가스 > 액화천연가스 > 도입·도매공급"
+      },
+      {
+       "code": "018670",
+       "name": "SK가스",
+       "ticker": "018670.KS",
+       "market": "KOSPI",
+       "mcap_eok": 22524,
+       "path": "가스 > 액화석유가스 > 수입·저장·판매"
+      },
+      {
+       "code": "071320",
+       "name": "지역난방공사",
+       "ticker": "071320.KS",
+       "market": "KOSPI",
+       "mcap_eok": 8811,
+       "path": "전력 > 열병합 > 증기·전기 생산"
+      },
+      {
+       "code": "005090",
+       "name": "SGC에너지",
+       "ticker": "005090.KS",
+       "market": "KOSPI",
+       "mcap_eok": 7752,
+       "path": "전력 > 열병합 > 증기·전기 생산"
+      },
+      {
+       "code": "017940",
+       "name": "E1",
+       "ticker": "017940.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6674,
+       "path": "가스 > 액화석유가스 > 수입·저장·판매"
+      }
+     ]
+    },
+    {
+     "id": "kr_24",
+     "name": "배터리 셀",
+     "group": "2차전지",
+     "members": [
+      {
+       "code": "373220",
+       "name": "LG에너지솔루션",
+       "ticker": "373220.KS",
+       "market": "KOSPI",
+       "mcap_eok": 815490,
+       "path": "전지·에너지저장 > 이차전지 > 전지 셀·모듈"
+      },
+      {
+       "code": "006400",
+       "name": "삼성SDI",
+       "ticker": "006400.KS",
+       "market": "KOSPI",
+       "mcap_eok": 427103,
+       "path": "전지·에너지저장 > 이차전지 > 전지 셀·모듈"
+      }
+     ]
+    },
+    {
+     "id": "kr_25",
+     "name": "양극재·전구체",
+     "group": "2차전지",
+     "members": [
+      {
+       "code": "003670",
+       "name": "포스코퓨처엠",
+       "ticker": "003670.KS",
+       "market": "KOSPI",
+       "mcap_eok": 160636,
+       "path": "이차전지 소재 > 양극재 > 양극활물질 생산"
+      },
+      {
+       "code": "086520",
+       "name": "에코프로",
+       "ticker": "086520.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 110114,
+       "path": "환경·전지 소재 > 복합 소재 > 환경소재·이차전지 소재"
+      },
+      {
+       "code": "247540",
+       "name": "에코프로비엠",
+       "ticker": "247540.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 102526,
+       "path": "이차전지 소재 > 양극재 > 양극활물질 생산"
+      },
+      {
+       "code": "066970",
+       "name": "엘앤에프",
+       "ticker": "066970.KS",
+       "market": "KOSPI",
+       "mcap_eok": 46258,
+       "path": "이차전지 소재 > 양극재 > 양극활물질 생산"
+      },
+      {
+       "code": "450080",
+       "name": "에코프로머티",
+       "ticker": "450080.KS",
+       "market": "KOSPI",
+       "mcap_eok": 25457,
+       "path": "이차전지 소재 > 전구체 > 양극재용 전구체"
+      },
+      {
+       "code": "005070",
+       "name": "코스모신소재",
+       "ticker": "005070.KS",
+       "market": "KOSPI",
+       "mcap_eok": 12671,
+       "path": "이차전지 소재 > 양극재 > 양극활물질 생산"
+      },
+      {
+       "code": "033790",
+       "name": "피노",
+       "ticker": "033790.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6557,
+       "path": "이차전지 소재 > 전구체 > 양극재용 전구체"
+      }
+     ]
+    },
+    {
+     "id": "kr_26",
+     "name": "분리막·음극재·장비",
+     "group": "2차전지",
+     "members": [
+      {
+       "code": "361610",
+       "name": "SK아이이테크놀로지",
+       "ticker": "361610.KS",
+       "market": "KOSPI",
+       "mcap_eok": 13290,
+       "path": "이차전지 소재 > 분리막 > 습식 분리막"
+      },
+      {
+       "code": "078600",
+       "name": "대주전자재료",
+       "ticker": "078600.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 13050,
+       "path": "이차전지 소재 > 음극재 > 음극활물질 생산"
+      },
+      {
+       "code": "137400",
+       "name": "피엔티",
+       "ticker": "137400.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6917,
+       "path": "전지 제조장비 > 전극공정 > 롤투롤·전극 제조장비"
+      },
+      {
+       "code": "222080",
+       "name": "SFA넥셀",
+       "ticker": "222080.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5779,
+       "path": "전지 제조장비 > 전극공정 > 롤투롤·전극 제조장비"
+      }
+     ]
+    },
+    {
+     "id": "kr_27",
+     "name": "조선",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "329180",
+       "name": "HD현대중공업",
+       "ticker": "329180.KS",
+       "market": "KOSPI",
+       "mcap_eok": 466552,
+       "path": "조선 > 선박건조 > 상선·해양구조물 건조"
+      },
+      {
+       "code": "042660",
+       "name": "한화오션",
+       "ticker": "042660.KS",
+       "market": "KOSPI",
+       "mcap_eok": 263821,
+       "path": "조선 > 선박건조 > 상선·해양구조물 건조"
+      },
+      {
+       "code": "009540",
+       "name": "HD한국조선해양",
+       "ticker": "009540.KS",
+       "market": "KOSPI",
+       "mcap_eok": 245228,
+       "path": "기타 금융 > 기타 금융업 > 세부 제품·공급망 확인 불가"
+      },
+      {
+       "code": "010140",
+       "name": "삼성중공업",
+       "ticker": "010140.KS",
+       "market": "KOSPI",
+       "mcap_eok": 187440,
+       "path": "조선 > 선박건조 > 상선·해양구조물 건조"
+      },
+      {
+       "code": "439260",
+       "name": "대한조선",
+       "ticker": "439260.KS",
+       "market": "KOSPI",
+       "mcap_eok": 17996,
+       "path": "조선 > 선박건조 > 상선·해양구조물 건조"
+      },
+      {
+       "code": "097230",
+       "name": "HJ중공업",
+       "ticker": "097230.KS",
+       "market": "KOSPI",
+       "mcap_eok": 14194,
+       "path": "조선 > 선박건조 > 상선·해양구조물 건조"
+      }
+     ]
+    },
+    {
+     "id": "kr_28",
+     "name": "선박엔진·기자재",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "443060",
+       "name": "HD현대마린솔루션",
+       "ticker": "443060.KS",
+       "market": "KOSPI",
+       "mcap_eok": 95271,
+       "path": "조선 > 사후서비스 > 선박 사후관리·개조·디지털 제어"
+      },
+      {
+       "code": "082740",
+       "name": "한화엔진",
+       "ticker": "082740.KS",
+       "market": "KOSPI",
+       "mcap_eok": 38093,
+       "path": "조선 > 선박엔진 > 대형 선박용 엔진"
+      },
+      {
+       "code": "071970",
+       "name": "HD현대마린엔진",
+       "ticker": "071970.KS",
+       "market": "KOSPI",
+       "mcap_eok": 17028,
+       "path": "조선 > 선박부품 > 조선 기자재·기계부품"
+      },
+      {
+       "code": "075580",
+       "name": "세진중공업",
+       "ticker": "075580.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5861,
+       "path": "조선 > 선박 구조물 > 선실·갑판·액화석유가스 탱크"
+      }
+     ]
+    },
+    {
+     "id": "kr_29",
+     "name": "LNG 보냉재·배관",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "017960",
+       "name": "한국카본",
+       "ticker": "017960.KS",
+       "market": "KOSPI",
+       "mcap_eok": 11627,
+       "path": "조선 기자재 > 보냉재 > 액화천연가스 선박용 단열재"
+      },
+      {
+       "code": "014620",
+       "name": "성광벤드",
+       "ticker": "014620.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 8631,
+       "path": "플랜트기기 > 배관부품 > 관이음쇠·배관자재"
+      },
+      {
+       "code": "023160",
+       "name": "태광",
+       "ticker": "023160.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6932,
+       "path": "플랜트기기 > 배관부품 > 관이음쇠·배관자재"
+      },
+      {
+       "code": "033500",
+       "name": "동성화인텍",
+       "ticker": "033500.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5026,
+       "path": "단열소재 > 보냉재 > 초저온 보냉재"
+      }
+     ]
+    },
+    {
+     "id": "kr_30",
+     "name": "로봇 완제품",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "277810",
+       "name": "레인보우로보틱스",
+       "ticker": "277810.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 84001,
+       "path": "로봇 > 협동로봇 > 협동로봇 완제품"
+      },
+      {
+       "code": "454910",
+       "name": "두산로보틱스",
+       "ticker": "454910.KS",
+       "market": "KOSPI",
+       "mcap_eok": 44920,
+       "path": "로봇 > 협동로봇 > 협동로봇 완제품"
+      },
+      {
+       "code": "388720",
+       "name": "유일로보틱스",
+       "ticker": "388720.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7563,
+       "path": "로봇 > 산업용 로봇 > 제조·취출 로봇"
+      },
+      {
+       "code": "090710",
+       "name": "휴림로봇",
+       "ticker": "090710.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7496,
+       "path": "로봇 > 산업용 로봇 > 제조·취출 로봇"
+      },
+      {
+       "code": "090360",
+       "name": "로보스타",
+       "ticker": "090360.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7302,
+       "path": "로봇 > 산업용 로봇 > 제조·취출 로봇"
+      },
+      {
+       "code": "466100",
+       "name": "클로봇",
+       "ticker": "466100.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7289,
+       "path": "로봇 소프트웨어 > 로봇제어 > 로봇 제어·운영 소프트웨어"
+      }
+     ]
+    },
+    {
+     "id": "kr_31",
+     "name": "로봇 부품(감속기·모터)",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "108490",
+       "name": "로보티즈",
+       "ticker": "108490.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 41654,
+       "path": "로봇 > 구동부품 > 로봇 액추에이터 모듈"
+      },
+      {
+       "code": "058610",
+       "name": "에스피지",
+       "ticker": "058610.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 20247,
+       "path": "구동부품 > 모터 > 기어드 모터"
+      },
+      {
+       "code": "437730",
+       "name": "삼현",
+       "ticker": "437730.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 10511,
+       "path": "구동부품 > 액추에이터 > 스마트 액추에이터·파워유닛"
+      },
+      {
+       "code": "160190",
+       "name": "하이젠알앤엠",
+       "ticker": "160190.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7305,
+       "path": "구동부품 > 모터 > 서보·범용 모터"
+      }
+     ]
+    },
+    {
+     "id": "kr_32",
+     "name": "건설기계",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "267270",
+       "name": "HD건설기계",
+       "ticker": "267270.KS",
+       "market": "KOSPI",
+       "mcap_eok": 66419,
+       "path": "건설기계 > 건설장비 > 건설용 중장비"
+      },
+      {
+       "code": "241560",
+       "name": "두산밥캣",
+       "ticker": "241560.KS",
+       "market": "KOSPI",
+       "mcap_eok": 60101,
+       "path": "건설기계 > 건설장비 > 건설용 중장비"
+      },
+      {
+       "code": "079900",
+       "name": "전진건설로봇",
+       "ticker": "079900.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5982,
+       "path": "건설기계 > 건설장비 > 콘크리트 펌프카"
+      }
+     ]
+    },
+    {
+     "id": "kr_33",
+     "name": "방산",
+     "group": "방산·우주",
+     "members": [
+      {
+       "code": "012450",
+       "name": "한화에어로스페이스",
+       "ticker": "012450.KS",
+       "market": "KOSPI",
+       "mcap_eok": 529556,
+       "path": "항공우주·방산 > 항공엔진 > 항공기 엔진·방산장비"
+      },
+      {
+       "code": "079550",
+       "name": "LIG디펜스앤에어로스페이스",
+       "ticker": "079550.KS",
+       "market": "KOSPI",
+       "mcap_eok": 146520,
+       "path": "항공우주·방산 > 유도무기 > 정밀 유도무기"
+      },
+      {
+       "code": "064350",
+       "name": "현대로템",
+       "ticker": "064350.KS",
+       "market": "KOSPI",
+       "mcap_eok": 137846,
+       "path": "운송장비 > 철도차량 > 철도차량·특수중기"
+      },
+      {
+       "code": "272210",
+       "name": "한화시스템",
+       "ticker": "272210.KS",
+       "market": "KOSPI",
+       "mcap_eok": 131676,
+       "path": "항공우주·방산 > 방산전자 > 감시·탐지·전투지휘체계"
+      },
+      {
+       "code": "047810",
+       "name": "한국항공우주",
+       "ticker": "047810.KS",
+       "market": "KOSPI",
+       "mcap_eok": 124573,
+       "path": "항공우주·방산 > 항공기 > 완제기·기체부품"
+      },
+      {
+       "code": "103140",
+       "name": "풍산",
+       "ticker": "103140.KS",
+       "market": "KOSPI",
+       "mcap_eok": 21971,
+       "path": "비철금속 > 신동제품 > 동·동합금 압연 및 봉 제품"
+      }
+     ]
+    },
+    {
+     "id": "kr_34",
+     "name": "우주·위성",
+     "group": "방산·우주",
+     "members": [
+      {
+       "code": "347700",
+       "name": "스피어",
+       "ticker": "347700.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 10413,
+       "path": "항공우주·방산 > 항공우주 부품 유통 > 우주항공 부품 판매"
+      },
+      {
+       "code": "099320",
+       "name": "쎄트렉아이",
+       "ticker": "099320.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7742,
+       "path": "항공우주·방산 > 위성 > 위성체·지상국·부품"
+      },
+      {
+       "code": "189300",
+       "name": "인텔리안테크",
+       "ticker": "189300.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6667,
+       "path": "통신장비 > 위성통신 장비 > 위성통신 안테나"
+      }
+     ]
+    },
+    {
+     "id": "kr_35",
+     "name": "건설",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "000720",
+       "name": "현대건설",
+       "ticker": "000720.KS",
+       "market": "KOSPI",
+       "mcap_eok": 146321,
+       "path": "건설 > 종합건설 > 주택·건축·토목 시공"
+      },
+      {
+       "code": "028050",
+       "name": "삼성E&A",
+       "ticker": "028050.KS",
+       "market": "KOSPI",
+       "mcap_eok": 96334,
+       "path": "설계·엔지니어링 > 플랜트 설계·시공 > 산업설비 설계·시공"
+      },
+      {
+       "code": "047040",
+       "name": "대우건설",
+       "ticker": "047040.KS",
+       "market": "KOSPI",
+       "mcap_eok": 82058,
+       "path": "건설 > 종합건설 > 주택·건축·토목 시공"
+      },
+      {
+       "code": "375500",
+       "name": "DL이앤씨",
+       "ticker": "375500.KS",
+       "market": "KOSPI",
+       "mcap_eok": 30413,
+       "path": "건설 > 종합건설 > 주택·건축·토목 시공"
+      },
+      {
+       "code": "006360",
+       "name": "GS건설",
+       "ticker": "006360.KS",
+       "market": "KOSPI",
+       "mcap_eok": 30167,
+       "path": "건설 > 종합건설 > 주택·건축·토목 시공"
+      },
+      {
+       "code": "294870",
+       "name": "IPARK현대산업개발",
+       "ticker": "294870.KS",
+       "market": "KOSPI",
+       "mcap_eok": 15290,
+       "path": "건설 > 종합건설 > 주택·건축·토목 시공"
+      },
+      {
+       "code": "002990",
+       "name": "금호건설",
+       "ticker": "002990.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5831,
+       "path": "건설 > 종합건설 > 주택·건축·토목 시공"
+      }
+     ]
+    },
+    {
+     "id": "kr_36",
+     "name": "건자재",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "002380",
+       "name": "KCC",
+       "ticker": "002380.KS",
+       "market": "KOSPI",
+       "mcap_eok": 42964,
+       "path": "건축자재 > 단열·내외장재 > 건축용 단열재·석고보드·유리"
+      },
+      {
+       "code": "300720",
+       "name": "한일시멘트",
+       "ticker": "300720.KS",
+       "market": "KOSPI",
+       "mcap_eok": 12252,
+       "path": "건축자재 > 시멘트 > 시멘트·레미콘"
+      },
+      {
+       "code": "038500",
+       "name": "삼표시멘트",
+       "ticker": "038500.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7748,
+       "path": "건축자재 > 시멘트 > 시멘트·레미콘"
+      }
+     ]
+    },
+    {
+     "id": "kr_37",
+     "name": "철강",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "005490",
+       "name": "POSCO홀딩스",
+       "ticker": "005490.KS",
+       "market": "KOSPI",
+       "mcap_eok": 260308,
+       "path": "철강 > 철강제품 > 판재·봉형강·특수강"
+      },
+      {
+       "code": "004020",
+       "name": "현대제철",
+       "ticker": "004020.KS",
+       "market": "KOSPI",
+       "mcap_eok": 43836,
+       "path": "철강 > 철강제품 > 판재·봉형강·특수강"
+      },
+      {
+       "code": "001430",
+       "name": "세아베스틸지주",
+       "ticker": "001430.KS",
+       "market": "KOSPI",
+       "mcap_eok": 14864,
+       "path": "철강 > 철강제품 > 판재·봉형강·특수강"
+      },
+      {
+       "code": "016380",
+       "name": "KG스틸",
+       "ticker": "016380.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5650,
+       "path": "철강 > 철강제품 > 판재·봉형강·특수강"
+      },
+      {
+       "code": "460860",
+       "name": "동국제강",
+       "ticker": "460860.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5089,
+       "path": "철강 > 철강제품 > 판재·봉형강·특수강"
+      }
+     ]
+    },
+    {
+     "id": "kr_38",
+     "name": "비철금속",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "010130",
+       "name": "고려아연",
+       "ticker": "010130.KS",
+       "market": "KOSPI",
+       "mcap_eok": 253189,
+       "path": "비철금속 > 제련 > 아연·연 제련"
+      },
+      {
+       "code": "006110",
+       "name": "삼아알미늄",
+       "ticker": "006110.KS",
+       "market": "KOSPI",
+       "mcap_eok": 10087,
+       "path": "비철금속 > 압연제품 > 알루미늄박"
+      },
+      {
+       "code": "000670",
+       "name": "영풍",
+       "ticker": "000670.KS",
+       "market": "KOSPI",
+       "mcap_eok": 7226,
+       "path": "비철금속 > 제련 > 아연·연 제련"
+      },
+      {
+       "code": "295310",
+       "name": "에이치브이엠",
+       "ticker": "295310.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6149,
+       "path": "비철금속 > 특수합금 > 니켈·철·구리 합금"
+      }
+     ]
+    },
+    {
+     "id": "kr_39",
+     "name": "석유화학",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "051910",
+       "name": "LG화학",
+       "ticker": "051910.KS",
+       "market": "KOSPI",
+       "mcap_eok": 190599,
+       "path": "화학 > 석유화학 > 기초유분·합성수지"
+      },
+      {
+       "code": "009830",
+       "name": "한화솔루션",
+       "ticker": "009830.KS",
+       "market": "KOSPI",
+       "mcap_eok": 65556,
+       "path": "화학 > 석유화학 > 기초유분·합성수지"
+      },
+      {
+       "code": "011780",
+       "name": "금호석유화학",
+       "ticker": "011780.KS",
+       "market": "KOSPI",
+       "mcap_eok": 31144,
+       "path": "화학 > 합성고무 > 스티렌·부타디엔계 합성고무"
+      },
+      {
+       "code": "011170",
+       "name": "롯데케미칼",
+       "ticker": "011170.KS",
+       "market": "KOSPI",
+       "mcap_eok": 24553,
+       "path": "화학 > 석유화학 > 기초유분·합성수지"
+      },
+      {
+       "code": "285130",
+       "name": "SK케미칼",
+       "ticker": "285130.KS",
+       "market": "KOSPI",
+       "mcap_eok": 9306,
+       "path": "화학 > 석유화학 > 기초유분·합성수지"
+      },
+      {
+       "code": "006650",
+       "name": "대한유화",
+       "ticker": "006650.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6311,
+       "path": "화학 > 석유화학 > 기초유분·합성수지"
+      }
+     ]
+    },
+    {
+     "id": "kr_40",
+     "name": "정유",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "096770",
+       "name": "SK이노베이션",
+       "ticker": "096770.KS",
+       "market": "KOSPI",
+       "mcap_eok": 233292,
+       "path": "석유제품 > 정유 > 원유 정제·석유제품 생산"
+      },
+      {
+       "code": "010950",
+       "name": "S-Oil",
+       "ticker": "010950.KS",
+       "market": "KOSPI",
+       "mcap_eok": 179456,
+       "path": "석유제품 > 정유 > 원유 정제·석유제품 생산"
+      },
+      {
+       "code": "078930",
+       "name": "GS",
+       "ticker": "078930.KS",
+       "market": "KOSPI",
+       "mcap_eok": 115654,
+       "path": "복합기업 > 지주회사 > 자회사 투자·관리"
+      }
+     ]
+    },
+    {
+     "id": "kr_41",
+     "name": "정밀화학",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "093370",
+       "name": "후성",
+       "ticker": "093370.KS",
+       "market": "KOSPI",
+       "mcap_eok": 13911,
+       "path": "화학 > 불소화합물 > 불소화물"
+      },
+      {
+       "code": "004000",
+       "name": "롯데정밀화학",
+       "ticker": "004000.KS",
+       "market": "KOSPI",
+       "mcap_eok": 11674,
+       "path": "화학 > 정밀화학 > 염소·셀룰로스·암모니아 제품"
+      },
+      {
+       "code": "069260",
+       "name": "TKG휴켐스",
+       "ticker": "069260.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6720,
+       "path": "화학 > 기초·정밀화학 > 화합물·화학제품"
+      },
+      {
+       "code": "268280",
+       "name": "미원에스씨",
+       "ticker": "268280.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6660,
+       "path": "화학 > 기능성 수지 > 에너지 경화수지"
+      },
+      {
+       "code": "178920",
+       "name": "PI첨단소재",
+       "ticker": "178920.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5579,
+       "path": "화학 > 고분자 소재 > 폴리이미드 제품"
+      }
+     ]
+    },
+    {
+     "id": "kr_42",
+     "name": "완성차",
+     "group": "자동차",
+     "members": [
+      {
+       "code": "005380",
+       "name": "현대차",
+       "ticker": "005380.KS",
+       "market": "KOSPI",
+       "mcap_eok": 788317,
+       "path": "자동차 > 완성차 > 승용차·상용차 제조"
+      },
+      {
+       "code": "000270",
+       "name": "기아",
+       "ticker": "000270.KS",
+       "market": "KOSPI",
+       "mcap_eok": 489577,
+       "path": "자동차 > 완성차 > 승용차·상용차 제조"
+      },
+      {
+       "code": "003620",
+       "name": "KG모빌리티",
+       "ticker": "003620.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5403,
+       "path": "자동차 > 완성차 > 승용차·상용차 제조"
+      }
+     ]
+    },
+    {
+     "id": "kr_43",
+     "name": "자동차 부품",
+     "group": "자동차",
+     "members": [
+      {
+       "code": "012330",
+       "name": "현대모비스",
+       "ticker": "012330.KS",
+       "market": "KOSPI",
+       "mcap_eok": 372755,
+       "path": "자동차 > 자동차부품 > 보수용 부품·모듈"
+      },
+      {
+       "code": "018880",
+       "name": "한온시스템",
+       "ticker": "018880.KS",
+       "market": "KOSPI",
+       "mcap_eok": 35406,
+       "path": "자동차 > 열관리 > 자동차 냉난방·압축기"
+      },
+      {
+       "code": "005850",
+       "name": "에스엘",
+       "ticker": "005850.KS",
+       "market": "KOSPI",
+       "mcap_eok": 23595,
+       "path": "자동차 > 조명·전장 > 자동차 램프·전동화 부품"
+      },
+      {
+       "code": "204320",
+       "name": "HL만도",
+       "ticker": "204320.KS",
+       "market": "KOSPI",
+       "mcap_eok": 22821,
+       "path": "자동차 > 차체 제어 > 제동·조향·현가 장치"
+      },
+      {
+       "code": "011210",
+       "name": "현대위아",
+       "ticker": "011210.KS",
+       "market": "KOSPI",
+       "mcap_eok": 15310,
+       "path": "자동차 > 자동차부품 > 구동·전장·기계부품"
+      },
+      {
+       "code": "064960",
+       "name": "SNT모티브",
+       "ticker": "064960.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6913,
+       "path": "자동차 > 자동차부품 > 구동·전장·기계부품"
+      },
+      {
+       "code": "025540",
+       "name": "한국단자",
+       "ticker": "025540.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5613,
+       "path": "전자부품 > 연결부품 > 커넥터·정밀단자"
+      }
+     ]
+    },
+    {
+     "id": "kr_44",
+     "name": "타이어",
+     "group": "자동차",
+     "members": [
+      {
+       "code": "161390",
+       "name": "한국타이어앤테크놀로지",
+       "ticker": "161390.KS",
+       "market": "KOSPI",
+       "mcap_eok": 79527,
+       "path": "자동차 > 타이어 > 차량용 타이어 제조"
+      },
+      {
+       "code": "073240",
+       "name": "금호타이어",
+       "ticker": "073240.KS",
+       "market": "KOSPI",
+       "mcap_eok": 20797,
+       "path": "자동차 > 타이어 > 차량용 타이어 제조"
+      },
+      {
+       "code": "002350",
+       "name": "넥센타이어",
+       "ticker": "002350.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5742,
+       "path": "자동차 > 타이어 > 차량용 타이어 제조"
+      }
+     ]
+    },
+    {
+     "id": "kr_45",
+     "name": "바이오 대형(위탁생산·시밀러)",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "207940",
+       "name": "삼성바이오로직스",
+       "ticker": "207940.KS",
+       "market": "KOSPI",
+       "mcap_eok": 666589,
+       "path": "바이오의약품 > 위탁개발·생산 > 바이오의약품 원액 위탁생산"
+      },
+      {
+       "code": "068270",
+       "name": "셀트리온",
+       "ticker": "068270.KS",
+       "market": "KOSPI",
+       "mcap_eok": 425922,
+       "path": "바이오의약품 > 바이오시밀러 > 항체 바이오시밀러 개발·제조·판매"
+      },
+      {
+       "code": "302440",
+       "name": "SK바이오사이언스",
+       "ticker": "302440.KS",
+       "market": "KOSPI",
+       "mcap_eok": 28832,
+       "path": "의약품 > 백신 > 백신 제품·제제"
+      },
+      {
+       "code": "237690",
+       "name": "에스티팜",
+       "ticker": "237690.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 19185,
+       "path": "의약품 > 원료의약품 > 원료의약품 제조"
+      }
+     ]
+    },
+    {
+     "id": "kr_46",
+     "name": "신약 개발 바이오",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "196170",
+       "name": "알테오젠",
+       "ticker": "196170.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 192944,
+       "path": "의약품 > 바이오의약품 > 바이오시밀러·바이오베터"
+      },
+      {
+       "code": "028300",
+       "name": "HLB",
+       "ticker": "028300.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 42157,
+       "path": "의료제품 > 의료제품 > 의료기기·의약외품"
+      },
+      {
+       "code": "298380",
+       "name": "에이비엘바이오",
+       "ticker": "298380.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 38183,
+       "path": "신약개발 > 항체치료제 > 항체의약품 연구개발"
+      },
+      {
+       "code": "087010",
+       "name": "펩트론",
+       "ticker": "087010.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 34323,
+       "path": "신약개발 > 지속형 제제 > 장기 약효지속성 제제 개발"
+      },
+      {
+       "code": "141080",
+       "name": "리가켐바이오",
+       "ticker": "141080.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 33058,
+       "path": "신약개발 > 항체약물접합체 > 항체 기반 약물접합체 개발"
+      },
+      {
+       "code": "310210",
+       "name": "보로노이",
+       "ticker": "310210.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 27729,
+       "path": "신약개발 > 표적치료제 > 표적치료제 개발"
+      },
+      {
+       "code": "347850",
+       "name": "디앤디파마텍",
+       "ticker": "347850.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 22597,
+       "path": "신약개발 > 대사질환 > 대사성 질환 치료제"
+      },
+      {
+       "code": "226950",
+       "name": "올릭스",
+       "ticker": "226950.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 20873,
+       "path": "신약개발 > 핵산치료제 > 간섭리보핵산 신약개발"
+      },
+      {
+       "code": "950160",
+       "name": "코오롱티슈진",
+       "ticker": "950160.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 14844,
+       "path": "신약개발 > 근골격계 > 골관절염 치료제 개발"
+      },
+      {
+       "code": "039200",
+       "name": "오스코텍",
+       "ticker": "039200.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 13409,
+       "path": "신약개발 > 신약 연구 > 신약 연구개발"
+      }
+     ]
+    },
+    {
+     "id": "kr_47",
+     "name": "제약",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "326030",
+       "name": "SK바이오팜",
+       "ticker": "326030.KS",
+       "market": "KOSPI",
+       "mcap_eok": 65156,
+       "path": "신약개발 > 중추신경계 > 신경·정신질환 신약"
+      },
+      {
+       "code": "128940",
+       "name": "한미약품",
+       "ticker": "128940.KS",
+       "market": "KOSPI",
+       "mcap_eok": 60339,
+       "path": "의약품 > 완제의약품 > 완제의약품 제조·판매"
+      },
+      {
+       "code": "000100",
+       "name": "유한양행",
+       "ticker": "000100.KS",
+       "market": "KOSPI",
+       "mcap_eok": 58230,
+       "path": "의약품 > 완제의약품 > 완제의약품 제조·판매"
+      },
+      {
+       "code": "000250",
+       "name": "삼천당제약",
+       "ticker": "000250.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 38212,
+       "path": "의약품 > 완제의약품 > 완제의약품 제조·판매"
+      },
+      {
+       "code": "009420",
+       "name": "한올바이오파마",
+       "ticker": "009420.KS",
+       "market": "KOSPI",
+       "mcap_eok": 28418,
+       "path": "의약품 > 완제의약품 > 완제의약품 제조·판매"
+      },
+      {
+       "code": "006280",
+       "name": "녹십자",
+       "ticker": "006280.KS",
+       "market": "KOSPI",
+       "mcap_eok": 14841,
+       "path": "의약품 > 완제의약품 > 완제의약품 제조·판매"
+      },
+      {
+       "code": "069620",
+       "name": "대웅제약",
+       "ticker": "069620.KS",
+       "market": "KOSPI",
+       "mcap_eok": 13394,
+       "path": "의약품 > 완제의약품 > 완제의약품 제조·판매"
+      },
+      {
+       "code": "185750",
+       "name": "종근당",
+       "ticker": "185750.KS",
+       "market": "KOSPI",
+       "mcap_eok": 9358,
+       "path": "의약품 > 완제의약품 > 완제의약품 제조·판매"
+      },
+      {
+       "code": "003850",
+       "name": "보령",
+       "ticker": "003850.KS",
+       "market": "KOSPI",
+       "mcap_eok": 7489,
+       "path": "의약품 > 완제의약품 > 완제의약품 제조·판매"
+      }
+     ]
+    },
+    {
+     "id": "kr_48",
+     "name": "미용 의료(톡신·장비·재생)",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "214450",
+       "name": "파마리서치",
+       "ticker": "214450.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 38337,
+       "path": "의약품 > 재생의약품 > 재생용 의약품"
+      },
+      {
+       "code": "145020",
+       "name": "휴젤",
+       "ticker": "145020.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 29786,
+       "path": "의약품 > 미용 바이오의약품 > 보툴리눔톡신·필러"
+      },
+      {
+       "code": "214370",
+       "name": "케어젠",
+       "ticker": "214370.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 23956,
+       "path": "바이오소재 > 펩타이드 > 성장인자·바이오미메틱 펩타이드"
+      },
+      {
+       "code": "214150",
+       "name": "클래시스",
+       "ticker": "214150.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 20451,
+       "path": "의료기기 > 미용 의료기기 > 피부미용 의료장비"
+      },
+      {
+       "code": "290650",
+       "name": "엘앤씨바이오",
+       "ticker": "290650.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 13646,
+       "path": "의료재료 > 인체조직 > 피부·뼈·연골 조직"
+      },
+      {
+       "code": "086900",
+       "name": "메디톡스",
+       "ticker": "086900.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5050,
+       "path": "의약품 > 미용 바이오의약품 > 보툴리눔톡신·필러"
+      }
+     ]
+    },
+    {
+     "id": "kr_49",
+     "name": "의료기기·의료AI",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "491000",
+       "name": "리브스메드",
+       "ticker": "491000.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 9104,
+       "path": "의료기기 > 수술기구 > 복강경 다관절 수술기구"
+      },
+      {
+       "code": "458870",
+       "name": "씨어스",
+       "ticker": "458870.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 8742,
+       "path": "의료기기 > 환자 모니터링 > 심전도·입원환자 모니터링"
+      },
+      {
+       "code": "041830",
+       "name": "인바디",
+       "ticker": "041830.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7872,
+       "path": "의료기기 > 체성분 검사 > 체성분 분석기"
+      },
+      {
+       "code": "328130",
+       "name": "루닛",
+       "ticker": "328130.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6477,
+       "path": "의료 소프트웨어 > 영상진단 보조 > 암 영상판독 인공지능 소프트웨어"
+      }
+     ]
+    },
+    {
+     "id": "kr_50",
+     "name": "은행·금융지주",
+     "group": "금융",
+     "members": [
+      {
+       "code": "105560",
+       "name": "KB금융",
+       "ticker": "105560.KS",
+       "market": "KOSPI",
+       "mcap_eok": 616092,
+       "path": "금융지주 > 종합금융 > 은행·증권·보험 자회사 지분관리"
+      },
+      {
+       "code": "055550",
+       "name": "신한지주",
+       "ticker": "055550.KS",
+       "market": "KOSPI",
+       "mcap_eok": 531417,
+       "path": "금융지주 > 자회사 관리 > 금융자회사 투자·관리"
+      },
+      {
+       "code": "086790",
+       "name": "하나금융지주",
+       "ticker": "086790.KS",
+       "market": "KOSPI",
+       "mcap_eok": 375335,
+       "path": "금융지주 > 종합금융 > 은행 등 금융자회사 지분관리"
+      },
+      {
+       "code": "316140",
+       "name": "우리금융지주",
+       "ticker": "316140.KS",
+       "market": "KOSPI",
+       "mcap_eok": 250875,
+       "path": "금융지주 > 자회사 관리 > 금융자회사 투자·관리"
+      },
+      {
+       "code": "024110",
+       "name": "기업은행",
+       "ticker": "024110.KS",
+       "market": "KOSPI",
+       "mcap_eok": 165864,
+       "path": "은행 > 예금·대출 > 은행 서비스"
+      },
+      {
+       "code": "323410",
+       "name": "카카오뱅크",
+       "ticker": "323410.KS",
+       "market": "KOSPI",
+       "mcap_eok": 104489,
+       "path": "은행 > 예금·대출 > 은행 서비스"
+      },
+      {
+       "code": "175330",
+       "name": "JB금융지주",
+       "ticker": "175330.KS",
+       "market": "KOSPI",
+       "mcap_eok": 58381,
+       "path": "금융지주 > 자회사 관리 > 금융자회사 투자·관리"
+      },
+      {
+       "code": "138930",
+       "name": "BNK금융지주",
+       "ticker": "138930.KS",
+       "market": "KOSPI",
+       "mcap_eok": 47836,
+       "path": "금융지주 > 자회사 관리 > 금융자회사 투자·관리"
+      }
+     ]
+    },
+    {
+     "id": "kr_51",
+     "name": "증권",
+     "group": "금융",
+     "members": [
+      {
+       "code": "006800",
+       "name": "미래에셋증권",
+       "ticker": "006800.KS",
+       "market": "KOSPI",
+       "mcap_eok": 190328,
+       "path": "투자서비스 > 증권 > 증권 중개·인수·매매"
+      },
+      {
+       "code": "071050",
+       "name": "한국금융지주",
+       "ticker": "071050.KS",
+       "market": "KOSPI",
+       "mcap_eok": 107272,
+       "path": "금융지주 > 자회사 관리 > 금융자회사 투자·관리"
+      },
+      {
+       "code": "005940",
+       "name": "NH투자증권",
+       "ticker": "005940.KS",
+       "market": "KOSPI",
+       "mcap_eok": 98393,
+       "path": "투자서비스 > 증권 > 증권 중개·인수·매매"
+      },
+      {
+       "code": "016360",
+       "name": "삼성증권",
+       "ticker": "016360.KS",
+       "market": "KOSPI",
+       "mcap_eok": 77958,
+       "path": "투자서비스 > 증권 > 증권 중개·인수·매매"
+      },
+      {
+       "code": "039490",
+       "name": "키움증권",
+       "ticker": "039490.KS",
+       "market": "KOSPI",
+       "mcap_eok": 71603,
+       "path": "투자서비스 > 증권 > 증권 중개·인수·매매"
+      },
+      {
+       "code": "003540",
+       "name": "대신증권",
+       "ticker": "003540.KS",
+       "market": "KOSPI",
+       "mcap_eok": 12703,
+       "path": "투자서비스 > 증권 > 증권 중개·인수·매매"
+      }
+     ]
+    },
+    {
+     "id": "kr_52",
+     "name": "보험",
+     "group": "금융",
+     "members": [
+      {
+       "code": "032830",
+       "name": "삼성생명",
+       "ticker": "032830.KS",
+       "market": "KOSPI",
+       "mcap_eok": 616000,
+       "path": "보험 > 생명보험 > 생명보험 인수"
+      },
+      {
+       "code": "000810",
+       "name": "삼성화재",
+       "ticker": "000810.KS",
+       "market": "KOSPI",
+       "mcap_eok": 288869,
+       "path": "보험 > 손해보험 > 자동차·재산·장기보험"
+      },
+      {
+       "code": "138040",
+       "name": "메리츠금융지주",
+       "ticker": "138040.KS",
+       "market": "KOSPI",
+       "mcap_eok": 218890,
+       "path": "금융지주 > 보험·증권 금융지주 > 보험·증권 자회사 지분관리"
+      },
+      {
+       "code": "005830",
+       "name": "DB손해보험",
+       "ticker": "005830.KS",
+       "market": "KOSPI",
+       "mcap_eok": 122682,
+       "path": "보험 > 손해보험 > 자동차·재산·장기보험"
+      },
+      {
+       "code": "088350",
+       "name": "한화생명",
+       "ticker": "088350.KS",
+       "market": "KOSPI",
+       "mcap_eok": 50809,
+       "path": "보험 > 생명보험 > 생명보험 인수"
+      },
+      {
+       "code": "001450",
+       "name": "현대해상",
+       "ticker": "001450.KS",
+       "market": "KOSPI",
+       "mcap_eok": 42879,
+       "path": "보험 > 손해보험 > 자동차·재산·장기보험"
+      },
+      {
+       "code": "003690",
+       "name": "코리안리",
+       "ticker": "003690.KS",
+       "market": "KOSPI",
+       "mcap_eok": 25818,
+       "path": "보험 > 재보험 > 보험위험 재인수"
+      }
+     ]
+    },
+    {
+     "id": "kr_53",
+     "name": "화장품 브랜드",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "278470",
+       "name": "에이피알",
+       "ticker": "278470.KS",
+       "market": "KOSPI",
+       "mcap_eok": 141141,
+       "path": "화장품 > 화장품 > 화장품 제조·판매"
+      },
+      {
+       "code": "090430",
+       "name": "아모레퍼시픽",
+       "ticker": "090430.KS",
+       "market": "KOSPI",
+       "mcap_eok": 81889,
+       "path": "화장품 > 화장품 > 화장품 제조·판매"
+      },
+      {
+       "code": "051900",
+       "name": "LG생활건강",
+       "ticker": "051900.KS",
+       "market": "KOSPI",
+       "mcap_eok": 43429,
+       "path": "화장품 > 화장품 > 화장품 제조·판매"
+      },
+      {
+       "code": "257720",
+       "name": "실리콘투",
+       "ticker": "257720.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 30329,
+       "path": "화장품 > 유통 > 화장품 유통"
+      },
+      {
+       "code": "483650",
+       "name": "달바글로벌",
+       "ticker": "483650.KS",
+       "market": "KOSPI",
+       "mcap_eok": 22897,
+       "path": "화장품 > 화장품 > 화장품 제조·판매"
+      }
+     ]
+    },
+    {
+     "id": "kr_54",
+     "name": "화장품 위탁생산(ODM)",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "161890",
+       "name": "한국콜마",
+       "ticker": "161890.KS",
+       "market": "KOSPI",
+       "mcap_eok": 33283,
+       "path": "화장품 > 화장품·의약품 > 화장품·의약품 제조"
+      },
+      {
+       "code": "192820",
+       "name": "코스맥스",
+       "ticker": "192820.KS",
+       "market": "KOSPI",
+       "mcap_eok": 30076,
+       "path": "화장품 > 화장품 > 화장품 제조·판매"
+      },
+      {
+       "code": "241710",
+       "name": "코스메카코리아",
+       "ticker": "241710.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 13467,
+       "path": "화장품 > 위탁생산 > 화장품 주문자·제조자개발 생산"
+      },
+      {
+       "code": "251970",
+       "name": "펌텍코리아",
+       "ticker": "251970.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6435,
+       "path": "포장재 > 화장품 용기 > 화장품 용기 제조"
+      }
+     ]
+    },
+    {
+     "id": "kr_55",
+     "name": "음식료(K-푸드)",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "003230",
+       "name": "삼양식품",
+       "ticker": "003230.KS",
+       "market": "KOSPI",
+       "mcap_eok": 97251,
+       "path": "식품 > 가공식품 > 라면·면류"
+      },
+      {
+       "code": "271560",
+       "name": "오리온",
+       "ticker": "271560.KS",
+       "market": "KOSPI",
+       "mcap_eok": 47869,
+       "path": "식품 > 제과 > 스낵·과자·빙과"
+      },
+      {
+       "code": "097950",
+       "name": "CJ제일제당",
+       "ticker": "097950.KS",
+       "market": "KOSPI",
+       "mcap_eok": 27549,
+       "path": "식품 > 식품소재·가공식품 > 전분·당류·조미료·가공식품"
+      },
+      {
+       "code": "004370",
+       "name": "농심",
+       "ticker": "004370.KS",
+       "market": "KOSPI",
+       "mcap_eok": 25364,
+       "path": "식품 > 가공식품 > 라면·면류"
+      },
+      {
+       "code": "007310",
+       "name": "오뚜기",
+       "ticker": "007310.KS",
+       "market": "KOSPI",
+       "mcap_eok": 13326,
+       "path": "식품 > 가공식품 > 라면·면류"
+      },
+      {
+       "code": "280360",
+       "name": "롯데웰푸드",
+       "ticker": "280360.KS",
+       "market": "KOSPI",
+       "mcap_eok": 12858,
+       "path": "식품 > 제과 > 스낵·과자·빙과"
+      },
+      {
+       "code": "005180",
+       "name": "빙그레",
+       "ticker": "005180.KS",
+       "market": "KOSPI",
+       "mcap_eok": 7832,
+       "path": "식품 > 유가공 > 우유·아이스크림"
+      }
+     ]
+    },
+    {
+     "id": "kr_56",
+     "name": "유통·면세",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "004170",
+       "name": "신세계",
+       "ticker": "004170.KS",
+       "market": "KOSPI",
+       "mcap_eok": 38205,
+       "path": "유통 > 백화점 > 백화점 운영"
+      },
+      {
+       "code": "023530",
+       "name": "롯데쇼핑",
+       "ticker": "023530.KS",
+       "market": "KOSPI",
+       "mcap_eok": 33324,
+       "path": "유통 > 백화점 > 백화점 운영"
+      },
+      {
+       "code": "282330",
+       "name": "BGF리테일",
+       "ticker": "282330.KS",
+       "market": "KOSPI",
+       "mcap_eok": 25683,
+       "path": "식료품 유통 > 편의점 > 체인형 편의점 운영"
+      },
+      {
+       "code": "069960",
+       "name": "현대백화점",
+       "ticker": "069960.KS",
+       "market": "KOSPI",
+       "mcap_eok": 21672,
+       "path": "유통 > 백화점 > 백화점 운영"
+      },
+      {
+       "code": "007070",
+       "name": "GS리테일",
+       "ticker": "007070.KS",
+       "market": "KOSPI",
+       "mcap_eok": 21027,
+       "path": "식료품 유통 > 편의점 > 체인형 편의점 운영"
+      },
+      {
+       "code": "139480",
+       "name": "이마트",
+       "ticker": "139480.KS",
+       "market": "KOSPI",
+       "mcap_eok": 20945,
+       "path": "식료품 유통 > 마트·슈퍼마켓 > 식료품 소매점 운영"
+      },
+      {
+       "code": "008770",
+       "name": "호텔신라",
+       "ticker": "008770.KS",
+       "market": "KOSPI",
+       "mcap_eok": 16523,
+       "path": "유통 > 면세점 > 면세판매"
+      }
+     ]
+    },
+    {
+     "id": "kr_57",
+     "name": "의류",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "111770",
+       "name": "영원무역",
+       "ticker": "111770.KS",
+       "market": "KOSPI",
+       "mcap_eok": 33189,
+       "path": "의류 > 의류제품 > 의류 제조·판매"
+      },
+      {
+       "code": "383220",
+       "name": "F&F",
+       "ticker": "383220.KS",
+       "market": "KOSPI",
+       "mcap_eok": 25397,
+       "path": "의류 > 의류제품 > 의류 제조·판매"
+      },
+      {
+       "code": "081660",
+       "name": "미스토홀딩스",
+       "ticker": "081660.KS",
+       "market": "KOSPI",
+       "mcap_eok": 21847,
+       "path": "의류·레저용품 > 스포츠용품 > 의류·신발·골프용품 유통"
+      },
+      {
+       "code": "093050",
+       "name": "LF",
+       "ticker": "093050.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6476,
+       "path": "의류 > 의류제품 > 의류 제조·판매"
+      }
+     ]
+    },
+    {
+     "id": "kr_58",
+     "name": "가전·렌탈",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "066570",
+       "name": "LG전자",
+       "ticker": "066570.KS",
+       "market": "KOSPI",
+       "mcap_eok": 333913,
+       "path": "생활가전 > 가전·영상기기 > 가전·영상 제품"
+      },
+      {
+       "code": "021240",
+       "name": "코웨이",
+       "ticker": "021240.KS",
+       "market": "KOSPI",
+       "mcap_eok": 70625,
+       "path": "생활가전 > 렌탈 > 정수기·공기청정기 임대"
+      },
+      {
+       "code": "009450",
+       "name": "경동나비엔",
+       "ticker": "009450.KS",
+       "market": "KOSPI",
+       "mcap_eok": 8741,
+       "path": "건축기기 > 냉난방 > 가정용 보일러·냉온수기"
+      },
+      {
+       "code": "284740",
+       "name": "쿠쿠홈시스",
+       "ticker": "284740.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5283,
+       "path": "생활가전 > 렌탈 > 정수기·공기청정기 임대"
+      }
+     ]
+    },
+    {
+     "id": "kr_59",
+     "name": "엔터(음악)",
+     "group": "미디어·레저",
+     "members": [
+      {
+       "code": "352820",
+       "name": "하이브",
+       "ticker": "352820.KS",
+       "market": "KOSPI",
+       "mcap_eok": 78195,
+       "path": "콘텐츠 > 음악 > 음원·음반·아티스트 사업"
+      },
+      {
+       "code": "041510",
+       "name": "에스엠",
+       "ticker": "041510.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 18933,
+       "path": "콘텐츠 > 음악 > 음원·음반·아티스트 사업"
+      },
+      {
+       "code": "035900",
+       "name": "JYP Ent.",
+       "ticker": "035900.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 14053,
+       "path": "콘텐츠 > 음악 > 음원·음반·아티스트 사업"
+      },
+      {
+       "code": "122870",
+       "name": "와이지엔터테인먼트",
+       "ticker": "122870.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 8121,
+       "path": "콘텐츠 > 음악 > 음원·음반·아티스트 사업"
+      }
+     ]
+    },
+    {
+     "id": "kr_60",
+     "name": "영상 콘텐츠·광고",
+     "group": "미디어·레저",
+     "members": [
+      {
+       "code": "030000",
+       "name": "제일기획",
+       "ticker": "030000.KS",
+       "market": "KOSPI",
+       "mcap_eok": 21777,
+       "path": "광고 > 광고대행 > 광고 기획·제작·대행"
+      },
+      {
+       "code": "079160",
+       "name": "CJ CGV",
+       "ticker": "079160.KS",
+       "market": "KOSPI",
+       "mcap_eok": 8858,
+       "path": "콘텐츠 > 영화관 > 영화상영·영화관 운영"
+      },
+      {
+       "code": "035760",
+       "name": "CJ ENM",
+       "ticker": "035760.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7335,
+       "path": "콘텐츠 > 텔레비전 방송업 > 세부 제품·공급망 확인 불가"
+      },
+      {
+       "code": "253450",
+       "name": "스튜디오드래곤",
+       "ticker": "253450.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6477,
+       "path": "콘텐츠 > 영상 제작 > 드라마 제작·판매"
+      }
+     ]
+    },
+    {
+     "id": "kr_61",
+     "name": "게임",
+     "group": "미디어·레저",
+     "members": [
+      {
+       "code": "259960",
+       "name": "크래프톤",
+       "ticker": "259960.KS",
+       "market": "KOSPI",
+       "mcap_eok": 97671,
+       "path": "게임 > 게임 소프트웨어 > 온라인·모바일 게임 개발·공급"
+      },
+      {
+       "code": "036570",
+       "name": "NC",
+       "ticker": "036570.KS",
+       "market": "KOSPI",
+       "mcap_eok": 45565,
+       "path": "게임 > 게임 소프트웨어 > 온라인·모바일 게임 개발·공급"
+      },
+      {
+       "code": "251270",
+       "name": "넷마블",
+       "ticker": "251270.KS",
+       "market": "KOSPI",
+       "mcap_eok": 29396,
+       "path": "게임 > 게임 소프트웨어 > 온라인·모바일 게임 개발·공급"
+      },
+      {
+       "code": "263750",
+       "name": "펄어비스",
+       "ticker": "263750.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 22152,
+       "path": "게임 > 게임 소프트웨어 > 온라인·모바일 게임 개발·공급"
+      },
+      {
+       "code": "462870",
+       "name": "시프트업",
+       "ticker": "462870.KS",
+       "market": "KOSPI",
+       "mcap_eok": 18327,
+       "path": "게임 > 게임 소프트웨어 > 온라인·모바일 게임 개발·공급"
+      },
+      {
+       "code": "293490",
+       "name": "카카오게임즈",
+       "ticker": "293490.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 9543,
+       "path": "게임 > 게임 소프트웨어 > 온라인·모바일 게임 개발·공급"
+      },
+      {
+       "code": "225570",
+       "name": "넥슨게임즈",
+       "ticker": "225570.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 7475,
+       "path": "게임 > 게임 소프트웨어 > 온라인·모바일 게임 개발·공급"
+      },
+      {
+       "code": "112040",
+       "name": "위메이드",
+       "ticker": "112040.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 5112,
+       "path": "게임 > 게임 소프트웨어 > 온라인·모바일 게임 개발·공급"
+      }
+     ]
+    },
+    {
+     "id": "kr_62",
+     "name": "카지노·여행",
+     "group": "미디어·레저",
+     "members": [
+      {
+       "code": "035250",
+       "name": "강원랜드",
+       "ticker": "035250.KS",
+       "market": "KOSPI",
+       "mcap_eok": 31770,
+       "path": "레저 > 카지노 > 카지노·복합리조트 운영"
+      },
+      {
+       "code": "032350",
+       "name": "롯데관광개발",
+       "ticker": "032350.KS",
+       "market": "KOSPI",
+       "mcap_eok": 9885,
+       "path": "레저 > 여행 > 여행알선·관광 서비스"
+      },
+      {
+       "code": "034230",
+       "name": "파라다이스",
+       "ticker": "034230.KS",
+       "market": "KOSPI",
+       "mcap_eok": 9262,
+       "path": "레저 > 카지노 > 카지노·복합리조트 운영"
+      },
+      {
+       "code": "114090",
+       "name": "GKL",
+       "ticker": "114090.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5832,
+       "path": "레저 > 카지노 > 카지노·복합리조트 운영"
+      },
+      {
+       "code": "039130",
+       "name": "하나투어",
+       "ticker": "039130.KS",
+       "market": "KOSPI",
+       "mcap_eok": 5320,
+       "path": "레저 > 여행 > 여행알선·관광 서비스"
+      }
+     ]
+    },
+    {
+     "id": "kr_63",
+     "name": "인터넷 플랫폼·결제",
+     "group": "인터넷·소프트웨어",
+     "members": [
+      {
+       "code": "035420",
+       "name": "NAVER",
+       "ticker": "035420.KS",
+       "market": "KOSPI",
+       "mcap_eok": 326204,
+       "path": "인터넷서비스 > 인터넷 플랫폼 > 포털·온라인광고"
+      },
+      {
+       "code": "035720",
+       "name": "카카오",
+       "ticker": "035720.KS",
+       "market": "KOSPI",
+       "mcap_eok": 156821,
+       "path": "인터넷서비스 > 인터넷 플랫폼 > 포털·온라인광고"
+      },
+      {
+       "code": "377300",
+       "name": "카카오페이",
+       "ticker": "377300.KS",
+       "market": "KOSPI",
+       "mcap_eok": 62901,
+       "path": "결제서비스 > 전자결제 > 온라인 결제·정산"
+      }
+     ]
+    },
+    {
+     "id": "kr_64",
+     "name": "IT서비스·소프트웨어",
+     "group": "인터넷·소프트웨어",
+     "members": [
+      {
+       "code": "018260",
+       "name": "삼성에스디에스",
+       "ticker": "018260.KS",
+       "market": "KOSPI",
+       "mcap_eok": 177968,
+       "path": "정보기술서비스 > 시스템통합 > 기업 시스템 구축·운영"
+      },
+      {
+       "code": "307950",
+       "name": "현대오토에버",
+       "ticker": "307950.KS",
+       "market": "KOSPI",
+       "mcap_eok": 105719,
+       "path": "소프트웨어 > 차량·산업 소프트웨어 > 차량·스마트팩토리 소프트웨어"
+      },
+      {
+       "code": "064400",
+       "name": "LG씨엔에스",
+       "ticker": "064400.KS",
+       "market": "KOSPI",
+       "mcap_eok": 71114,
+       "path": "정보기술서비스 > 시스템통합 > 기업 시스템 구축·운영"
+      },
+      {
+       "code": "022100",
+       "name": "포스코DX",
+       "ticker": "022100.KS",
+       "market": "KOSPI",
+       "mcap_eok": 32611,
+       "path": "정보기술서비스 > 산업 자동화 > 자동화 엔지니어링·정보기술서비스"
+      },
+      {
+       "code": "093320",
+       "name": "케이아이엔엑스",
+       "ticker": "093320.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6783,
+       "path": "정보기술서비스 > 인터넷 인프라 > 인터넷 연동 서비스"
+      },
+      {
+       "code": "053800",
+       "name": "안랩",
+       "ticker": "053800.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 6308,
+       "path": "소프트웨어 > 사이버보안 > 보안·백신 소프트웨어"
+      }
+     ]
+    },
+    {
+     "id": "kr_65",
+     "name": "해운",
+     "group": "운송·통신",
+     "members": [
+      {
+       "code": "011200",
+       "name": "HMM",
+       "ticker": "011200.KS",
+       "market": "KOSPI",
+       "mcap_eok": 199494,
+       "path": "해상운송 > 해운 > 외항 화물운송"
+      },
+      {
+       "code": "028670",
+       "name": "팬오션",
+       "ticker": "028670.KS",
+       "market": "KOSPI",
+       "mcap_eok": 32501,
+       "path": "해상운송 > 해운 > 외항 화물운송"
+      },
+      {
+       "code": "005880",
+       "name": "대한해운",
+       "ticker": "005880.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6761,
+       "path": "해상운송 > 해운 > 외항 화물운송"
+      }
+     ]
+    },
+    {
+     "id": "kr_66",
+     "name": "항공",
+     "group": "운송·통신",
+     "members": [
+      {
+       "code": "003490",
+       "name": "대한항공",
+       "ticker": "003490.KS",
+       "market": "KOSPI",
+       "mcap_eok": 110834,
+       "path": "항공운송 > 항공사 > 여객·화물 항공운송"
+      },
+      {
+       "code": "020560",
+       "name": "아시아나항공",
+       "ticker": "020560.KS",
+       "market": "KOSPI",
+       "mcap_eok": 16355,
+       "path": "항공운송 > 항공사 > 여객·화물 항공운송"
+      }
+     ]
+    },
+    {
+     "id": "kr_67",
+     "name": "물류",
+     "group": "운송·통신",
+     "members": [
+      {
+       "code": "086280",
+       "name": "현대글로비스",
+       "ticker": "086280.KS",
+       "market": "KOSPI",
+       "mcap_eok": 152250,
+       "path": "물류 > 종합물류 > 화물운송주선·보관·택배"
+      },
+      {
+       "code": "000120",
+       "name": "CJ대한통운",
+       "ticker": "000120.KS",
+       "market": "KOSPI",
+       "mcap_eok": 16789,
+       "path": "물류 > 종합물류 > 화물운송주선·보관·택배"
+      }
+     ]
+    },
+    {
+     "id": "kr_68",
+     "name": "통신",
+     "group": "운송·통신",
+     "members": [
+      {
+       "code": "017670",
+       "name": "SK텔레콤",
+       "ticker": "017670.KS",
+       "market": "KOSPI",
+       "mcap_eok": 198466,
+       "path": "통신 > 통신망 운영 > 이동통신 서비스"
+      },
+      {
+       "code": "030200",
+       "name": "KT",
+       "ticker": "030200.KS",
+       "market": "KOSPI",
+       "mcap_eok": 136847,
+       "path": "통신 > 통신망 운영 > 유무선·인터넷 서비스"
+      },
+      {
+       "code": "032640",
+       "name": "LG유플러스",
+       "ticker": "032640.KS",
+       "market": "KOSPI",
+       "mcap_eok": 63154,
+       "path": "통신 > 통신망 운영 > 이동통신 서비스"
+      }
+     ]
+    },
+    {
+     "id": "kr_69",
+     "name": "리츠",
+     "group": "부동산",
+     "members": [
+      {
+       "code": "395400",
+       "name": "SK리츠",
+       "ticker": "395400.KS",
+       "market": "KOSPI",
+       "mcap_eok": 15863,
+       "path": "부동산 임대 > 상장 부동산회사 > 부동산 임대·투자 운영"
+      },
+      {
+       "code": "330590",
+       "name": "롯데리츠",
+       "ticker": "330590.KS",
+       "market": "KOSPI",
+       "mcap_eok": 11370,
+       "path": "부동산 임대 > 상장 부동산회사 > 부동산 임대·투자 운영"
+      },
+      {
+       "code": "451800",
+       "name": "한화리츠",
+       "ticker": "451800.KS",
+       "market": "KOSPI",
+       "mcap_eok": 9554,
+       "path": "부동산 임대 > 상장 부동산회사 > 부동산 임대·투자 운영"
+      },
+      {
+       "code": "365550",
+       "name": "ESR켄달스퀘어리츠",
+       "ticker": "365550.KS",
+       "market": "KOSPI",
+       "mcap_eok": 7727,
+       "path": "부동산 임대 > 상장 부동산회사 > 부동산 임대·투자 운영"
+      },
+      {
+       "code": "293940",
+       "name": "신한알파리츠",
+       "ticker": "293940.KS",
+       "market": "KOSPI",
+       "mcap_eok": 6518,
+       "path": "부동산 임대 > 상장 부동산회사 > 부동산 임대·투자 운영"
+      }
+     ]
+    }
+   ]
+  },
+  "US": {
+   "label": "미국",
+   "currency": "달러",
+   "benchmark": {
+    "name": "S&P 500",
+    "etf": "SPY",
+    "ticker": "SPY",
+    "code": "spy.us"
+   },
+   "items": [
+    {
+     "id": "us_00",
+     "name": "AI 가속기(GPU·ASIC)",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "NVDA",
+       "name": "엔비디아",
+       "ticker": "NVDA",
+       "market": "NAS",
+       "mcap_usd_b": 5525.6
+      },
+      {
+       "code": "AVGO",
+       "name": "브로드컴",
+       "ticker": "AVGO",
+       "market": "NAS",
+       "mcap_usd_b": 1725.9
+      },
+      {
+       "code": "AMD",
+       "name": "AMD",
+       "ticker": "AMD",
+       "market": "NAS",
+       "mcap_usd_b": 992.7
+      },
+      {
+       "code": "MRVL",
+       "name": "마벨 테크놀로지 그룹",
+       "ticker": "MRVL",
+       "market": "NAS",
+       "mcap_usd_b": 241.4
+      }
+     ]
+    },
+    {
+     "id": "us_01",
+     "name": "메모리·저장장치",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "MU",
+       "name": "마이크론 테크놀로지",
+       "ticker": "MU",
+       "market": "NAS",
+       "mcap_usd_b": 1162.1
+      },
+      {
+       "code": "SNDK",
+       "name": "샌디스크",
+       "ticker": "SNDK",
+       "market": "NAS",
+       "mcap_usd_b": 228.6
+      },
+      {
+       "code": "STX",
+       "name": "시게이트 테크놀로지 홀딩스",
+       "ticker": "STX",
+       "market": "NAS",
+       "mcap_usd_b": 178.0
+      },
+      {
+       "code": "WDC",
+       "name": "웨스턴 디지털",
+       "ticker": "WDC",
+       "market": "NAS",
+       "mcap_usd_b": 143.2
+      }
+     ]
+    },
+    {
+     "id": "us_02",
+     "name": "전공정 장비",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "ASML",
+       "name": "ASML 홀딩(ADR)",
+       "ticker": "ASML",
+       "market": "NAS",
+       "mcap_usd_b": 686.2
+      },
+      {
+       "code": "AMAT",
+       "name": "어플라이드 머티어리얼즈",
+       "ticker": "AMAT",
+       "market": "NAS",
+       "mcap_usd_b": 402.4
+      },
+      {
+       "code": "LRCX",
+       "name": "램 리서치",
+       "ticker": "LRCX",
+       "market": "NAS",
+       "mcap_usd_b": 399.0
+      },
+      {
+       "code": "ACMR",
+       "name": "ACM 리서치",
+       "ticker": "ACMR",
+       "market": "NAS",
+       "mcap_usd_b": 4.6
+      }
+     ]
+    },
+    {
+     "id": "us_03",
+     "name": "검사·계측",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "KLAC",
+       "name": "KLA",
+       "ticker": "KLAC",
+       "market": "NAS",
+       "mcap_usd_b": 255.2
+      },
+      {
+       "code": "NVMI",
+       "name": "노바",
+       "ticker": "NVMI",
+       "market": "NAS",
+       "mcap_usd_b": 11.2
+      },
+      {
+       "code": "ONTO",
+       "name": "온투 이노베이션",
+       "ticker": "ONTO",
+       "market": "NYS",
+       "mcap_usd_b": 10.8
+      },
+      {
+       "code": "CAMT",
+       "name": "캠텍",
+       "ticker": "CAMT",
+       "market": "NAS",
+       "mcap_usd_b": 7.1
+      }
+     ]
+    },
+    {
+     "id": "us_04",
+     "name": "반도체 테스트",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "TER",
+       "name": "테라다인",
+       "ticker": "TER",
+       "market": "NAS",
+       "mcap_usd_b": 63.0
+      },
+      {
+       "code": "FORM",
+       "name": "폼팩터",
+       "ticker": "FORM",
+       "market": "NAS",
+       "mcap_usd_b": 10.9
+      },
+      {
+       "code": "COHU",
+       "name": "코후",
+       "ticker": "COHU",
+       "market": "NAS",
+       "mcap_usd_b": 3.2
+      },
+      {
+       "code": "AEHR",
+       "name": "에흐르 테스트 시스템스",
+       "ticker": "AEHR",
+       "market": "NAS",
+       "mcap_usd_b": 2.8
+      }
+     ]
+    },
+    {
+     "id": "us_05",
+     "name": "반도체 소재·부품",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "ENTG",
+       "name": "인테그리스",
+       "ticker": "ENTG",
+       "market": "NAS",
+       "mcap_usd_b": 25.3
+      },
+      {
+       "code": "MKSI",
+       "name": "MKS",
+       "ticker": "MKSI",
+       "market": "NAS",
+       "mcap_usd_b": 17.9
+      },
+      {
+       "code": "UCTT",
+       "name": "울트라 클린 홀딩스",
+       "ticker": "UCTT",
+       "market": "NAS",
+       "mcap_usd_b": 3.1
+      },
+      {
+       "code": "ICHR",
+       "name": "아이코어 홀딩스",
+       "ticker": "ICHR",
+       "market": "NAS",
+       "mcap_usd_b": 2.2
+      }
+     ]
+    },
+    {
+     "id": "us_06",
+     "name": "파운드리",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "TSM",
+       "name": "TSMC(ADR)",
+       "ticker": "TSM",
+       "market": "NYS",
+       "mcap_usd_b": 2351.1
+      },
+      {
+       "code": "INTC",
+       "name": "인텔",
+       "ticker": "INTC",
+       "market": "NAS",
+       "mcap_usd_b": 553.5
+      },
+      {
+       "code": "UMC",
+       "name": "UMC(ADR)",
+       "ticker": "UMC",
+       "market": "NYS",
+       "mcap_usd_b": 57.7
+      },
+      {
+       "code": "GFS",
+       "name": "글로벌파운드리스",
+       "ticker": "GFS",
+       "market": "NAS",
+       "mcap_usd_b": 26.5
+      }
+     ]
+    },
+    {
+     "id": "us_07",
+     "name": "아날로그·전력반도체",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "TXN",
+       "name": "텍사스 인스트루먼츠",
+       "ticker": "TXN",
+       "market": "NAS",
+       "mcap_usd_b": 259.1
+      },
+      {
+       "code": "ADI",
+       "name": "아날로그 디바이시스",
+       "ticker": "ADI",
+       "market": "NAS",
+       "mcap_usd_b": 196.8
+      },
+      {
+       "code": "MPWR",
+       "name": "모놀리식 파워 시스템",
+       "ticker": "MPWR",
+       "market": "NAS",
+       "mcap_usd_b": 68.1
+      },
+      {
+       "code": "NXPI",
+       "name": "NXP 세미컨덕터스",
+       "ticker": "NXPI",
+       "market": "NAS",
+       "mcap_usd_b": 57.4
+      },
+      {
+       "code": "MCHP",
+       "name": "마이크로칩 테크놀로지",
+       "ticker": "MCHP",
+       "market": "NAS",
+       "mcap_usd_b": 41.0
+      },
+      {
+       "code": "ON",
+       "name": "온 세미컨덕터",
+       "ticker": "ON",
+       "market": "NAS",
+       "mcap_usd_b": 30.2
+      }
+     ]
+    },
+    {
+     "id": "us_08",
+     "name": "반도체 설계 SW·IP",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "ARM",
+       "name": "에이알엠 홀딩스(ADR)",
+       "ticker": "ARM",
+       "market": "NAS",
+       "mcap_usd_b": 284.4
+      },
+      {
+       "code": "SNPS",
+       "name": "시놉시스",
+       "ticker": "SNPS",
+       "market": "NAS",
+       "mcap_usd_b": 97.7
+      },
+      {
+       "code": "CDNS",
+       "name": "케이던스 디자인 시스템즈",
+       "ticker": "CDNS",
+       "market": "NAS",
+       "mcap_usd_b": 97.2
+      }
+     ]
+    },
+    {
+     "id": "us_09",
+     "name": "AI 연결 반도체",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "ALAB",
+       "name": "아스테라 랩스",
+       "ticker": "ALAB",
+       "market": "NAS",
+       "mcap_usd_b": 59.4
+      },
+      {
+       "code": "CRDO",
+       "name": "크리도 테크놀로지 그룹 홀딩",
+       "ticker": "CRDO",
+       "market": "NAS",
+       "mcap_usd_b": 40.7
+      },
+      {
+       "code": "RMBS",
+       "name": "램버스",
+       "ticker": "RMBS",
+       "market": "NAS",
+       "mcap_usd_b": 11.7
+      }
+     ]
+    },
+    {
+     "id": "us_10",
+     "name": "광통신 부품",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "LITE",
+       "name": "루멘텀 홀딩스",
+       "ticker": "LITE",
+       "market": "NAS",
+       "mcap_usd_b": 99.9
+      },
+      {
+       "code": "COHR",
+       "name": "코히어런트",
+       "ticker": "COHR",
+       "market": "NYS",
+       "mcap_usd_b": 45.9
+      },
+      {
+       "code": "FN",
+       "name": "패브리넷",
+       "ticker": "FN",
+       "market": "NYS",
+       "mcap_usd_b": 13.0
+      },
+      {
+       "code": "AAOI",
+       "name": "어플라이드 옵토일렉트로닉스",
+       "ticker": "AAOI",
+       "market": "NAS",
+       "mcap_usd_b": 9.3
+      }
+     ]
+    },
+    {
+     "id": "us_11",
+     "name": "AI 서버·스토리지",
+     "group": "AI 인프라",
+     "members": [
+      {
+       "code": "DELL",
+       "name": "델 테크놀로지스",
+       "ticker": "DELL",
+       "market": "NYS",
+       "mcap_usd_b": 142.5
+      },
+      {
+       "code": "HPE",
+       "name": "휴렛팩커드 엔터프라이즈",
+       "ticker": "HPE",
+       "market": "NYS",
+       "mcap_usd_b": 73.2
+      },
+      {
+       "code": "NTAP",
+       "name": "넷앱",
+       "ticker": "NTAP",
+       "market": "NAS",
+       "mcap_usd_b": 46.6
+      },
+      {
+       "code": "SMCI",
+       "name": "슈퍼 마이크로 컴퓨터",
+       "ticker": "SMCI",
+       "market": "NAS",
+       "mcap_usd_b": 27.5
+      }
+     ]
+    },
+    {
+     "id": "us_12",
+     "name": "네트워크 장비",
+     "group": "AI 인프라",
+     "members": [
+      {
+       "code": "CSCO",
+       "name": "시스코 시스템즈",
+       "ticker": "CSCO",
+       "market": "NAS",
+       "mcap_usd_b": 466.8
+      },
+      {
+       "code": "ANET",
+       "name": "아리스타 네트웍스",
+       "ticker": "ANET",
+       "market": "NYS",
+       "mcap_usd_b": 223.2
+      },
+      {
+       "code": "CIEN",
+       "name": "시에나",
+       "ticker": "CIEN",
+       "market": "NYS",
+       "mcap_usd_b": 47.2
+      }
+     ]
+    },
+    {
+     "id": "us_13",
+     "name": "데이터센터 전력·냉각",
+     "group": "AI 인프라",
+     "members": [
+      {
+       "code": "ETN",
+       "name": "이턴 코퍼레이션",
+       "ticker": "ETN",
+       "market": "NYS",
+       "mcap_usd_b": 152.0
+      },
+      {
+       "code": "VRT",
+       "name": "버티브 홀딩스",
+       "ticker": "VRT",
+       "market": "NYS",
+       "mcap_usd_b": 93.5
+      },
+      {
+       "code": "NVT",
+       "name": "엔벤트 일렉트릭",
+       "ticker": "NVT",
+       "market": "NYS",
+       "mcap_usd_b": 23.0
+      },
+      {
+       "code": "MOD",
+       "name": "모딘 매뉴팩처링",
+       "ticker": "MOD",
+       "market": "NYS",
+       "mcap_usd_b": 7.9
+      }
+     ]
+    },
+    {
+     "id": "us_14",
+     "name": "AI 클라우드·채굴 데이터센터",
+     "group": "AI 인프라",
+     "members": [
+      {
+       "code": "NBIS",
+       "name": "네비우스 그룹",
+       "ticker": "NBIS",
+       "market": "NAS",
+       "mcap_usd_b": 52.7
+      },
+      {
+       "code": "CRWV",
+       "name": "코어위브",
+       "ticker": "CRWV",
+       "market": "NAS",
+       "mcap_usd_b": 37.7
+      },
+      {
+       "code": "IREN",
+       "name": "IREN",
+       "ticker": "IREN",
+       "market": "NAS",
+       "mcap_usd_b": 13.8
+      },
+      {
+       "code": "WULF",
+       "name": "테라울프",
+       "ticker": "WULF",
+       "market": "NAS",
+       "mcap_usd_b": 6.9
+      },
+      {
+       "code": "CIFR",
+       "name": "사이퍼 마이닝",
+       "ticker": "CIFR",
+       "market": "NAS",
+       "mcap_usd_b": 5.6
+      },
+      {
+       "code": "CORZ",
+       "name": "코어 사이언티픽",
+       "ticker": "CORZ",
+       "market": "NAS",
+       "mcap_usd_b": 5.0
+      }
+     ]
+    },
+    {
+     "id": "us_15",
+     "name": "전력 인프라 공사",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "PWR",
+       "name": "콴타 서비시스",
+       "ticker": "PWR",
+       "market": "NYS",
+       "mcap_usd_b": 95.0
+      },
+      {
+       "code": "FIX",
+       "name": "컴포트 시스템스 USA",
+       "ticker": "FIX",
+       "market": "NYS",
+       "mcap_usd_b": 50.6
+      },
+      {
+       "code": "EME",
+       "name": "엠코 그룹",
+       "ticker": "EME",
+       "market": "NYS",
+       "mcap_usd_b": 31.8
+      },
+      {
+       "code": "MTZ",
+       "name": "마스텍",
+       "ticker": "MTZ",
+       "market": "NYS",
+       "mcap_usd_b": 15.3
+      },
+      {
+       "code": "MYRG",
+       "name": "MYR 그룹",
+       "ticker": "MYRG",
+       "market": "NAS",
+       "mcap_usd_b": 4.9
+      },
+      {
+       "code": "PRIM",
+       "name": "프리모리스 서비시스",
+       "ticker": "PRIM",
+       "market": "NYS",
+       "mcap_usd_b": 3.9
+      }
+     ]
+    },
+    {
+     "id": "us_16",
+     "name": "발전설비·전력망 장비",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "GEV",
+       "name": "GE베르노바",
+       "ticker": "GEV",
+       "market": "NYS",
+       "mcap_usd_b": 245.3
+      },
+      {
+       "code": "BE",
+       "name": "블룸 에너지",
+       "ticker": "BE",
+       "market": "NYS",
+       "mcap_usd_b": 65.2
+      },
+      {
+       "code": "HUBB",
+       "name": "허벨",
+       "ticker": "HUBB",
+       "market": "NYS",
+       "mcap_usd_b": 24.4
+      }
+     ]
+    },
+    {
+     "id": "us_17",
+     "name": "원전·SMR·우라늄",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "CCJ",
+       "name": "카메코",
+       "ticker": "CCJ",
+       "market": "NYS",
+       "mcap_usd_b": 35.5
+      },
+      {
+       "code": "BWXT",
+       "name": "BWX 테크놀로지스",
+       "ticker": "BWXT",
+       "market": "NYS",
+       "mcap_usd_b": 12.6
+      },
+      {
+       "code": "OKLO",
+       "name": "오클로",
+       "ticker": "OKLO",
+       "market": "NYS",
+       "mcap_usd_b": 5.2
+      },
+      {
+       "code": "SMR",
+       "name": "뉴스케일 파워",
+       "ticker": "SMR",
+       "market": "NYS",
+       "mcap_usd_b": 2.4
+      },
+      {
+       "code": "LEU",
+       "name": "센트러스 에너지",
+       "ticker": "LEU",
+       "market": "NYS",
+       "mcap_usd_b": 2.3
+      }
+     ]
+    },
+    {
+     "id": "us_18",
+     "name": "독립발전(IPP)",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "CEG",
+       "name": "컨스털레이션 에너지",
+       "ticker": "CEG",
+       "market": "NAS",
+       "mcap_usd_b": 105.6
+      },
+      {
+       "code": "VST",
+       "name": "비스트라 에너지",
+       "ticker": "VST",
+       "market": "NYS",
+       "mcap_usd_b": 54.2
+      },
+      {
+       "code": "NRG",
+       "name": "NRG 에너지",
+       "ticker": "NRG",
+       "market": "NYS",
+       "mcap_usd_b": 21.8
+      },
+      {
+       "code": "TLN",
+       "name": "탈런 에너지",
+       "ticker": "TLN",
+       "market": "NAS",
+       "mcap_usd_b": 17.9
+      }
+     ]
+    },
+    {
+     "id": "us_19",
+     "name": "유틸리티",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "NEE",
+       "name": "넥스트에라 에너지",
+       "ticker": "NEE",
+       "market": "NYS",
+       "mcap_usd_b": 166.5
+      },
+      {
+       "code": "SO",
+       "name": "서던",
+       "ticker": "SO",
+       "market": "NYS",
+       "mcap_usd_b": 104.9
+      },
+      {
+       "code": "DUK",
+       "name": "듀크 에너지",
+       "ticker": "DUK",
+       "market": "NYS",
+       "mcap_usd_b": 94.7
+      },
+      {
+       "code": "AEP",
+       "name": "아메리칸 일렉트릭 파워",
+       "ticker": "AEP",
+       "market": "NAS",
+       "mcap_usd_b": 66.9
+      },
+      {
+       "code": "D",
+       "name": "도미니언 에너지",
+       "ticker": "D",
+       "market": "NYS",
+       "mcap_usd_b": 55.9
+      }
+     ]
+    },
+    {
+     "id": "us_20",
+     "name": "태양광·에너지저장",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "FSLR",
+       "name": "퍼스트 솔라",
+       "ticker": "FSLR",
+       "market": "NAS",
+       "mcap_usd_b": 19.1
+      },
+      {
+       "code": "NXT",
+       "name": "넥스트파워",
+       "ticker": "NXT",
+       "market": "NAS",
+       "mcap_usd_b": 13.1
+      },
+      {
+       "code": "ENPH",
+       "name": "인페이즈 에너지",
+       "ticker": "ENPH",
+       "market": "NAS",
+       "mcap_usd_b": 4.3
+      },
+      {
+       "code": "SEDG",
+       "name": "솔라엣지 테크놀로지스",
+       "ticker": "SEDG",
+       "market": "NAS",
+       "mcap_usd_b": 2.0
+      },
+      {
+       "code": "FLNC",
+       "name": "플루언스 에너지",
+       "ticker": "FLNC",
+       "market": "NAS",
+       "mcap_usd_b": 1.1
+      }
+     ]
+    },
+    {
+     "id": "us_21",
+     "name": "사이버보안",
+     "group": "소프트웨어·인터넷",
+     "members": [
+      {
+       "code": "PANW",
+       "name": "팰로 앨토 네트웍스",
+       "ticker": "PANW",
+       "market": "NAS",
+       "mcap_usd_b": 342.6
+      },
+      {
+       "code": "CRWD",
+       "name": "크라우드스트라이크 홀딩스",
+       "ticker": "CRWD",
+       "market": "NAS",
+       "mcap_usd_b": 281.6
+      },
+      {
+       "code": "FTNT",
+       "name": "포티넷",
+       "ticker": "FTNT",
+       "market": "NAS",
+       "mcap_usd_b": 142.9
+      },
+      {
+       "code": "NET",
+       "name": "클라우드플레어",
+       "ticker": "NET",
+       "market": "NYS",
+       "mcap_usd_b": 95.6
+      },
+      {
+       "code": "OKTA",
+       "name": "옥타",
+       "ticker": "OKTA",
+       "market": "NAS",
+       "mcap_usd_b": 38.8
+      },
+      {
+       "code": "ZS",
+       "name": "지스케일러",
+       "ticker": "ZS",
+       "market": "NAS",
+       "mcap_usd_b": 33.8
+      }
+     ]
+    },
+    {
+     "id": "us_22",
+     "name": "데이터·클라우드 SW",
+     "group": "소프트웨어·인터넷",
+     "members": [
+      {
+       "code": "ORCL",
+       "name": "오라클",
+       "ticker": "ORCL",
+       "market": "NYS",
+       "mcap_usd_b": 387.7
+      },
+      {
+       "code": "SNOW",
+       "name": "스노우플레이크",
+       "ticker": "SNOW",
+       "market": "NYS",
+       "mcap_usd_b": 108.3
+      },
+      {
+       "code": "DDOG",
+       "name": "데이터도그",
+       "ticker": "DDOG",
+       "market": "NAS",
+       "mcap_usd_b": 98.2
+      },
+      {
+       "code": "MDB",
+       "name": "몽고DB",
+       "ticker": "MDB",
+       "market": "NAS",
+       "mcap_usd_b": 31.1
+      },
+      {
+       "code": "ESTC",
+       "name": "엘라스틱",
+       "ticker": "ESTC",
+       "market": "NYS",
+       "mcap_usd_b": 9.6
+      }
+     ]
+    },
+    {
+     "id": "us_23",
+     "name": "기업용 SW·AI 앱",
+     "group": "소프트웨어·인터넷",
+     "members": [
+      {
+       "code": "PLTR",
+       "name": "팔란티어 테크",
+       "ticker": "PLTR",
+       "market": "NAS",
+       "mcap_usd_b": 481.0
+      },
+      {
+       "code": "CRM",
+       "name": "세일스포스",
+       "ticker": "CRM",
+       "market": "NYS",
+       "mcap_usd_b": 198.1
+      },
+      {
+       "code": "NOW",
+       "name": "서비스나우",
+       "ticker": "NOW",
+       "market": "NYS",
+       "mcap_usd_b": 146.8
+      },
+      {
+       "code": "ADBE",
+       "name": "어도비",
+       "ticker": "ADBE",
+       "market": "NAS",
+       "mcap_usd_b": 94.3
+      },
+      {
+       "code": "INTU",
+       "name": "인튜이트",
+       "ticker": "INTU",
+       "market": "NAS",
+       "mcap_usd_b": 80.9
+      },
+      {
+       "code": "WDAY",
+       "name": "워크데이",
+       "ticker": "WDAY",
+       "market": "NAS",
+       "mcap_usd_b": 36.6
+      }
+     ]
+    },
+    {
+     "id": "us_24",
+     "name": "빅테크 플랫폼",
+     "group": "소프트웨어·인터넷",
+     "members": [
+      {
+       "code": "AAPL",
+       "name": "애플",
+       "ticker": "AAPL",
+       "market": "NAS",
+       "mcap_usd_b": 4913.0
+      },
+      {
+       "code": "MSFT",
+       "name": "마이크로소프트",
+       "ticker": "MSFT",
+       "market": "NAS",
+       "mcap_usd_b": 3973.2
+      },
+      {
+       "code": "AMZN",
+       "name": "아마존닷컴",
+       "ticker": "AMZN",
+       "market": "NAS",
+       "mcap_usd_b": 2830.6
+      },
+      {
+       "code": "GOOGL",
+       "name": "알파벳 A",
+       "ticker": "GOOGL",
+       "market": "NAS",
+       "mcap_usd_b": 2063.5
+      },
+      {
+       "code": "META",
+       "name": "메타 플랫폼스(페이스북)",
+       "ticker": "META",
+       "market": "NAS",
+       "mcap_usd_b": 1584.8
+      }
+     ]
+    },
+    {
+     "id": "us_25",
+     "name": "소비자 인터넷",
+     "group": "소프트웨어·인터넷",
+     "members": [
+      {
+       "code": "NFLX",
+       "name": "넷플릭스",
+       "ticker": "NFLX",
+       "market": "NAS",
+       "mcap_usd_b": 292.7
+      },
+      {
+       "code": "UBER",
+       "name": "우버 테크놀로지스",
+       "ticker": "UBER",
+       "market": "NYS",
+       "mcap_usd_b": 146.1
+      },
+      {
+       "code": "BKNG",
+       "name": "부킹 홀딩스",
+       "ticker": "BKNG",
+       "market": "NAS",
+       "mcap_usd_b": 120.5
+      },
+      {
+       "code": "SPOT",
+       "name": "스포티파이 테크놀로지",
+       "ticker": "SPOT",
+       "market": "NYS",
+       "mcap_usd_b": 109.2
+      },
+      {
+       "code": "DASH",
+       "name": "도어대시",
+       "ticker": "DASH",
+       "market": "NAS",
+       "mcap_usd_b": 80.4
+      },
+      {
+       "code": "ABNB",
+       "name": "에어비앤비",
+       "ticker": "ABNB",
+       "market": "NAS",
+       "mcap_usd_b": 69.6
+      }
+     ]
+    },
+    {
+     "id": "us_26",
+     "name": "전자상거래",
+     "group": "소프트웨어·인터넷",
+     "members": [
+      {
+       "code": "SHOP",
+       "name": "쇼피파이",
+       "ticker": "SHOP",
+       "market": "NAS",
+       "mcap_usd_b": 206.5
+      },
+      {
+       "code": "MELI",
+       "name": "메르카도리브레",
+       "ticker": "MELI",
+       "market": "NAS",
+       "mcap_usd_b": 95.8
+      },
+      {
+       "code": "EBAY",
+       "name": "이베이",
+       "ticker": "EBAY",
+       "market": "NAS",
+       "mcap_usd_b": 49.9
+      },
+      {
+       "code": "CPNG",
+       "name": "쿠팡",
+       "ticker": "CPNG",
+       "market": "NYS",
+       "mcap_usd_b": 23.4
+      }
+     ]
+    },
+    {
+     "id": "us_27",
+     "name": "크립토 금융",
+     "group": "금융",
+     "members": [
+      {
+       "code": "HOOD",
+       "name": "로빈훗 마케츠",
+       "ticker": "HOOD",
+       "market": "NAS",
+       "mcap_usd_b": 86.2
+      },
+      {
+       "code": "MSTR",
+       "name": "스트래티지",
+       "ticker": "MSTR",
+       "market": "NAS",
+       "mcap_usd_b": 56.3
+      },
+      {
+       "code": "COIN",
+       "name": "코인베이스 글로벌",
+       "ticker": "COIN",
+       "market": "NAS",
+       "mcap_usd_b": 40.0
+      },
+      {
+       "code": "CRCL",
+       "name": "서클 인터넷 그룹",
+       "ticker": "CRCL",
+       "market": "NYS",
+       "mcap_usd_b": 19.4
+      }
+     ]
+    },
+    {
+     "id": "us_28",
+     "name": "결제·핀테크",
+     "group": "금융",
+     "members": [
+      {
+       "code": "V",
+       "name": "비자",
+       "ticker": "V",
+       "market": "NYS",
+       "mcap_usd_b": 656.8
+      },
+      {
+       "code": "MA",
+       "name": "마스타카드",
+       "ticker": "MA",
+       "market": "NYS",
+       "mcap_usd_b": 536.8
+      },
+      {
+       "code": "PYPL",
+       "name": "페이팔 홀딩스",
+       "ticker": "PYPL",
+       "market": "NAS",
+       "mcap_usd_b": 47.5
+      },
+      {
+       "code": "XYZ",
+       "name": "블록",
+       "ticker": "XYZ",
+       "market": "NYS",
+       "mcap_usd_b": 41.8
+      },
+      {
+       "code": "AFRM",
+       "name": "어펌 홀딩스",
+       "ticker": "AFRM",
+       "market": "NAS",
+       "mcap_usd_b": 24.0
+      },
+      {
+       "code": "SOFI",
+       "name": "소파이 테크놀로지스",
+       "ticker": "SOFI",
+       "market": "NAS",
+       "mcap_usd_b": 20.4
+      }
+     ]
+    },
+    {
+     "id": "us_29",
+     "name": "대형 은행",
+     "group": "금융",
+     "members": [
+      {
+       "code": "JPM",
+       "name": "제이피모간 체이스",
+       "ticker": "JPM",
+       "market": "NYS",
+       "mcap_usd_b": 903.0
+      },
+      {
+       "code": "BAC",
+       "name": "뱅크오브아메리카",
+       "ticker": "BAC",
+       "market": "NYS",
+       "mcap_usd_b": 358.2
+      },
+      {
+       "code": "WFC",
+       "name": "웰스파고",
+       "ticker": "WFC",
+       "market": "NYS",
+       "mcap_usd_b": 252.7
+      },
+      {
+       "code": "C",
+       "name": "씨티그룹",
+       "ticker": "C",
+       "market": "NYS",
+       "mcap_usd_b": 208.4
+      }
+     ]
+    },
+    {
+     "id": "us_30",
+     "name": "투자은행·증권",
+     "group": "금융",
+     "members": [
+      {
+       "code": "MS",
+       "name": "모간스탠리",
+       "ticker": "MS",
+       "market": "NYS",
+       "mcap_usd_b": 283.6
+      },
+      {
+       "code": "GS",
+       "name": "골드만삭스",
+       "ticker": "GS",
+       "market": "NYS",
+       "mcap_usd_b": 256.6
+      },
+      {
+       "code": "SCHW",
+       "name": "찰스 슈왑",
+       "ticker": "SCHW",
+       "market": "NYS",
+       "mcap_usd_b": 159.0
+      },
+      {
+       "code": "IBKR",
+       "name": "인터랙티브 브로커스 그룹",
+       "ticker": "IBKR",
+       "market": "NAS",
+       "mcap_usd_b": 39.8
+      }
+     ]
+    },
+    {
+     "id": "us_31",
+     "name": "지역은행",
+     "group": "금융",
+     "members": [
+      {
+       "code": "USB",
+       "name": "US 뱅코프",
+       "ticker": "USB",
+       "market": "NYS",
+       "mcap_usd_b": 88.9
+      },
+      {
+       "code": "PNC",
+       "name": "PNC 파이낸셜 서비시스",
+       "ticker": "PNC",
+       "market": "NYS",
+       "mcap_usd_b": 86.7
+      },
+      {
+       "code": "TFC",
+       "name": "트루이스트 파이낸셜",
+       "ticker": "TFC",
+       "market": "NYS",
+       "mcap_usd_b": 56.3
+      },
+      {
+       "code": "FITB",
+       "name": "피프스 서드 뱅코프",
+       "ticker": "FITB",
+       "market": "NYS",
+       "mcap_usd_b": 45.7
+      },
+      {
+       "code": "KEY",
+       "name": "키코프",
+       "ticker": "KEY",
+       "market": "NYS",
+       "mcap_usd_b": 21.3
+      }
+     ]
+    },
+    {
+     "id": "us_32",
+     "name": "보험",
+     "group": "금융",
+     "members": [
+      {
+       "code": "CB",
+       "name": "처브",
+       "ticker": "CB",
+       "market": "NYS",
+       "mcap_usd_b": 138.8
+      },
+      {
+       "code": "PGR",
+       "name": "프로그레시브",
+       "ticker": "PGR",
+       "market": "NYS",
+       "mcap_usd_b": 127.0
+      },
+      {
+       "code": "TRV",
+       "name": "트래블러스 컴퍼니스",
+       "ticker": "TRV",
+       "market": "NYS",
+       "mcap_usd_b": 76.9
+      },
+      {
+       "code": "ALL",
+       "name": "올스테이트",
+       "ticker": "ALL",
+       "market": "NYS",
+       "mcap_usd_b": 62.7
+      }
+     ]
+    },
+    {
+     "id": "us_33",
+     "name": "자산운용·대체투자",
+     "group": "금융",
+     "members": [
+      {
+       "code": "BLK",
+       "name": "블랙록",
+       "ticker": "BLK",
+       "market": "NYS",
+       "mcap_usd_b": 175.7
+      },
+      {
+       "code": "BX",
+       "name": "블랙스톤",
+       "ticker": "BX",
+       "market": "NYS",
+       "mcap_usd_b": 80.0
+      },
+      {
+       "code": "KKR",
+       "name": "KKR & CO",
+       "ticker": "KKR",
+       "market": "NYS",
+       "mcap_usd_b": 77.4
+      },
+      {
+       "code": "APO",
+       "name": "아폴로 글로벌 매니지먼트",
+       "ticker": "APO",
+       "market": "NYS",
+       "mcap_usd_b": 65.4
+      },
+      {
+       "code": "ARES",
+       "name": "아레스 매니지먼트",
+       "ticker": "ARES",
+       "market": "NYS",
+       "mcap_usd_b": 25.1
+      }
+     ]
+    },
+    {
+     "id": "us_34",
+     "name": "거래소·금융데이터",
+     "group": "금융",
+     "members": [
+      {
+       "code": "SPGI",
+       "name": "S&P 글로벌",
+       "ticker": "SPGI",
+       "market": "NYS",
+       "mcap_usd_b": 126.7
+      },
+      {
+       "code": "CME",
+       "name": "CME 그룹",
+       "ticker": "CME",
+       "market": "NAS",
+       "mcap_usd_b": 100.9
+      },
+      {
+       "code": "ICE",
+       "name": "인터컨티넨털 익스체인지",
+       "ticker": "ICE",
+       "market": "NYS",
+       "mcap_usd_b": 90.7
+      },
+      {
+       "code": "MCO",
+       "name": "무디스",
+       "ticker": "MCO",
+       "market": "NYS",
+       "mcap_usd_b": 84.0
+      },
+      {
+       "code": "NDAQ",
+       "name": "나스닥",
+       "ticker": "NDAQ",
+       "market": "NAS",
+       "mcap_usd_b": 52.3
+      }
+     ]
+    },
+    {
+     "id": "us_35",
+     "name": "방산",
+     "group": "산업재",
+     "members": [
+      {
+       "code": "RTX",
+       "name": "RTX",
+       "ticker": "RTX",
+       "market": "NYS",
+       "mcap_usd_b": 261.4
+      },
+      {
+       "code": "LMT",
+       "name": "록히드 마틴",
+       "ticker": "LMT",
+       "market": "NYS",
+       "mcap_usd_b": 127.4
+      },
+      {
+       "code": "GD",
+       "name": "제너럴 다이내믹스",
+       "ticker": "GD",
+       "market": "NYS",
+       "mcap_usd_b": 93.1
+      },
+      {
+       "code": "NOC",
+       "name": "노스롭 그루만",
+       "ticker": "NOC",
+       "market": "NYS",
+       "mcap_usd_b": 73.9
+      },
+      {
+       "code": "LHX",
+       "name": "L3 해리스 테크놀로지스",
+       "ticker": "LHX",
+       "market": "NYS",
+       "mcap_usd_b": 46.3
+      },
+      {
+       "code": "HII",
+       "name": "헌팅턴 잉걸스 인더스트리스",
+       "ticker": "HII",
+       "market": "NYS",
+       "mcap_usd_b": 10.7
+      }
+     ]
+    },
+    {
+     "id": "us_36",
+     "name": "상업항공·항공부품",
+     "group": "산업재",
+     "members": [
+      {
+       "code": "GE",
+       "name": "GE에어로스페이스",
+       "ticker": "GE",
+       "market": "NYS",
+       "mcap_usd_b": 325.6
+      },
+      {
+       "code": "BA",
+       "name": "보잉",
+       "ticker": "BA",
+       "market": "NYS",
+       "mcap_usd_b": 150.3
+      },
+      {
+       "code": "HWM",
+       "name": "하우멧 에어로스페이스",
+       "ticker": "HWM",
+       "market": "NYS",
+       "mcap_usd_b": 88.1
+      },
+      {
+       "code": "TDG",
+       "name": "트랜스다임 그룹",
+       "ticker": "TDG",
+       "market": "NYS",
+       "mcap_usd_b": 63.0
+      },
+      {
+       "code": "HEI",
+       "name": "헤이코",
+       "ticker": "HEI",
+       "market": "NYS",
+       "mcap_usd_b": 17.1
+      }
+     ]
+    },
+    {
+     "id": "us_37",
+     "name": "우주",
+     "group": "산업재",
+     "members": [
+      {
+       "code": "RKLB",
+       "name": "로켓 랩",
+       "ticker": "RKLB",
+       "market": "NAS",
+       "mcap_usd_b": 40.8
+      },
+      {
+       "code": "ASTS",
+       "name": "AST 스페이스모바일",
+       "ticker": "ASTS",
+       "market": "NAS",
+       "mcap_usd_b": 15.3
+      },
+      {
+       "code": "PL",
+       "name": "플래닛 랩스",
+       "ticker": "PL",
+       "market": "NYS",
+       "mcap_usd_b": 4.6
+      },
+      {
+       "code": "LUNR",
+       "name": "인튜이티브 머신스",
+       "ticker": "LUNR",
+       "market": "NAS",
+       "mcap_usd_b": 2.3
+      }
+     ]
+    },
+    {
+     "id": "us_38",
+     "name": "드론·방산테크",
+     "group": "산업재",
+     "members": [
+      {
+       "code": "KTOS",
+       "name": "크라토스 디펜스 앤드 시큐리티 솔루션스",
+       "ticker": "KTOS",
+       "market": "NAS",
+       "mcap_usd_b": 8.0
+      },
+      {
+       "code": "AVAV",
+       "name": "에어로바이런먼트",
+       "ticker": "AVAV",
+       "market": "NAS",
+       "mcap_usd_b": 7.0
+      }
+     ]
+    },
+    {
+     "id": "us_39",
+     "name": "건설·농기계",
+     "group": "산업재",
+     "members": [
+      {
+       "code": "CAT",
+       "name": "캐터필러",
+       "ticker": "CAT",
+       "market": "NYS",
+       "mcap_usd_b": 335.9
+      },
+      {
+       "code": "DE",
+       "name": "디어",
+       "ticker": "DE",
+       "market": "NYS",
+       "mcap_usd_b": 173.1
+      },
+      {
+       "code": "URI",
+       "name": "유나이티드 렌탈스",
+       "ticker": "URI",
+       "market": "NYS",
+       "mcap_usd_b": 65.8
+      }
+     ]
+    },
+    {
+     "id": "us_40",
+     "name": "철도·화물운송",
+     "group": "산업재",
+     "members": [
+      {
+       "code": "UNP",
+       "name": "유니언 퍼시픽",
+       "ticker": "UNP",
+       "market": "NYS",
+       "mcap_usd_b": 165.4
+      },
+      {
+       "code": "CSX",
+       "name": "CSX",
+       "ticker": "CSX",
+       "market": "NAS",
+       "mcap_usd_b": 87.5
+      },
+      {
+       "code": "UPS",
+       "name": "UPS",
+       "ticker": "UPS",
+       "market": "NYS",
+       "mcap_usd_b": 70.9
+      },
+      {
+       "code": "FDX",
+       "name": "페덱스",
+       "ticker": "FDX",
+       "market": "NYS",
+       "mcap_usd_b": 69.5
+      },
+      {
+       "code": "ODFL",
+       "name": "올드 도미니언 프레이트 라인",
+       "ticker": "ODFL",
+       "market": "NAS",
+       "mcap_usd_b": 37.7
+      }
+     ]
+    },
+    {
+     "id": "us_41",
+     "name": "항공사",
+     "group": "산업재",
+     "members": [
+      {
+       "code": "DAL",
+       "name": "델타 에어라인스",
+       "ticker": "DAL",
+       "market": "NYS",
+       "mcap_usd_b": 49.6
+      },
+      {
+       "code": "UAL",
+       "name": "유나이티드 에어라인스 홀딩스",
+       "ticker": "UAL",
+       "market": "NAS",
+       "mcap_usd_b": 34.9
+      },
+      {
+       "code": "LUV",
+       "name": "사우스웨스트 에어라인스",
+       "ticker": "LUV",
+       "market": "NYS",
+       "mcap_usd_b": 19.3
+      },
+      {
+       "code": "AAL",
+       "name": "아메리칸 에어라인스 그룹",
+       "ticker": "AAL",
+       "market": "NAS",
+       "mcap_usd_b": 8.4
+      }
+     ]
+    },
+    {
+     "id": "us_42",
+     "name": "주택건설",
+     "group": "산업재",
+     "members": [
+      {
+       "code": "DHI",
+       "name": "닥터 호턴",
+       "ticker": "DHI",
+       "market": "NYS",
+       "mcap_usd_b": 39.0
+      },
+      {
+       "code": "PHM",
+       "name": "풀티 그룹",
+       "ticker": "PHM",
+       "market": "NYS",
+       "mcap_usd_b": 21.3
+      },
+      {
+       "code": "LEN",
+       "name": "레나",
+       "ticker": "LEN",
+       "market": "NYS",
+       "mcap_usd_b": 16.0
+      },
+      {
+       "code": "NVR",
+       "name": "NVR",
+       "ticker": "NVR",
+       "market": "NYS",
+       "mcap_usd_b": 15.8
+      },
+      {
+       "code": "TOL",
+       "name": "톨 브라더스",
+       "ticker": "TOL",
+       "market": "NYS",
+       "mcap_usd_b": 12.3
+      }
+     ]
+    },
+    {
+     "id": "us_43",
+     "name": "건자재",
+     "group": "산업재",
+     "members": [
+      {
+       "code": "CRH",
+       "name": "CRH",
+       "ticker": "CRH",
+       "market": "NYS",
+       "mcap_usd_b": 55.6
+      },
+      {
+       "code": "MLM",
+       "name": "마틴 마리에타 머티리얼스",
+       "ticker": "MLM",
+       "market": "NYS",
+       "mcap_usd_b": 35.6
+      },
+      {
+       "code": "VMC",
+       "name": "벌칸 머티리얼스",
+       "ticker": "VMC",
+       "market": "NYS",
+       "mcap_usd_b": 31.7
+      }
+     ]
+    },
+    {
+     "id": "us_44",
+     "name": "석유 메이저·탐사",
+     "group": "에너지·소재",
+     "members": [
+      {
+       "code": "XOM",
+       "name": "엑슨 모빌",
+       "ticker": "XOM",
+       "market": "NYS",
+       "mcap_usd_b": 694.7
+      },
+      {
+       "code": "CVX",
+       "name": "셰브론",
+       "ticker": "CVX",
+       "market": "NYS",
+       "mcap_usd_b": 444.5
+      },
+      {
+       "code": "COP",
+       "name": "코노코필립스",
+       "ticker": "COP",
+       "market": "NYS",
+       "mcap_usd_b": 176.0
+      },
+      {
+       "code": "EOG",
+       "name": "EOG 리소시스",
+       "ticker": "EOG",
+       "market": "NYS",
+       "mcap_usd_b": 82.9
+      },
+      {
+       "code": "OXY",
+       "name": "옥시덴털 페트롤리엄",
+       "ticker": "OXY",
+       "market": "NYS",
+       "mcap_usd_b": 62.4
+      },
+      {
+       "code": "DVN",
+       "name": "데번 에너지",
+       "ticker": "DVN",
+       "market": "NYS",
+       "mcap_usd_b": 55.8
+      }
+     ]
+    },
+    {
+     "id": "us_45",
+     "name": "오일서비스",
+     "group": "에너지·소재",
+     "members": [
+      {
+       "code": "SLB",
+       "name": "슐럼버거",
+       "ticker": "SLB",
+       "market": "NYS",
+       "mcap_usd_b": 73.5
+      },
+      {
+       "code": "BKR",
+       "name": "베이커 휴즈",
+       "ticker": "BKR",
+       "market": "NAS",
+       "mcap_usd_b": 56.3
+      },
+      {
+       "code": "HAL",
+       "name": "할리버턴",
+       "ticker": "HAL",
+       "market": "NYS",
+       "mcap_usd_b": 27.9
+      }
+     ]
+    },
+    {
+     "id": "us_46",
+     "name": "해양시추",
+     "group": "에너지·소재",
+     "members": [
+      {
+       "code": "NE",
+       "name": "노블",
+       "ticker": "NE",
+       "market": "NYS",
+       "mcap_usd_b": 7.0
+      },
+      {
+       "code": "RIG",
+       "name": "트랜스오션",
+       "ticker": "RIG",
+       "market": "NYS",
+       "mcap_usd_b": 6.3
+      },
+      {
+       "code": "VAL",
+       "name": "발라리스",
+       "ticker": "VAL",
+       "market": "NYS",
+       "mcap_usd_b": 5.8
+      },
+      {
+       "code": "BORR",
+       "name": "보르 드릴링",
+       "ticker": "BORR",
+       "market": "NYS",
+       "mcap_usd_b": 1.4
+      }
+     ]
+    },
+    {
+     "id": "us_47",
+     "name": "LNG·미드스트림",
+     "group": "에너지·소재",
+     "members": [
+      {
+       "code": "WMB",
+       "name": "윌리엄스 컴퍼니스",
+       "ticker": "WMB",
+       "market": "NYS",
+       "mcap_usd_b": 88.9
+      },
+      {
+       "code": "KMI",
+       "name": "킨더 모건",
+       "ticker": "KMI",
+       "market": "NYS",
+       "mcap_usd_b": 76.2
+      },
+      {
+       "code": "LNG",
+       "name": "셰니어 에너지",
+       "ticker": "LNG",
+       "market": "NYS",
+       "mcap_usd_b": 59.8
+      },
+      {
+       "code": "VG",
+       "name": "벤처 글로벌",
+       "ticker": "VG",
+       "market": "NYS",
+       "mcap_usd_b": 7.0
+      }
+     ]
+    },
+    {
+     "id": "us_48",
+     "name": "정유",
+     "group": "에너지·소재",
+     "members": [
+      {
+       "code": "MPC",
+       "name": "매러선 페트롤리엄",
+       "ticker": "MPC",
+       "market": "NYS",
+       "mcap_usd_b": 134.3
+      },
+      {
+       "code": "VLO",
+       "name": "발레로 에너지",
+       "ticker": "VLO",
+       "market": "NYS",
+       "mcap_usd_b": 124.9
+      },
+      {
+       "code": "PSX",
+       "name": "필립스 66",
+       "ticker": "PSX",
+       "market": "NYS",
+       "mcap_usd_b": 117.0
+      }
+     ]
+    },
+    {
+     "id": "us_49",
+     "name": "금광",
+     "group": "에너지·소재",
+     "members": [
+      {
+       "code": "NEM",
+       "name": "뉴몬트",
+       "ticker": "NEM",
+       "market": "NYS",
+       "mcap_usd_b": 125.0
+      },
+      {
+       "code": "AEM",
+       "name": "애그니코 이글 마인스",
+       "ticker": "AEM",
+       "market": "NYS",
+       "mcap_usd_b": 96.6
+      },
+      {
+       "code": "AU",
+       "name": "앵글로골드 아샨티",
+       "ticker": "AU",
+       "market": "NYS",
+       "mcap_usd_b": 46.9
+      },
+      {
+       "code": "KGC",
+       "name": "킨로스 골드",
+       "ticker": "KGC",
+       "market": "NYS",
+       "mcap_usd_b": 28.5
+      }
+     ]
+    },
+    {
+     "id": "us_50",
+     "name": "구리·전략광물",
+     "group": "에너지·소재",
+     "members": [
+      {
+       "code": "SCCO",
+       "name": "서던 코퍼",
+       "ticker": "SCCO",
+       "market": "NYS",
+       "mcap_usd_b": 169.3
+      },
+      {
+       "code": "FCX",
+       "name": "프리포트 맥모란",
+       "ticker": "FCX",
+       "market": "NYS",
+       "mcap_usd_b": 99.9
+      },
+      {
+       "code": "TECK",
+       "name": "텍 리소시스",
+       "ticker": "TECK",
+       "market": "NYS",
+       "mcap_usd_b": 32.9
+      },
+      {
+       "code": "MP",
+       "name": "MP 머티리얼스",
+       "ticker": "MP",
+       "market": "NYS",
+       "mcap_usd_b": 7.2
+      }
+     ]
+    },
+    {
+     "id": "us_51",
+     "name": "철강·알루미늄",
+     "group": "에너지·소재",
+     "members": [
+      {
+       "code": "NUE",
+       "name": "뉴코",
+       "ticker": "NUE",
+       "market": "NYS",
+       "mcap_usd_b": 58.1
+      },
+      {
+       "code": "STLD",
+       "name": "스틸 다이내믹스",
+       "ticker": "STLD",
+       "market": "NAS",
+       "mcap_usd_b": 34.2
+      },
+      {
+       "code": "AA",
+       "name": "알코아",
+       "ticker": "AA",
+       "market": "NYS",
+       "mcap_usd_b": 10.9
+      },
+      {
+       "code": "CLF",
+       "name": "클리블랜드 클리프스",
+       "ticker": "CLF",
+       "market": "NYS",
+       "mcap_usd_b": 6.9
+      }
+     ]
+    },
+    {
+     "id": "us_52",
+     "name": "화학",
+     "group": "에너지·소재",
+     "members": [
+      {
+       "code": "LIN",
+       "name": "린데",
+       "ticker": "LIN",
+       "market": "NAS",
+       "mcap_usd_b": 223.0
+      },
+      {
+       "code": "APD",
+       "name": "에어 프라덕츠 앤드 케미컬스",
+       "ticker": "APD",
+       "market": "NYS",
+       "mcap_usd_b": 66.7
+      },
+      {
+       "code": "DOW",
+       "name": "다우",
+       "ticker": "DOW",
+       "market": "NYS",
+       "mcap_usd_b": 21.6
+      },
+      {
+       "code": "LYB",
+       "name": "라이온델바젤 인더스트리스",
+       "ticker": "LYB",
+       "market": "NYS",
+       "mcap_usd_b": 20.7
+      }
+     ]
+    },
+    {
+     "id": "us_53",
+     "name": "비만 치료제",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "LLY",
+       "name": "일라이 릴리",
+       "ticker": "LLY",
+       "market": "NYS",
+       "mcap_usd_b": 1183.3
+      },
+      {
+       "code": "NVO",
+       "name": "노보노디스크(ADR)",
+       "ticker": "NVO",
+       "market": "NYS",
+       "mcap_usd_b": 129.9
+      }
+     ]
+    },
+    {
+     "id": "us_54",
+     "name": "대형 제약",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "JNJ",
+       "name": "존슨 앤드 존슨",
+       "ticker": "JNJ",
+       "market": "NYS",
+       "mcap_usd_b": 615.9
+      },
+      {
+       "code": "ABBV",
+       "name": "애브비",
+       "ticker": "ABBV",
+       "market": "NYS",
+       "mcap_usd_b": 504.4
+      },
+      {
+       "code": "MRK",
+       "name": "머크",
+       "ticker": "MRK",
+       "market": "NYS",
+       "mcap_usd_b": 360.1
+      },
+      {
+       "code": "AMGN",
+       "name": "암젠",
+       "ticker": "AMGN",
+       "market": "NAS",
+       "mcap_usd_b": 224.3
+      },
+      {
+       "code": "PFE",
+       "name": "화이자",
+       "ticker": "PFE",
+       "market": "NYS",
+       "mcap_usd_b": 168.6
+      },
+      {
+       "code": "BMY",
+       "name": "브리스톨 마이어스 스큅",
+       "ticker": "BMY",
+       "market": "NYS",
+       "mcap_usd_b": 122.1
+      }
+     ]
+    },
+    {
+     "id": "us_55",
+     "name": "바이오텍",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "GILD",
+       "name": "길리어드 사이언스",
+       "ticker": "GILD",
+       "market": "NAS",
+       "mcap_usd_b": 187.4
+      },
+      {
+       "code": "VRTX",
+       "name": "버텍스 파머슈티컬",
+       "ticker": "VRTX",
+       "market": "NAS",
+       "mcap_usd_b": 129.3
+      },
+      {
+       "code": "REGN",
+       "name": "리제네론 파머슈티컬스",
+       "ticker": "REGN",
+       "market": "NAS",
+       "mcap_usd_b": 75.5
+      },
+      {
+       "code": "BIIB",
+       "name": "바이오젠",
+       "ticker": "BIIB",
+       "market": "NAS",
+       "mcap_usd_b": 33.3
+      },
+      {
+       "code": "ALNY",
+       "name": "앨나일램 파머슈티컬스",
+       "ticker": "ALNY",
+       "market": "NAS",
+       "mcap_usd_b": 31.1
+      }
+     ]
+    },
+    {
+     "id": "us_56",
+     "name": "의료기기",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "ABT",
+       "name": "애보트 래브러토리스",
+       "ticker": "ABT",
+       "market": "NYS",
+       "mcap_usd_b": 181.5
+      },
+      {
+       "code": "ISRG",
+       "name": "인튜이티브 서지컬",
+       "ticker": "ISRG",
+       "market": "NAS",
+       "mcap_usd_b": 149.8
+      },
+      {
+       "code": "MDT",
+       "name": "메드트로닉",
+       "ticker": "MDT",
+       "market": "NYS",
+       "mcap_usd_b": 121.2
+      },
+      {
+       "code": "SYK",
+       "name": "스트라이커",
+       "ticker": "SYK",
+       "market": "NYS",
+       "mcap_usd_b": 113.0
+      },
+      {
+       "code": "BSX",
+       "name": "보스턴 사이언티픽",
+       "ticker": "BSX",
+       "market": "NYS",
+       "mcap_usd_b": 64.3
+      },
+      {
+       "code": "EW",
+       "name": "에드워즈 라이프사이언시스",
+       "ticker": "EW",
+       "market": "NYS",
+       "mcap_usd_b": 49.9
+      }
+     ]
+    },
+    {
+     "id": "us_57",
+     "name": "건강보험·헬스케어 서비스",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "UNH",
+       "name": "유나이티드헬스 그룹",
+       "ticker": "UNH",
+       "market": "NYS",
+       "mcap_usd_b": 340.5
+      },
+      {
+       "code": "CVS",
+       "name": "CVS 헬스",
+       "ticker": "CVS",
+       "market": "NYS",
+       "mcap_usd_b": 118.1
+      },
+      {
+       "code": "ELV",
+       "name": "엘리밴스 헬스",
+       "ticker": "ELV",
+       "market": "NYS",
+       "mcap_usd_b": 92.9
+      },
+      {
+       "code": "CI",
+       "name": "시그나 그룹",
+       "ticker": "CI",
+       "market": "NYS",
+       "mcap_usd_b": 79.9
+      },
+      {
+       "code": "HUM",
+       "name": "휴마나",
+       "ticker": "HUM",
+       "market": "NYS",
+       "mcap_usd_b": 49.6
+      }
+     ]
+    },
+    {
+     "id": "us_58",
+     "name": "생명과학 도구",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "TMO",
+       "name": "써모 피셔 사이언티픽",
+       "ticker": "TMO",
+       "market": "NYS",
+       "mcap_usd_b": 243.3
+      },
+      {
+       "code": "DHR",
+       "name": "다나허",
+       "ticker": "DHR",
+       "market": "NYS",
+       "mcap_usd_b": 161.0
+      },
+      {
+       "code": "A",
+       "name": "애질런트 테크놀로지스",
+       "ticker": "A",
+       "market": "NYS",
+       "mcap_usd_b": 48.8
+      },
+      {
+       "code": "ILMN",
+       "name": "일루미나",
+       "ticker": "ILMN",
+       "market": "NAS",
+       "mcap_usd_b": 42.0
+      }
+     ]
+    },
+    {
+     "id": "us_59",
+     "name": "할인점·대형마트",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "WMT",
+       "name": "월마트",
+       "ticker": "WMT",
+       "market": "NAS",
+       "mcap_usd_b": 883.4
+      },
+      {
+       "code": "COST",
+       "name": "코스트코 홀세일",
+       "ticker": "COST",
+       "market": "NAS",
+       "mcap_usd_b": 419.6
+      },
+      {
+       "code": "TJX",
+       "name": "TJX",
+       "ticker": "TJX",
+       "market": "NYS",
+       "mcap_usd_b": 162.1
+      },
+      {
+       "code": "TGT",
+       "name": "타깃",
+       "ticker": "TGT",
+       "market": "NYS",
+       "mcap_usd_b": 70.1
+      },
+      {
+       "code": "DG",
+       "name": "달러제너럴",
+       "ticker": "DG",
+       "market": "NYS",
+       "mcap_usd_b": 29.6
+      }
+     ]
+    },
+    {
+     "id": "us_60",
+     "name": "외식",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "MCD",
+       "name": "맥도날드",
+       "ticker": "MCD",
+       "market": "NYS",
+       "mcap_usd_b": 171.9
+      },
+      {
+       "code": "SBUX",
+       "name": "스타벅스",
+       "ticker": "SBUX",
+       "market": "NAS",
+       "mcap_usd_b": 103.5
+      },
+      {
+       "code": "YUM",
+       "name": "염 브랜즈",
+       "ticker": "YUM",
+       "market": "NYS",
+       "mcap_usd_b": 39.5
+      },
+      {
+       "code": "CMG",
+       "name": "치폴레 멕시칸 그릴",
+       "ticker": "CMG",
+       "market": "NYS",
+       "mcap_usd_b": 37.8
+      }
+     ]
+    },
+    {
+     "id": "us_61",
+     "name": "의류·신발",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "NKE",
+       "name": "나이키 B",
+       "ticker": "NKE",
+       "market": "NYS",
+       "mcap_usd_b": 44.7
+      },
+      {
+       "code": "DECK",
+       "name": "덱커 아웃도어",
+       "ticker": "DECK",
+       "market": "NYS",
+       "mcap_usd_b": 11.7
+      },
+      {
+       "code": "ONON",
+       "name": "온 홀딩",
+       "ticker": "ONON",
+       "market": "NYS",
+       "mcap_usd_b": 10.3
+      },
+      {
+       "code": "LULU",
+       "name": "룰루레몬 애슬레티카",
+       "ticker": "LULU",
+       "market": "NAS",
+       "mcap_usd_b": 10.0
+      }
+     ]
+    },
+    {
+     "id": "us_62",
+     "name": "여행·카지노·크루즈",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "MAR",
+       "name": "메리어트 인터내셔널",
+       "ticker": "MAR",
+       "market": "NAS",
+       "mcap_usd_b": 95.4
+      },
+      {
+       "code": "HLT",
+       "name": "힐튼 월드와이드 홀딩스",
+       "ticker": "HLT",
+       "market": "NYS",
+       "mcap_usd_b": 77.7
+      },
+      {
+       "code": "RCL",
+       "name": "로열 캐리비언 크루즈",
+       "ticker": "RCL",
+       "market": "NYS",
+       "mcap_usd_b": 74.3
+      },
+      {
+       "code": "CCL",
+       "name": "카니발",
+       "ticker": "CCL",
+       "market": "NYS",
+       "mcap_usd_b": 34.8
+      },
+      {
+       "code": "LVS",
+       "name": "라스베이거스 샌즈",
+       "ticker": "LVS",
+       "market": "NYS",
+       "mcap_usd_b": 24.6
+      },
+      {
+       "code": "WYNN",
+       "name": "윈 리조츠",
+       "ticker": "WYNN",
+       "market": "NAS",
+       "mcap_usd_b": 7.7
+      },
+      {
+       "code": "NCLH",
+       "name": "노르웨이지언 크루즈 라인 홀딩스",
+       "ticker": "NCLH",
+       "market": "NYS",
+       "mcap_usd_b": 6.9
+      }
+     ]
+    },
+    {
+     "id": "us_63",
+     "name": "필수소비재",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "KO",
+       "name": "코카콜라",
+       "ticker": "KO",
+       "market": "NYS",
+       "mcap_usd_b": 404.0
+      },
+      {
+       "code": "PG",
+       "name": "프록터 앤드 갬블",
+       "ticker": "PG",
+       "market": "NYS",
+       "mcap_usd_b": 370.1
+      },
+      {
+       "code": "PM",
+       "name": "필립 모리스 인터내셔널",
+       "ticker": "PM",
+       "market": "NYS",
+       "mcap_usd_b": 319.8
+      },
+      {
+       "code": "PEP",
+       "name": "펩시코",
+       "ticker": "PEP",
+       "market": "NAS",
+       "mcap_usd_b": 171.9
+      },
+      {
+       "code": "MO",
+       "name": "알트리아 그룹",
+       "ticker": "MO",
+       "market": "NYS",
+       "mcap_usd_b": 125.4
+      },
+      {
+       "code": "CL",
+       "name": "콜게이트 팜올리브",
+       "ticker": "CL",
+       "market": "NYS",
+       "mcap_usd_b": 75.0
+      }
+     ]
+    },
+    {
+     "id": "us_64",
+     "name": "전기차·자동차",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "TSLA",
+       "name": "테슬라",
+       "ticker": "TSLA",
+       "market": "NAS",
+       "mcap_usd_b": 1511.5
+      },
+      {
+       "code": "GM",
+       "name": "제너럴 모터스",
+       "ticker": "GM",
+       "market": "NYS",
+       "mcap_usd_b": 73.7
+      },
+      {
+       "code": "F",
+       "name": "포드 모터",
+       "ticker": "F",
+       "market": "NYS",
+       "mcap_usd_b": 48.7
+      },
+      {
+       "code": "RIVN",
+       "name": "리비안 오토모티브",
+       "ticker": "RIVN",
+       "market": "NAS",
+       "mcap_usd_b": 20.2
+      }
+     ]
+    },
+    {
+     "id": "us_65",
+     "name": "미디어·스트리밍",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "DIS",
+       "name": "월트 디즈니",
+       "ticker": "DIS",
+       "market": "NYS",
+       "mcap_usd_b": 191.0
+      },
+      {
+       "code": "CMCSA",
+       "name": "컴캐스트",
+       "ticker": "CMCSA",
+       "market": "NAS",
+       "mcap_usd_b": 73.1
+      },
+      {
+       "code": "ROKU",
+       "name": "로쿠",
+       "ticker": "ROKU",
+       "market": "NAS",
+       "mcap_usd_b": 20.2
+      }
+     ]
+    },
+    {
+     "id": "us_66",
+     "name": "통신",
+     "group": "통신·부동산",
+     "members": [
+      {
+       "code": "VZ",
+       "name": "버라이존 커뮤니케이션스",
+       "ticker": "VZ",
+       "market": "NYS",
+       "mcap_usd_b": 173.0
+      },
+      {
+       "code": "T",
+       "name": "AT&T",
+       "ticker": "T",
+       "market": "NYS",
+       "mcap_usd_b": 160.6
+      },
+      {
+       "code": "TMUS",
+       "name": "T 모바일 US",
+       "ticker": "TMUS",
+       "market": "NAS",
+       "mcap_usd_b": 159.4
+      }
+     ]
+    },
+    {
+     "id": "us_67",
+     "name": "데이터센터·통신 리츠",
+     "group": "통신·부동산",
+     "members": [
+      {
+       "code": "EQIX",
+       "name": "에퀴닉스",
+       "ticker": "EQIX",
+       "market": "NAS",
+       "mcap_usd_b": 101.2
+      },
+      {
+       "code": "AMT",
+       "name": "아메리칸 타워",
+       "ticker": "AMT",
+       "market": "NYS",
+       "mcap_usd_b": 86.3
+      },
+      {
+       "code": "DLR",
+       "name": "디지털 리얼티 트러스트",
+       "ticker": "DLR",
+       "market": "NYS",
+       "mcap_usd_b": 65.3
+      },
+      {
+       "code": "CCI",
+       "name": "크라운 캐슬",
+       "ticker": "CCI",
+       "market": "NYS",
+       "mcap_usd_b": 35.0
+      }
+     ]
+    },
+    {
+     "id": "us_68",
+     "name": "일반 리츠",
+     "group": "통신·부동산",
+     "members": [
+      {
+       "code": "WELL",
+       "name": "웰타워",
+       "ticker": "WELL",
+       "market": "NYS",
+       "mcap_usd_b": 162.5
+      },
+      {
+       "code": "PLD",
+       "name": "프로로지스",
+       "ticker": "PLD",
+       "market": "NYS",
+       "mcap_usd_b": 119.5
+      },
+      {
+       "code": "SPG",
+       "name": "사이먼 프라퍼티 그룹",
+       "ticker": "SPG",
+       "market": "NYS",
+       "mcap_usd_b": 66.5
+      },
+      {
+       "code": "O",
+       "name": "리얼티 인컴",
+       "ticker": "O",
+       "market": "NYS",
+       "mcap_usd_b": 53.1
+      }
+     ]
+    }
+   ]
+  }
+ }
+}
