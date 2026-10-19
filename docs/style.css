@@ -180,7 +180,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .rc1 .rk { font-size: 17px; }
 .rc-name { font-weight: 700; font-size: 15px; flex: 1; min-width: 0; line-height: 1.25; }
 .rc-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
-.rc2 { display: grid; grid-template-columns: 1.2fr repeat(3, 1fr); gap: 8px; align-items: center; margin-top: 8px; }
+.rc2 { display: grid; grid-template-columns: 1.1fr repeat(4, 1fr); gap: 8px; align-items: center; margin-top: 8px; }
 .rc2 .bar { min-width: 0; }
 .rc-ret { display: flex; flex-direction: column; font-size: 13px; }
 .rc-ret em { font-style: normal; font-size: 11px; color: var(--muted); }
@@ -272,3 +272,21 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
   .tile .v { font-size: 20px; }
   .chart { height: 260px; }
 }
+
+/* 갱신 상태 줄 */
+.runbar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; font-size: 13px; color: var(--ink-2); }
+.rb-item b { color: var(--muted); font-weight: 600; margin-right: 4px; }
+.rb-badge { display: inline-block; margin-left: 4px; padding: 1px 8px; border-radius: 999px; font-size: 12px; font-weight: 650; background: var(--surface-2); color: var(--ink-2); }
+.rb-badge.ok { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); }
+.rb-badge.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.rb-badge.bad { background: color-mix(in srgb, var(--up) 14%, transparent); color: var(--up); }
+.rb-live { font-weight: 650; }
+.rb-live a { color: inherit; }
+.rb-live.busy { color: var(--accent); } .rb-live.ok { color: var(--good); } .rb-live.bad { color: var(--up); }
+.rb-actions { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; }
+.rb-run { min-height: 34px; padding: 5px 14px; }
+.rb-run.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.rb-run:disabled { opacity: .6; cursor: default; }
+.rb-log { font-size: 12.5px; color: var(--accent); text-decoration: none; }
+.rb-hint { flex-basis: 100%; font-size: 12px; color: var(--muted); }
+@media (max-width: 560px) { .runbar { font-size: 12.5px; gap: 4px 12px; } .rb-actions { margin-left: 0; width: 100%; } .rb-run { flex: 1; } }

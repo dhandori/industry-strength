@@ -3,6 +3,7 @@
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const state = { market: "KR", sort: "rank", group: "전체", data: {}, series: {}, charts: [], openId: null };
+  window.__isMarket = () => state.market;
   const HEAT_DAYS = 40;
   const WEAK = ["상승 둔화", "하락 추세", "바닥 다지기"];
 
@@ -26,7 +27,7 @@
   const md = (d) => { const [, m, dd] = d.split("-"); return `${+m}/${+dd}`; };
 
   async function getJSON(url) {
-    const r = await fetch(url + "?v=" + Math.floor(Date.now() / 600000), { cache: "no-store" });
+    const r = await fetch(url + "?v=" + dataStamp, { cache: "no-store" });
     if (!r.ok) throw new Error(url + " " + r.status);
     return r.json();
   }
@@ -62,10 +63,22 @@
       return;
     }
     render();
+    window.__isRefresh && window.__isRefresh.repaint();
   }
+  // 새 데이터가 올라오면 캐시를 비우고 다시 그린다.
+  let dataStamp = Date.now();
+  function reloadData() { state.data = {}; state.series = {}; dataStamp = Date.now(); load(); }
 
+  // 당일 순위: 바구니 지수의 하루 변동(chg1)을 시장 안에서 줄 세운다.
+  function addDayRank(d) {
+    if (d._dayRanked) return;
+    const ranked = d.items.filter((i) => i.chg1 != null).sort((a, b) => b.chg1 - a.chg1);
+    ranked.forEach((i, k) => { i.rank1 = k + 1; });
+    d._dayRanked = true;
+  }
   function render() {
     const d = state.data[state.market];
+    addDayRank(d);
     $("#meta").textContent = `${d.label} 기준일 ${d.basis_date} 종가 · 갱신 ${d.updated_at} · 세부 산업 ${d.items.length}개 · 종목 ${d.n_stocks ?? "–"}개`;
     const w = $("#warn");
     if (d.warnings && d.warnings.length) { w.hidden = false; w.innerHTML = "<b>데이터 확인 필요</b> · " + d.warnings.map(esc).join(" · "); }
@@ -181,6 +194,7 @@
         <td><span class="rk">${i.rank ?? "–"}</span>${chgOf(i)}</td>
         <td class="name"><b>${esc(i.name)}${i.stale ? '<span class="stale">지연</span>' : ""}</b><span>${subOf(i)}</span>${tags ? "<br>" + tags : ""}</td>
         <td><div class="bar" title="시장 안 순위 백분위 ${pctile(i)}% · 종합 강도 ${i.score == null ? "–" : Math.round(i.score)}점"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div></td>
+        <td class="num">${ret(i.chg1, i.rank1)}</td>
         <td class="num">${ret(i.ret5, i.rank5)}</td>
         <td class="num">${ret(i.ret20, i.rank20)}</td>
         <td class="num">${ret(i.ret60, i.rank60)}</td>
@@ -195,12 +209,12 @@
         <div class="rc1"><span class="rk">${i.rank ?? "–"}</span>${chgOf(i)}<b class="rc-name">${esc(i.name)}</b><span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></div>
         <div class="rc-sub">${subOf(i)}</div>
         <div class="rc2"><div class="bar"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div>
-          <span class="rc-ret"><em>5일</em>${ret(i.ret5, i.rank5)}</span><span class="rc-ret"><em>20일</em>${ret(i.ret20, i.rank20)}</span><span class="rc-ret"><em>60일</em>${ret(i.ret60, i.rank60)}</span></div>
+          <span class="rc-ret"><em>당일</em>${ret(i.chg1, i.rank1)}</span><span class="rc-ret"><em>5일</em>${ret(i.ret5, i.rank5)}</span><span class="rc-ret"><em>20일</em>${ret(i.ret20, i.rank20)}</span><span class="rc-ret"><em>60일</em>${ret(i.ret60, i.rank60)}</span></div>
         <div class="rc3">${checksOf(i, true)}<span class="rc-dist">고점 대비 <b>${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</b></span></div>
       </button>`).join("");
     if (!rows.length) {
       const msg = "조건에 맞는 산업이 없어요. 지금은 가격 추세가 살아 있는 산업이 없다는 뜻이에요.";
-      $("#rankTable tbody").innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
+      $("#rankTable tbody").innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
       $("#rankCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
     }
     $$("#rankTable tbody tr[data-id], #rankCards .rcard").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
@@ -470,4 +484,5 @@
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === h));
   }
   load();
+  window.__isRefresh && window.__isRefresh.init(reloadData);
 })();
