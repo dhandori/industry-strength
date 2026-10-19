@@ -47,15 +47,21 @@
   <section class="card" aria-labelledby="ex-h">
     <div class="card-head wrap">
       <h2 id="ex-h">업종 탐색 <span class="sub" id="exSub"></span></h2>
+      <div class="filters">
+      <div class="seg small" id="exSrc" aria-label="분류 기준">
+        <button data-src="board" aria-pressed="true">이 판 분류</button>
+        <button data-src="naver" aria-pressed="false">네이버 업종</button>
+      </div>
       <div class="seg small" id="exSeg" aria-label="기간">
         <button data-k="chg1" aria-pressed="true">1일</button>
         <button data-k="ret5" aria-pressed="false">5일</button>
         <button data-k="ret20" aria-pressed="false">20일</button>
         <button data-k="ret60" aria-pressed="false">60일</button>
       </div>
+      </div>
     </div>
     <div id="explore" class="explore"></div>
-    <p class="foot-note">큰 분류를 누르면 세부 산업이, 세부 산업을 누르면 종목이 펼쳐져요. 분류·세부 산업 등락률은 구성 종목 등락률의 단순 평균(종목 수 같은 비중)이에요. 빨강은 상승, 파랑은 하락.</p>
+    <p class="foot-note" id="exNote"></p>
   </section>
 
   <section class="card" aria-labelledby="rank-h">

@@ -293,9 +293,9 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 
 /* 업종 탐색 */
 .explore { display: grid; }
-.ex-row { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 18px minmax(120px, 1fr) minmax(120px, 46%) 70px; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid var(--grid); cursor: pointer; font-size: 13.5px; }
+.ex-row { box-sizing: border-box; display: grid; grid-template-columns: 18px minmax(120px, 1fr) minmax(120px, 46%) 70px; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid var(--grid); cursor: pointer; font-size: 13.5px; }
 .ex-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-@media (hover: hover) { button.ex-row:hover { background: var(--accent-soft); } }
+@media (hover: hover) { .ex-row[role=button]:hover { background: var(--accent-soft); } }
 .ex-row .chev { color: var(--muted); transition: transform .15s; display: inline-block; text-align: center; }
 .ex-row.open .chev { transform: rotate(90deg); }
 .ex-row.lv0 .ex-name { font-weight: 700; }
@@ -315,3 +315,11 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
   .ex-row { grid-template-columns: 14px minmax(90px, 1fr) minmax(70px, 34%) 62px; gap: 6px; font-size: 13px; }
   .ex-row.lv1 { padding-left: 12px; } .ex-row.lv2 { padding-left: 22px; }
 }
+
+.xl { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: 1px; }
+.xl a, .xl-pill { font-size: 10.5px; font-weight: 650; text-decoration: none; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 5px; padding: 0 5px; line-height: 16px; white-space: nowrap; }
+.xl-pill { margin-left: 6px; display: inline-block; }
+.xl a:hover, .xl-pill:hover { background: var(--accent-soft); }
+.xl-inline { color: var(--accent); text-decoration: none; margin-left: 4px; }
+.explore .empty { font-size: 13.5px; color: var(--ink-2); padding: 16px 4px; margin: 0; line-height: 1.6; }
+.ex-row.lv2 .ex-name { white-space: normal; line-height: 1.35; }

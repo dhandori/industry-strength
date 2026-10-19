@@ -49,6 +49,12 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RUN_TRIGGER: ${{ github.event_name }}
 
+      - name: 네이버 업종 수집
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 8
+        run: python scripts/naver_upjong.py
+
       - name: 결과 저장 (실패해도 상태 기록)
         if: always()
         run: |

@@ -36,7 +36,7 @@
   $$(".seg[role=tablist] button").forEach((b) => b.addEventListener("click", () => {
     state.market = b.dataset.market;
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x === b));
-    state.group = "전체"; state.exOpen = new Set();
+    state.group = "전체"; state.exOpen = new Set(); state.exAll = new Set();
     try { history.replaceState(null, "", "#" + state.market); } catch (e) {}
     load();
   }));
@@ -166,63 +166,122 @@
     setTimeout(() => { addEventListener("pointerdown", off, true); addEventListener("scroll", off, true); }, 0);
   }
 
+  // ---------- 외부 링크
+  function stockLinks(m, market) {
+    const code = m.code || m.ticker;
+    if (market === "KR") {
+      return `<span class="xl"><a href="https://finance.naver.com/item/main.naver?code=${code}" target="_blank" rel="noopener" title="네이버 증권에서 보기">네이버</a><a href="https://www.tradingview.com/chart/?symbol=KRX:${code}" target="_blank" rel="noopener" title="TradingView 차트">TV</a></span>`;
+    }
+    const t = m.ticker || code;
+    return `<span class="xl"><a href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(t)}" target="_blank" rel="noopener" title="TradingView 차트">TV</a><a href="https://finviz.com/quote.ashx?t=${encodeURIComponent(t)}" target="_blank" rel="noopener" title="Finviz에서 보기">Finviz</a></span>`;
+  }
+
   // ---------- 업종 탐색 (분류 → 세부 산업 → 종목)
-  state.exKey = "chg1"; state.exOpen = new Set();
+  state.exKey = "chg1"; state.exOpen = new Set(); state.exSrc = "board"; state.exAll = new Set();
+  const PLABEL = { chg1: "1일", ret5: "5일", ret20: "20일", ret60: "60일" };
   $$("#exSeg button").forEach((b) => b.addEventListener("click", () => {
     state.exKey = b.dataset.k;
     $$("#exSeg button").forEach((x) => x.setAttribute("aria-pressed", x === b));
     renderExplore(state.data[state.market]);
   }));
+  $$("#exSrc button").forEach((b) => b.addEventListener("click", async () => {
+    state.exSrc = b.dataset.src; state.exOpen = new Set(); state.exAll = new Set();
+    $$("#exSrc button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    renderExplore(state.data[state.market]);
+  }));
   function avgOf(list, k) {
     const v = list.map((m) => m[k]).filter((x) => x != null);
-    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+    return v.length ? v.reduce((a, c) => a + c, 0) / v.length : null;
   }
-  function renderExplore(d) {
-    const k = state.exKey;
-    const label = { chg1: "1일", ret5: "5일", ret20: "20일", ret60: "60일" }[k];
-    $("#exSub").textContent = `${d.basis_date} 종가 기준 · ${label} 등락률`;
+  async function loadNaver() {
+    if (state.naver !== undefined) return state.naver;
+    try { state.naver = await getJSON("data/KR_naver.json"); } catch (e) { state.naver = null; }
+    return state.naver;
+  }
+  function boardTree(d, k) {
     const groups = {};
     for (const it of d.items) {
-      const g = groups[it.group] || (groups[it.group] = { name: it.group, subs: [], stocks: new Map() });
+      const g = groups[it.group] || (groups[it.group] = { key: "g:" + it.group, name: it.group, children: [], stocks: new Map() });
       const mem = (it.members || []).filter((m) => !m.missing);
-      g.subs.push({ id: it.id, name: it.name, v: avgOf(mem, k), n: mem.length, mem });
+      g.children.push({ key: "s:" + it.id, name: it.name, v: avgOf(mem, k), n: mem.length, detail: it.id,
+        stocks: mem.map((m) => ({ ...m, v: m[k] })) });
       mem.forEach((m) => g.stocks.set(m.ticker, m));
     }
-    const list = Object.values(groups).map((g) => ({ ...g, v: avgOf([...g.stocks.values()], k), n: g.stocks.size }))
-      .sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
+    return Object.values(groups).map((g) => ({ ...g, v: avgOf([...g.stocks.values()], k), n: g.stocks.size }));
+  }
+  function naverTree(nv, k) {
+    const secs = {};
+    for (const ind of nv.industries) {
+      const sc = secs[ind.sector] || (secs[ind.sector] = { key: "n:" + ind.sector, name: ind.sector, children: [], all: [] });
+      const st = ind.stocks.map((x) => ({ ...x, v: x[k] }));
+      sc.children.push({ key: "u:" + ind.no, name: ind.name, n: st.length, link: ind.url,
+        v: k === "chg1" ? ind.rate : avgOf(st, "v"), stocks: st });
+      sc.all.push(...st);
+    }
+    return Object.values(secs).map((sc) => ({ ...sc, v: avgOf(sc.all, "v"), n: sc.all.length }));
+  }
+  async function renderExplore(d) {
+    const k = state.exKey, mk = state.market;
+    const srcBox = $("#exSrc");
+    srcBox.hidden = mk !== "KR";
+    const src = mk === "KR" ? state.exSrc : "board";
+    const el = $("#explore");
+    let tree, note = "";
+    if (src === "naver") {
+      const nv = await loadNaver();
+      if (state.market !== mk || state.exSrc !== "naver") return;
+      if (!nv || !nv.industries) {
+        el.innerHTML = `<p class="empty">네이버 업종 자료가 아직 없어요. 한국장 마감 뒤 자동 수집이 한 번 돌면 채워져요.</p>`;
+        $("#exSub").textContent = "네이버 업종"; return;
+      }
+      if (!nv.periods_available.includes(k)) {
+        el.innerHTML = `<p class="empty">네이버 업종의 ${PLABEL[k]} 등락률은 매일 기록을 이어 붙여 계산해요. 기록이 ${k.replace("ret", "")}거래일 쌓이면 보여요. (지금 ${nv.days_recorded}일치)<br>1일 등락률은 지금 바로 볼 수 있어요.</p>`;
+        $("#exSub").textContent = `네이버 업종 · ${nv.basis_date} 종가 기준`; return;
+      }
+      tree = naverTree(nv, k);
+      $("#exSub").innerHTML = `네이버 업종 ${nv.n_industries}개 · 종목 ${nv.n_stocks.toLocaleString()}개 · ${nv.basis_date} 종가 · ${PLABEL[k]} <a class="xl-inline" href="${nv.source_url}" target="_blank" rel="noopener">네이버 업종별 시세 ↗</a>`;
+      note = k === "chg1" ? "업종 등락률은 네이버가 발표한 값 그대로, 섹터 등락률은 소속 종목의 단순 평균이에요." : "여러 날 등락률은 종목별 하루 등락률을 이어 곱한 뒤 단순 평균했어요.";
+    } else {
+      tree = boardTree(d, k);
+      $("#exSub").textContent = `이 판 분류 · ${d.basis_date} 종가 · ${PLABEL[k]} 등락률`;
+      note = "분류·세부 산업 등락률은 구성 종목 등락률의 단순 평균(종목 수 같은 비중)이에요.";
+    }
+    $("#exNote").textContent = `큰 분류를 누르면 세부 업종이, 세부 업종을 누르면 종목이 펼쳐져요. ${note} 빨강은 상승, 파랑은 하락. 네이버·TV·Finviz 버튼은 새 창으로 열려요.`;
+    const sorted = (arr) => arr.slice().sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
     const scale = (arr) => Math.max(1e-9, ...arr.map((x) => Math.abs(x.v ?? 0)));
-    const bar = (v, mx) => {
-      if (v == null) return `<span class="ex-bar"></span>`;
-      const w = Math.min(50, Math.abs(v) / mx * 50);
-      return `<span class="ex-bar"><i class="${v >= 0 ? "pos" : "neg"}" style="width:${w}%"></i></span>`;
-    };
+    const bar = (v, mx) => v == null ? `<span class="ex-bar"></span>`
+      : `<span class="ex-bar"><i class="${v >= 0 ? "pos" : "neg"}" style="width:${Math.min(50, Math.abs(v) / mx * 50)}%"></i></span>`;
     const val = (v) => `<span class="ex-val ret ${cls(v)}">${fmtPct(v, 2)}</span>`;
-    const gmx = scale(list);
+    const top = sorted(tree), gmx = scale(top);
     let h = "";
-    for (const g of list) {
-      const gk = "g:" + g.name, open = state.exOpen.has(gk);
-      h += `<button class="ex-row lv0${open ? " open" : ""}" data-k="${esc(gk)}"><span class="chev">›</span><span class="ex-name">${esc(g.name)} <em>${g.n}</em></span>${bar(g.v, gmx)}${val(g.v)}</button>`;
+    for (const g of top) {
+      const open = state.exOpen.has(g.key);
+      h += `<div class="ex-row lv0${open ? " open" : ""}" data-k="${esc(g.key)}" role="button" tabindex="0"><span class="chev">›</span><span class="ex-name">${esc(g.name)} <em>${g.n}</em></span>${bar(g.v, gmx)}${val(g.v)}</div>`;
       if (!open) continue;
-      const subs = g.subs.slice().sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
-      const smx = scale(subs);
+      const subs = sorted(g.children), smx = scale(subs);
       for (const sb of subs) {
-        const sk = "s:" + sb.id, sopen = state.exOpen.has(sk);
-        h += `<button class="ex-row lv1${sopen ? " open" : ""}" data-k="${sk}"><span class="chev">›</span><span class="ex-name">${esc(sb.name)} <em>${sb.n}</em></span>${bar(sb.v, smx)}${val(sb.v)}</button>`;
-        if (!sopen) continue;
-        const ms = sb.mem.map((m) => ({ ...m, v: m[k] })).sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
-        const mmx = scale(ms);
-        for (const m of ms) h += `<div class="ex-row lv2"><span class="chev"></span><span class="ex-name">${esc(m.name)} <em>${esc(m.code)}</em></span>${bar(m.v, mmx)}${val(m.v)}</div>`;
-        h += `<button class="ex-more" data-id="${sb.id}">${esc(sb.name)} 상세 보기 ›</button>`;
+        const so = state.exOpen.has(sb.key);
+        const lk = sb.link ? `<a class="xl-pill" href="${sb.link}" target="_blank" rel="noopener" title="네이버 업종 화면">네이버 ↗</a>` : "";
+        h += `<div class="ex-row lv1${so ? " open" : ""}" data-k="${esc(sb.key)}" role="button" tabindex="0"><span class="chev">›</span><span class="ex-name">${esc(sb.name)} <em>${sb.n}</em>${lk}</span>${bar(sb.v, smx)}${val(sb.v)}</div>`;
+        if (!so) continue;
+        const ms = sorted(sb.stocks), mmx = scale(ms);
+        const showAll = state.exAll.has(sb.key) || ms.length <= 20;
+        for (const m of (showAll ? ms : ms.slice(0, 20))) {
+          const extra = m.value_mil != null ? `<em>거래대금 ${m.value_mil >= 100 ? Math.round(m.value_mil / 100).toLocaleString() + "억" : "1억 미만"}</em>` : `<em>${esc(m.code || "")}</em>`;
+          h += `<div class="ex-row lv2"><span class="chev"></span><span class="ex-name">${esc(m.name)} ${extra}${stockLinks(m, mk)}</span>${bar(m.v, mmx)}${val(m.v)}</div>`;
+        }
+        if (!showAll) h += `<button class="ex-more" data-all="${esc(sb.key)}">전체 ${ms.length}개 보기 ›</button>`;
+        if (sb.detail) h += `<button class="ex-more" data-id="${sb.detail}">${esc(sb.name)} 차트·상세 보기 ›</button>`;
       }
     }
-    const el = $("#explore");
     el.innerHTML = h;
-    $$(".ex-row[data-k]", el).forEach((b) => b.addEventListener("click", () => {
-      const key = b.dataset.k;
-      state.exOpen.has(key) ? state.exOpen.delete(key) : state.exOpen.add(key);
-      renderExplore(d);
-    }));
-    $$(".ex-more", el).forEach((b) => b.addEventListener("click", () => openDetail(b.dataset.id)));
+    const toggle = (key) => { state.exOpen.has(key) ? state.exOpen.delete(key) : state.exOpen.add(key); renderExplore(d); };
+    $$(".ex-row[data-k]", el).forEach((b) => {
+      b.addEventListener("click", (e) => { if (e.target.closest("a")) return; toggle(b.dataset.k); });
+      b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(b.dataset.k); } });
+    });
+    $$(".ex-more[data-id]", el).forEach((b) => b.addEventListener("click", () => openDetail(b.dataset.id)));
+    $$(".ex-more[data-all]", el).forEach((b) => b.addEventListener("click", () => { state.exAll.add(b.dataset.all); renderExplore(d); }));
   }
 
   // ---------- table
