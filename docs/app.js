@@ -212,13 +212,17 @@
   function naverTree(nv, k) {
     const secs = {};
     for (const ind of nv.industries) {
-      const sc = secs[ind.sector] || (secs[ind.sector] = { key: "n:" + ind.sector, name: ind.sector, children: [], all: [] });
-      const st = ind.stocks.map((x) => ({ ...x, v: x[k] }));
-      sc.children.push({ key: "u:" + ind.no, name: ind.name, n: st.length, link: ind.url,
-        v: k === "chg1" ? ind.rate : avgOf(st, "v"), stocks: st });
-      sc.all.push(...st);
+      const sc = secs[ind.sector] || (secs[ind.sector] = { key: "n:" + ind.sector, name: ind.sector, children: [] });
+      sc.children.push({ key: "u:" + ind.no, name: ind.name, n: ind.total, v: ind[k], link: ind.url,
+        rise: ind.rise, fall: ind.fall, leaf: true });
     }
-    return Object.values(secs).map((sc) => ({ ...sc, v: avgOf(sc.all, "v"), n: sc.all.length }));
+    // 섹터 등락률 = 소속 업종 등락률을 종목 수로 가중 평균
+    return Object.values(secs).map((sc) => {
+      const ok = sc.children.filter((c) => c.v != null && c.n);
+      const w = ok.reduce((a, c) => a + c.n, 0);
+      return { ...sc, n: sc.children.reduce((a, c) => a + (c.n || 0), 0),
+        v: w ? ok.reduce((a, c) => a + c.v * c.n, 0) / w : null };
+    });
   }
   async function renderExplore(d) {
     const k = state.exKey, mk = state.market;
@@ -239,14 +243,14 @@
         $("#exSub").textContent = `네이버 업종 · ${nv.basis_date} 종가 기준`; return;
       }
       tree = naverTree(nv, k);
-      $("#exSub").innerHTML = `네이버 업종 ${nv.n_industries}개 · 종목 ${nv.n_stocks.toLocaleString()}개 · ${nv.basis_date} 종가 · ${PLABEL[k]} <a class="xl-inline" href="${nv.source_url}" target="_blank" rel="noopener">네이버 업종별 시세 ↗</a>`;
-      note = k === "chg1" ? "업종 등락률은 네이버가 발표한 값 그대로, 섹터 등락률은 소속 종목의 단순 평균이에요." : "여러 날 등락률은 종목별 하루 등락률을 이어 곱한 뒤 단순 평균했어요.";
+      $("#exSub").innerHTML = `네이버 업종 ${nv.n_industries}개 · ${nv.basis_date} 종가 · ${PLABEL[k]} <a class="xl-inline" href="${nv.source_url}" target="_blank" rel="noopener">네이버 업종별 시세 ↗</a>`;
+      note = (k === "chg1" ? "업종 등락률은 네이버가 발표한 값 그대로예요." : "여러 날 등락률은 네이버 업종 하루 등락률을 이어 곱했어요.") + " 섹터는 소속 업종을 종목 수로 가중 평균했어요. 업종 안 종목은 '네이버' 버튼으로 네이버 화면에서 보세요.";
     } else {
       tree = boardTree(d, k);
       $("#exSub").textContent = `이 판 분류 · ${d.basis_date} 종가 · ${PLABEL[k]} 등락률`;
       note = "분류·세부 산업 등락률은 구성 종목 등락률의 단순 평균(종목 수 같은 비중)이에요.";
     }
-    $("#exNote").textContent = `큰 분류를 누르면 세부 업종이, 세부 업종을 누르면 종목이 펼쳐져요. ${note} 빨강은 상승, 파랑은 하락. 네이버·TV·Finviz 버튼은 새 창으로 열려요.`;
+    $("#exNote").textContent = `큰 분류를 누르면 세부 업종이 펼쳐지고, 이 판 분류에서는 세부 업종을 누르면 종목까지 펼쳐져요. ${note} 빨강은 상승, 파랑은 하락. 네이버·TV·Finviz 버튼은 새 창으로 열려요.`;
     const sorted = (arr) => arr.slice().sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
     const scale = (arr) => Math.max(1e-9, ...arr.map((x) => Math.abs(x.v ?? 0)));
     const bar = (v, mx) => v == null ? `<span class="ex-bar"></span>`
@@ -262,6 +266,11 @@
       for (const sb of subs) {
         const so = state.exOpen.has(sb.key);
         const lk = sb.link ? `<a class="xl-pill" href="${sb.link}" target="_blank" rel="noopener" title="네이버 업종 화면">네이버 ↗</a>` : "";
+        if (sb.leaf) {
+          const rf = sb.rise != null ? `<em class="rf"><b class="up">▲${sb.rise}</b> <b class="dn">▼${sb.fall}</b></em>` : "";
+          h += `<div class="ex-row lv1 leaf"><span class="chev"></span><span class="ex-name">${esc(sb.name)} <em>${sb.n ?? ""}</em>${rf}${lk}</span>${bar(sb.v, smx)}${val(sb.v)}</div>`;
+          continue;
+        }
         h += `<div class="ex-row lv1${so ? " open" : ""}" data-k="${esc(sb.key)}" role="button" tabindex="0"><span class="chev">›</span><span class="ex-name">${esc(sb.name)} <em>${sb.n}</em>${lk}</span>${bar(sb.v, smx)}${val(sb.v)}</div>`;
         if (!so) continue;
         const ms = sorted(sb.stocks), mmx = scale(ms);

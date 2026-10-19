@@ -323,3 +323,5 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .xl-inline { color: var(--accent); text-decoration: none; margin-left: 4px; }
 .explore .empty { font-size: 13.5px; color: var(--ink-2); padding: 16px 4px; margin: 0; line-height: 1.6; }
 .ex-row.lv2 .ex-name { white-space: normal; line-height: 1.35; }
+.ex-row.leaf { cursor: default; }
+.ex-name .rf { margin-left: 6px; } .rf b { font-weight: 600; } .rf .up { color: var(--up); } .rf .dn { color: var(--down); }

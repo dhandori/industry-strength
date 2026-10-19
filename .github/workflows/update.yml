@@ -53,9 +53,7 @@ jobs:
         if: always()
         continue-on-error: true
         timeout-minutes: 8
-        run: |
-          python scripts/naver_probe.py || true
-          python scripts/naver_upjong.py
+        run: python scripts/naver_upjong.py
 
       - name: 결과 저장 (실패해도 상태 기록)
         if: always()
