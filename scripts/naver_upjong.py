@@ -85,6 +85,8 @@ def fetch_groups() -> list[dict]:
     seen, out = set(), []
     for page in range(1, 11):
         r = requests.get(API, params={"page": page, "pageSize": 100}, headers=UA, timeout=20)
+        if page > 1 and r.status_code == 404:   # 마지막 페이지를 넘으면 404
+            break
         r.raise_for_status()
         groups = r.json().get("groups") or []
         new = [g for g in groups if g.get("no") not in seen]
