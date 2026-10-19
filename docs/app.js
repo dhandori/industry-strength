@@ -36,7 +36,7 @@
   $$(".seg[role=tablist] button").forEach((b) => b.addEventListener("click", () => {
     state.market = b.dataset.market;
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x === b));
-    state.group = "전체";
+    state.group = "전체"; state.exOpen = new Set();
     try { history.replaceState(null, "", "#" + state.market); } catch (e) {}
     load();
   }));
@@ -85,7 +85,7 @@
     else w.hidden = true;
     const groups = ["전체", ...new Set(d.items.map((i) => i.group))];
     $("#groupSel").innerHTML = groups.map((g) => `<option${g === state.group ? " selected" : ""}>${esc(g)}</option>`).join("");
-    renderTiles(d); renderSignals(d); renderTable(); renderHeat(d); renderGroups(d); renderBreadth(d);
+    renderTiles(d); renderSignals(d); renderExplore(d); renderTable(); renderHeat(d); renderGroups(d); renderBreadth(d);
   }
 
   // ---------- tiles
@@ -164,6 +164,65 @@
     tip.style.left = x + "px"; tip.style.top = (r.bottom + 8) + "px";
     const off = () => { tip.hidden = true; tip.classList.remove("wide"); removeEventListener("pointerdown", off, true); removeEventListener("scroll", off, true); };
     setTimeout(() => { addEventListener("pointerdown", off, true); addEventListener("scroll", off, true); }, 0);
+  }
+
+  // ---------- 업종 탐색 (분류 → 세부 산업 → 종목)
+  state.exKey = "chg1"; state.exOpen = new Set();
+  $$("#exSeg button").forEach((b) => b.addEventListener("click", () => {
+    state.exKey = b.dataset.k;
+    $$("#exSeg button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    renderExplore(state.data[state.market]);
+  }));
+  function avgOf(list, k) {
+    const v = list.map((m) => m[k]).filter((x) => x != null);
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  }
+  function renderExplore(d) {
+    const k = state.exKey;
+    const label = { chg1: "1일", ret5: "5일", ret20: "20일", ret60: "60일" }[k];
+    $("#exSub").textContent = `${d.basis_date} 종가 기준 · ${label} 등락률`;
+    const groups = {};
+    for (const it of d.items) {
+      const g = groups[it.group] || (groups[it.group] = { name: it.group, subs: [], stocks: new Map() });
+      const mem = (it.members || []).filter((m) => !m.missing);
+      g.subs.push({ id: it.id, name: it.name, v: avgOf(mem, k), n: mem.length, mem });
+      mem.forEach((m) => g.stocks.set(m.ticker, m));
+    }
+    const list = Object.values(groups).map((g) => ({ ...g, v: avgOf([...g.stocks.values()], k), n: g.stocks.size }))
+      .sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
+    const scale = (arr) => Math.max(1e-9, ...arr.map((x) => Math.abs(x.v ?? 0)));
+    const bar = (v, mx) => {
+      if (v == null) return `<span class="ex-bar"></span>`;
+      const w = Math.min(50, Math.abs(v) / mx * 50);
+      return `<span class="ex-bar"><i class="${v >= 0 ? "pos" : "neg"}" style="width:${w}%"></i></span>`;
+    };
+    const val = (v) => `<span class="ex-val ret ${cls(v)}">${fmtPct(v, 2)}</span>`;
+    const gmx = scale(list);
+    let h = "";
+    for (const g of list) {
+      const gk = "g:" + g.name, open = state.exOpen.has(gk);
+      h += `<button class="ex-row lv0${open ? " open" : ""}" data-k="${esc(gk)}"><span class="chev">›</span><span class="ex-name">${esc(g.name)} <em>${g.n}</em></span>${bar(g.v, gmx)}${val(g.v)}</button>`;
+      if (!open) continue;
+      const subs = g.subs.slice().sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
+      const smx = scale(subs);
+      for (const sb of subs) {
+        const sk = "s:" + sb.id, sopen = state.exOpen.has(sk);
+        h += `<button class="ex-row lv1${sopen ? " open" : ""}" data-k="${sk}"><span class="chev">›</span><span class="ex-name">${esc(sb.name)} <em>${sb.n}</em></span>${bar(sb.v, smx)}${val(sb.v)}</button>`;
+        if (!sopen) continue;
+        const ms = sb.mem.map((m) => ({ ...m, v: m[k] })).sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
+        const mmx = scale(ms);
+        for (const m of ms) h += `<div class="ex-row lv2"><span class="chev"></span><span class="ex-name">${esc(m.name)} <em>${esc(m.code)}</em></span>${bar(m.v, mmx)}${val(m.v)}</div>`;
+        h += `<button class="ex-more" data-id="${sb.id}">${esc(sb.name)} 상세 보기 ›</button>`;
+      }
+    }
+    const el = $("#explore");
+    el.innerHTML = h;
+    $$(".ex-row[data-k]", el).forEach((b) => b.addEventListener("click", () => {
+      const key = b.dataset.k;
+      state.exOpen.has(key) ? state.exOpen.delete(key) : state.exOpen.add(key);
+      renderExplore(d);
+    }));
+    $$(".ex-more", el).forEach((b) => b.addEventListener("click", () => openDetail(b.dataset.id)));
   }
 
   // ---------- table

@@ -290,3 +290,28 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .rb-log { font-size: 12.5px; color: var(--accent); text-decoration: none; }
 .rb-hint { flex-basis: 100%; font-size: 12px; color: var(--muted); }
 @media (max-width: 560px) { .runbar { font-size: 12.5px; gap: 4px 12px; } .rb-actions { margin-left: 0; width: 100%; } .rb-run { flex: 1; } }
+
+/* 업종 탐색 */
+.explore { display: grid; }
+.ex-row { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 18px minmax(120px, 1fr) minmax(120px, 46%) 70px; align-items: center; gap: 8px; padding: 7px 4px; border-bottom: 1px solid var(--grid); cursor: pointer; font-size: 13.5px; }
+.ex-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+@media (hover: hover) { button.ex-row:hover { background: var(--accent-soft); } }
+.ex-row .chev { color: var(--muted); transition: transform .15s; display: inline-block; text-align: center; }
+.ex-row.open .chev { transform: rotate(90deg); }
+.ex-row.lv0 .ex-name { font-weight: 700; }
+.ex-row.lv1 { padding-left: 22px; background: color-mix(in srgb, var(--surface-2) 45%, transparent); }
+.ex-row.lv1 .ex-name { font-weight: 600; }
+.ex-row.lv2 { padding-left: 40px; cursor: default; font-size: 13px; background: color-mix(in srgb, var(--surface-2) 75%, transparent); }
+.ex-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ex-name em { font-style: normal; color: var(--muted); font-size: 11.5px; font-weight: 500; margin-left: 2px; }
+.ex-bar { position: relative; height: 10px; }
+.ex-bar::before { content: ""; position: absolute; left: 50%; top: -3px; bottom: -3px; width: 1px; background: var(--line); }
+.ex-bar i { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.ex-bar i.pos { left: 50%; background: var(--up); }
+.ex-bar i.neg { right: 50%; background: var(--down); }
+.ex-val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 650; }
+.ex-more { all: unset; cursor: pointer; font-size: 12.5px; color: var(--accent); padding: 6px 4px 10px 58px; font-weight: 600; }
+@media (max-width: 560px) {
+  .ex-row { grid-template-columns: 14px minmax(90px, 1fr) minmax(70px, 34%) 62px; gap: 6px; font-size: 13px; }
+  .ex-row.lv1 { padding-left: 12px; } .ex-row.lv2 { padding-left: 22px; }
+}
