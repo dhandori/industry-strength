@@ -4,7 +4,7 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const state = { market: "KR", sort: "rank", group: "전체", data: {}, series: {}, charts: [], openId: null };
   const HEAT_DAYS = 40;
-  const WEAK = ["3단계 둔화", "4단계 하락", "1단계 바닥"];
+  const WEAK = ["상승 둔화", "하락 추세", "바닥 다지기"];
 
   // ---------- theme
   const root = document.documentElement;
@@ -80,8 +80,8 @@
     const rc = b.regime === "상승 추세" ? "up" : b.regime === "하락 추세" ? "down" : "neutral";
     const br = d.breadth.above50.filter((v) => v != null);
     const brNow = br.at(-1), brPrev = br.at(-21);
-    const s2 = d.items.filter((i) => i.stage === "2단계 상승").length;
-    const s2t = d.items.filter((i) => i.stage === "2단계 진입 시도").length;
+    const s2 = d.items.filter((i) => i.stage === "상승 추세").length;
+    const s2t = d.items.filter((i) => i.stage === "상승 전환 시도").length;
     $("#tiles").innerHTML = `
       <div class="tile"><div class="k">시장 국면</div>
         <div class="v"><span class="badge ${rc}" style="font-size:15px;padding:3px 10px"><span class="dot"></span>${b.regime}</span></div>
@@ -92,9 +92,9 @@
       <div class="tile"><div class="k">50일선 위 산업 비율</div>
         <div class="v">${brNow == null ? "–" : brNow.toFixed(0) + "%"}</div>
         <div class="d">20거래일 전 ${brPrev == null ? "–" : brPrev.toFixed(0) + "%"}${brNow != null && brPrev != null ? ` (${brNow >= brPrev ? "▲" : "▼"}${Math.abs(brNow - brPrev).toFixed(0)}%p)` : ""}</div></div>
-      <div class="tile"><div class="k">2단계 상승 산업</div>
+      <div class="tile"><div class="k">상승 추세 산업</div>
         <div class="v">${s2}<span style="font-size:15px;color:var(--muted);font-weight:600"> / ${d.items.length}</span></div>
-        <div class="d">진입 시도 ${s2t}개 포함 시 ${s2 + s2t}개</div></div>`;
+        <div class="d">상승 전환 시도 ${s2t}개까지 합치면 ${s2 + s2t}개</div></div>`;
   }
 
   // ---------- signals
@@ -115,7 +115,7 @@
           const weak = !g.any && WEAK.includes(i.stage);
           return `<button class="chip${weak ? " weak" : ""}" data-id="${i.id}"${weak ? ' title="가격 추세는 아직 약함(하락 속 상대 강세)"' : ""}>${esc(i.name)}${weak ? " ↘" : ""}</button>`;
         }).join("") : '<span class="none">해당 없음</span>'}</div></div>`;
-    }).join("") + `<p class="foot-note" style="grid-column:1/-1;margin:0">↘ 표시는 순위는 올랐지만 가격은 아직 하락·둔화 단계인 산업이에요. 덜 빠져서 순위가 오른 경우일 수 있으니 추세 확인이 먼저예요.</p>`;
+    }).join("") + `<p class="foot-note" style="grid-column:1/-1;margin:0">↘ 표시는 순위는 올랐지만 가격은 아직 하락하거나 힘이 빠진 산업이에요. 덜 빠져서 순위가 오른 경우일 수 있으니 추세 확인이 먼저예요.</p>`;
     $$("#signals .chip").forEach((c) => c.addEventListener("click", () => openDetail(c.dataset.id)));
   }
 
@@ -124,7 +124,7 @@
     const d = state.data[state.market];
     if (!d) return;
     let rows = d.items.filter((i) => (state.group === "전체" || i.group === state.group)
-      && (!state.trendOnly || i.stage === "2단계 상승" || i.stage === "2단계 진입 시도"));
+      && (!state.trendOnly || i.stage === "상승 추세" || i.stage === "상승 전환 시도"));
     const k = state.sort;
     rows = rows.slice().sort((a, b) => {
       const av = a[k], bv = b[k];
@@ -132,12 +132,12 @@
       if (av == null) return 1; if (bv == null) return -1;
       return k === "rank_chg5" ? bv - av || a.rank - b.rank : av - bv;
     });
-    const stageCls = { "2단계 상승": "s2", "2단계 진입 시도": "s2t", "4단계 하락": "s4" };
+    const stageCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
     const ret = (v, rk) => `<span class="ret ${cls(v)}">${fmtPct(v)}</span><span class="rsub">${rk == null ? "–" : rk + "위"}</span>`;
     $("#rankTable tbody").innerHTML = rows.map((i) => {
       const ch = i.rank_chg5;
       const chg = ch == null ? "" : ch > 0 ? `<span class="chg up">▲${ch}</span>` : ch < 0 ? `<span class="chg down">▼${-ch}</span>` : `<span class="chg flat">–</span>`;
-      const checks = i.checks ? `<span class="checks" aria-label="추세 조건 ${i.checks.filter(Boolean).length}/5">${i.checks.map((c) => `<i class="${c ? "on" : ""}"></i>`).join("")}</span>` : `<span class="rsub">이력 부족</span>`;
+      const checks = i.checks ? `<span class="checks" aria-label="추세 조건 ${i.checks.filter(Boolean).length}/5">${i.checks.map((c) => `<i class="${c ? "on" : ""}"></i>`).join("")}</span>` : `<span class="rsub">데이터 부족</span>`;
       const tags = i.tags.filter((t) => !t.includes("이탈")).slice(0, 2).map((t) => `<span class="tag-mini">${t}</span>`).join("");
       return `<tr data-id="${i.id}" class="${i.top ? "top" : ""}">
         <td><span class="rk">${i.rank ?? "–"}</span>${chg}</td>
@@ -205,7 +205,7 @@
   // ---------- groups
   function renderGroups(d) {
     $("#groups").innerHTML = d.groups.map((g) => `
-      <div class="grp" data-t="${esc(g.group)}: 평균 강도 ${g.score} · 상위 절반 ${g.top_half}/${g.n} · 2단계 ${g.stage2}/${g.n}">
+      <div class="grp" data-t="${esc(g.group)}: 평균 강도 ${g.score} · 상위 절반 ${g.top_half}/${g.n} · 상승 추세 ${g.stage2}/${g.n}">
         <span class="gn">${esc(g.group)}</span>
         <span class="gb"><b style="width:${g.score ?? 0}%"></b></span>
         <span class="gm">${g.score == null ? "–" : Math.round(g.score)}점 · 상위 ${g.top_half}/${g.n}</span>
@@ -265,7 +265,7 @@
     if (!lg || !lg.classList.contains("chart-legend")) { lg = document.createElement("div"); lg.className = "chart-legend"; el.before(lg); }
     legend(lg, [
       { n: "50일선 위", c: css("--accent"), s: s1, f: (v) => v.toFixed(0) + "%", last: d.breadth.above50.at(-1) },
-      { n: "2단계 상승", c: css("--good"), s: s2, f: (v) => v.toFixed(0) + "%", last: d.breadth.stage2.at(-1) },
+      { n: "상승 추세", c: css("--good"), s: s2, f: (v) => v.toFixed(0) + "%", last: d.breadth.stage2.at(-1) },
     ], ch);
   }
 
@@ -286,7 +286,7 @@
       ["상위권 지속", it.streak ? `${it.streak}일 (${md(it.streak_start)}~)` : "–"],
       ["20일 수익률", fmtPct(it.ret20)], ["60일 수익률", fmtPct(it.ret60)], ["120일 수익률", fmtPct(it.ret120)],
       ["52주 고점 대비", it.dist_high == null ? "–" : it.dist_high.toFixed(1) + "%"],
-      ["단계", it.stage], ["RS선 50일 평균 위", it.rs_above_ma50 == null ? "–" : it.rs_above_ma50 ? "예" : "아니오"],
+      ["추세 상태", it.stage], ["RS선 50일 평균 위", it.rs_above_ma50 == null ? "–" : it.rs_above_ma50 ? "예" : "아니오"],
       ["거래량(20일/60일)", it.vol_ratio == null ? "–" : it.vol_ratio.toFixed(2) + "배"],
       ["종합 강도", it.score == null ? "–" : Math.round(it.score) + "점"],
     ];

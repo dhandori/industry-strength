@@ -219,18 +219,18 @@ def r(x, nd=2):
 
 def stage_of(close, ma50, ma150, ma200, ma200_up, dist_high) -> str:
     if any(pd.isna(v) for v in (close, ma50, ma200)):
-        return "이력 부족"
+        return "데이터 부족"
     if pd.isna(ma150):
         ma150 = ma200
     if close > ma50 > ma150 > ma200 and ma200_up and dist_high >= -0.25:
-        return "2단계 상승"
+        return "상승 추세"
     if close < ma200 and not ma200_up:
-        return "4단계 하락"
+        return "하락 추세"
     if close < ma50 and close > ma200 and ma200_up:
-        return "3단계 둔화"
+        return "상승 둔화"
     if close > ma50 and close > ma200:
-        return "2단계 진입 시도"
-    return "1단계 바닥"
+        return "상승 전환 시도"
+    return "바닥 다지기"
 
 
 def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, source: dict | None) -> tuple[dict, dict]:
@@ -358,7 +358,7 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
         g["n"] += 1
         g["score_sum"] += it["score"]
         g["top_half"] += 1 if it["rank"] <= n_last / 2 else 0
-        g["stage2"] += 1 if it["stage"] == "2단계 상승" else 0
+        g["stage2"] += 1 if it["stage"] == "상승 추세" else 0
     group_list = sorted(
         ({"group": g["group"], "n": g["n"], "score": r(g["score_sum"] / g["n"], 1) if g["n"] else None,
           "top_half": g["top_half"], "stage2": g["stage2"]} for g in groups.values()),
