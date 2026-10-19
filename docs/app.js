@@ -85,7 +85,12 @@
     const s2t = d.items.filter((i) => i.stage === "상승 전환 시도").length;
     const idxs = [b, d.benchmark2].filter(Boolean);
     const reg = (x) => { const c = x.regime === "상승 추세" ? "up" : x.regime === "하락 추세" ? "down" : "neutral"; return `<span class="badge ${c}"><span class="dot"></span>${x.regime}</span>`; };
+    // 첫 번째 타일이 결론: 지금 추세가 살아 있는 산업이 몇 개인가.
+    const tone = s2 / Math.max(1, d.items.length) >= 0.3 ? "up" : s2 / Math.max(1, d.items.length) <= 0.1 ? "down" : "";
     $("#tiles").innerHTML = `
+      <div class="tile tile-main"><div class="k">상승 추세 산업</div>
+        <div class="v big ${tone}">${s2}<span class="of"> / ${d.items.length}</span></div>
+        <div class="d">상승 전환 시도 ${s2t}개까지 합치면 ${s2 + s2t}개</div></div>
       <div class="tile"><div class="k">시장 국면</div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span>${reg(x)}</div>
         <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}</div>`).join("")}</div>
@@ -94,33 +99,58 @@
         <div class="d">5일 ${fmtPct(x.ret5)} · 60일 ${fmtPct(x.ret60)}</div>`).join("")}</div>
       <div class="tile"><div class="k">50일선 위 산업 비율</div>
         <div class="v">${brNow == null ? "–" : brNow.toFixed(0) + "%"}</div>
-        <div class="d">20거래일 전 ${brPrev == null ? "–" : brPrev.toFixed(0) + "%"}${brNow != null && brPrev != null ? ` (${brNow >= brPrev ? "▲" : "▼"}${Math.abs(brNow - brPrev).toFixed(0)}%p)` : ""}</div></div>
-      <div class="tile"><div class="k">상승 추세 산업</div>
-        <div class="v">${s2}<span style="font-size:15px;color:var(--muted);font-weight:600"> / ${d.items.length}</span></div>
-        <div class="d">상승 전환 시도 ${s2t}개까지 합치면 ${s2 + s2t}개</div></div>`;
+        <div class="d">20거래일 전 ${brPrev == null ? "–" : brPrev.toFixed(0) + "%"}${brNow != null && brPrev != null ? ` (${brNow >= brPrev ? "▲" : "▼"}${Math.abs(brNow - brPrev).toFixed(0)}%p)` : ""}</div></div>`;
   }
 
   // ---------- signals
+  const SHOW = 5;
+  const weakHelp = "순위는 올랐지만 가격은 아직 하락하거나 힘이 빠진 산업이에요. 덜 빠져서 순위가 오른 경우일 수 있으니 추세 확인이 먼저예요.";
   function renderSignals(d) {
-    const groups = [
-      { t: "순위 급상승", c: "var(--up)", desc: "5일 새 크게 올라온 산업" },
-      { t: "신규 상위권", c: "var(--accent)" },
-      { t: "종목 확산", c: "var(--good)" },
-      { t: "52주 신고가", c: "var(--good)" },
-      { t: "RS 신고가", c: "var(--good)" },
-      { t: "50일선 돌파", c: "var(--accent)" },
-      { t: "약화 경고", c: "var(--down)", any: ["상위권 이탈", "50일선 이탈"] },
+    // 강세 신호 3종은 한 줄, 주의 신호 2종은 그 아래 한 줄. 0개인 카드는 한 줄로 접는다.
+    const rows = [
+      { title: "강세 신호", groups: [
+        { t: "순위 급상승", c: "var(--up)", help: "5거래일 전보다 종합 순위가 크게 오른 산업" },
+        { t: "신규 상위권", c: "var(--accent)", help: "오늘 처음 상위 25% 안에 들어온 산업" },
+        { t: "종목 확산", c: "var(--good)", help: "구성 종목의 70% 이상이 50일선 위인 산업" },
+        { t: "52주 신고가", c: "var(--good)", help: "바구니 지수가 52주 고점을 넘긴 산업" },
+        { t: "RS 신고가", c: "var(--good)", help: "시장 대비 강도(RS선)가 1년 중 최고인 산업" },
+      ] },
+      { title: "주의 신호", groups: [
+        { t: "50일선 돌파", c: "var(--accent)", help: "바구니 지수가 오늘 50일선 위로 올라온 산업 · 전환 초입일 수 있어요" },
+        { t: "약화 경고", c: "var(--down)", any: ["상위권 이탈", "50일선 이탈"], help: "상위 25%에서 밀려났거나 50일선 아래로 내려간 산업" },
+      ] },
     ];
-    $("#signals").innerHTML = groups.map((g) => {
-      const keys = g.any || [g.t];
-      const list = d.items.filter((i) => i.tags.some((t) => keys.includes(t)));
-      return `<div class="sig"><h3><span class="dot" style="color:${g.c}"></span>${g.t} <span class="cnt">${list.length}</span></h3>
-        <div class="chips">${list.length ? list.map((i) => {
+    $("#signals").innerHTML = rows.map((row) => {
+      const empties = [];
+      const cards = row.groups.map((g) => {
+        const keys = g.any || [g.t];
+        const list = d.items.filter((i) => i.tags.some((t) => keys.includes(t)));
+        const chip = (i) => {
           const weak = !g.any && WEAK.includes(i.stage);
-          return `<button class="chip${weak ? " weak" : ""}" data-id="${i.id}"${weak ? ' title="가격 추세는 아직 약함(하락 속 상대 강세)"' : ""}>${esc(i.name)}${weak ? " ↘" : ""}</button>`;
-        }).join("") : '<span class="none">해당 없음</span>'}</div></div>`;
-    }).join("") + `<p class="foot-note" style="grid-column:1/-1;margin:0">↘ 표시는 순위는 올랐지만 가격은 아직 하락하거나 힘이 빠진 산업이에요. 덜 빠져서 순위가 오른 경우일 수 있으니 추세 확인이 먼저예요.</p>`;
-    $$("#signals .chip").forEach((c) => c.addEventListener("click", () => openDetail(c.dataset.id)));
+          return `<button class="chip${weak ? " weak" : ""}" data-id="${i.id}"${weak ? ` title="${weakHelp}"` : ""}>${esc(i.name)}${weak ? '<span class="chip-tail">순위↑ 가격↓</span>' : ""}</button>`;
+        };
+        const head = `<h3><span class="dot" style="color:${g.c}"></span>${g.t} <span class="cnt">${list.length}</span><button class="help" type="button" aria-label="${g.t} 뜻" data-help="${esc(g.help)}">?</button></h3>`;
+        if (!list.length) { empties.push(`<span class="sig-empty">${head}<span class="none">해당 없음</span></span>`); return ""; }
+        const more = list.length > SHOW ? `<button class="chip more" type="button" data-more="${g.t}">+${list.length - SHOW}개 더</button>` : "";
+        return `<div class="sig" data-sig="${g.t}">${head}
+          <div class="chips">${list.slice(0, SHOW).map(chip).join("")}${more}</div>
+          ${list.length > SHOW ? `<div class="chips rest" hidden>${list.slice(SHOW).map(chip).join("")}<button class="chip more" type="button" data-less="${g.t}">접기</button></div>` : ""}</div>`;
+      });
+      return `<div class="sig-row"><div class="sig-row-title">${row.title}</div><div class="sig-grid">${cards.join("")}</div>${empties.length ? `<div class="sig-empties">${empties.join("")}</div>` : ""}</div>`;
+    }).join("");
+    const sg = $("#signals");
+    $$(".chip[data-id]", sg).forEach((c) => c.addEventListener("click", () => openDetail(c.dataset.id)));
+    $$(".chip[data-more]", sg).forEach((b) => b.addEventListener("click", () => { const s = b.closest(".sig"); $(".rest", s).hidden = false; b.hidden = true; }));
+    $$(".chip[data-less]", sg).forEach((b) => b.addEventListener("click", () => { const s = b.closest(".sig"); $(".rest", s).hidden = true; $(".chip[data-more]", s).hidden = false; }));
+    $$(".help", sg).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); showHelp(b, b.dataset.help); }));
+  }
+  function showHelp(anchor, text) {
+    tip.textContent = text; tip.hidden = false; tip.classList.add("wide");
+    const r = anchor.getBoundingClientRect();
+    const x = Math.max(8, Math.min(r.left, innerWidth - tip.offsetWidth - 8));
+    tip.style.left = x + "px"; tip.style.top = (r.bottom + 8) + "px";
+    const off = () => { tip.hidden = true; tip.classList.remove("wide"); removeEventListener("pointerdown", off, true); removeEventListener("scroll", off, true); };
+    setTimeout(() => { addEventListener("pointerdown", off, true); addEventListener("scroll", off, true); }, 0);
   }
 
   // ---------- table
@@ -138,28 +168,43 @@
     });
     const stageCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
     const ret = (v, rk) => `<span class="ret ${cls(v)}">${fmtPct(v)}</span><span class="rsub">${rk == null ? "–" : rk + "위"}</span>`;
+    // 막대 길이는 시장 안 순위 백분위(1위=100%, 꼴찌=0%): 점수가 55~90에 몰려도 차이가 보이게.
+    const nAll = d.items.filter((x) => x.rank != null).length;
+    const pctile = (i) => i.rank == null || nAll < 2 ? 0 : Math.round((1 - (i.rank - 1) / (nAll - 1)) * 100);
+    const CHECK_LABELS = ["50", "50>150", "150>200", "200↑", "고점"];
+    const checksOf = (i, labels) => i.checks ? `<span class="checks${labels ? " labeled" : ""}" aria-label="추세 조건 ${i.checks.filter(Boolean).length}/5">${i.checks.map((c, k) => `<span class="ck"><i class="${c ? "on" : ""}"></i>${labels ? `<em>${CHECK_LABELS[k]}</em>` : ""}</span>`).join("")}</span>` : `<span class="rsub">데이터 부족</span>`;
+    const chgOf = (i) => { const ch = i.rank_chg5; return ch == null ? "" : ch > 0 ? `<span class="chg up">▲${ch}</span>` : ch < 0 ? `<span class="chg down">▼${-ch}</span>` : `<span class="chg flat">–</span>`; };
+    const subOf = (i) => `대장 ${esc(i.leader || "–")} · ${i.n ?? 0}종목` + (i.streak ? ` · 상위권 ${i.streak}일째` : "") + (i.breadth50 == null ? "" : ` · 50일선 위 ${i.breadth50}%`) + (i.near_high ? ` · 신고가권 ${i.near_high}` : "");
     $("#rankTable tbody").innerHTML = rows.map((i) => {
-      const ch = i.rank_chg5;
-      const chg = ch == null ? "" : ch > 0 ? `<span class="chg up">▲${ch}</span>` : ch < 0 ? `<span class="chg down">▼${-ch}</span>` : `<span class="chg flat">–</span>`;
-      const checks = i.checks ? `<span class="checks" aria-label="추세 조건 ${i.checks.filter(Boolean).length}/5">${i.checks.map((c) => `<i class="${c ? "on" : ""}"></i>`).join("")}</span>` : `<span class="rsub">데이터 부족</span>`;
       const tags = i.tags.filter((t) => !t.includes("이탈")).slice(0, 2).map((t) => `<span class="tag-mini">${t}</span>`).join("");
       return `<tr data-id="${i.id}" class="${i.top ? "top" : ""}">
-        <td><span class="rk">${i.rank ?? "–"}</span>${chg}</td>
-        <td class="name"><b>${esc(i.name)}${i.stale ? '<span class="stale">지연</span>' : ""}</b><span>대장 ${esc(i.leader || "–")} · ${i.n ?? 0}종목</span>${tags ? "<br>" + tags : ""}</td>
-        <td><div class="bar"><i><b style="width:${i.score ?? 0}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div></td>
+        <td><span class="rk">${i.rank ?? "–"}</span>${chgOf(i)}</td>
+        <td class="name"><b>${esc(i.name)}${i.stale ? '<span class="stale">지연</span>' : ""}</b><span>${subOf(i)}</span>${tags ? "<br>" + tags : ""}</td>
+        <td><div class="bar" title="시장 안 순위 백분위 ${pctile(i)}% · 종합 강도 ${i.score == null ? "–" : Math.round(i.score)}점"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div></td>
         <td class="num">${ret(i.ret5, i.rank5)}</td>
         <td class="num">${ret(i.ret20, i.rank20)}</td>
         <td class="num">${ret(i.ret60, i.rank60)}</td>
-        <td class="num" title="${i.streak_start ? i.streak_start + "부터" : ""}">${i.streak ? `<b>${i.streak}일</b><span class="rsub">${md(i.streak_start)}~</span>` : '<span class="rsub">–</span>'}</td>
-        <td class="num" title="구성 종목 중 50일선 위 비율 · 52주 고점 -5% 이내 종목 수">${i.breadth50 == null ? "–" : `<b>${i.breadth50}%</b>`}<span class="rsub">신고가권 ${i.near_high ?? 0}/${i.n ?? 0}</span></td>
-        <td>${checks}</td>
+        <td>${checksOf(i, true)}</td>
         <td class="num">${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</td>
         <td><span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></td>
       </tr>`;
     }).join("");
-    if (!rows.length) $("#rankTable tbody").innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">조건에 맞는 산업이 없어요. 지금은 가격 추세가 살아 있는 산업이 없다는 뜻이에요.</td></tr>`;
-    $$("#rankTable tbody tr[data-id]").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
-    $("#tableNote").innerHTML = `파란 띠 = 종합 순위 상위 25%(${d.top_cut}위 이내). 수익률 아래 작은 숫자는 그 기간 순위예요. 표가 넘치면 옆으로 밀어서 보세요.`;
+    // 휴대폰: 표 대신 카드. 1줄 순위·이름·상태, 2줄 강도·수익률, 3줄 추세 점검.
+    $("#rankCards").innerHTML = rows.map((i) => `
+      <button class="rcard${i.top ? " top" : ""}" type="button" data-id="${i.id}">
+        <div class="rc1"><span class="rk">${i.rank ?? "–"}</span>${chgOf(i)}<b class="rc-name">${esc(i.name)}</b><span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></div>
+        <div class="rc-sub">${subOf(i)}</div>
+        <div class="rc2"><div class="bar"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div>
+          <span class="rc-ret"><em>5일</em>${ret(i.ret5, i.rank5)}</span><span class="rc-ret"><em>20일</em>${ret(i.ret20, i.rank20)}</span><span class="rc-ret"><em>60일</em>${ret(i.ret60, i.rank60)}</span></div>
+        <div class="rc3">${checksOf(i, true)}<span class="rc-dist">고점 대비 <b>${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</b></span></div>
+      </button>`).join("");
+    if (!rows.length) {
+      const msg = "조건에 맞는 산업이 없어요. 지금은 가격 추세가 살아 있는 산업이 없다는 뜻이에요.";
+      $("#rankTable tbody").innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
+      $("#rankCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
+    }
+    $$("#rankTable tbody tr[data-id], #rankCards .rcard").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
+    $("#tableNote").innerHTML = `파란 띠 = 종합 순위 상위 25%(${d.top_cut}위 이내). 막대 길이는 시장 안 순위 백분위, 숫자는 종합 강도 점수예요. 수익률 아래 작은 숫자는 그 기간 순위예요.`;
   }
 
   // ---------- heatmap
@@ -177,10 +222,10 @@
     const dates = d.history.dates.slice(-days);
     const n = d.n;
     const all = d.items.filter((i) => i.rank != null);
-    const items = state.heatAll ? all : all.slice(0, 30);
+    const items = state.heatAll ? all : all.filter((i) => i.rank <= d.top_cut);
     const btn = $("#heatMore");
-    btn.hidden = all.length <= 30;
-    btn.textContent = state.heatAll ? "상위 30개만 보기" : `전체 ${all.length}개 보기`;
+    btn.hidden = all.length <= items.length;
+    btn.textContent = state.heatAll ? `상위 25%(${d.top_cut}개)만 보기` : `전체 ${all.length}개 보기`;
     const el = $("#heat");
     el.style.gridTemplateColumns = `minmax(110px, 150px) repeat(${dates.length}, minmax(7px, 1fr))`;
     let h = "", sepDone = false;
@@ -191,11 +236,11 @@
       h += `<div class="hn" data-id="${it.id}" title="${esc(it.name)}"><em>${it.rank}</em>${esc(it.name)}</div>`;
       h += rk.map((r, k) => `<div class="hc${k === last ? " today" : ""}" style="background:${heatColor(r, n)}" data-t="${esc(it.name)} · ${dates[k]} · ${r == null ? "데이터 없음" : r + "위 / " + n}"></div>`).join("");
     }
-    h += `<div></div>` + dates.map((dt, k) => `<div class="hd">${(last - k) % (days <= 20 ? 5 : 10) === 0 ? md(dt) : ""}</div>`).join("");
+    h += `<div></div>` + dates.map((dt, k) => `<div class="hd">${(last - k) % 5 === 0 ? md(dt) : ""}</div>`).join("");
     el.innerHTML = h;
     $$(".hn", el).forEach((x) => x.addEventListener("click", () => openDetail(x.dataset.id)));
     const wrap = el.parentElement; wrap.scrollLeft = wrap.scrollWidth;
-    $("#heat-h .sub").textContent = `최근 ${dates.length}거래일 · 종합 순위`;
+    $("#heat-h .sub").textContent = `최근 ${dates.length}거래일 · 종합 순위${state.heatAll ? "" : " · 상위 25%만"}`;
     bindTips(el, ".hc");
   }
 
@@ -223,6 +268,16 @@
   }
 
   // ---------- charts
+  const hasLW = () => !!(window.LightweightCharts && window.LightweightCharts.createChart);
+  // 차트 라이브러리(CDN)를 못 불러오면 빈칸 대신 안내 + 숫자 표로 대체한다.
+  function chartFallback(el, dates, series) {
+    const last = (a) => { for (let k = a.length - 1; k >= 0; k--) if (a[k] != null) return a[k]; return null; };
+    const prev = (a, n) => { const idx = a.length - 1 - n; return idx >= 0 ? a[idx] : null; };
+    el.innerHTML = `<div class="chart-fallback"><p>차트 라이브러리를 불러오지 못했어요. 최근 값을 숫자로 보여 드려요.</p>
+      <table class="mem-table"><thead><tr><th>항목</th><th class="num">최근</th><th class="num">5일 전</th><th class="num">20일 전</th></tr></thead><tbody>
+      ${series.map(([n, a, f]) => `<tr><td><b>${n}</b></td><td class="num">${last(a) == null ? "–" : f(last(a))}</td><td class="num">${prev(a, 5) == null ? "–" : f(prev(a, 5))}</td><td class="num">${prev(a, 20) == null ? "–" : f(prev(a, 20))}</td></tr>`).join("")}
+      </tbody></table></div>`;
+  }
   function baseChart(el, opts = {}) {
     const LW = window.LightweightCharts;
     const ch = LW.createChart(el, {
@@ -264,6 +319,8 @@
   function renderBreadth(d) {
     const el = $("#breadthChart");
     clearCharts(el); el.innerHTML = "";
+    if (!hasLW()) { el.classList.add("as-table"); chartFallback(el, d.breadth.dates, [["50일선 위 산업", d.breadth.above50, (v) => v.toFixed(0) + "%"], ["상승 추세 산업", d.breadth.stage2, (v) => v.toFixed(0) + "%"]]); return; }
+    el.classList.remove("as-table");
     const ch = baseChart(el, { fmt: (v) => v.toFixed(0) + "%", priceScale: { autoScale: false } });
     const s1 = line(ch, d.breadth.dates, d.breadth.above50, css("--accent"), 2);
     const s2 = line(ch, d.breadth.dates, d.breadth.stage2, css("--good"), 2, { lineStyle: 0 });
@@ -312,9 +369,16 @@
     const cur = d.currency;
     const fmtP = (v) => v == null ? "–" : cur === "원" ? Math.round(v).toLocaleString("ko-KR") : v.toFixed(2);
     const stCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
+    const link = (m) => {
+      const code = String(m.code || "").trim();
+      if (!/^[A-Za-z0-9.\-]{1,12}$/.test(code)) return "";
+      const tv = `https://www.tradingview.com/symbols/${encodeURIComponent(state.market === "KR" ? "KRX-" + code : code)}/`;
+      const naver = state.market === "KR" ? `<a href="https://m.stock.naver.com/domestic/stock/${encodeURIComponent(code)}/total" target="_blank" rel="noopener noreferrer">네이버</a>` : "";
+      return `<span class="mem-links">${naver}<a href="${tv}" target="_blank" rel="noopener noreferrer">TradingView</a></span>`;
+    };
     const rows = (it.members || []).map((m) => m.missing ? `<tr><td>${esc(m.name)}</td><td colspan="6" class="rsub">가격 없음</td></tr>` : `
       <tr title="${esc(m.path || "")}">
-        <td><b>${esc(m.name)}</b>${m.stale ? '<span class="stale">지연</span>' : ""}<span class="rsub">${esc(m.code)} · ${fmtP(m.close)}</span></td>
+        <td><b>${esc(m.name)}</b>${m.stale ? '<span class="stale">지연</span>' : ""}<span class="rsub">${esc(m.code)} · ${fmtP(m.close)}${link(m)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret20)}">${fmtPct(m.ret20)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret5)}">${fmtPct(m.ret5)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret60)}">${fmtPct(m.ret60)}</span></td>
@@ -334,6 +398,13 @@
     clearCharts(panel);
     ["#cPrice", "#cRs", "#cRank"].forEach((q) => { $(q).innerHTML = ""; });
     const pf = (v) => v.toFixed(1);
+    if (!hasLW()) {
+      $("#lgPrice").innerHTML = ""; $("#lgRs").innerHTML = "";
+      chartFallback($("#cPrice"), dates, [["바구니 지수", s.close, pf], ["20일선", s.ma20, pf], ["50일선", s.ma50, pf], ["200일선", s.ma200, pf]]);
+      chartFallback($("#cRs"), dates, [["RS선", s.rs, pf], ["RS 50일 평균", s.rs_ma50, pf]]);
+      chartFallback($("#cRank"), d.history.dates, [["종합 순위", d.history.rank[it.id], (v) => Math.round(v) + "위"]]);
+      return;
+    }
 
     const c1 = baseChart($("#cPrice"), { fmt: pf });
     const sp = line(c1, dates, s.close, css("--price"), 2);
