@@ -1,10 +1,17 @@
 name: 산업 강도판 갱신
 
 on:
+  # GitHub 예약 실행은 10~40분 늦거나 빠지기도 해서 여러 번 건다. 이미 최신이면 1분 안에 끝난다.
+  # 시각을 바꾸면 docs/refresh.js 의 SLOTS 도 같이 바꾼다.
   schedule:
-    - cron: "40 7 * * 1-5"    # 한국장 마감 후 16:40 KST
-    - cron: "10 9 * * 1-5"    # 한국 데이터 늦게 반영될 때 대비 18:10 KST
-    - cron: "50 21 * * 1-5"   # 미국장 마감 후 06:50 KST (서머타임 해제 시 마감 06:00 KST)
+    - cron: "40 7 * * 1-5"    # 16:40 KST 한국장 마감 후
+    - cron: "10 8 * * 1-5"    # 17:10 KST 재시도
+    - cron: "40 8 * * 1-5"    # 17:40 KST 재시도
+    - cron: "10 9 * * 1-5"    # 18:10 KST 늦게 반영되는 가격 대비
+    - cron: "30 10 * * 1-5"   # 19:30 KST 마지막 재시도
+    - cron: "50 21 * * 1-5"   # 06:50 KST 미국장 마감 후 (서머타임 해제 시 마감 06:00 KST)
+    - cron: "30 22 * * 1-5"   # 07:30 KST 재시도
+    - cron: "30 23 * * 1-5"   # 08:30 KST 마지막 재시도
   workflow_dispatch:
   push:
     branches: [main]
@@ -38,8 +45,12 @@ jobs:
 
       - name: 가격 수집·계산
         run: python scripts/update.py
+        env:
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          RUN_TRIGGER: ${{ github.event_name }}
 
-      - name: 결과 저장
+      - name: 결과 저장 (실패해도 상태 기록)
+        if: always()
         run: |
           git config user.name "industry-strength-bot"
           git config user.email "actions@users.noreply.github.com"

@@ -556,7 +556,14 @@ def main():
     out_dir = ROOT / ("tmp/docs/data" if a.synthetic else "docs/data")
     store = ROOT / ("tmp/prices" if a.synthetic else "data/prices")
     out_dir.mkdir(parents=True, exist_ok=True)
-    status = {"updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"), "markets": {}}
+    import os
+    # 이전 상태를 읽어 두었다가, 한 시장이 실패해도 다른 시장의 최신 기준일은 지우지 않는다.
+    try:
+        prev_status = json.loads((out_dir / "status.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        prev_status = {}
+    status = {"updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"), "run_url": os.environ.get("RUN_URL"),
+              "trigger": os.environ.get("RUN_TRIGGER") or "local", "markets": {}}
     fatal = False
     for k, mkey in enumerate(a.markets.split(",")):
         m = cfg["markets"][mkey]
@@ -571,7 +578,8 @@ def main():
             c, v = merge_store(mkey, nc, nv, store)
         if c.empty or "__bench__" not in c or c["__bench__"].notna().sum() < 210:
             log(mkey, "벤치마크 가격 부족 → 이 시장은 기존 화면 유지")
-            status["markets"][mkey] = {"ok": False, "reason": "벤치마크 가격 부족"}
+            keep = (prev_status.get("markets") or {}).get(mkey) or {}
+            status["markets"][mkey] = {"ok": False, "reason": "벤치마크 가격 부족", "basis_date": keep.get("basis_date"), "n": keep.get("n")}
             fatal = True
             continue
         basket, mem = build_baskets(m, c)
