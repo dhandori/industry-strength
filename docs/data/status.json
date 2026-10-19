@@ -1,16 +1,16 @@
 {
- "updated_at": "2026-10-19 11:43 KST",
+ "updated_at": "2026-10-19 11:50 KST",
  "markets": {
   "KR": {
    "ok": true,
    "basis_date": "2026-10-16",
-   "n": 30,
+   "n": 70,
    "warnings": []
   },
   "US": {
    "ok": true,
    "basis_date": "2026-10-16",
-   "n": 42,
+   "n": 69,
    "warnings": []
   }
  }
