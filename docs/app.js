@@ -45,6 +45,11 @@
     renderTable();
   }));
   $("#groupSel").addEventListener("change", (e) => { state.group = e.target.value; renderTable(); });
+  $("#trendOnly").addEventListener("click", (e) => {
+    state.trendOnly = !state.trendOnly;
+    e.currentTarget.setAttribute("aria-pressed", state.trendOnly);
+    renderTable();
+  });
 
   async function load() {
     const m = state.market;
@@ -118,7 +123,8 @@
   function renderTable() {
     const d = state.data[state.market];
     if (!d) return;
-    let rows = d.items.filter((i) => state.group === "전체" || i.group === state.group);
+    let rows = d.items.filter((i) => (state.group === "전체" || i.group === state.group)
+      && (!state.trendOnly || i.stage === "2단계 상승" || i.stage === "2단계 진입 시도"));
     const k = state.sort;
     rows = rows.slice().sort((a, b) => {
       const av = a[k], bv = b[k];
@@ -146,7 +152,8 @@
         <td><span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></td>
       </tr>`;
     }).join("");
-    $$("#rankTable tbody tr").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
+    if (!rows.length) $("#rankTable tbody").innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">조건에 맞는 산업이 없어요. 지금은 가격 추세가 살아 있는 산업이 없다는 뜻이에요.</td></tr>`;
+    $$("#rankTable tbody tr[data-id]").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
     $("#tableNote").innerHTML = `파란 띠 = 종합 순위 상위 25%(${d.top_cut}위 이내). 수익률 아래 작은 숫자는 그 기간 순위예요. 표가 넘치면 옆으로 밀어서 보세요.`;
   }
 

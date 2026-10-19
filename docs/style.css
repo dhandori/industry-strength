@@ -70,6 +70,8 @@ button, select { font: inherit; color: inherit; }
 .seg button[aria-selected="true"], .seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
 .seg.small button { padding: 5px 10px; font-size: 13px; }
 .icon-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; width: 36px; height: 36px; display: grid; place-items: center; cursor: pointer; color: var(--ink-2); }
+.toggle { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 5px 10px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.toggle[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 select { border: 1px solid var(--line); background: var(--surface); border-radius: 9px; padding: 5px 10px; font-size: 13px; }
 
 main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14px; }
@@ -115,9 +117,12 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .rank-table th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 8px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; line-height: 1.25; position: sticky; top: 0; background: var(--surface); }
 .rank-table th.num, .rank-table td.num { text-align: right; }
 .rank-table td { padding: 9px 8px; border-bottom: 1px solid var(--grid); vertical-align: middle; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.rank-table tbody tr { cursor: pointer; }
-.rank-table tbody tr:hover td { background: var(--accent-soft); }
+.rank-table tbody tr { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.rank-table tbody tr.top td { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); }
 .rank-table tbody tr.top td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+@media (hover: hover) {
+  .rank-table tbody tr:hover td { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+}
 .c-rank { width: 62px; }
 .c-name, .rank-table td.name { position: sticky; left: 0; z-index: 1; background: var(--surface); }
 .rank-table th.c-name { z-index: 2; }
@@ -135,7 +140,8 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .bar i b { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 4px; }
 .bar span { width: 30px; text-align: right; font-weight: 650; }
 .checks { display: inline-flex; gap: 3px; }
-.checks i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--line); }
+.checks i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--muted); opacity: .55; }
+.checks i.on { opacity: 1; }
 .checks i.on { background: var(--good); border-color: var(--good); }
 .stage { font-size: 12px; font-weight: 650; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
 .stage.s2 { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); }
