@@ -163,7 +163,8 @@ def main():
     bdate = basis_date()
     status = {"updated_at": now.strftime("%Y-%m-%d %H:%M KST"), "basis_date": bdate, "ok": False}
     try:
-        lst = parse_list(get(f"{BASE}/sise/sise_group.naver?type=upjong"))
+        list_html = get(f"{BASE}/sise/sise_group.naver?type=upjong")
+        lst = parse_list(list_html)
     except Exception as e:  # noqa: BLE001
         status["error"] = str(e)[:300]
         log("업종 목록 실패", e)
@@ -172,6 +173,10 @@ def main():
     log("업종", len(lst))
     if len(lst) < 30:
         status["error"] = f"업종 수가 너무 적음({len(lst)})"
+        i = list_html.find("upjong")
+        status["debug_len"] = len(list_html)
+        status["debug_head"] = list_html[:600]
+        status["debug_near"] = list_html[max(0, i - 300): i + 1500] if i >= 0 else ""
         write_status_only(status)
         return
     inds = []
