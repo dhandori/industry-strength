@@ -134,7 +134,29 @@ def fetch_market(mkey: str, m: dict) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
         else:
             source[e["id"]] = "failed"
     log(mkey, "수집 결과", {k: sum(1 for s in source.values() if s == k) for k in set(source.values())})
-    return pd.DataFrame(closes), pd.DataFrame(vols), source
+    c, v = drop_intraday(mkey, pd.DataFrame(closes), pd.DataFrame(vols))
+    return c, v, source
+
+
+def drop_intraday(mkey: str, c: pd.DataFrame, v: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """장이 아직 안 끝났으면 오늘 봉(장중 가격)을 버린다."""
+    from zoneinfo import ZoneInfo
+
+    if c.empty:
+        return c, v
+    if mkey == "KR":
+        now = datetime.now(ZoneInfo("Asia/Seoul"))
+        close_hm = (15, 45)
+    else:
+        now = datetime.now(ZoneInfo("America/New_York"))
+        close_hm = (16, 15)
+    today = pd.Timestamp(now.date())
+    c.index = pd.to_datetime(c.index).normalize()
+    v.index = pd.to_datetime(v.index).normalize()
+    if (now.hour, now.minute) < close_hm and today in c.index:
+        log(mkey, "장중이라 오늘 봉 제외", today.date())
+        c, v = c.drop(index=today), v.drop(index=today, errors="ignore")
+    return c, v
 
 
 def merge_store(mkey: str, new_c: pd.DataFrame, new_v: pd.DataFrame, store: Path) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -147,6 +169,11 @@ def merge_store(mkey: str, new_c: pd.DataFrame, new_v: pd.DataFrame, store: Path
             new = new.copy()
             new.index = pd.to_datetime(new.index).normalize()
             new = new[~new.index.duplicated(keep="last")]
+            if not old.empty and kind == "close" and "__bench__" in new and new["__bench__"].notna().any():
+                cut = new["__bench__"].last_valid_index()
+                old = old[old.index <= cut]          # 예전에 저장된 장중 봉 등 새 기준일 이후 값 제거
+            elif not old.empty and kind == "volume" and new_c is not None and "__bench__" in new_c and new_c["__bench__"].notna().any():
+                old = old[old.index <= pd.to_datetime(new_c["__bench__"].last_valid_index()).normalize()]
             merged = new.combine_first(old) if not old.empty else new
         else:
             merged = old

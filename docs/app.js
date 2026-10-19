@@ -4,6 +4,7 @@
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const state = { market: "KR", sort: "rank", group: "전체", data: {}, series: {}, charts: [], openId: null };
   const HEAT_DAYS = 40;
+  const WEAK = ["3단계 둔화", "4단계 하락", "1단계 바닥"];
 
   // ---------- theme
   const root = document.documentElement;
@@ -105,8 +106,11 @@
       const keys = g.any || [g.t];
       const list = d.items.filter((i) => i.tags.some((t) => keys.includes(t)));
       return `<div class="sig"><h3><span class="dot" style="color:${g.c}"></span>${g.t} <span class="cnt">${list.length}</span></h3>
-        <div class="chips">${list.length ? list.map((i) => `<button class="chip" data-id="${i.id}">${esc(i.name)}</button>`).join("") : '<span class="none">해당 없음</span>'}</div></div>`;
-    }).join("");
+        <div class="chips">${list.length ? list.map((i) => {
+          const weak = !g.any && WEAK.includes(i.stage);
+          return `<button class="chip${weak ? " weak" : ""}" data-id="${i.id}"${weak ? ' title="가격 추세는 아직 약함(하락 속 상대 강세)"' : ""}>${esc(i.name)}${weak ? " ↘" : ""}</button>`;
+        }).join("") : '<span class="none">해당 없음</span>'}</div></div>`;
+    }).join("") + `<p class="foot-note" style="grid-column:1/-1;margin:0">↘ 표시는 순위는 올랐지만 가격은 아직 하락·둔화 단계인 산업이에요. 덜 빠져서 순위가 오른 경우일 수 있으니 추세 확인이 먼저예요.</p>`;
     $$("#signals .chip").forEach((c) => c.addEventListener("click", () => openDetail(c.dataset.id)));
   }
 

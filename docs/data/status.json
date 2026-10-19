@@ -1,9 +1,9 @@
 {
- "updated_at": "2026-10-19 11:18 KST",
+ "updated_at": "2026-10-19 11:19 KST",
  "markets": {
   "KR": {
    "ok": true,
-   "basis_date": "2026-10-19",
+   "basis_date": "2026-10-16",
    "n": 30,
    "warnings": []
   },
