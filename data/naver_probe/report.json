@@ -1,32 +1,27 @@
 {
- "list": {
-  "status": 200,
-  "ctype": "text/html; charset=utf-8",
-  "len": 129897
- },
- "detail": {
-  "status": 200,
-  "ctype": "text/html; charset=utf-8",
-  "len": 129903
- },
- "m_industry": {
+ "ind_p100": {
   "status": 200,
   "ctype": "application/json;charset=UTF-8",
-  "len": 2267
+  "len": 8609
  },
- "m_industry2": {
-  "status": 404,
-  "ctype": "application/json; charset=utf-8",
-  "len": 115
- },
- "m_upjong": {
-  "status": 404,
-  "ctype": "text/html;charset=UTF-8",
-  "len": 4115
- },
- "m_domestic": {
+ "ind_p2": {
   "status": 200,
-  "ctype": "text/html; charset=utf-8",
-  "len": 41806
+  "ctype": "application/json;charset=UTF-8",
+  "len": 2285
+ },
+ "ind_283": {
+  "status": 200,
+  "ctype": "application/json;charset=UTF-8",
+  "len": 89090
+ },
+ "ind_283b": {
+  "status": 200,
+  "ctype": "application/json;charset=UTF-8",
+  "len": 26533
+ },
+ "ind_283c": {
+  "status": 200,
+  "ctype": "application/json;charset=UTF-8",
+  "len": 23656
  }
 }
