@@ -111,6 +111,9 @@ def market_entries(mkey: str, m: dict) -> list[dict]:
     """수집 대상: 벤치마크 + 모든 바구니 구성 종목(중복 제거). 열 이름은 티커, 벤치마크는 '__bench__'."""
     out = [{"id": "__bench__", "ticker": m["benchmark"]["ticker"], "code": m["benchmark"]["code"]}]
     seen = {m["benchmark"]["ticker"]}
+    if m.get("benchmark2"):
+        out.append({"id": "__bench2__", "ticker": m["benchmark2"]["ticker"], "code": m["benchmark2"]["code"]})
+        seen.add(m["benchmark2"]["ticker"])
     for it in m["items"]:
         for mb in it["members"]:
             if mb["ticker"] in seen:
@@ -258,7 +261,10 @@ def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     """
     bench = close["__bench__"].dropna()
     cal = bench.index
-    px = close.reindex(cal).drop(columns="__bench__").ffill(limit=3)
+    bcols = [c for c in ("__bench__", "__bench2__") if c in close.columns]
+    px = close.reindex(cal).drop(columns=bcols).ffill(limit=3)
+    bench2 = close["__bench2__"].reindex(cal).ffill(limit=3) if "__bench2__" in close.columns else None
+    second_mkts = {"KOSDAQ", "NAS"}
     rets = px.pct_change(fill_method=None)
     idx = {}
     for it in m["items"]:
@@ -276,6 +282,8 @@ def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
         idx[it["id"]] = lvl.reindex(cal)
     basket = pd.DataFrame(idx)
     basket["__bench__"] = bench
+    if bench2 is not None:
+        basket["__bench2__"] = bench2
 
     # 종목별 지표
     ma50 = px.rolling(50, min_periods=50).mean()
@@ -284,7 +292,9 @@ def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     up200 = ma200 > ma200.shift(20)
     hi = px.rolling(252, min_periods=60).max()
     dist = px / hi - 1
-    rs = px.div(bench, axis=0)
+    mkt_of = {mb["ticker"]: mb.get("market") for it in m["items"] for mb in it["members"]}
+    bdf = pd.DataFrame({t: (bench2 if bench2 is not None and mkt_of.get(t) in second_mkts else bench) for t in px.columns})
+    rs = px / bdf
     rs_ma = rs.rolling(50, min_periods=50).mean()
     k = {w: px / px.shift(w) - 1 for w in (1, 5, 20, 60)}
     last = cal[-1]
@@ -334,6 +344,14 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
     vol = volume.reindex(cal)[[c for c in ids if c in volume.columns]]
     bench = bench_raw
     last = cal[-1]
+    bench2 = close["__bench2__"].reindex(cal).ffill(limit=3) if "__bench2__" in close.columns else None
+    second_mkts = {"KOSDAQ", "NAS"}
+    bench_of = {}
+    for it in items:
+        mk = [mb.get("market") for mb in it.get("members", [])]
+        use2 = bench2 is not None and sum(x in second_mkts for x in mk) > len(mk) / 2
+        bench_of[it["id"]] = "2" if use2 else "1"
+    bdf = pd.DataFrame({i: (bench2 if bench_of[i] == "2" else bench) for i in ids})
 
     rets = {w: px / px.shift(w) - 1 for w in (1, 5, 20, 60, 120)}
     ranks = {w: rets[w].rank(axis=1, ascending=False, method="min") for w in (5, 20, 60)}
@@ -351,7 +369,7 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
     hi52 = px.rolling(252, min_periods=60).max()
     lo52 = px.rolling(252, min_periods=60).min()
     dist_hi = px / hi52 - 1
-    rs = px.div(bench, axis=0)
+    rs = px / bdf
     rs_ma50 = rs.rolling(50, min_periods=50).mean()
     rs_hi = rs.rolling(252, min_periods=60).max()
 
@@ -436,6 +454,7 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
             "rs_above_ma50": r(rs.at[last, i] > rs_ma50.at[last, i]) if not pd.isna(rs_ma50.at[last, i]) else None,
             "vol_ratio": r(v20 / v60, 2) if v60 and not pd.isna(v60) and v60 > 0 else None,
             "tags": tags, "stale": bool(stale),
+            "bench": (m.get("benchmark2") if bench_of[i] == "2" else m["benchmark"])["name"],
             "last_date": s_last.strftime("%Y-%m-%d") if s_last is not None else None,
             "source": (source or {}).get(i, "stored"),
         })
@@ -455,16 +474,24 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
           "top_half": g["top_half"], "stage2": g["stage2"]} for g in groups.values()),
         key=lambda x: -(x["score"] or 0))
 
+    def index_info(b: pd.Series, meta: dict) -> dict:
+        b = b.dropna()
+        m50, m200 = b.rolling(50).mean(), b.rolling(200).mean()
+        up = bool(m200.iloc[-1] > m200.iloc[-21])
+        c = b.iloc[-1]
+        if c > m50.iloc[-1] and c > m200.iloc[-1] and up:
+            reg = "상승 추세"
+        elif c < m200.iloc[-1] and not up:
+            reg = "하락 추세"
+        else:
+            reg = "조정·혼조"
+        return {**meta, "close": r(c), "chg1": r((b.iloc[-1] / b.iloc[-2] - 1) * 100),
+                "ret5": r((b.iloc[-1] / b.iloc[-6] - 1) * 100), "ret20": r((b.iloc[-1] / b.iloc[-21] - 1) * 100),
+                "ret60": r((b.iloc[-1] / b.iloc[-61] - 1) * 100),
+                "above50": bool(c > m50.iloc[-1]), "above200": bool(c > m200.iloc[-1]), "ma200_up": up, "regime": reg}
+
     b_ma50 = bench.rolling(50).mean()
     b_ma200 = bench.rolling(200).mean()
-    b_up = b_ma200.iloc[-1] > b_ma200.iloc[-21]
-    bc = bench.iloc[-1]
-    if bc > b_ma50.iloc[-1] and bc > b_ma200.iloc[-1] and b_up:
-        regime = "상승 추세"
-    elif bc < b_ma200.iloc[-1] and not b_up:
-        regime = "하락 추세"
-    else:
-        regime = "조정·혼조"
 
     breadth50 = above50.mean(axis=1) * 100
     breadth_s2 = stage2.mean(axis=1) * 100
@@ -478,14 +505,8 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
         "basis_date": last.strftime("%Y-%m-%d"),
         "n": n_last, "top_cut": int(top_cut.loc[last]),
         "weights": {str(k): v for k, v in WEIGHTS.items()},
-        "benchmark": {
-            **m["benchmark"], "close": r(bc), "chg1": r((bench.iloc[-1] / bench.iloc[-2] - 1) * 100),
-            "ret5": r((bench.iloc[-1] / bench.iloc[-6] - 1) * 100),
-            "ret20": r((bench.iloc[-1] / bench.iloc[-21] - 1) * 100),
-            "ret60": r((bench.iloc[-1] / bench.iloc[-61] - 1) * 100),
-            "above50": bool(bc > b_ma50.iloc[-1]), "above200": bool(bc > b_ma200.iloc[-1]),
-            "ma200_up": bool(b_up), "regime": regime,
-        },
+        "benchmark": index_info(bench, m["benchmark"]),
+        "benchmark2": index_info(bench2, m["benchmark2"]) if bench2 is not None and bench2.notna().sum() > 210 else None,
         "breadth": {"dates": [d.strftime("%Y-%m-%d") for d in hist_idx],
                     "above50": ser(breadth50, 1), "stage2": ser(breadth_s2, 1)},
         "groups": group_list,

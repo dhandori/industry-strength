@@ -83,13 +83,15 @@
     const brNow = br.at(-1), brPrev = br.at(-21);
     const s2 = d.items.filter((i) => i.stage === "상승 추세").length;
     const s2t = d.items.filter((i) => i.stage === "상승 전환 시도").length;
+    const idxs = [b, d.benchmark2].filter(Boolean);
+    const reg = (x) => { const c = x.regime === "상승 추세" ? "up" : x.regime === "하락 추세" ? "down" : "neutral"; return `<span class="badge ${c}"><span class="dot"></span>${x.regime}</span>`; };
     $("#tiles").innerHTML = `
       <div class="tile"><div class="k">시장 국면</div>
-        <div class="v"><span class="badge ${rc}" style="font-size:15px;padding:3px 10px"><span class="dot"></span>${b.regime}</span></div>
-        <div class="d">${esc(b.etf)} ${b.above50 ? "50일선 위" : "50일선 아래"} · ${b.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${b.ma200_up ? "상승" : "하락"}</div></div>
-      <div class="tile"><div class="k">${esc(b.name)} 20일 수익률</div>
-        <div class="v ret ${cls(b.ret20)}">${fmtPct(b.ret20)}</div>
-        <div class="d">5일 ${fmtPct(b.ret5)} · 60일 ${fmtPct(b.ret60)}</div></div>
+        ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span>${reg(x)}</div>
+        <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}</div>`).join("")}</div>
+      <div class="tile"><div class="k">지수 20일 수익률</div>
+        ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span><span class="ret ${cls(x.ret20)} idx-v">${fmtPct(x.ret20)}</span></div>
+        <div class="d">5일 ${fmtPct(x.ret5)} · 60일 ${fmtPct(x.ret60)}</div>`).join("")}</div>
       <div class="tile"><div class="k">50일선 위 산업 비율</div>
         <div class="v">${brNow == null ? "–" : brNow.toFixed(0) + "%"}</div>
         <div class="d">20거래일 전 ${brPrev == null ? "–" : brPrev.toFixed(0) + "%"}${brNow != null && brPrev != null ? ` (${brNow >= brPrev ? "▲" : "▼"}${Math.abs(brNow - brPrev).toFixed(0)}%p)` : ""}</div></div>
@@ -294,7 +296,7 @@
       ["상위권 지속", it.streak ? `${it.streak}일 (${md(it.streak_start)}~)` : "–"],
       ["20일 수익률", fmtPct(it.ret20)], ["60일 수익률", fmtPct(it.ret60)], ["120일 수익률", fmtPct(it.ret120)],
       ["52주 고점 대비", it.dist_high == null ? "–" : it.dist_high.toFixed(1) + "%"],
-      ["추세 상태", it.stage], ["RS선 50일 평균 위", it.rs_above_ma50 == null ? "–" : it.rs_above_ma50 ? "예" : "아니오"],
+      ["추세 상태", it.stage], [`RS선(${it.bench || d.benchmark.name} 대비) 50일 평균 위`, it.rs_above_ma50 == null ? "–" : it.rs_above_ma50 ? "예" : "아니오"],
       ["50일선 위 종목", it.breadth50 == null ? "–" : `${it.breadth50}%`],
       ["종합 강도", it.score == null ? "–" : Math.round(it.score) + "점"],
     ];
@@ -352,7 +354,7 @@
     const rsm = line(c2, dates, s.rs_ma50, css("--ma20"), 1.5, { lastValueVisible: false });
     c2.timeScale().fitContent();
     legend($("#lgRs"), [
-      { n: `RS선 (${d.benchmark.etf} 대비)`, c: css("--accent"), s: rs, f: (v) => v.toFixed(1), last: lastOf(s.rs) },
+      { n: `RS선 (${it.bench || d.benchmark.name} 대비)`, c: css("--accent"), s: rs, f: (v) => v.toFixed(1), last: lastOf(s.rs) },
       { n: "RS 50일 평균", c: css("--ma20"), s: rsm, f: (v) => v.toFixed(1), last: lastOf(s.rs_ma50) },
     ], c2);
 

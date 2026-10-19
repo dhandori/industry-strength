@@ -94,6 +94,9 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .tile .k { font-size: 12.5px; color: var(--ink-2); font-weight: 600; }
 .tile .v { font-size: 24px; font-weight: 750; margin-top: 4px; letter-spacing: -0.03em; }
 .tile .d { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.idx-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
+.idx-n { font-size: 13px; font-weight: 650; }
+.idx-v { font-size: 18px; font-weight: 750; letter-spacing: -0.02em; }
 .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 650; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
 .badge.up { background: color-mix(in srgb, var(--up) 12%, transparent); color: var(--up); }
 .badge.down { background: color-mix(in srgb, var(--down) 12%, transparent); color: var(--down); }

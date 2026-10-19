@@ -10,6 +10,12 @@
     "ticker": "069500.KS",
     "code": "069500"
    },
+   "benchmark2": {
+    "name": "코스닥150",
+    "etf": "KODEX 코스닥150",
+    "ticker": "229200.KS",
+    "code": "229200"
+   },
    "items": [
     {
      "id": "kr_00",
@@ -3199,6 +3205,12 @@
     "etf": "SPY",
     "ticker": "SPY",
     "code": "spy.us"
+   },
+   "benchmark2": {
+    "name": "나스닥100",
+    "etf": "QQQ",
+    "ticker": "QQQ",
+    "code": "qqq.us"
    },
    "items": [
     {

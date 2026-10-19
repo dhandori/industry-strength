@@ -205,6 +205,7 @@ def main():
         seen.add(name)
     out["markets"]["KR"] = {"label": "한국", "currency": "원",
                             "benchmark": {"name": "코스피200", "etf": "KODEX 200", "ticker": "069500.KS", "code": "069500"},
+                            "benchmark2": {"name": "코스닥150", "etf": "KODEX 코스닥150", "ticker": "229200.KS", "code": "229200"},
                             "items": kr_items}
 
     us_items = []
@@ -226,6 +227,7 @@ def main():
         us_items.append({"id": sid, "name": name, "group": grp, "members": sorted(members, key=lambda m: -m["mcap_usd_b"])})
     out["markets"]["US"] = {"label": "미국", "currency": "달러",
                             "benchmark": {"name": "S&P 500", "etf": "SPY", "ticker": "SPY", "code": "spy.us"},
+                            "benchmark2": {"name": "나스닥100", "etf": "QQQ", "ticker": "QQQ", "code": "qqq.us"},
                             "items": us_items}
 
     (ROOT / "config/baskets.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
