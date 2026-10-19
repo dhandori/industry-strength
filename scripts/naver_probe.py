@@ -4,12 +4,11 @@ from pathlib import Path
 out = Path(__file__).resolve().parent.parent / "data/naver_probe"; out.mkdir(parents=True, exist_ok=True)
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"}
 urls = {
- "list": "https://finance.naver.com/sise/sise_group.naver?type=upjong",
- "detail": "https://finance.naver.com/sise/sise_group_detail.naver?type=upjong&no=278",
- "m_industry": "https://m.stock.naver.com/api/stocks/industry",
- "m_industry2": "https://m.stock.naver.com/front-api/industry/list?page=1&pageSize=100",
- "m_upjong": "https://m.stock.naver.com/api/index/industry",
- "m_domestic": "https://m.stock.naver.com/domestic/industry",
+ "ind_p100": "https://m.stock.naver.com/api/stocks/industry?page=1&pageSize=100",
+ "ind_p2": "https://m.stock.naver.com/api/stocks/industry?page=2&pageSize=20",
+ "ind_283": "https://m.stock.naver.com/api/stocks/industry/283?page=1&pageSize=100",
+ "ind_283b": "https://m.stock.naver.com/api/stocks/industry/283",
+ "ind_283c": "https://m.stock.naver.com/api/stocks/industry/283?page=2&pageSize=50",
 }
 rep = {}
 for k, u in urls.items():
