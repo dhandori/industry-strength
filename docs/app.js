@@ -159,26 +159,34 @@
 
   // ---------- heatmap
   function heatColor(rank, n) {
-    if (rank == null) return "transparent";
-    const p = n > 1 ? 1 - (rank - 1) / (n - 1) : 1;
-    const step = Math.min(7, Math.max(0, Math.floor(p * 8)));
-    return `var(--h${step})`;
+    if (rank == null) return "var(--hn)";
+    const p = rank / n;                      // 0에 가까울수록 상위
+    if (p <= 0.10) return "var(--h1)";
+    if (p <= 0.25) return "var(--h2)";
+    if (p <= 0.50) return "var(--h3)";
+    if (p <= 0.75) return "var(--h4)";
+    return "var(--h5)";
   }
   function renderHeat(d) {
-    const dates = d.history.dates.slice(-HEAT_DAYS);
+    const days = innerWidth < 640 ? 20 : HEAT_DAYS;
+    const dates = d.history.dates.slice(-days);
     const n = d.n;
     const items = d.items.filter((i) => i.rank != null);
     const el = $("#heat");
-    el.style.gridTemplateColumns = `minmax(84px, 130px) repeat(${dates.length}, minmax(6px, 1fr))`;
-    let h = "";
+    el.style.gridTemplateColumns = `minmax(110px, 150px) repeat(${dates.length}, minmax(7px, 1fr))`;
+    let h = "", sepDone = false;
+    const last = dates.length - 1;
     for (const it of items) {
-      const rk = d.history.rank[it.id].slice(-HEAT_DAYS);
-      h += `<div class="hn" data-id="${it.id}" title="${esc(it.name)}">${it.rank}. ${esc(it.name)}</div>`;
-      h += rk.map((r, k) => `<div class="hc" style="background:${heatColor(r, n)}" data-t="${esc(it.name)} · ${dates[k]} · ${r == null ? "데이터 없음" : r + "위"}"></div>`).join("");
+      if (!sepDone && it.rank > d.top_cut) { h += `<div class="hsep" aria-hidden="true"></div>`; sepDone = true; }
+      const rk = d.history.rank[it.id].slice(-days);
+      h += `<div class="hn" data-id="${it.id}" title="${esc(it.name)}"><em>${it.rank}</em>${esc(it.name)}</div>`;
+      h += rk.map((r, k) => `<div class="hc${k === last ? " today" : ""}" style="background:${heatColor(r, n)}" data-t="${esc(it.name)} · ${dates[k]} · ${r == null ? "데이터 없음" : r + "위 / " + n}"></div>`).join("");
     }
-    h += `<div></div>` + dates.map((dt, k) => `<div class="hd">${k % 10 === 0 || k === dates.length - 1 ? md(dt) : ""}</div>`).join("");
+    h += `<div></div>` + dates.map((dt, k) => `<div class="hd">${(last - k) % (days <= 20 ? 5 : 10) === 0 ? md(dt) : ""}</div>`).join("");
     el.innerHTML = h;
     $$(".hn", el).forEach((x) => x.addEventListener("click", () => openDetail(x.dataset.id)));
+    const wrap = el.parentElement; wrap.scrollLeft = wrap.scrollWidth;
+    $("#heat-h .sub").textContent = `최근 ${dates.length}거래일 · 종합 순위`;
     bindTips(el, ".hc");
   }
 
@@ -353,6 +361,9 @@
       if (state.openId && state.series[state.market]) drawDetail(d.items.find((x) => x.id === state.openId));
     });
   }
+
+  // resize-heat: 화면 폭이 바뀌면 색 지도 기간 다시 맞춤
+  let rzT; addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(() => { const d = state.data[state.market]; if (d) renderHeat(d); }, 200); });
 
   // start
   const h = (location.hash || "").replace("#", "").toUpperCase();
