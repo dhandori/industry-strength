@@ -3194,6 +3194,77 @@
        "path": "부동산 임대 > 상장 부동산회사 > 부동산 임대·투자 운영"
       }
      ]
+    },
+    {
+     "id": "kr_70",
+     "name": "ESS 밸류체인(전기차→ESS 전환)",
+     "group": "2차전지",
+     "members": [
+      {
+       "code": "373220",
+       "name": "LG에너지솔루션",
+       "ticker": "373220.KS",
+       "market": "KOSPI",
+       "mcap_eok": 815490,
+       "path": "전지·에너지저장 > 이차전지 > 전지 셀·모듈"
+      },
+      {
+       "code": "006400",
+       "name": "삼성SDI",
+       "ticker": "006400.KS",
+       "market": "KOSPI",
+       "mcap_eok": 427103,
+       "path": "전지·에너지저장 > 이차전지 > 전지 셀·모듈"
+      },
+      {
+       "code": "003670",
+       "name": "포스코퓨처엠",
+       "ticker": "003670.KS",
+       "market": "KOSPI",
+       "mcap_eok": 160636,
+       "path": "이차전지 소재 > 양극재 > 양극활물질 생산"
+      },
+      {
+       "code": "066970",
+       "name": "엘앤에프",
+       "ticker": "066970.KS",
+       "market": "KOSPI",
+       "mcap_eok": 46258,
+       "path": "이차전지 소재 > 양극재 > 양극활물질 생산"
+      },
+      {
+       "code": "011790",
+       "name": "SKC",
+       "ticker": "011790.KS",
+       "market": "KOSPI",
+       "mcap_eok": 43001,
+       "path": "이차전지 소재 > 집전체 > 전지용 동박"
+      },
+      {
+       "code": "178320",
+       "name": "서진시스템",
+       "ticker": "178320.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 22287,
+       "path": "통신장비 > 통신부품 > 통신장비·휴대폰 부품"
+      },
+      {
+       "code": "020150",
+       "name": "롯데에너지머티리얼즈",
+       "ticker": "020150.KS",
+       "market": "KOSPI",
+       "mcap_eok": 19113,
+       "path": "전자재료 > 동박 > 회로기판·전자용 동박"
+      },
+      {
+       "code": "348370",
+       "name": "엔켐",
+       "ticker": "348370.KQ",
+       "market": "KOSDAQ",
+       "mcap_eok": 4314,
+       "path": ""
+      }
+     ]
     }
    ]
   },
@@ -5814,6 +5885,34 @@
        "ticker": "O",
        "market": "NYS",
        "mcap_usd_b": 53.1
+      }
+     ]
+    },
+    {
+     "id": "us_69",
+     "name": "에너지저장(ESS)",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "ENPH",
+       "name": "인페이즈 에너지",
+       "ticker": "ENPH",
+       "market": "NAS",
+       "mcap_usd_b": 4.3
+      },
+      {
+       "code": "FLNC",
+       "name": "플루언스 에너지",
+       "ticker": "FLNC",
+       "market": "NAS",
+       "mcap_usd_b": 1.1
+      },
+      {
+       "code": "EOSE",
+       "name": "이오스 에너지",
+       "ticker": "EOSE",
+       "market": "NAS",
+       "mcap_usd_b": 0.7
       }
      ]
     }
