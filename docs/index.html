@@ -7,7 +7,7 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261019-r1">
+<link rel="stylesheet" href="style.css?v=20261021-h1">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>window.LightweightCharts || document.write('<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 </head>
@@ -28,9 +28,13 @@
       </button>
     </div>
   </div>
+  <nav class="view-tabs" role="tablist" aria-label="화면 선택">
+    <button role="tab" data-view="strength" aria-selected="true"><span class="vt-ico" aria-hidden="true">📊</span>산업 강도</button>
+    <button role="tab" data-view="highs" aria-selected="false"><span class="vt-ico" aria-hidden="true">🚀</span>52주 신고가</button>
+  </nav>
 </header>
 
-<main>
+<main id="viewStrength">
   <div id="runbar" class="runbar" aria-live="polite"></div>
   <div id="warn" class="warn" hidden></div>
 
@@ -162,6 +166,82 @@
   </section>
 </main>
 
+<main id="viewHighs" hidden>
+  <p class="hx-meta" id="hxMeta">불러오는 중…</p>
+  <section class="tiles" id="hxTiles" aria-label="신고가 요약"></section>
+
+  <section class="card" aria-labelledby="hxc-h">
+    <div class="card-head wrap">
+      <h2 id="hxc-h">신고가 종목 수 추이 <span class="sub">막대 = 그날 52주 신고가 종목 수 · 진한 막대는 기간 평균 이상</span></h2>
+    </div>
+    <div class="chart-legend" id="hxLegend"></div>
+    <div id="hxChart" class="chart sm"></div>
+    <p class="foot-note">막대가 5일 평균선 위로 올라오면 신고가가 늘어나는 중, 아래로 내려가면 줄어드는 중이에요.</p>
+  </section>
+
+  <section class="card" aria-labelledby="hxs-h">
+    <div class="card-head wrap">
+      <h2 id="hxs-h">강해지는 업종 <span class="sub">최근 5거래일 vs 그 전 5거래일 · 제목을 누르면 정렬</span></h2>
+    </div>
+    <div class="hx-wrap" id="hxStrong"></div>
+    <p class="foot-note"><b>업종 안 비율</b>은 그 업종 전체 종목 중 최근 5거래일에 한 번이라도 신고가를 낸 종목의 비율이에요. 높을수록 대장주 하나가 아니라 <b>업종 전체가 함께</b> 오르는 중이에요(종목 3개 미만 업종은 –).</p>
+  </section>
+
+  <section class="card" aria-labelledby="hxh-h">
+    <div class="card-head wrap">
+      <h2 id="hxh-h">업종 × 날짜 <span class="sub" id="hxHeatSub"></span></h2>
+      <div class="heat-legend">
+        <span><i style="background:var(--x1)"></i>1개</span>
+        <span><i style="background:var(--x2)"></i>2~3개</span>
+        <span><i style="background:var(--x3)"></i>4~6개</span>
+        <span><i style="background:var(--x4)"></i>7개 이상</span>
+      </div>
+    </div>
+    <div class="heat-wrap"><div id="hxHeat" class="heat hx-heat"></div></div>
+    <button class="toggle" id="hxHeatMore" style="margin-top:10px" hidden></button>
+    <p class="foot-note">한 줄에 색이 며칠 이어지면 그 업종에서 신고가가 꾸준히 나오는 중이에요. 맨 오른쪽 테두리 칸이 최근 거래일이에요.</p>
+  </section>
+
+  <section class="card" aria-labelledby="hxf-h">
+    <div class="card-head wrap">
+      <h2 id="hxf-h">자주 나온 종목 <span class="sub">기록 기간 전체 · 노란 줄 = 지금 이틀 이상 연속 신고가</span></h2>
+    </div>
+    <div class="hx-wrap" id="hxFreq"></div>
+    <button class="toggle" id="hxFreqMore" style="margin-top:10px" hidden></button>
+  </section>
+
+  <section class="card" aria-labelledby="hxd-h">
+    <div class="card-head wrap">
+      <h2 id="hxd-h">날짜별 신고가 종목</h2>
+      <div class="filters">
+        <div class="seg small" id="hxMode" aria-label="보기 방식">
+          <button data-mode="group" aria-pressed="true">업종별 묶음</button>
+          <button data-mode="table" aria-pressed="false">표 (정렬)</button>
+        </div>
+        <input id="hxSearch" class="hx-search" type="search" placeholder="종목·업종 찾기" aria-label="종목·업종 찾기">
+      </div>
+    </div>
+    <div class="dchips" id="hxDays"></div>
+    <p class="hx-daysum" id="hxDaySum"></p>
+    <div id="hxList"></div>
+    <p class="foot-note">🔁 N일째 = 연속 신고가 · 🆕 = 기록 기간 안에서 처음 나온 종목 · 종목 이름은 TradingView 차트로 연결돼요. ‘강도판: ○○’을 누르면 산업 강도 탭의 그 산업 상세가 열려요.</p>
+  </section>
+
+  <section class="card guide" aria-labelledby="hxg-h">
+    <details>
+      <summary><h2 id="hxg-h">기준</h2></summary>
+      <div class="guide-body">
+        <dl>
+          <dt>대상</dt><dd>한국: 코스피·코스닥 보통주 중 시가총액 1,000억 원 이상(우선주·스팩 제외). 미국: NYSE·나스닥·AMEX 보통주 중 시가총액 20억 달러 이상.</dd>
+          <dt>52주 신고가</dt><dd>그날 장중 최고가가 직전 52주 최고가 이상인 종목이에요. 한국장은 평일 17시, 미국장은 다음 날 08시(한국 시간)에 종가 기준으로 기록해요.</dd>
+          <dt>업종</dt><dd>조선·2차전지·원전·전력기기·방산·메모리·로봇처럼 시장에서 부르는 이름은 직접 확인한 종목만 붙였고, 나머지는 야후 파이낸스 업종을 한글로 옮겼어요. 산업 강도 탭의 바구니 분류와는 기준이 달라서, 같은 종목이 강도판의 어느 산업에 들어 있는지는 ‘강도판: ○○’ 표시로 따로 보여 줘요.</dd>
+        </dl>
+        <p class="small-print">투자 판단의 참고 자료이며 매수·매도 추천이 아니에요.</p>
+      </div>
+    </details>
+  </section>
+</main>
+
 <div class="drawer" id="drawer" hidden>
   <div class="drawer-backdrop" data-close></div>
   <article class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
@@ -193,6 +273,7 @@
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="refresh.js?v=20261019-r1"></script>
-<script src="app.js?v=20261019-r1"></script>
+<script src="app.js?v=20261021-h1"></script>
+<script src="highs.js?v=20261021-h1"></script>
 </body>
 </html>

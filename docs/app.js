@@ -37,9 +37,27 @@
     state.market = b.dataset.market;
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x === b));
     state.group = "전체"; state.exOpen = new Set(); state.exAll = new Set();
-    try { history.replaceState(null, "", "#" + state.market); } catch (e) {}
+    setHash();
     load();
+    if (state.view === "highs") window.__highs && window.__highs.show(state.market);
   }));
+
+  // ---------- 화면 전환: 산업 강도 / 52주 신고가 (2026-10-21)
+  state.view = "strength";
+  function setHash() { try { history.replaceState(null, "", "#" + state.market + (state.view === "highs" ? "-highs" : "")); } catch (e) {} }
+  function setView(v) {
+    state.view = v;
+    $$(".view-tabs button").forEach((x) => x.setAttribute("aria-selected", x.dataset.view === v));
+    $("#viewStrength").hidden = v !== "strength";
+    $("#viewHighs").hidden = v !== "highs";
+    document.body.classList.toggle("v-highs", v === "highs");
+    setHash();
+    if (v === "highs") window.__highs && window.__highs.show(state.market);
+    else requestAnimationFrame(rerenderCharts);
+    scrollTo({ top: 0 });
+  }
+  $$(".view-tabs button").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
+  window.__isBoard = () => ({ data: state.data, open: openDetail });
   $$("#sortSeg button").forEach((b) => b.addEventListener("click", () => {
     state.sort = b.dataset.sort;
     $$("#sortSeg button").forEach((x) => x.setAttribute("aria-pressed", x === b));
@@ -593,6 +611,7 @@
   addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#drawer").hidden) closeDrawer(); });
 
   function rerenderCharts() {
+    window.__highs && window.__highs.rerender();
     const d = state.data[state.market];
     if (!d) return;
     requestAnimationFrame(() => {
@@ -605,11 +624,13 @@
   let rzT; addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(() => { const d = state.data[state.market]; if (d) renderHeat(d); }, 200); });
 
   // start
-  const h = (location.hash || "").replace("#", "").toUpperCase();
+  const [hm, hv] = (location.hash || "").replace("#", "").split("-");
+  const h = (hm || "").toUpperCase();
   if (h === "US" || h === "KR") {
     state.market = h;
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === h));
   }
   load();
-  window.__isRefresh && window.__isRefresh.init(reloadData);
+  window.__isRefresh && window.__isRefresh.init(() => { reloadData(); window.__highs && window.__highs.reload(); });
+  if (hv === "highs") addEventListener("DOMContentLoaded", () => setView("highs"), { once: true });
 })();
