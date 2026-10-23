@@ -85,7 +85,7 @@
         if (mine.conclusion === "success") { await readStatus(); onDone(); flash("갱신 완료 · 새 데이터를 불러왔어요", "ok"); }
         else flash("갱신이 실패했어요 · 실행 기록에서 이유를 볼 수 있어요", "bad", mine.html_url);
       } else if (Date.now() - pending.at > MAX_WAIT) { save(null); flash("실행을 확인하지 못했어요 · 실행 기록을 열어 보세요", "bad", WF_URL); }
-      else { paint(mine ? { text: `수집 중 · ${mins(Date.parse(mine.created_at))}분째 (보통 1~2분)`, cls: "busy", url: mine.html_url } : { text: "GitHub 창에서 ‘Run workflow’를 눌러 주세요 · 시작되면 여기서 따라가요", cls: "busy", url: WF_URL }); pollT = setTimeout(follow, 20000); }
+      else { paint(mine ? { text: `수집 중 · ${mins(Date.parse(mine.created_at))}분째 (보통 1~2분)`, cls: "busy", url: mine.html_url } : { text: "GitHub 창에서 ‘Run workflow’를 눌러 주세요 · 시작되면 여기서 진행 상황을 보여 드려요", cls: "busy", url: WF_URL }); pollT = setTimeout(follow, 20000); }
       return;
     }
     if (active) { paint({ text: `자동 갱신 진행 중 · ${mins(Date.parse(active.created_at))}분째`, cls: "busy", url: active.html_url }); pollT = setTimeout(follow, 30000); }
@@ -109,14 +109,14 @@
       ${next ? `<span class="rb-item"><b>다음 자동</b> ${next.label} (${next.who})</span>` : ""}
       ${live ? `<span class="rb-live ${live.cls}">${live.url ? `<a href="${live.url}" target="_blank" rel="noopener noreferrer">${live.text}</a>` : live.text}</span>` : ""}
       <span class="rb-actions">
-        <button type="button" class="toggle rb-run${stale && !pending ? " primary" : ""}" id="runNow"${pending ? " disabled" : ""}>${pending ? "갱신 따라가는 중…" : "지금 갱신"}</button>
+        <button type="button" class="toggle rb-run${stale && !pending ? " primary" : ""}" id="runNow"${pending ? " disabled" : ""}>${pending ? "갱신 확인 중…" : "지금 갱신"}</button>
         <a class="rb-log" href="${WF_URL}" target="_blank" rel="noopener noreferrer">실행 기록</a>
       </span>
       ${stale && !live ? `<span class="rb-hint">휴장일이면 정상이에요. 아니면 ‘지금 갱신’을 눌러 주세요.</span>` : ""}`;
     const btn = $("#runNow");
     if (btn) btn.onclick = () => {
       window.open(WF_URL, "_blank", "noopener");
-      save({ at: Date.now() }); paint({ text: "GitHub 창에서 ‘Run workflow’를 눌러 주세요 · 시작되면 여기서 따라가요", cls: "busy", url: WF_URL });
+      save({ at: Date.now() }); paint({ text: "GitHub 창에서 ‘Run workflow’를 눌러 주세요 · 시작되면 여기서 진행 상황을 보여 드려요", cls: "busy", url: WF_URL });
       pollT = setTimeout(follow, 15000);
     };
   }

@@ -136,7 +136,7 @@
   // 차트 라이브러리는 color-mix를 못 읽어서 #rrggbb → rgba로 바꾼다.
   const color50 = (c) => { const m = /^#([0-9a-f]{6})$/i.exec(c); if (!m) return c; const v = parseInt(m[1], 16); return `rgba(${v >> 16}, ${(v >> 8) & 255}, ${v & 255}, 0.45)`; };
 
-  // ---------- 강해지는 업종
+  // ---------- 최근 신고가가 자주 나온 업종
   function strongRows(D) {
     const rec = D.days.slice(-RECENT), old = D.days.slice(-RECENT * 2, -RECENT);
     const agg = {};
@@ -155,7 +155,7 @@
     const show = rows.filter((r) => r.rec > 0 || r.old > 0).slice(0, 15);
     const mx = Math.max(1, ...show.map((r) => Math.abs(r.chg)));
     const th = (key, label, numc) => `<th class="${numc ? "num " : ""}sortable${k === key ? " on" : ""}" data-k="${key}">${label}${k === key ? (d < 0 ? " ▼" : " ▲") : ""}</th>`;
-    $("#hxStrong").innerHTML = `<table class="hx-table"><thead><tr><th>업종</th>${th("rec", `최근 ${RECENT}일`, 1)}${th("old", `그 전 ${RECENT}일`, 1)}${th("chg", "변화", 0)}${th("ratio", "업종 안 비율", 1)}<th>최근 나온 종목</th></tr></thead><tbody>
+    $("#hxStrong").innerHTML = `<table class="hx-table"><thead><tr><th>업종</th>${th("rec", `최근 ${RECENT}일 횟수`, 1)}${th("old", `그 전 ${RECENT}일 횟수`, 1)}${th("chg", "증감", 0)}${th("ratio", "업종 내 비율", 1)}<th>최근 신고가 종목</th></tr></thead><tbody>
       ${show.map((r) => `<tr>
         <td class="hx-name"><b>${esc(r.ind)}</b><span>${esc(r.big)}</span></td>
         <td class="num"><b>${r.rec}</b></td><td class="num muted">${r.old}</td>
@@ -189,7 +189,7 @@
     const btn = $("#hxHeatMore");
     btn.hidden = all.length <= 12;
     btn.textContent = st.heatAll ? "상위 12개 업종만 보기" : `업종 ${all.length}개 모두 보기`;
-    $("#hxHeatSub").textContent = `최근 ${ds.length}거래일 · ${st.heatAll ? "전체 업종" : "신고가가 많은 12개 업종"}`;
+    $("#hxHeatSub").textContent = `최근 ${ds.length}거래일 · ${st.heatAll ? "전체 업종" : "신고가가 많은 상위 12개 업종"}`;
     const wrap = el.parentElement; wrap.scrollLeft = wrap.scrollWidth;
     tips(el, ".hc");
   }
@@ -206,11 +206,11 @@
     const total = rows.length;
     if (!st.freqAll) rows = rows.slice(0, 20);
     const th = (key, label, numc) => `<th class="${numc ? "num " : ""}sortable${k === key ? " on" : ""}" data-k="${key}">${label}${k === key ? (d < 0 ? " ▼" : " ▲") : ""}</th>`;
-    $("#hxFreq").innerHTML = `<table class="hx-table"><thead><tr>${th("name", "종목", 0)}${th("ind", "업종", 0)}${th("days", "나온 날", 1)}${th("now", "지금 연속", 1)}${th("d", "마지막 신고가", 0)}${th("chg", "그날 등락", 1)}${th("mcap", "시가총액", 1)}</tr></thead><tbody>
+    $("#hxFreq").innerHTML = `<table class="hx-table"><thead><tr>${th("name", "종목", 0)}${th("ind", "업종", 0)}${th("days", "신고가 일수", 1)}${th("now", "현재 연속", 1)}${th("d", "마지막 신고가일", 0)}${th("chg", "그날 등락률", 1)}${th("mcap", "시가총액", 1)}</tr></thead><tbody>
       ${rows.map((r) => `<tr class="${r.now >= 2 ? "streak" : ""}">
         <td class="hx-name">${stockCell(r)}</td><td>${esc(r.ind)}</td>
         <td class="num"><span class="pill n${Math.min(4, Math.ceil(r.days / 2))}">${r.days}일</span></td>
-        <td class="num">${r.now >= 2 ? `<b>🔁 ${r.now}일째</b>` : r.now === 1 ? "오늘" : '<span class="muted">–</span>'}</td>
+        <td class="num">${r.now >= 2 ? `<b>🔁 ${r.now}일째</b>` : r.now === 1 ? "1일" : '<span class="muted">–</span>'}</td>
         <td>${mdw(r.d)}</td><td class="num"><span class="ret ${cls(r.chg)}">${pct(r.chg)}</span></td><td class="num">${cap(r.mcap)}</td></tr>`).join("")}
       </tbody></table>`;
     const more = $("#hxFreqMore");
@@ -241,7 +241,7 @@
     const newIn = prevSet ? rows.filter((r) => !prevSet.has(r.code)) : [];
     const q = st.q.trim().toLowerCase();
     const flt = q ? rows.filter((r) => (r.name + " " + r.code + " " + r.ind + " " + r.big).toLowerCase().includes(q)) : rows;
-    $("#hxDaySum").innerHTML = `<b>${mdw(st.day)}</b> 신고가 ${rows.length}개${prevSet ? ` · 새로 들어옴 ${newIn.length} · 빠짐 ${gone.length}` : ""}${gone.length ? `<span class="gone">빠진 종목: ${gone.slice(0, 12).map((r) => esc(r.name)).join(" · ")}${gone.length > 12 ? ` 외 ${gone.length - 12}` : ""}</span>` : ""}`;
+    $("#hxDaySum").innerHTML = `<b>${mdw(st.day)}</b> 신고가 ${rows.length}개${prevSet ? ` · 새로 진입 ${newIn.length}개 · 이탈 ${gone.length}개` : ""}${gone.length ? `<span class="gone">이탈한 종목: ${gone.slice(0, 12).map((r) => esc(r.name)).join(" · ")}${gone.length > 12 ? ` 외 ${gone.length - 12}` : ""}</span>` : ""}`;
     const el = $("#hxList");
     if (st.listMode === "group") {
       const g = {};

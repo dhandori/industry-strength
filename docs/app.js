@@ -260,11 +260,11 @@
       const nv = await loadNaver();
       if (state.market !== mk || state.exSrc !== "naver") return;
       if (!nv || !nv.industries) {
-        el.innerHTML = `<p class="empty">네이버 업종 자료가 아직 없어요. 한국장 마감 뒤 자동 수집이 한 번 돌면 채워져요.</p>`;
+        el.innerHTML = `<p class="empty">네이버 업종 자료가 아직 없어요. 한국장 마감 뒤 자동 수집이 한 번 끝나면 채워져요.</p>`;
         $("#exSub").textContent = "네이버 업종"; return;
       }
       if (!nv.periods_available.includes(k)) {
-        el.innerHTML = `<p class="empty">네이버 업종의 ${PLABEL[k]} 등락률은 매일 기록을 이어 붙여 계산해요. 기록이 ${k.replace("ret", "")}거래일 쌓이면 보여요. (지금 ${nv.days_recorded}일치)<br>1일 등락률은 지금 바로 볼 수 있어요.</p>`;
+        el.innerHTML = `<p class="empty">네이버 업종의 ${PLABEL[k]} 등락률은 매일 쌓은 기록을 이어 붙여 계산해요. 기록이 ${k.replace("ret", "")}거래일 쌓이면 보여 드릴게요(지금 ${nv.days_recorded}일치).<br>1일 등락률은 지금 바로 볼 수 있어요.</p>`;
         $("#exSub").textContent = `네이버 업종 · ${nv.basis_date} 종가 기준`; return;
       }
       tree = naverTree(nv, k);
@@ -272,10 +272,10 @@
       note = (k === "chg1" ? "업종 등락률은 네이버가 발표한 값 그대로예요." : "여러 날 등락률은 네이버 업종 하루 등락률을 이어 곱했어요.") + " 섹터는 소속 업종을 종목 수로 가중 평균했어요. 업종 안 종목은 '네이버' 버튼으로 네이버 화면에서 보세요.";
     } else {
       tree = boardTree(d, k);
-      $("#exSub").textContent = `이 판 분류 · ${d.basis_date} 종가 · ${PLABEL[k]} 등락률`;
+      $("#exSub").textContent = `강도판 분류 · ${d.basis_date} 종가 · ${PLABEL[k]} 등락률`;
       note = "분류·세부 산업 등락률은 구성 종목 등락률의 단순 평균(종목 수 같은 비중)이에요.";
     }
-    $("#exNote").textContent = `큰 분류를 누르면 세부 업종이 펼쳐지고, 이 판 분류에서는 세부 업종을 누르면 종목까지 펼쳐져요. ${note} 빨강은 상승, 파랑은 하락. 네이버·TV·Finviz 버튼은 새 창으로 열려요.`;
+    $("#exNote").textContent = `큰 분류를 누르면 세부 업종이 펼쳐지고, 강도판 분류에서는 세부 업종을 누르면 종목까지 펼쳐져요. ${note} 빨강은 상승, 파랑은 하락이에요. 네이버·TV·Finviz 버튼은 새 창으로 열려요.`;
     const sorted = (arr) => arr.slice().sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
     const scale = (arr) => Math.max(1e-9, ...arr.map((x) => Math.abs(x.v ?? 0)));
     const bar = (v, mx) => v == null ? `<span class="ex-bar"></span>`
@@ -365,12 +365,12 @@
         <div class="rc3">${checksOf(i, true)}<span class="rc-dist">고점 대비 <b>${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</b></span></div>
       </button>`).join("");
     if (!rows.length) {
-      const msg = "조건에 맞는 산업이 없어요. 지금은 가격 추세가 살아 있는 산업이 없다는 뜻이에요.";
+      const msg = "조건에 맞는 산업이 없어요. 지금 이 조건에서는 가격이 오르고 있는 산업이 없어요.";
       $("#rankTable tbody").innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
       $("#rankCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
     }
     $$("#rankTable tbody tr[data-id], #rankCards .rcard").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
-    $("#tableNote").innerHTML = `파란 띠 = 종합 순위 상위 25%(${d.top_cut}위 이내). 막대 길이는 시장 안 순위 백분위, 숫자는 종합 강도 점수예요. 수익률 아래 작은 숫자는 그 기간 순위예요.`;
+    $("#tableNote").innerHTML = `파란 띠는 종합 순위 상위 25%(${d.top_cut}위 이내)예요. 막대 길이는 전체 산업 중 몇 % 위치인지, 막대 옆 숫자는 종합 강도 점수예요. 수익률 아래 작은 숫자는 그 기간 수익률 순위예요.`;
   }
 
   // ---------- heatmap
@@ -515,7 +515,7 @@
     $("#drawer").hidden = false;
     document.body.style.overflow = "hidden";
     $("#dTitle").textContent = `${it.name}`;
-    $("#dSub").textContent = `${it.group} · 구성 종목 ${it.n}개 같은 비중 · 지수 ${it.close == null ? "–" : it.close.toFixed(1)} (${fmtPct(it.chg1, 2)}) · ${it.last_date}`;
+    $("#dSub").textContent = `${it.group} · 구성 종목 ${it.n}개 · 같은 비중 · 지수 ${it.close == null ? "–" : it.close.toFixed(1)} (${fmtPct(it.chg1, 2)}) · ${it.last_date}`;
     renderMembers(it, d);
     const st = [
       ["종합 순위", it.rank == null ? "–" : `${it.rank}위 / ${d.n}`],
@@ -524,7 +524,7 @@
       ["상위권 지속", it.streak ? `${it.streak}일 (${md(it.streak_start)}~)` : "–"],
       ["20일 수익률", fmtPct(it.ret20)], ["60일 수익률", fmtPct(it.ret60)], ["120일 수익률", fmtPct(it.ret120)],
       ["52주 고점 대비", it.dist_high == null ? "–" : it.dist_high.toFixed(1) + "%"],
-      ["추세 상태", it.stage], [`RS선(${it.bench || d.benchmark.name} 대비) 50일 평균 위`, it.rs_above_ma50 == null ? "–" : it.rs_above_ma50 ? "예" : "아니오"],
+      ["추세 상태", it.stage], [`RS선이 50일 평균 위 (${it.bench || d.benchmark.name} 대비)`, it.rs_above_ma50 == null ? "–" : it.rs_above_ma50 ? "예" : "아니오"],
       ["50일선 위 종목", it.breadth50 == null ? "–" : `${it.breadth50}%`],
       ["종합 강도", it.score == null ? "–" : Math.round(it.score) + "점"],
     ];

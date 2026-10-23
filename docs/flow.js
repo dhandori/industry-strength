@@ -77,9 +77,9 @@
     const alive = rise.filter((m) => ALIVE.includes(m.it.stage)).length;
     const r = rise.length ? alive / rise.length : 0;
     const q = !rise.length ? ""
-      : r >= 0.5 ? `<p class="fl-q good">강해진 세부 산업 ${rise.length}개 중 <b>${alive}개</b>는 가격 추세도 살아 있어요 → 실제 돈이 들어가는 <b>진짜 강세</b>에 가까워요.</p>`
-      : alive ? `<p class="fl-q mid">강해진 세부 산업 ${rise.length}개 중 가격 추세까지 살아 있는 곳은 <b>${alive}개</b>뿐이에요 → 순환 초입일 수 있으니 <b>추세↑</b> 표시부터 보세요.</p>`
-      : `<p class="fl-q warn">강해진 세부 산업 ${rise.length}개 모두 가격 추세는 아직 약해요 → 오른 게 아니라 <b>덜 빠져서</b> 순위가 오른 순환일 수 있어요.</p>`;
+      : r >= 0.5 ? `<p class="fl-q good">강해진 세부 산업 ${rise.length}개 중 <b>${alive}개</b>는 가격도 오르고 있어요 → 실제로 돈이 들어오는 <b>진짜 강세</b>에 가까워요.</p>`
+      : alive ? `<p class="fl-q mid">강해진 세부 산업 ${rise.length}개 중 가격까지 오르는 곳은 <b>${alive}개</b>뿐이에요 → 순환의 초입일 수 있으니 <b>추세↑</b> 표시가 붙은 산업부터 보세요.</p>`
+      : `<p class="fl-q warn">강해진 세부 산업 ${rise.length}개 모두 가격 추세는 아직 약해요 → 실제로 올랐다기보다 <b>덜 빠져서</b> 순위만 오른 것일 수 있어요.</p>`;
     return `<div class="fl-head">
       <div class="fl-side"><span class="fl-lab">힘이 빠지는 곳</span><div class="fl-chips">${side(dns, "down", "뚜렷한 곳 없음")}</div></div>
       <div class="fl-arrow" aria-hidden="true">→</div>
@@ -219,7 +219,7 @@
     const el = $("#flow");
     if (!el || !d || !d.history || !d.history.rank) return;
     const T = d.history.dates.length;
-    if (T <= st.k + smoothOf(st.k)) { el.innerHTML = `<p class="none">기록이 ${st.k}거래일보다 짧아서 아직 못 그려요.</p>`; return; }
+    if (T <= st.k + smoothOf(st.k)) { el.innerHTML = `<p class="none">기록이 아직 ${st.k}거래일만큼 쌓이지 않아 그릴 수 없어요.</p>`; return; }
     $("#flow-h .sub").textContent = `${md(d.history.dates[T - 1 - st.k])} → ${md(d.basis_date)} · ${st.k}거래일 동안`;
 
     const gf = groupFlow(d);
@@ -246,18 +246,18 @@
           <div class="fl-map-wrap" id="flMap"></div>
         </div>
         <div class="fl-col">
-          <h3>큰 분류 흐름 <span class="sub">선 = ${st.k}일 전을 가운데 선에 맞춘 변화${ALSO.some((P) => P < st.k) ? ` · 점선 = ${ALSO.filter((P) => P < st.k).join("·")}일 전` : ""} · 숫자 = 지금 강도와 ${st.k}일 변화</span></h3>
+          <h3>큰 분류 흐름 <span class="sub">가운데 선 = ${st.k}일 전 강도 · 위로 갈수록 강해짐${ALSO.some((P) => P < st.k) ? ` · 세로 점선 = ${ALSO.filter((P) => P < st.k).join("·")}일 전` : ""} · 숫자 = 지금 강도와 ${st.k}일 변화</span></h3>
           <div class="fl-groups">${gRows}</div>
         </div>
       </div>
       <div class="fl-bottom">
         <div class="fl-col">
-          <h3><span class="dot" style="color:var(--up)"></span>강해지는 세부 산업 <span class="sub">순위가 가장 많이 오른 순</span>
-            <button class="toggle fl-alive" type="button" aria-pressed="${st.alive}" title="가격도 상승 추세·상승 전환 시도인 산업만">가격 추세 살아 있는 것만</button></h3>
-          ${rise.length ? scale + fold("r", rise.map((m) => row(m, d)), 5) : `<p class="none">${st.alive ? "순위가 오른 산업 중 가격 추세까지 살아 있는 곳이 없어요." : "해당 없음"}</p>`}
+          <h3><span class="dot" style="color:var(--up)"></span>순위가 오른 세부 산업 <span class="sub">많이 오른 순</span>
+            <button class="toggle fl-alive" type="button" aria-pressed="${st.alive}" title="가격도 상승 추세·상승 전환 시도인 산업만">가격도 오르는 산업만</button></h3>
+          ${rise.length ? scale + fold("r", rise.map((m) => row(m, d)), 5) : `<p class="none">${st.alive ? "순위가 오른 산업 중 가격까지 오르고 있는 곳은 없어요." : "해당 없음"}</p>`}
         </div>
         <div class="fl-col">
-          <h3><span class="dot" style="color:var(--down)"></span>밀려나는 세부 산업 <span class="sub">${st.k}일 전 상위 25%였던 산업 중</span></h3>
+          <h3><span class="dot" style="color:var(--down)"></span>상위권에서 밀려난 세부 산업 <span class="sub">${st.k}일 전 상위 25%였던 산업 중</span></h3>
           ${fall.length ? scale + fold("f", fall.map((m) => row(m, d)), 4) : `<p class="none">상위권에서 밀린 산업이 없어요.</p>`}
         </div>
       </div>`;

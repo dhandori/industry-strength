@@ -51,13 +51,13 @@
       </div>
     </div>
     <div id="flow" class="flow"></div>
-    <p class="foot-note"><b>강도</b>는 분류 안 세부 산업들의 종합 순위를 0(꼴찌)~100(1위)으로 바꿔 평균한 값이에요(5일은 그대로, 20일은 5일, 60일은 10일, 200일은 20일 이동평균). 지도에서 <b>오른쪽 위</b>로 갈수록 이미 강한데 더 강해지는 분류, <b>왼쪽 위</b>는 약했지만 힘이 붙는 분류예요. 큰 분류 흐름의 선은 고른 기간 전 강도를 가운데 선에 맞춰서 그 뒤로 얼마나 오르내렸는지 보여 줘요(모든 분류가 같은 출발점·같은 세로 폭). 분류·산업 이름 아래 작은 <b>20일·60일·200일</b> 숫자는 고른 기간과 상관없이 늘 보이는 다른 기간 변화예요(짧은 흐름과 긴 흐름이 같은 방향인지 확인). 줄 그림의 <b>빈 점</b>은 기간 전 자리, <b>찬 점</b>은 지금 자리예요. <b>추세↑</b>는 가격도 오르는 중, <b>가격↓</b>는 순위만 오르고 가격 추세는 아직 약한 산업이에요. 분류를 누르면 아래 순위표가 그 분류로 걸러지고, 세부 산업을 누르면 상세가 열려요.</p>
+    <p class="foot-note"><b>강도</b>는 한 분류에 속한 세부 산업들의 종합 순위를 0점(꼴찌)~100점(1위)으로 바꿔 평균한 값이에요. 들쭉날쭉함을 줄이려고 고른 기간에 맞춰 이동평균을 냈어요(5일은 그대로, 20일은 5일, 60일은 10일, 200일은 20일 평균). 지도에서 <b>오른쪽 위</b>는 이미 강한데 더 강해지는 분류이고, <b>왼쪽 위</b>는 약했지만 힘이 붙고 있는 분류예요. ‘큰 분류 흐름’의 선은 모든 분류를 고른 기간 전 강도에서 똑같이 출발시켜, 그 뒤로 얼마나 오르내렸는지 비교할 수 있게 그렸어요. 이름 아래 작은 <b>20일·60일·200일</b> 숫자는 고른 기간과 관계없이 늘 함께 보여 주는 다른 기간의 변화예요. 짧은 흐름과 긴 흐름이 같은 방향인지 확인할 때 쓰세요. 순위 이동 그림의 <b>빈 점</b>은 기간 시작 때 자리, <b>찬 점</b>은 지금 자리예요. <b>추세↑</b>는 가격도 오르고 있는 산업, <b>가격↓</b>는 순위만 올랐고 가격 추세는 아직 약한 산업이에요. 분류를 누르면 아래 순위표가 그 분류만 보이도록 걸러지고, 세부 산업을 누르면 상세 화면이 열려요.</p>
   </section>
 
   <section class="card" aria-labelledby="sig-h">
     <div class="card-head">
       <h2 id="sig-h">오늘의 신호</h2>
-      <span class="hint">산업 이름을 누르면 상세 · 카드마다 5개까지 먼저 보여요</span>
+      <span class="hint">산업 이름을 누르면 상세가 열려요 · 신호마다 5개까지 먼저 보여 줘요</span>
     </div>
     <div id="signals" class="signals"></div>
   </section>
@@ -67,7 +67,7 @@
       <h2 id="ex-h">업종 탐색 <span class="sub" id="exSub"></span></h2>
       <div class="filters">
       <div class="seg small" id="exSrc" aria-label="분류 기준">
-        <button data-src="board" aria-pressed="true">이 판 분류</button>
+        <button data-src="board" aria-pressed="true">강도판 분류</button>
         <button data-src="naver" aria-pressed="false">네이버 업종</button>
       </div>
       <div class="seg small" id="exSeg" aria-label="기간">
@@ -123,7 +123,7 @@
 
   <section class="card" aria-labelledby="heat-h">
     <div class="card-head wrap">
-      <h2 id="heat-h">순위 흐름 <span class="sub">최근 40거래일 · 종합 순위 · 기본은 상위 25%만</span></h2>
+      <h2 id="heat-h">순위 흐름 <span class="sub">최근 40거래일 종합 순위 · 처음에는 상위 25%만 보여 줘요</span></h2>
       <div class="seg small" id="heatSort" aria-label="줄 순서">
         <button data-hs="rank" aria-pressed="true">지금 순위 순</button>
         <button data-hs="rise" aria-pressed="false">최근 상승 순</button>
@@ -138,7 +138,7 @@
     </div>
     <div class="heat-wrap"><div id="heat" class="heat"></div></div>
     <button class="toggle" id="heatMore" style="margin-top:10px" hidden></button>
-    <p class="foot-note">빨간 칸이 길게 이어질수록 강세가 꾸준한 산업이에요. 회색·파랑에서 빨강으로 바뀌는 지점이 강세가 <b>시작된 날</b>이에요. ‘최근 상승 순’은 화면 기간 첫날보다 순위가 많이 오른 산업부터 보여 줘요(이름 앞 ▲숫자). ‘지금 순위 순’에서는 점선 위쪽이 현재 상위 25%, 맨 오른쪽 테두리 칸이 최근 거래일이에요.</p>
+    <p class="foot-note">빨간 칸이 길게 이어질수록 강세가 꾸준한 산업이에요. 회색·파랑에서 빨강으로 바뀌는 지점이 강세가 <b>시작된 날</b>이에요. ‘최근 상승 순’은 표시된 기간의 첫날보다 순위가 많이 오른 산업부터 보여 줘요(이름 앞 ▲숫자가 오른 계단 수). ‘지금 순위 순’에서는 점선 위쪽이 현재 상위 25%예요. 맨 오른쪽 테두리 칸이 가장 최근 거래일이에요.</p>
   </section>
 
   <div class="two-col">
@@ -150,7 +150,7 @@
     <section class="card" aria-labelledby="br-h">
       <div class="card-head"><h2 id="br-h">산업 폭 <span class="sub">50일선 위 산업 비율</span></h2></div>
       <div id="breadthChart" class="chart sm"></div>
-      <p class="foot-note">이 선이 오르면 강세가 여러 산업으로 퍼지는 중, 내리면 소수만 버티는 중이에요.</p>
+      <p class="foot-note">이 선이 오르면 강세가 여러 산업으로 퍼지고 있다는 뜻이고, 내리면 일부 산업만 버티고 있다는 뜻이에요.</p>
     </section>
   </div>
 
@@ -190,24 +190,24 @@
 
   <section class="card" aria-labelledby="hxc-h">
     <div class="card-head wrap">
-      <h2 id="hxc-h">신고가 종목 수 추이 <span class="sub">막대 = 그날 52주 신고가 종목 수 · 진한 막대는 기간 평균 이상</span></h2>
+      <h2 id="hxc-h">신고가 종목 수 추이 <span class="sub">막대는 그날 52주 신고가를 낸 종목 수 · 진한 막대는 기간 평균보다 많은 날</span></h2>
     </div>
     <div class="chart-legend" id="hxLegend"></div>
     <div id="hxChart" class="chart sm"></div>
-    <p class="foot-note">막대가 5일 평균선 위로 올라오면 신고가가 늘어나는 중, 아래로 내려가면 줄어드는 중이에요.</p>
+    <p class="foot-note">막대가 5일 평균선보다 높으면 신고가가 늘어나는 중이고, 낮으면 줄어드는 중이에요.</p>
   </section>
 
   <section class="card" aria-labelledby="hxs-h">
     <div class="card-head wrap">
-      <h2 id="hxs-h">강해지는 업종 <span class="sub">최근 5거래일 vs 그 전 5거래일 · 제목을 누르면 정렬</span></h2>
+      <h2 id="hxs-h">최근 신고가가 자주 나온 업종 <span class="sub">업종별 52주 신고가 횟수 · 최근 5거래일과 그 전 5거래일 비교 · 열 제목을 누르면 정렬돼요</span></h2>
     </div>
     <div class="hx-wrap" id="hxStrong"></div>
-    <p class="foot-note"><b>업종 안 비율</b>은 그 업종 전체 종목 중 최근 5거래일에 한 번이라도 신고가를 낸 종목의 비율이에요. 높을수록 대장주 하나가 아니라 <b>업종 전체가 함께</b> 오르는 중이에요(종목 3개 미만 업종은 –).</p>
+    <p class="foot-note"><b>횟수</b>는 그 업종 종목들이 52주 신고가를 낸 횟수를 모두 더한 값이에요. 한 종목이 3일 연속 신고가를 내면 3번으로 셉니다. <b>증감</b>이 ▲이면 신고가가 늘어나는 중이고, ▼이면 줄어드는 중이에요. <b>업종 내 비율</b>은 그 업종 전체 종목 중 최근 5거래일에 한 번이라도 신고가를 낸 종목의 비율이에요. 이 비율이 높을수록 대장주 하나가 아니라 <b>업종 전체가 함께</b> 오르고 있다는 뜻이에요(종목이 3개 미만인 업종은 –로 표시).</p>
   </section>
 
   <section class="card" aria-labelledby="hxh-h">
     <div class="card-head wrap">
-      <h2 id="hxh-h">업종 × 날짜 <span class="sub" id="hxHeatSub"></span></h2>
+      <h2 id="hxh-h">업종별 신고가 달력 <span class="sub" id="hxHeatSub"></span></h2>
       <div class="heat-legend">
         <span><i style="background:var(--x1)"></i>1개</span>
         <span><i style="background:var(--x2)"></i>2~3개</span>
@@ -217,12 +217,12 @@
     </div>
     <div class="heat-wrap"><div id="hxHeat" class="heat hx-heat"></div></div>
     <button class="toggle" id="hxHeatMore" style="margin-top:10px" hidden></button>
-    <p class="foot-note">한 줄에 색이 며칠 이어지면 그 업종에서 신고가가 꾸준히 나오는 중이에요. 맨 오른쪽 테두리 칸이 최근 거래일이에요.</p>
+    <p class="foot-note">칸 안 숫자는 그날 그 업종에서 나온 신고가 종목 수예요. 한 줄에 색이 며칠 이어지면 그 업종에서 신고가가 꾸준히 나오고 있다는 뜻이에요. 맨 오른쪽 테두리 칸이 가장 최근 거래일이에요.</p>
   </section>
 
   <section class="card" aria-labelledby="hxf-h">
     <div class="card-head wrap">
-      <h2 id="hxf-h">자주 나온 종목 <span class="sub">기록 기간 전체 · 노란 줄 = 지금 이틀 이상 연속 신고가</span></h2>
+      <h2 id="hxf-h">신고가가 자주 나온 종목 <span class="sub">기록 기간 전체 · 노란 줄은 지금 이틀 이상 연속 신고가인 종목</span></h2>
     </div>
     <div class="hx-wrap" id="hxFreq"></div>
     <button class="toggle" id="hxFreqMore" style="margin-top:10px" hidden></button>
@@ -234,7 +234,7 @@
       <div class="filters">
         <div class="seg small" id="hxMode" aria-label="보기 방식">
           <button data-mode="group" aria-pressed="true">업종별 묶음</button>
-          <button data-mode="table" aria-pressed="false">표 (정렬)</button>
+          <button data-mode="table" aria-pressed="false">표로 보기</button>
         </div>
         <input id="hxSearch" class="hx-search" type="search" placeholder="종목·업종 찾기" aria-label="종목·업종 찾기">
       </div>
@@ -242,7 +242,7 @@
     <div class="dchips" id="hxDays"></div>
     <p class="hx-daysum" id="hxDaySum"></p>
     <div id="hxList"></div>
-    <p class="foot-note">🔁 N일째 = 연속 신고가 · 🆕 = 기록 기간 안에서 처음 나온 종목 · 종목 이름은 TradingView 차트로 연결돼요. ‘강도판: ○○’을 누르면 산업 강도 탭의 그 산업 상세가 열려요.</p>
+    <p class="foot-note">🔁 N일째는 N일 연속 신고가라는 뜻이고, 🆕는 기록 기간 안에서 처음 신고가를 낸 종목이에요. 종목 이름을 누르면 TradingView 차트가 열려요. ‘강도판: ○○’을 누르면 산업 강도 탭에서 그 산업의 상세 화면이 열려요.</p>
   </section>
 
   <section class="card guide" aria-labelledby="hxg-h">
@@ -290,9 +290,9 @@
 </div>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
-<script src="refresh.js?v=20261019-r1"></script>
-<script src="flow.js?v=20261023-f6"></script>
-<script src="app.js?v=20261023-f3"></script>
-<script src="highs.js?v=20261023-f1"></script>
+<script src="refresh.js?v=20261023-t1"></script>
+<script src="flow.js?v=20261023-t1"></script>
+<script src="app.js?v=20261023-t1"></script>
+<script src="highs.js?v=20261023-t1"></script>
 </body>
 </html>
