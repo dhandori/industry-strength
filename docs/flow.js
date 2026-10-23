@@ -10,7 +10,7 @@
   const md = (s) => { const [, m, dd] = s.split("-"); return `${+m}/${+dd}`; };
   const WEAK = ["상승 둔화", "하락 추세", "바닥 다지기"];
   const ALIVE = ["상승 추세", "상승 전환 시도"];
-  const DAYS = 40, SMOOTH = 5, TAIL = 8, RISE_N = 10, FALL_N = 8, FLAT = 3;
+  const SMOOTH = 5, TAIL = 8, RISE_N = 10, FALL_N = 8, FLAT = 3;
   const st = { k: 20, d: null, alive: false, open: new Set() };
   // 어떤 기간을 골라도 20·60·200일 변화는 늘 같이 보여 준다(짧은 흐름이 긴 기간에 묻히지 않게)
   const ALSO = [20, 60, 200];
@@ -19,7 +19,10 @@
   const pct = (r, n) => r == null || n < 2 ? null : (1 - (r - 1) / (n - 1)) * 100;
   const mean = (a) => { const v = a.filter((x) => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
   const smooth = (a, w) => a.map((_, k) => mean(a.slice(Math.max(0, k - w + 1), k + 1)));
-  const smoothOf = (k) => k >= 200 ? 20 : k >= 60 ? 10 : SMOOTH;
+  // 5일은 다듬지 않은 그대로(시작점이 정확히 5일 전), 긴 기간일수록 길게 다듬어 잔물결을 줄인다
+  const smoothOf = (k) => k >= 200 ? 20 : k >= 60 ? 10 : k >= 20 ? SMOOTH : 1;
+  // 5일은 하루하루가 들쭉날쭉해서 꼬리를 짧게(최근 3일)
+  const tailOf = (k) => k <= 5 ? 4 : Math.min(TAIL, k + 1);
   const dir = (v) => v == null || Math.abs(v) < FLAT ? "flat" : v > 0 ? "up" : "down";
 
   // ---------- 큰 분류별 강도 선
@@ -27,7 +30,8 @@
     const H = d.history, n = d.n, T = H.dates.length, k = st.k;
     // 선 길이는 비교 기간이 보이도록 최소 40거래일, 길면 기간+10거래일
     // 긴 기간일수록 더 길게 다듬어 잔물결을 줄인다(5·20일 5일, 60일 10일, 200일 20일 평균)
-    const len = Math.max(DAYS, k + 10), sw = smoothOf(k), span = Math.max(len, k + TAIL) + sw;
+    // 선은 정확히 고른 기간 전부터 지금까지
+    const len = k + 1, sw = smoothOf(k), span = Math.max(len, k + tailOf(k)) + sw;
     const by = {};
     for (const it of d.items) (by[it.group] || (by[it.group] = [])).push(it);
     return Object.entries(by).map(([g, list]) => {
@@ -42,7 +46,7 @@
       }
       const at = (j) => sm[sm.length - 1 - j];
       const tail = [];
-      for (let j = TAIL - 1; j >= 0; j--) {
+      for (let j = tailOf(k) - 1; j >= 0; j--) {
         const x = at(j), b = at(j + k);
         if (x != null && b != null) tail.push({ x, y: x - b });
       }
@@ -146,15 +150,18 @@
     return s + tails + marks + labels + `</svg>`;
   }
 
-  function spark(line, delta) {
-    const W = 120, H = 30;
-    const xs = (k) => (k / (line.length - 1)) * W, ys = (x) => H - (x / 100) * H;
+  // 선은 '시작점 대비 변화': 모든 분류가 같은 높이(가운데 선)에서 출발해 얼마나 오르내렸는지. 세로 폭은 모든 분류 공통
+  function spark(line0, delta, amp) {
+    const W = 120, H = 30, base = line0.find((x) => x != null);
+    const line = line0.map((x) => x == null || base == null ? null : x - base);
+    const xs = (k) => (k / (line.length - 1)) * W, ys = (x) => H / 2 - (x / amp) * (H / 2);
     let p = "", on = false;
     line.forEach((x, k) => { if (x == null) { on = false; return; } p += (on ? "L" : "M") + xs(k).toFixed(1) + " " + ys(x).toFixed(1); on = true; });
     const c = { up: "var(--up)", down: "var(--down)", flat: "var(--muted)" }[dir(delta)];
     const ly = line.at(-1) == null ? null : ys(line.at(-1));
-    const marks = [...new Set([...ALSO, st.k])].filter((P) => P < line.length)
-      .map((P) => { const x = xs(line.length - 1 - P); return `<line x1="${x}" x2="${x}" y1="0" y2="${H}" class="fl-then${P === st.k ? " sel" : ""}"/>`; }).join("");
+    // 선 시작이 고른 기간 전이므로, 그보다 짧은 기간(20·60일 전)만 점선으로
+    const marks = ALSO.filter((P) => P < line.length - 1)
+      .map((P) => { const x = xs(line.length - 1 - P); return `<line x1="${x}" x2="${x}" y1="0" y2="${H}" class="fl-then"/>`; }).join("");
     return `<svg class="fl-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
       <line x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}" class="fl-mid"/>
       ${marks}
@@ -223,22 +230,23 @@
     // 밀려나는 쪽은 기간 시작 때 상위권(상위 25%)이던 산업 중에서만: 원래 약하던 산업이 더 약해진 건 흐름이 아님
     const fall = ms.filter((m) => m.chg < 0 && m.was <= d.top_cut).sort((a, b) => a.chg - b.chg).slice(0, FALL_N);
 
+    const amp = Math.max(5, ...gf.map((g) => { const b = g.line.find((x) => x != null); return Math.max(...g.line.map((x) => x == null || b == null ? 0 : Math.abs(x - b))); })) * 1.08;
     const gRows = fold("g", gf.map((g) => {
       const c = dir(g.delta);
       return `<button class="fl-g" type="button" data-group="${esc(g.g)}" title="${esc(g.g)} · 상위 25% ${g.top}/${g.n}개 · 누르면 아래 순위표를 이 분류로 걸러요">
         <span class="fl-gn"><span class="fl-gt">${esc(g.g)} <em>${g.top}/${g.n}</em></span>${perLine(g.per, FLAT)}</span>
-        ${spark(g.line, g.delta)}
-        <span class="fl-gv ${c}"><b>${Math.round(g.now)}</b><span>${c === "up" ? "▲" : c === "down" ? "▼" : "–"}${g.delta == null ? "" : Math.abs(Math.round(g.delta))}</span></span></button>`;
+        ${spark(g.line, g.delta, amp)}
+        <span class="fl-gv ${c}"><b>${Math.round(g.now)}</b><span>${g.delta == null ? "" : c === "up" ? "▲" + Math.round(g.delta) : c === "down" ? "▼" + Math.abs(Math.round(g.delta)) : Math.round(g.delta) === 0 ? "0" : (g.delta > 0 ? "+" : "−") + Math.abs(Math.round(g.delta))}</span></span></button>`;
     }), 4, 3);
 
     el.innerHTML = `${headline(gf, riseTop)}
       <div class="fl-top">
         <div class="fl-col">
-          <h3>로테이션 지도 <span class="sub">큰 분류 · 꼬리 = 최근 ${TAIL}거래일 이동</span></h3>
+          <h3>로테이션 지도 <span class="sub">큰 분류 · 꼬리 = 최근 ${tailOf(st.k) - 1}거래일 이동</span></h3>
           <div class="fl-map-wrap" id="flMap"></div>
         </div>
         <div class="fl-col">
-          <h3>큰 분류 흐름 <span class="sub">선 = 최근 ${Math.max(DAYS, st.k + 10)}거래일 · 점선 = 20·60·200일 전(진한 점선 = ${st.k}일 전) · 숫자 = 지금 강도와 ${st.k}일 변화</span></h3>
+          <h3>큰 분류 흐름 <span class="sub">선 = ${st.k}일 전을 가운데 선에 맞춘 변화${ALSO.some((P) => P < st.k) ? ` · 점선 = ${ALSO.filter((P) => P < st.k).join("·")}일 전` : ""} · 숫자 = 지금 강도와 ${st.k}일 변화</span></h3>
           <div class="fl-groups">${gRows}</div>
         </div>
       </div>

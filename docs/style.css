@@ -463,7 +463,7 @@ body.v-highs #meta { display: none; }
 @media (hover: hover) { .fl-g:hover, .fl-row:hover, .fl-chip:hover { background-color: var(--accent-soft); } }
 .fl-gn { font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .fl-gn em { font-style: normal; font-weight: 500; font-size: 11.5px; color: var(--muted); margin-left: 2px; }
-.fl-spark { width: 100%; height: 28px; display: block; overflow: visible; }
+.fl-spark { width: 100%; height: 36px; display: block; overflow: visible; }
 .fl-spark .fl-mid { stroke: var(--grid); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .fl-spark .fl-then { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 2; vector-effect: non-scaling-stroke; }
 .fl-gv { text-align: right; font-variant-numeric: tabular-nums; line-height: 1.15; }
@@ -510,4 +510,3 @@ body.v-highs #meta { display: none; }
 .fl-name small .fl-per { display: inline-flex; margin-left: 6px; }
 .fl-per i { font-style: normal; white-space: nowrap; }
 .fl-per .up { color: var(--up); } .fl-per .down { color: var(--down); } .fl-per .flat { color: var(--muted); }
-.fl-spark .fl-then.sel { stroke: var(--ink-2); stroke-dasharray: 3 2; }
