@@ -87,86 +87,133 @@
     </div>${q}`;
   }
 
-  // ---------- 로테이션 지도 (SVG)
+  // ---------- 로테이션 지도 (SVG) — 모눈·눈금·굵어지는 꼬리·겹치지 않는 이름표 (2026-10-23 가시성 개선)
   function rotationMap(gf, W) {
-    const H = Math.round(Math.max(290, Math.min(480, W * 0.86)));
-    const P = { l: 30, r: 12, t: 12, b: 26 };
+    const H = Math.round(Math.max(320, Math.min(500, W * 1.02)));
+    const P = { l: 34, r: 10, t: 10, b: 34 };
     const iw = W - P.l - P.r, ih = H - P.t - P.b;
     const ymax = Math.max(10, Math.ceil(Math.max(...gf.flatMap((g) => g.tail.map((p) => Math.abs(p.y)))) / 10) * 10);
     const X = (x) => P.l + (x / 100) * iw, Y = (y) => P.t + ih / 2 - (y / ymax) * (ih / 2);
-    const fs = W < 420 ? 11.5 : 12.5;
-    const colorOf = (p) => p.y >= FLAT ? (p.x >= 50 ? "var(--up)" : "var(--fl-rise)") : p.y <= -FLAT ? (p.x >= 50 ? "var(--down)" : "var(--muted)") : "var(--ink-2)";
+    const colorOf = (p) => p.y >= FLAT ? (p.x >= 50 ? "var(--up)" : "var(--fl-rise)") : p.y <= -FLAT ? (p.x >= 50 ? "var(--down)" : "var(--muted)") : "var(--muted)";
+    const f1 = (v) => v.toFixed(1);
     let s = `<svg class="fl-map" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="큰 분류 로테이션 지도">`;
-    // 사분면 배경과 이름
+    // 사분면 바탕(네 칸 모두 옅게)
     s += `<rect x="${X(50)}" y="${P.t}" width="${iw / 2}" height="${ih / 2}" class="q-lead"/>
       <rect x="${P.l}" y="${P.t}" width="${iw / 2}" height="${ih / 2}" class="q-rise"/>
       <rect x="${X(50)}" y="${Y(0)}" width="${iw / 2}" height="${ih / 2}" class="q-fade"/>
-      <line x1="${P.l}" x2="${W - P.r}" y1="${Y(0)}" y2="${Y(0)}" class="ax"/>
-      <line x1="${X(50)}" x2="${X(50)}" y1="${P.t}" y2="${P.t + ih}" class="ax"/>
-      <text x="${W - P.r - 6}" y="${P.t + 15}" text-anchor="end" class="qn lead">주도 · 강하고 더 강해짐</text>
-      <text x="${P.l + 6}" y="${P.t + 15}" class="qn rise">부상 · 약하지만 강해지는 중</text>
-      <text x="${W - P.r - 6}" y="${P.t + ih - 7}" text-anchor="end" class="qn">식는 중 · 강하지만 약해짐</text>
-      <text x="${P.l + 6}" y="${P.t + ih - 7}" class="qn">소외 · 약하고 더 약해짐</text>
-      <text x="${P.l}" y="${H - 8}" class="tk">← 지금 약함</text>
-      <text x="${W - P.r}" y="${H - 8}" text-anchor="end" class="tk">지금 강함 →</text>
-      <text x="${P.l - 6}" y="${Y(ymax) + 9}" text-anchor="end" class="tk">+${ymax}</text>
-      <text x="${P.l - 6}" y="${Y(0) + 4}" text-anchor="end" class="tk">0</text>
-      <text x="${P.l - 6}" y="${Y(-ymax)}" text-anchor="end" class="tk">−${ymax}</text>`;
-    // 꼬리 → 점 → 이름 (이름은 겹치지 않게 자리 고르기)
-    const fq = 11, qw = (t) => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? fq * 0.98 : fq * 0.56), 0);
-    const q1 = qw("주도 · 강하고 더 강해짐"), q2 = qw("부상 · 약하지만 강해지는 중"), q3 = qw("식는 중 · 강하지만 약해짐"), q4 = qw("소외 · 약하고 더 약해짐");
-    const placed = [
-      { x0: W - P.r - 6 - q1, x1: W - P.r - 6, y0: P.t + 4, y1: P.t + 18 },
-      { x0: P.l + 6, x1: P.l + 6 + q2, y0: P.t + 4, y1: P.t + 18 },
-      { x0: W - P.r - 6 - q3, x1: W - P.r - 6, y0: P.t + ih - 18, y1: P.t + ih - 4 },
-      { x0: P.l + 6, x1: P.l + 6 + q4, y0: P.t + ih - 18, y1: P.t + ih - 4 },
+      <rect x="${P.l}" y="${Y(0)}" width="${iw / 2}" height="${ih / 2}" class="q-lag"/>`;
+    // 모눈(10점 간격)
+    for (let v = 10; v < 100; v += 10) if (v !== 50) s += `<line x1="${X(v)}" x2="${X(v)}" y1="${P.t}" y2="${P.t + ih}" class="gd"/>`;
+    for (let v = -ymax + 10; v < ymax; v += 10) if (v) s += `<line x1="${P.l}" x2="${P.l + iw}" y1="${f1(Y(v))}" y2="${f1(Y(v))}" class="gd"/>`;
+    s += `<rect x="${P.l}" y="${P.t}" width="${iw}" height="${ih}" class="frame"/>
+      <line x1="${P.l}" x2="${P.l + iw}" y1="${Y(0)}" y2="${Y(0)}" class="ax"/>
+      <line x1="${X(50)}" x2="${X(50)}" y1="${P.t}" y2="${P.t + ih}" class="ax"/>`;
+    // 눈금 숫자
+    for (const v of [0, 25, 50, 75, 100]) s += `<text x="${X(v)}" y="${P.t + ih + 14}" text-anchor="middle" class="tk">${v}</text>`;
+    for (const v of [-ymax, -ymax / 2, 0, ymax / 2, ymax]) s += `<text x="${P.l - 5}" y="${f1(Y(v) + 4)}" text-anchor="end" class="tk">${v > 0 ? "+" + v : v < 0 ? "−" + Math.abs(v) : 0}</text>`;
+    s += `<text x="${P.l}" y="${H - 5}" class="tk">← 지금 약함</text>
+      <text x="${W - P.r}" y="${H - 5}" text-anchor="end" class="tk">지금 강함 →</text>`;
+    const QL = [
+      ["주도 · 강하고 더 강해짐", P.l + iw - 6, P.t + 16, "end", "lead"],
+      ["부상 · 약하지만 강해지는 중", P.l + 6, P.t + 16, "start", "rise"],
+      ["식는 중 · 강하지만 약해짐", P.l + iw - 6, P.t + ih - 8, "end", "fade"],
+      ["소외 · 약하고 더 약해짐", P.l + 6, P.t + ih - 8, "start", "lag"],
     ];
-    const dots = gf.map((g) => { const p = g.tail.at(-1); return { g, cx: X(p.x), cy: Y(p.y), c: colorOf(p) }; });
-    dots.forEach((o) => placed.push({ x0: o.cx - 5, x1: o.cx + 5, y0: o.cy - 5, y1: o.cy + 5 }));
-    const textW = (t) => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? fs * 0.98 : fs * 0.56), 0);
-    const hit = (b) => placed.reduce((a, o) => a + Math.max(0, Math.min(b.x1, o.x1) - Math.max(b.x0, o.x0)) * Math.max(0, Math.min(b.y1, o.y1) - Math.max(b.y0, o.y0)), 0);
+    const tw = (t, f) => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? f * 1.0 : f * 0.58), 0);
+    const placed = [];
+    for (const [t, x, y, a, c] of QL) {
+      s += `<text x="${x}" y="${y}" text-anchor="${a}" class="qn ${c}">${t}</text>`;
+      const w = tw(t, 11.5);
+      placed.push(a === "end" ? [x - w, y - 12, x, y + 2] : [x, y - 12, x + w, y + 2]);
+    }
+    // 꼬리: 과거일수록 가늘고 흐리게, 최근일수록 굵고 진하게. 시작은 빈 점, 하루하루는 작은 점
+    const dots = gf.map((g) => { const p = g.tail.at(-1); return { g, p, cx: X(p.x), cy: Y(p.y), c: colorOf(p) }; });
     let tails = "", marks = "", labels = "";
     for (const o of dots) {
-      const pts = o.g.tail.map((p) => [X(p.x), Y(p.y)]);
-      for (let j = 1; j < pts.length; j++) {
-        const op = (0.12 + 0.6 * (j / (pts.length - 1))).toFixed(2);
-        tails += `<line x1="${pts[j - 1][0].toFixed(1)}" y1="${pts[j - 1][1].toFixed(1)}" x2="${pts[j][0].toFixed(1)}" y2="${pts[j][1].toFixed(1)}" stroke="${o.c}" stroke-opacity="${op}" stroke-width="2.2" stroke-linecap="round"/>`;
+      const pts = o.g.tail.map((p) => [X(p.x), Y(p.y)]), m = pts.length - 1;
+      for (let j = 1; j <= m; j++) {
+        tails += `<line x1="${f1(pts[j - 1][0])}" y1="${f1(pts[j - 1][1])}" x2="${f1(pts[j][0])}" y2="${f1(pts[j][1])}" stroke="${o.c}" stroke-opacity="${(0.25 + 0.6 * j / m).toFixed(2)}" stroke-width="${(1 + 1.8 * j / m).toFixed(1)}" stroke-linecap="round"/>`;
       }
-      const tw = textW(o.g.g), th = fs + 2;
-      const cands = [
-        { x: o.cx + 8, y: o.cy + fs * 0.36, a: "start", b: { x0: o.cx + 7, x1: o.cx + 9 + tw, y0: o.cy - th / 2, y1: o.cy + th / 2 } },
-        { x: o.cx - 8, y: o.cy + fs * 0.36, a: "end", b: { x0: o.cx - 9 - tw, x1: o.cx - 7, y0: o.cy - th / 2, y1: o.cy + th / 2 } },
-        { x: o.cx, y: o.cy - 9, a: "middle", b: { x0: o.cx - tw / 2, x1: o.cx + tw / 2, y0: o.cy - 9 - th + 2, y1: o.cy - 7 } },
-        { x: o.cx, y: o.cy + 9 + fs * 0.8, a: "middle", b: { x0: o.cx - tw / 2, x1: o.cx + tw / 2, y0: o.cy + 7, y1: o.cy + 9 + th } },
-      ].filter((c) => c.b.x0 >= 0 && c.b.x1 <= W && c.b.y0 >= 0 && c.b.y1 <= H);
-      const best = cands.map((c) => ({ c, h: hit(c.b) })).sort((a, b) => a.h - b.h)[0];
+      pts.slice(1, -1).forEach((q, j) => { tails += `<circle cx="${f1(q[0])}" cy="${f1(q[1])}" r="1.6" fill="${o.c}" fill-opacity="${(0.35 + 0.5 * j / Math.max(1, m - 2)).toFixed(2)}"/>`; });
+      if (m > 0) tails += `<circle cx="${f1(pts[0][0])}" cy="${f1(pts[0][1])}" r="2.6" class="t0" stroke="${o.c}"/>`;
+      placed.push([o.cx - 7, o.cy - 7, o.cx + 7, o.cy + 7]);
+      pts.forEach((q) => placed.push([q[0] - 1.5, q[1] - 1.5, q[0] + 1.5, q[1] + 1.5]));
+    }
+    const hit = (b) => placed.reduce((a, o) => a + Math.max(0, Math.min(b[2], o[2]) - Math.max(b[0], o[0])) * Math.max(0, Math.min(b[3], o[3]) - Math.max(b[1], o[1])), 0);
+    // 많이 움직인 분류부터 이름 자리를 먼저 잡는다
+    for (const o of [...dots].sort((a, b) => Math.abs(b.g.delta ?? 0) - Math.abs(a.g.delta ?? 0))) {
       const tip = `${o.g.g} · 지금 강도 ${Math.round(o.g.now)} · ${st.k}일 동안 ${o.g.delta > 0 ? "+" : ""}${Math.round(o.g.delta)} · 상위 25% ${o.g.top}/${o.g.n}개`;
-      marks += `<g class="fl-dot" data-group="${esc(o.g.g)}" tabindex="0" role="button" aria-label="${esc(tip)}"><title>${esc(tip)}</title><circle cx="${o.cx}" cy="${o.cy}" r="12" fill="transparent"/><circle cx="${o.cx}" cy="${o.cy}" r="5.5" fill="${o.c}" stroke="var(--surface)" stroke-width="2"/></g>`;
+      marks += `<g class="fl-dot" data-group="${esc(o.g.g)}" tabindex="0" role="button" aria-label="${esc(tip)}"><title>${esc(tip)}</title><circle cx="${o.cx}" cy="${o.cy}" r="13" fill="transparent"/><circle cx="${o.cx}" cy="${o.cy}" r="6" fill="${o.c}" class="dt"/></g>`;
+      const big = Math.abs(o.g.delta ?? 0) >= 20, fs = big ? 12.5 : 11.5, w = tw(o.g.g, fs), C = [];
+      // 가까운 자리 8곳 + 멀리 떨어진 자리 8곳(이때는 점과 이름을 가는 선으로 잇는다)
+      const near = [[9, 4, "start"], [-9, 4, "end"], [0, -10, "middle"], [0, 17, "middle"], [8, -7, "start"], [-8, -7, "end"], [8, 15, "start"], [-8, 15, "end"]];
+      const far = [[24, 4, "start"], [-24, 4, "end"], [0, -24, "middle"], [0, 31, "middle"], [20, -18, "start"], [-20, -18, "end"], [20, 26, "start"], [-20, 26, "end"]];
+      for (const [dx, dy, an, lead] of [...near, ...far.map((f) => [...f, 1])]) {
+        const x0 = an === "start" ? o.cx + dx : an === "end" ? o.cx + dx - w : o.cx + dx - w / 2;
+        const b = [x0 - 1, o.cy + dy - fs + 1, x0 + w + 1, o.cy + dy + 2];
+        if (b[0] >= P.l + 1 && b[2] <= W - P.r - 1 && b[1] >= P.t + 1 && b[3] <= P.t + ih - 1) C.push({ x: o.cx + dx, y: o.cy + dy, an, b, lead });
+      }
+      // 이름이 다른 점 바로 옆에 붙으면 그 점의 이름으로 오해하므로 크게 감점
+      // (가장자리 거리 기준으로 남의 점이 내 점보다 이름에 더 가까우면 감점)
+      const gap = (d, b) => Math.hypot(Math.max(b[0] - d.cx, 0, d.cx - b[2]), Math.max(b[1] - d.cy, 0, d.cy - b[3]));
+      const near2 = (b) => { const mine = gap(o, b); return dots.reduce((a, d) => d === o ? a : a + (gap(d, b) < 14 ? 400 : gap(d, b) < mine + 4 ? 250 : 0), 0); };
+      const best = C.map((c) => ({ c, h: hit(c.b) + near2(c.b) + (c.lead ? 60 : 0) })).sort((a, b) => a.h - b.h)[0];
       if (best) {
         placed.push(best.c.b);
-        labels += `<text x="${best.c.x.toFixed(1)}" y="${best.c.y.toFixed(1)}" text-anchor="${best.c.a}" class="lb" fill="${o.c}" style="font-size:${fs}px" data-group="${esc(o.g.g)}">${esc(o.g.g)}</text>`;
+        if (best.c.lead) {
+          const b = best.c.b, tx = Math.max(b[0], Math.min(o.cx, b[2])), ty = Math.max(b[1], Math.min(o.cy, b[3]));
+          const dx = tx - o.cx, dy = ty - o.cy, dd = Math.hypot(dx, dy) || 1;
+          labels = `<line x1="${f1(o.cx + dx / dd * 7)}" y1="${f1(o.cy + dy / dd * 7)}" x2="${f1(tx)}" y2="${f1(ty)}" class="ld"/>` + labels;
+        }
+        labels += `<text x="${f1(best.c.x)}" y="${f1(best.c.y)}" text-anchor="${best.c.an}" class="lb${big ? " big" : ""}" style="font-size:${fs}px" data-group="${esc(o.g.g)}">${esc(o.g.g)}</text>`;
       }
     }
     return s + tails + marks + labels + `</svg>`;
   }
 
+  // 지도 읽는 법(접었다 펴기)
+  let helpOpen = false;
+  const mapHelp = () => `<details class="fl-help"${helpOpen ? " open" : ""}>
+      <summary>로테이션 지도 읽는 법</summary>
+      <ul>
+        <li><b>점 하나 = 큰 분류 하나</b>예요. 강도는 그 분류에 속한 세부 산업들의 순위를 점수로 바꾼 평균이에요(1위 = 100, 꼴찌 = 0${smoothOf(st.k) > 1 ? `, ${smoothOf(st.k)}일 평균` : ""}).</li>
+        <li><b>가로(→)는 지금 강도</b>예요. 오른쪽일수록 지금 시장에서 강한 분류이고, 가운데 세로선(50)이 중간이에요.</li>
+        <li><b>세로(↑)는 고른 기간(${st.k}일) 동안 강도가 변한 정도</b>예요. 가운데 가로선(0)보다 위면 강해졌고, 아래면 약해졌어요.</li>
+        <li><b>네 칸은 보통 시계 방향으로 돌아요.</b> 부상(왼쪽 위) → 주도(오른쪽 위) → 식는 중(오른쪽 아래) → 소외(왼쪽 아래) → 다시 부상.</li>
+        <li><b>꼬리는 최근 ${tailOf(st.k) - 1}거래일 동안 지나온 길</b>이에요. 빈 점이 출발점이고, 굵고 진해지는 쪽이 최근이에요. 꼬리가 길수록 빠르게 움직이는 중이에요.</li>
+        <li><b>꼬리가 가리키는 방향이 지금의 흐름</b>이에요. 오른쪽 위를 향하면 힘이 붙는 중, 왼쪽 아래를 향하면 힘이 빠지는 중이에요.</li>
+        <li>추세추종이라면 <b>주도 칸</b>과 <b>부상에서 주도로 넘어가는 분류</b>를 먼저 보고, 주도에서 <b>식는 중으로 내려가는 분류</b>는 보유 비중을 점검하는 신호로 보세요.</li>
+        <li>이름이 굵은 분류는 이 기간에 20점 넘게 움직인 곳이에요. 점이나 이름을 누르면 아래 순위표가 그 분류로 걸러져요.</li>
+      </ul>
+    </details>`;
+
   // 선은 '시작점 대비 변화': 모든 분류가 같은 높이(가운데 선)에서 출발해 얼마나 오르내렸는지. 세로 폭은 모든 분류 공통
+  // 가운데 선 위는 빨강, 아래는 파랑으로 면을 채워 방향이 색으로 바로 보이게 한다
+  let sparkId = 0;
   function spark(line0, delta, amp) {
-    const W = 120, H = 30, base = line0.find((x) => x != null);
+    const W = 200, H = 46, base = line0.find((x) => x != null), id = ++sparkId;
     const line = line0.map((x) => x == null || base == null ? null : x - base);
-    const xs = (k) => (k / (line.length - 1)) * W, ys = (x) => H / 2 - (x / amp) * (H / 2);
-    let p = "", on = false;
-    line.forEach((x, k) => { if (x == null) { on = false; return; } p += (on ? "L" : "M") + xs(k).toFixed(1) + " " + ys(x).toFixed(1); on = true; });
+    const xs = (k) => 3 + (k / (line.length - 1)) * (W - 10), ys = (x) => H / 2 - (x / amp) * (H / 2 - 3);
+    let p = "", on = false, first = null, last = null;
+    line.forEach((x, k) => { if (x == null) { on = false; return; } p += (on ? "L" : "M") + xs(k).toFixed(1) + " " + ys(x).toFixed(1); on = true; if (first == null) first = k; last = k; });
     const c = { up: "var(--up)", down: "var(--down)", flat: "var(--muted)" }[dir(delta)];
-    const ly = line.at(-1) == null ? null : ys(line.at(-1));
+    const area = first == null ? "" : `${p}L${xs(last).toFixed(1)} ${H / 2}L${xs(first).toFixed(1)} ${H / 2}Z`;
+    const guides = [10, 20].filter((t) => t < amp).flatMap((t) => [H / 2 - (t / amp) * (H / 2 - 3), H / 2 + (t / amp) * (H / 2 - 3)])
+      .map((y) => `<line x1="0" x2="${W}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" class="fl-guide"/>`).join("");
     // 선 시작이 고른 기간 전이므로, 그보다 짧은 기간(20·60일 전)만 점선으로
     const marks = ALSO.filter((P) => P < line.length - 1)
       .map((P) => { const x = xs(line.length - 1 - P); return `<line x1="${x}" x2="${x}" y1="0" y2="${H}" class="fl-then"/>`; }).join("");
+    // 점은 늘어나지 않도록 '길이 0인 둥근 선'으로 그린다(preserveAspectRatio="none"에서도 동그랗게)
+    const dot = (k, y, w, cls) => `<line x1="${xs(k).toFixed(1)}" x2="${xs(k).toFixed(1)}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" class="${cls}" stroke-width="${w}" vector-effect="non-scaling-stroke" stroke-linecap="round"${cls === "fl-end" ? ` stroke="${c}"` : ""}/>`;
     return `<svg class="fl-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
+      <defs><clipPath id="fsu${id}"><rect x="0" y="0" width="${W}" height="${H / 2}"/></clipPath><clipPath id="fsd${id}"><rect x="0" y="${H / 2}" width="${W}" height="${H / 2}"/></clipPath></defs>
+      ${guides}
+      ${area ? `<path d="${area}" class="fl-au" clip-path="url(#fsu${id})"/><path d="${area}" class="fl-ad" clip-path="url(#fsd${id})"/>` : ""}
       <line x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}" class="fl-mid"/>
       ${marks}
-      <path d="${p}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
-      ${ly == null ? "" : `<circle cx="${W}" cy="${ly}" r="2.6" fill="${c}"/>`}</svg>`;
+      <path d="${p}" fill="none" stroke="${c}" stroke-width="2.2" vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
+      ${first == null ? "" : dot(first, H / 2, 6.5, "fl-s0") + dot(first, H / 2, 3, "fl-s1")}
+      ${last == null ? "" : dot(last, ys(line[last]), 11, "fl-ring") + dot(last, ys(line[last]), 8, "fl-end")}</svg>`;
   }
 
   function track(m, d) {
@@ -242,11 +289,12 @@
     el.innerHTML = `${headline(gf, riseTop)}
       <div class="fl-top">
         <div class="fl-col">
-          <h3>로테이션 지도 <span class="sub">큰 분류 · 꼬리 = 최근 ${tailOf(st.k) - 1}거래일 이동</span></h3>
+          <h3>로테이션 지도 <span class="sub">큰 분류 · 꼬리 = 최근 ${tailOf(st.k) - 1}거래일 이동(빈 점 → 큰 점)</span></h3>
           <div class="fl-map-wrap" id="flMap"></div>
+          ${mapHelp()}
         </div>
         <div class="fl-col">
-          <h3>큰 분류 흐름 <span class="sub">가운데 선 = ${st.k}일 전 강도 · 위로 갈수록 강해짐${ALSO.some((P) => P < st.k) ? ` · 세로 점선 = ${ALSO.filter((P) => P < st.k).join("·")}일 전` : ""} · 숫자 = 지금 강도와 ${st.k}일 변화</span></h3>
+          <h3>큰 분류 흐름 <span class="sub">가운데 선 = ${st.k}일 전 강도 · 위(빨강) = 강해짐 · 아래(파랑) = 약해짐${ALSO.some((P) => P < st.k) ? ` · 세로 점선 = ${ALSO.filter((P) => P < st.k).join("·")}일 전` : ""} · 숫자 = 지금 강도와 ${st.k}일 변화</span></h3>
           <div class="fl-groups">${gRows}</div>
         </div>
       </div>
@@ -273,6 +321,7 @@
       open ? st.open.add(k) : st.open.delete(k);
       b.textContent = open ? "접기" : b.dataset.label;
     }));
+    const hp = $(".fl-help", el); if (hp) hp.addEventListener("toggle", () => { helpOpen = hp.open; });
     $(".fl-alive", el).addEventListener("click", () => { st.alive = !st.alive; render(); });
   }
 
