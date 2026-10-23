@@ -177,6 +177,10 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .rs-chip.rs-up { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); }
 .rs-chip.rs-dn { background: color-mix(in srgb, var(--down) 10%, transparent); color: var(--down); }
 .rank-table td.c-rs { white-space: nowrap; }
+.rs-cell { display: flex; align-items: center; gap: 8px; }
+.rs-num { display: inline-block; min-width: 30px; text-align: center; font-size: 15px; font-weight: 750; padding: 2px 4px; border-radius: 7px; background: var(--surface-2); color: var(--ink); }
+.rs-num.hi { background: color-mix(in srgb, var(--good) 16%, transparent); color: var(--good); }
+.rs-num.lo { color: var(--down); }
 .rc4 { display: flex; align-items: center; gap: 8px; margin-top: 7px; flex-wrap: wrap; }
 
 /* rank cards (phone) */

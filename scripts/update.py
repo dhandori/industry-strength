@@ -374,6 +374,14 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
     rs_hi = rs.rolling(252, min_periods=60).max()
     bret20 = bdf / bdf.shift(20) - 1
     rs_ex20 = (1 + rets[20]) / (1 + bret20) - 1   # 20일 동안 시장 대비 초과수익
+    # RS 지수(1~99): 오닐(IBD)식. 최근 3개월 40%, 6·9·12개월 각 20% 가중 수익률을 시장 안 산업끼리 백분위로.
+    # 1년 이력이 없으면 있는 기간끼리 가중치를 다시 나눈다.
+    RSW = {63: 0.4, 126: 0.2, 189: 0.2, 252: 0.2}
+    rsr = {w: px / px.shift(w) - 1 for w in RSW}
+    rs_num = sum(rsr[w].fillna(0) * wt for w, wt in RSW.items())
+    rs_den = sum(rsr[w].notna() * wt for w, wt in RSW.items())
+    rs_perf = (rs_num / rs_den.replace(0, np.nan)).where(rsr[63].notna())
+    rs_rating = np.ceil(rs_perf.rank(axis=1, pct=True) * 99).clip(1, 99)
 
     above50 = (px > ma[50]).where(ma[50].notna())
     stage2 = (px > ma[50]) & (ma[50] > ma[150].fillna(ma[200])) & (ma[150].fillna(ma[200]) > ma[200]) & ma200_up & (dist_hi >= -0.25)
@@ -456,6 +464,8 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
             "rs_above_ma50": r(rs.at[last, i] > rs_ma50.at[last, i]) if not pd.isna(rs_ma50.at[last, i]) else None,
             "rs_hi_dist": r((rs.at[last, i] / rs_hi.at[last, i] - 1) * 100) if not pd.isna(rs_hi.at[last, i]) else None,
             "rs_ex20": r(rs_ex20.at[last, i] * 100) if not pd.isna(rs_ex20.at[last, i]) else None,
+            "rs_rating": r(rs_rating.at[last, i], 0),
+            "rs_rating_chg20": r(rs_rating.at[last, i] - rs_rating[i].iloc[-21], 0) if len(cal) > 21 and not pd.isna(rs_rating[i].iloc[-21]) else None,
             "vol_ratio": r(v20 / v60, 2) if v60 and not pd.isna(v60) and v60 > 0 else None,
             "tags": tags, "stale": bool(stale),
             "bench": (m.get("benchmark2") if bench_of[i] == "2" else m["benchmark"])["name"],

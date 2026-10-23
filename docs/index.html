@@ -93,7 +93,7 @@
           <button data-sort="rank20" aria-pressed="false">20일</button>
           <button data-sort="rank60" aria-pressed="false">60일</button>
           <button data-sort="rank_chg5" aria-pressed="false">순위 상승</button>
-          <button data-sort="rs_hi_dist" aria-pressed="false" title="RS선이 1년 최고치에 가까운 순">RS</button>
+          <button data-sort="rs_rating" aria-pressed="false" title="RS 지수(1~99)가 높은 순">RS</button>
         </div>
         <button class="toggle" id="rsOnly" aria-pressed="false" title="RS선이 50일 평균 위에 있는(시장보다 강한) 산업만 보기">RS 강한 산업만</button>
         <button class="toggle" id="trendOnly" aria-pressed="false" title="가격이 실제로 오르는 중인 산업(상승 추세·상승 전환 시도)만 보기">오르는 산업만</button>
@@ -115,7 +115,7 @@
             <th title="가격>50일선 · 50>150일선 · 150>200일선 · 200일선 상승 · 고점 대비 -15% 이내">추세 점검</th>
             <th class="num">고점<br>대비</th>
             <th>추세 상태</th>
-            <th class="c-rs" title="RS선 = 산업 지수 ÷ 시장 지수. 'RS 신고가'는 1년 최고, '시장보다 강함'은 RS선이 50일 평균 위, '시장보다 약함'은 아래. 아래 숫자는 RS선의 1년 최고치 대비 위치">RS<br>(시장 대비)</th>
+            <th class="c-rs" title="숫자 = RS 지수(1~99, 오닐식: 최근 3개월 40%·6·9·12개월 각 20% 가중 수익률의 산업 간 백분위, 80 이상 강함). RS선 = 산업 지수 ÷ 시장 지수. 'RS 신고가'는 1년 최고, '시장보다 강함'은 RS선이 50일 평균 위, '시장보다 약함'은 아래. 아래 숫자는 RS선의 1년 최고치 대비 위치">RS<br>(시장 대비)</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -172,6 +172,8 @@
           <dd>상위 25% 안에 며칠 연속 머물렀는지예요(표에서는 산업 이름 아래 “상위권 n일째”로 표시). 강세가 시작된 날과 얼마나 오래 이어졌는지를 같이 볼 수 있어요.</dd>
           <dt>추세 점검 (점 5개)</dt>
           <dd>미너비니식 추세 조건을 산업 바구니 지수에 적용했어요. ① 가격이 50일선 위 ② 50일선이 150일선 위 ③ 150일선이 200일선 위 ④ 200일선이 한 달 전보다 위 ⑤ 52주 고점에서 15% 이내. 다섯 개가 다 차면 <b>상승 추세</b>예요.</dd>
+          <dt>RS 지수</dt>
+          <dd>1~99 사이 숫자예요. 최근 1년 수익률(최근 3개월에 40%, 6·9·12개월에 20%씩 무게)을 같은 시장의 다른 산업들과 비교한 등수를 백분위로 바꾼 값이에요. 오닐(IBD)의 RS 등급과 같은 방식이고, 80 이상이면 시장에서 상위 20% 안에 드는 강한 산업이에요. 5·20·60일로 매기는 종합 강도보다 더 긴 흐름을 봐요.</dd>
           <dt>RS선</dt>
           <dd>산업 바구니 지수를 시장 지수로 나눈 선이에요. 구성 종목 중 코스닥 종목이 절반을 넘으면 코스닥150, 아니면 코스피200과 비교해요(미국은 나스닥100·S&amp;P 500). 오르면 시장보다 강하다는 뜻이고, RS선이 신고가를 내면 시장 대비 강도가 1년 중 최고라는 뜻이에요.</dd>
           <dt>추세 상태</dt>

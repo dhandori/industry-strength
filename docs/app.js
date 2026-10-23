@@ -335,7 +335,7 @@
       const av = a[k], bv = b[k];
       if (av == null && bv == null) return (a.rank ?? 999) - (b.rank ?? 999);
       if (av == null) return 1; if (bv == null) return -1;
-      return k === "rank_chg5" || k === "rs_hi_dist" ? bv - av || a.rank - b.rank : av - bv;
+      return k === "rank_chg5" || k === "rs_rating" ? bv - av || a.rank - b.rank : av - bv;
     });
     const stageCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
     const ret = (v, rk) => `<span class="ret ${cls(v)}">${fmtPct(v)}</span><span class="rsub">${rk == null ? "–" : rk + "위"}</span>`;
@@ -348,7 +348,8 @@
     // RS 표시: 시장 지수 대비 강도. 신고가(1년 최고 -0.5% 이내) / 강함(50일 평균 위) / 약함(아래)
     const rsState = (i) => i.rs_hi_dist != null && i.rs_hi_dist >= -0.5 ? ["RS 신고가", "rs-hi"]
       : i.rs_above_ma50 === true ? ["시장보다 강함", "rs-up"] : i.rs_above_ma50 === false ? ["시장보다 약함", "rs-dn"] : ["데이터 부족", ""];
-    const rsTip = (i) => `${esc(i.bench || d.benchmark.name)} 대비 · RS선 1년 최고 대비 ${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"} · 20일 시장 대비 ${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}`;
+    const rsNum = (i) => i.rs_rating == null ? "" : `<b class="rs-num ${i.rs_rating >= 80 ? "hi" : i.rs_rating < 40 ? "lo" : ""}" title="RS 지수 ${i.rs_rating} (1~99, 1년 가중 수익률을 산업끼리 비교한 백분위)${i.rs_rating_chg20 == null ? "" : ` · 20일 전보다 ${i.rs_rating_chg20 > 0 ? "+" : ""}${i.rs_rating_chg20}`}">${i.rs_rating}</b>`;
+    const rsTip = (i) => `RS 지수 ${i.rs_rating ?? "–"} · ${esc(i.bench || d.benchmark.name)} 대비 · RS선 1년 최고 대비 ${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"} · 20일 시장 대비 ${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}`;
     const rsOf = (i) => { const [t, c] = rsState(i); return `<span class="rs-chip ${c}" title="${rsTip(i)}">${t}</span>`; };
     const rsSub = (i) => i.rs_hi_dist == null ? "" : `<span class="rsub">RS 고점 ${i.rs_hi_dist >= -0.05 ? "0.0" : i.rs_hi_dist.toFixed(1)}%</span>`;
     const subOf = (i) => `대장 ${esc(i.leader || "–")} · ${i.n ?? 0}종목` + (i.streak ? ` · 상위권 ${i.streak}일째` : "") + (i.breadth50 == null ? "" : ` · 50일선 위 ${i.breadth50}%`) + (i.near_high ? ` · 신고가권 ${i.near_high}` : "");
@@ -365,7 +366,7 @@
         <td>${checksOf(i, true)}</td>
         <td class="num">${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</td>
         <td><span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></td>
-        <td class="c-rs">${rsOf(i)}${rsSub(i)}</td>
+        <td class="c-rs"><div class="rs-cell">${rsNum(i)}<div>${rsOf(i)}${rsSub(i)}</div></div></td>
       </tr>`;
     }).join("");
     // 휴대폰: 표 대신 카드. 1줄 순위·이름·상태, 2줄 강도·수익률, 3줄 추세 점검.
@@ -376,7 +377,7 @@
         <div class="rc2"><div class="bar"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div>
           <span class="rc-ret"><em>당일</em>${ret(i.chg1, i.rank1)}</span><span class="rc-ret"><em>5일</em>${ret(i.ret5, i.rank5)}</span><span class="rc-ret"><em>20일</em>${ret(i.ret20, i.rank20)}</span><span class="rc-ret"><em>60일</em>${ret(i.ret60, i.rank60)}</span></div>
         <div class="rc3">${checksOf(i, true)}<span class="rc-dist">고점 대비 <b>${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</b></span></div>
-        <div class="rc4">${rsOf(i)}<span class="rc-dist">RS선 1년 최고 대비 <b>${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"}</b> · 20일 시장 대비 <b class="ret ${cls(i.rs_ex20)}">${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}</b></span></div>
+        <div class="rc4">${i.rs_rating == null ? "" : `<span class="rc-dist">RS 지수</span>${rsNum(i)}`}${rsOf(i)}<span class="rc-dist">RS선 1년 최고 대비 <b>${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"}</b> · 20일 시장 대비 <b class="ret ${cls(i.rs_ex20)}">${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}</b></span></div>
       </button>`).join("");
     if (!rows.length) {
       const msg = "조건에 맞는 산업이 없어요. 지금 이 조건에서는 가격이 오르고 있는 산업이 없어요.";
@@ -539,7 +540,7 @@
       ["20일 수익률", fmtPct(it.ret20)], ["60일 수익률", fmtPct(it.ret60)], ["120일 수익률", fmtPct(it.ret120)],
       ["52주 고점 대비", it.dist_high == null ? "–" : it.dist_high.toFixed(1) + "%"],
       ["추세 상태", it.stage], [`RS선이 50일 평균 위 (${it.bench || d.benchmark.name} 대비)`, it.rs_above_ma50 == null ? "–" : it.rs_above_ma50 ? "예" : "아니오"],
-      ["RS선 1년 최고 대비", it.rs_hi_dist == null ? "–" : it.rs_hi_dist.toFixed(1) + "%"], ["20일 시장 대비 초과수익", it.rs_ex20 == null ? "–" : (it.rs_ex20 > 0 ? "+" : "") + it.rs_ex20.toFixed(1) + "%p"],
+      ["RS 지수 (1~99)", it.rs_rating == null ? "–" : it.rs_rating + (it.rs_rating_chg20 == null ? "" : ` (20일 전 대비 ${it.rs_rating_chg20 > 0 ? "+" : ""}${it.rs_rating_chg20})`)], ["RS선 1년 최고 대비", it.rs_hi_dist == null ? "–" : it.rs_hi_dist.toFixed(1) + "%"], ["20일 시장 대비 초과수익", it.rs_ex20 == null ? "–" : (it.rs_ex20 > 0 ? "+" : "") + it.rs_ex20.toFixed(1) + "%p"],
       ["50일선 위 종목", it.breadth50 == null ? "–" : `${it.breadth50}%`],
       ["종합 강도", it.score == null ? "–" : Math.round(it.score) + "점"],
     ];
