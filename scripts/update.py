@@ -372,6 +372,8 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
     rs = px / bdf
     rs_ma50 = rs.rolling(50, min_periods=50).mean()
     rs_hi = rs.rolling(252, min_periods=60).max()
+    bret20 = bdf / bdf.shift(20) - 1
+    rs_ex20 = (1 + rets[20]) / (1 + bret20) - 1   # 20일 동안 시장 대비 초과수익
 
     above50 = (px > ma[50]).where(ma[50].notna())
     stage2 = (px > ma[50]) & (ma[50] > ma[150].fillna(ma[200])) & (ma[150].fillna(ma[200]) > ma[200]) & ma200_up & (dist_hi >= -0.25)
@@ -452,6 +454,8 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
             "dist_high": r(dist_hi.at[last, i] * 100), "above_low": r((c / lo52.at[last, i] - 1) * 100),
             "checks": checks, "stage": stg,
             "rs_above_ma50": r(rs.at[last, i] > rs_ma50.at[last, i]) if not pd.isna(rs_ma50.at[last, i]) else None,
+            "rs_hi_dist": r((rs.at[last, i] / rs_hi.at[last, i] - 1) * 100) if not pd.isna(rs_hi.at[last, i]) else None,
+            "rs_ex20": r(rs_ex20.at[last, i] * 100) if not pd.isna(rs_ex20.at[last, i]) else None,
             "vol_ratio": r(v20 / v60, 2) if v60 and not pd.isna(v60) and v60 > 0 else None,
             "tags": tags, "stale": bool(stale),
             "bench": (m.get("benchmark2") if bench_of[i] == "2" else m["benchmark"])["name"],

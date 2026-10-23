@@ -72,6 +72,11 @@
   }));
   $("#heatMore").addEventListener("click", () => { state.heatAll = !state.heatAll; renderHeat(state.data[state.market]); });
   $("#groupSel").addEventListener("change", (e) => { state.group = e.target.value; renderTable(); });
+  $("#rsOnly").addEventListener("click", (e) => {
+    state.rsOnly = !state.rsOnly;
+    e.currentTarget.setAttribute("aria-pressed", state.rsOnly);
+    renderTable();
+  });
   $("#trendOnly").addEventListener("click", (e) => {
     state.trendOnly = !state.trendOnly;
     e.currentTarget.setAttribute("aria-pressed", state.trendOnly);
@@ -323,13 +328,14 @@
     const d = state.data[state.market];
     if (!d) return;
     let rows = d.items.filter((i) => (state.group === "전체" || i.group === state.group)
-      && (!state.trendOnly || i.stage === "상승 추세" || i.stage === "상승 전환 시도"));
+      && (!state.trendOnly || i.stage === "상승 추세" || i.stage === "상승 전환 시도")
+      && (!state.rsOnly || i.rs_above_ma50 === true));
     const k = state.sort;
     rows = rows.slice().sort((a, b) => {
       const av = a[k], bv = b[k];
       if (av == null && bv == null) return (a.rank ?? 999) - (b.rank ?? 999);
       if (av == null) return 1; if (bv == null) return -1;
-      return k === "rank_chg5" ? bv - av || a.rank - b.rank : av - bv;
+      return k === "rank_chg5" || k === "rs_hi_dist" ? bv - av || a.rank - b.rank : av - bv;
     });
     const stageCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
     const ret = (v, rk) => `<span class="ret ${cls(v)}">${fmtPct(v)}</span><span class="rsub">${rk == null ? "–" : rk + "위"}</span>`;
@@ -339,6 +345,12 @@
     const CHECK_LABELS = ["50", "50>150", "150>200", "200↑", "고점"];
     const checksOf = (i, labels) => i.checks ? `<span class="checks${labels ? " labeled" : ""}" aria-label="추세 조건 ${i.checks.filter(Boolean).length}/5">${i.checks.map((c, k) => `<span class="ck"><i class="${c ? "on" : ""}"></i>${labels ? `<em>${CHECK_LABELS[k]}</em>` : ""}</span>`).join("")}</span>` : `<span class="rsub">데이터 부족</span>`;
     const chgOf = (i) => { const ch = i.rank_chg5; return ch == null ? "" : ch > 0 ? `<span class="chg up">▲${ch}</span>` : ch < 0 ? `<span class="chg down">▼${-ch}</span>` : `<span class="chg flat">–</span>`; };
+    // RS 표시: 시장 지수 대비 강도. 신고가(1년 최고 -0.5% 이내) / 강함(50일 평균 위) / 약함(아래)
+    const rsState = (i) => i.rs_hi_dist != null && i.rs_hi_dist >= -0.5 ? ["RS 신고가", "rs-hi"]
+      : i.rs_above_ma50 === true ? ["시장보다 강함", "rs-up"] : i.rs_above_ma50 === false ? ["시장보다 약함", "rs-dn"] : ["데이터 부족", ""];
+    const rsTip = (i) => `${esc(i.bench || d.benchmark.name)} 대비 · RS선 1년 최고 대비 ${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"} · 20일 시장 대비 ${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}`;
+    const rsOf = (i) => { const [t, c] = rsState(i); return `<span class="rs-chip ${c}" title="${rsTip(i)}">${t}</span>`; };
+    const rsSub = (i) => i.rs_hi_dist == null ? "" : `<span class="rsub">RS 고점 ${i.rs_hi_dist >= -0.05 ? "0.0" : i.rs_hi_dist.toFixed(1)}%</span>`;
     const subOf = (i) => `대장 ${esc(i.leader || "–")} · ${i.n ?? 0}종목` + (i.streak ? ` · 상위권 ${i.streak}일째` : "") + (i.breadth50 == null ? "" : ` · 50일선 위 ${i.breadth50}%`) + (i.near_high ? ` · 신고가권 ${i.near_high}` : "");
     $("#rankTable tbody").innerHTML = rows.map((i) => {
       const tags = i.tags.filter((t) => !t.includes("이탈")).slice(0, 2).map((t) => `<span class="tag-mini">${t}</span>`).join("");
@@ -353,6 +365,7 @@
         <td>${checksOf(i, true)}</td>
         <td class="num">${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</td>
         <td><span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></td>
+        <td class="c-rs">${rsOf(i)}${rsSub(i)}</td>
       </tr>`;
     }).join("");
     // 휴대폰: 표 대신 카드. 1줄 순위·이름·상태, 2줄 강도·수익률, 3줄 추세 점검.
@@ -363,10 +376,11 @@
         <div class="rc2"><div class="bar"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div>
           <span class="rc-ret"><em>당일</em>${ret(i.chg1, i.rank1)}</span><span class="rc-ret"><em>5일</em>${ret(i.ret5, i.rank5)}</span><span class="rc-ret"><em>20일</em>${ret(i.ret20, i.rank20)}</span><span class="rc-ret"><em>60일</em>${ret(i.ret60, i.rank60)}</span></div>
         <div class="rc3">${checksOf(i, true)}<span class="rc-dist">고점 대비 <b>${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</b></span></div>
+        <div class="rc4">${rsOf(i)}<span class="rc-dist">RS선 1년 최고 대비 <b>${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"}</b> · 20일 시장 대비 <b class="ret ${cls(i.rs_ex20)}">${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}</b></span></div>
       </button>`).join("");
     if (!rows.length) {
       const msg = "조건에 맞는 산업이 없어요. 지금 이 조건에서는 가격이 오르고 있는 산업이 없어요.";
-      $("#rankTable tbody").innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
+      $("#rankTable tbody").innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
       $("#rankCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
     }
     $$("#rankTable tbody tr[data-id], #rankCards .rcard").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
@@ -525,6 +539,7 @@
       ["20일 수익률", fmtPct(it.ret20)], ["60일 수익률", fmtPct(it.ret60)], ["120일 수익률", fmtPct(it.ret120)],
       ["52주 고점 대비", it.dist_high == null ? "–" : it.dist_high.toFixed(1) + "%"],
       ["추세 상태", it.stage], [`RS선이 50일 평균 위 (${it.bench || d.benchmark.name} 대비)`, it.rs_above_ma50 == null ? "–" : it.rs_above_ma50 ? "예" : "아니오"],
+      ["RS선 1년 최고 대비", it.rs_hi_dist == null ? "–" : it.rs_hi_dist.toFixed(1) + "%"], ["20일 시장 대비 초과수익", it.rs_ex20 == null ? "–" : (it.rs_ex20 > 0 ? "+" : "") + it.rs_ex20.toFixed(1) + "%p"],
       ["50일선 위 종목", it.breadth50 == null ? "–" : `${it.breadth50}%`],
       ["종합 강도", it.score == null ? "–" : Math.round(it.score) + "점"],
     ];

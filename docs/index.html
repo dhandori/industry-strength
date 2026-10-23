@@ -93,7 +93,9 @@
           <button data-sort="rank20" aria-pressed="false">20일</button>
           <button data-sort="rank60" aria-pressed="false">60일</button>
           <button data-sort="rank_chg5" aria-pressed="false">순위 상승</button>
+          <button data-sort="rs_hi_dist" aria-pressed="false" title="RS선이 1년 최고치에 가까운 순">RS</button>
         </div>
+        <button class="toggle" id="rsOnly" aria-pressed="false" title="RS선이 50일 평균 위에 있는(시장보다 강한) 산업만 보기">RS 강한 산업만</button>
         <button class="toggle" id="trendOnly" aria-pressed="false" title="가격이 실제로 오르는 중인 산업(상승 추세·상승 전환 시도)만 보기">오르는 산업만</button>
         <select id="groupSel" aria-label="큰 분류 필터"></select>
       </div>
@@ -113,6 +115,7 @@
             <th title="가격>50일선 · 50>150일선 · 150>200일선 · 200일선 상승 · 고점 대비 -15% 이내">추세 점검</th>
             <th class="num">고점<br>대비</th>
             <th>추세 상태</th>
+            <th class="c-rs" title="RS선 = 산업 지수 ÷ 시장 지수. 'RS 신고가'는 1년 최고, '시장보다 강함'은 RS선이 50일 평균 위, '시장보다 약함'은 아래. 아래 숫자는 RS선의 1년 최고치 대비 위치">RS<br>(시장 대비)</th>
           </tr>
         </thead>
         <tbody></tbody>
