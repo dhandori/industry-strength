@@ -7,7 +7,7 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261023-f2">
+<link rel="stylesheet" href="style.css?v=20261023-f3">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>window.LightweightCharts || document.write('<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 </head>
@@ -47,10 +47,11 @@
         <button data-k="5" aria-pressed="false">5일</button>
         <button data-k="20" aria-pressed="true">20일</button>
         <button data-k="60" aria-pressed="false">60일</button>
+        <button data-k="200" aria-pressed="false">200일</button>
       </div>
     </div>
     <div id="flow" class="flow"></div>
-    <p class="foot-note"><b>강도</b>는 분류 안 세부 산업들의 종합 순위를 0(꼴찌)~100(1위)으로 바꿔 평균한 값이에요(5일 평균). 지도에서 <b>오른쪽 위</b>로 갈수록 이미 강한데 더 강해지는 분류, <b>왼쪽 위</b>는 약했지만 힘이 붙는 분류예요. 줄 그림의 <b>빈 점</b>은 기간 전 자리, <b>찬 점</b>은 지금 자리예요. <b>추세↑</b>는 가격도 오르는 중, <b>가격↓</b>는 순위만 오르고 가격 추세는 아직 약한 산업이에요. 분류를 누르면 아래 순위표가 그 분류로 걸러지고, 세부 산업을 누르면 상세가 열려요.</p>
+    <p class="foot-note"><b>강도</b>는 분류 안 세부 산업들의 종합 순위를 0(꼴찌)~100(1위)으로 바꿔 평균한 값이에요(5·20일은 5일, 60일은 10일, 200일은 20일 이동평균). 지도에서 <b>오른쪽 위</b>로 갈수록 이미 강한데 더 강해지는 분류, <b>왼쪽 위</b>는 약했지만 힘이 붙는 분류예요. 줄 그림의 <b>빈 점</b>은 기간 전 자리, <b>찬 점</b>은 지금 자리예요. <b>추세↑</b>는 가격도 오르는 중, <b>가격↓</b>는 순위만 오르고 가격 추세는 아직 약한 산업이에요. 분류를 누르면 아래 순위표가 그 분류로 걸러지고, 세부 산업을 누르면 상세가 열려요.</p>
   </section>
 
   <section class="card" aria-labelledby="sig-h">
@@ -123,6 +124,10 @@
   <section class="card" aria-labelledby="heat-h">
     <div class="card-head wrap">
       <h2 id="heat-h">순위 흐름 <span class="sub">최근 40거래일 · 종합 순위 · 기본은 상위 25%만</span></h2>
+      <div class="seg small" id="heatSort" aria-label="줄 순서">
+        <button data-hs="rank" aria-pressed="true">지금 순위 순</button>
+        <button data-hs="rise" aria-pressed="false">최근 상승 순</button>
+      </div>
       <div class="heat-legend">
         <span><i style="background:var(--h1)"></i>상위 10%</span>
         <span><i style="background:var(--h2)"></i>상위 25%</span>
@@ -133,7 +138,7 @@
     </div>
     <div class="heat-wrap"><div id="heat" class="heat"></div></div>
     <button class="toggle" id="heatMore" style="margin-top:10px" hidden></button>
-    <p class="foot-note">빨간 칸이 길게 이어질수록 강세가 꾸준한 산업이에요. 회색·파랑에서 빨강으로 바뀌는 지점이 강세가 <b>시작된 날</b>이에요. 점선 위쪽이 현재 상위 25%, 맨 오른쪽 테두리 칸이 최근 거래일이에요.</p>
+    <p class="foot-note">빨간 칸이 길게 이어질수록 강세가 꾸준한 산업이에요. 회색·파랑에서 빨강으로 바뀌는 지점이 강세가 <b>시작된 날</b>이에요. ‘최근 상승 순’은 화면 기간 첫날보다 순위가 많이 오른 산업부터 보여 줘요(이름 앞 ▲숫자). ‘지금 순위 순’에서는 점선 위쪽이 현재 상위 25%, 맨 오른쪽 테두리 칸이 최근 거래일이에요.</p>
   </section>
 
   <div class="two-col">
@@ -286,8 +291,8 @@
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="refresh.js?v=20261019-r1"></script>
-<script src="flow.js?v=20261023-f2"></script>
-<script src="app.js?v=20261023-f1"></script>
+<script src="flow.js?v=20261023-f3"></script>
+<script src="app.js?v=20261023-f3"></script>
 <script src="highs.js?v=20261023-f1"></script>
 </body>
 </html>

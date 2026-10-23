@@ -17,18 +17,21 @@
   const pct = (r, n) => r == null || n < 2 ? null : (1 - (r - 1) / (n - 1)) * 100;
   const mean = (a) => { const v = a.filter((x) => x != null); return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null; };
   const smooth = (a, w) => a.map((_, k) => mean(a.slice(Math.max(0, k - w + 1), k + 1)));
+  const smoothOf = (k) => k >= 200 ? 20 : k >= 60 ? 10 : SMOOTH;
   const dir = (v) => v == null || Math.abs(v) < FLAT ? "flat" : v > 0 ? "up" : "down";
 
   // ---------- 큰 분류별 강도 선
   function groupFlow(d) {
     const H = d.history, n = d.n, T = H.dates.length, k = st.k;
-    const span = DAYS + SMOOTH + k;
+    // 선 길이는 비교 기간이 보이도록 최소 40거래일, 길면 기간+10거래일
+    // 긴 기간일수록 더 길게 다듬어 잔물결을 줄인다(5·20일 5일, 60일 10일, 200일 20일 평균)
+    const len = Math.max(DAYS, k + 10), sw = smoothOf(k), span = Math.max(len, k + TAIL) + sw;
     const by = {};
     for (const it of d.items) (by[it.group] || (by[it.group] = [])).push(it);
     return Object.entries(by).map(([g, list]) => {
       const raw = [];
       for (let t = Math.max(0, T - span); t < T; t++) raw.push(mean(list.map((it) => pct((H.rank[it.id] || [])[t], n))));
-      const sm = smooth(raw, SMOOTH);
+      const sm = smooth(raw, sw);
       const at = (j) => sm[sm.length - 1 - j];
       const tail = [];
       for (let j = TAIL - 1; j >= 0; j--) {
@@ -36,7 +39,7 @@
         if (x != null && b != null) tail.push({ x, y: x - b });
       }
       const now = at(0), then = at(k);
-      return { g, n: list.length, line: sm.slice(-DAYS), now, delta: now == null || then == null ? null : now - then, tail,
+      return { g, n: list.length, line: sm.slice(-len), now, delta: now == null || then == null ? null : now - then, tail,
         top: list.filter((it) => it.rank != null && it.rank <= d.top_cut).length };
     }).filter((g) => g.now != null).sort((a, b) => (b.delta ?? -1e9) - (a.delta ?? -1e9));
   }
@@ -95,7 +98,14 @@
       <text x="${P.l - 6}" y="${Y(0) + 4}" text-anchor="end" class="tk">0</text>
       <text x="${P.l - 6}" y="${Y(-ymax)}" text-anchor="end" class="tk">−${ymax}</text>`;
     // 꼬리 → 점 → 이름 (이름은 겹치지 않게 자리 고르기)
-    const placed = [];
+    const fq = 11, qw = (t) => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? fq * 0.98 : fq * 0.56), 0);
+    const q1 = qw("주도 · 강하고 더 강해짐"), q2 = qw("부상 · 약하지만 강해지는 중"), q3 = qw("식는 중 · 강하지만 약해짐"), q4 = qw("소외 · 약하고 더 약해짐");
+    const placed = [
+      { x0: W - P.r - 6 - q1, x1: W - P.r - 6, y0: P.t + 4, y1: P.t + 18 },
+      { x0: P.l + 6, x1: P.l + 6 + q2, y0: P.t + 4, y1: P.t + 18 },
+      { x0: W - P.r - 6 - q3, x1: W - P.r - 6, y0: P.t + ih - 18, y1: P.t + ih - 4 },
+      { x0: P.l + 6, x1: P.l + 6 + q4, y0: P.t + ih - 18, y1: P.t + ih - 4 },
+    ];
     const dots = gf.map((g) => { const p = g.tail.at(-1); return { g, cx: X(p.x), cy: Y(p.y), c: colorOf(p) }; });
     dots.forEach((o) => placed.push({ x0: o.cx - 5, x1: o.cx + 5, y0: o.cy - 5, y1: o.cy + 5 }));
     const textW = (t) => [...t].reduce((a, ch) => a + (/[가-힣]/.test(ch) ? fs * 0.98 : fs * 0.56), 0);
@@ -180,7 +190,7 @@
     const el = $("#flow");
     if (!el || !d || !d.history || !d.history.rank) return;
     const T = d.history.dates.length;
-    if (T <= st.k + SMOOTH) { el.innerHTML = `<p class="none">기록이 ${st.k}거래일보다 짧아서 아직 못 그려요.</p>`; return; }
+    if (T <= st.k + smoothOf(st.k)) { el.innerHTML = `<p class="none">기록이 ${st.k}거래일보다 짧아서 아직 못 그려요.</p>`; return; }
     $("#flow-h .sub").textContent = `${md(d.history.dates[T - 1 - st.k])} → ${md(d.basis_date)} · ${st.k}거래일 동안`;
 
     const gf = groupFlow(d);
@@ -206,7 +216,7 @@
           <div class="fl-map-wrap" id="flMap"></div>
         </div>
         <div class="fl-col">
-          <h3>큰 분류 흐름 <span class="sub">강도 0~100 · 오른쪽 숫자 = 지금 강도와 ${st.k}일 변화</span></h3>
+          <h3>큰 분류 흐름 <span class="sub">선 = 최근 ${Math.max(DAYS, st.k + 10)}거래일 · 점선 = ${st.k}일 전 · 숫자 = 지금 강도와 변화</span></h3>
           <div class="fl-groups">${gRows}</div>
         </div>
       </div>

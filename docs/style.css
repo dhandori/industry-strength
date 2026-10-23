@@ -502,3 +502,5 @@ body.v-highs #meta { display: none; }
   .fl-fold:not(.open) .fl-x { display: none; }
   .fl-more { display: block; width: 100%; margin: 4px 0; padding: 8px; border: 1px dashed var(--line); border-radius: 9px; background: transparent; color: var(--ink-2); font-size: 13px; font-weight: 600; cursor: pointer; }
 }
+.heat.rise .hn em { width: 34px; color: var(--up); font-size: 12px; }
+#heatSort { margin-left: auto; }

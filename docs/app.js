@@ -63,6 +63,13 @@
     $$("#sortSeg button").forEach((x) => x.setAttribute("aria-pressed", x === b));
     renderTable();
   }));
+  // 순위 흐름 줄 순서: 지금 순위 / 화면 기간 동안 순위가 많이 오른 순(강세가 막 시작된 산업이 위로)
+  state.heatSort = "rank";
+  $$("#heatSort button").forEach((b) => b.addEventListener("click", () => {
+    state.heatSort = b.dataset.hs;
+    $$("#heatSort button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    renderHeat(state.data[state.market]);
+  }));
   $("#heatMore").addEventListener("click", () => { state.heatAll = !state.heatAll; renderHeat(state.data[state.market]); });
   $("#groupSel").addEventListener("change", (e) => { state.group = e.target.value; renderTable(); });
   $("#trendOnly").addEventListener("click", (e) => {
@@ -376,30 +383,35 @@
     if (p <= 0.75) return "var(--h4)";
     return "var(--h5)";
   }
+  const fmtGain = (g) => g == null ? "–" : g > 0 ? "▲" + g : g < 0 ? "▼" + -g : "–";
   function renderHeat(d) {
     const days = innerWidth < 640 ? 20 : HEAT_DAYS;
     const dates = d.history.dates.slice(-days);
     const n = d.n;
-    const all = d.items.filter((i) => i.rank != null);
-    const items = state.heatAll ? all : all.filter((i) => i.rank <= d.top_cut);
+    const el = $("#heat");
+    const rise = state.heatSort === "rise";
+    const gain = (i) => { const r0 = (d.history.rank[i.id] || []).at(-days); return r0 == null ? null : r0 - i.rank; };
+    let all = d.items.filter((i) => i.rank != null);
+    if (rise) all = all.map((i) => ({ i, g: gain(i) })).sort((a, b) => (b.g ?? -1e9) - (a.g ?? -1e9) || a.i.rank - b.i.rank).map((x) => x.i);
+    const items = state.heatAll ? all : rise ? all.slice(0, d.top_cut) : all.filter((i) => i.rank <= d.top_cut);
     const btn = $("#heatMore");
     btn.hidden = all.length <= items.length;
-    btn.textContent = state.heatAll ? `상위 25%(${d.top_cut}개)만 보기` : `전체 ${all.length}개 보기`;
-    const el = $("#heat");
+    btn.textContent = state.heatAll ? `${rise ? "많이 오른" : "상위 25%"} ${d.top_cut}개만 보기` : `전체 ${all.length}개 보기`;
+    el.classList.toggle("rise", rise);
     el.style.gridTemplateColumns = `minmax(110px, 150px) repeat(${dates.length}, minmax(7px, 1fr))`;
     let h = "", sepDone = false;
     const last = dates.length - 1;
     for (const it of items) {
-      if (!sepDone && it.rank > d.top_cut) { h += `<div class="hsep" aria-hidden="true"></div>`; sepDone = true; }
+      if (!rise && !sepDone && it.rank > d.top_cut) { h += `<div class="hsep" aria-hidden="true"></div>`; sepDone = true; }
       const rk = d.history.rank[it.id].slice(-days);
-      h += `<div class="hn" data-id="${it.id}" title="${esc(it.name)}"><em>${it.rank}</em>${esc(it.name)}</div>`;
+      h += `<div class="hn" data-id="${it.id}" title="${esc(it.name)} · 지금 ${it.rank}위"><em>${rise ? fmtGain(gain(it)) : it.rank}</em>${esc(it.name)}</div>`;
       h += rk.map((r, k) => `<div class="hc${k === last ? " today" : ""}" style="background:${heatColor(r, n)}" data-t="${esc(it.name)} · ${dates[k]} · ${r == null ? "데이터 없음" : r + "위 / " + n}"></div>`).join("");
     }
     h += `<div></div>` + dates.map((dt, k) => `<div class="hd">${(last - k) % 5 === 0 ? md(dt) : ""}</div>`).join("");
     el.innerHTML = h;
     $$(".hn", el).forEach((x) => x.addEventListener("click", () => openDetail(x.dataset.id)));
     const wrap = el.parentElement; wrap.scrollLeft = wrap.scrollWidth;
-    $("#heat-h .sub").textContent = `최근 ${dates.length}거래일 · 종합 순위${state.heatAll ? "" : " · 상위 25%만"}`;
+    $("#heat-h .sub").textContent = `최근 ${dates.length}거래일 · 종합 순위${rise ? ` · 이 기간 순위가 많이 오른 순${state.heatAll ? "" : ` ${d.top_cut}개`}` : state.heatAll ? "" : " · 상위 25%만"}`;
     bindTips(el, ".hc");
   }
 
