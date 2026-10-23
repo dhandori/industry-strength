@@ -504,3 +504,10 @@ body.v-highs #meta { display: none; }
 }
 .heat.rise .hn em { width: 34px; color: var(--up); font-size: 12px; }
 #heatSort { margin-left: auto; }
+.fl-gn { display: flex; flex-direction: column; min-width: 0; }
+.fl-gt { overflow: hidden; text-overflow: ellipsis; }
+.fl-per { display: flex; flex-wrap: wrap; gap: 0 7px; font-size: 11px; font-weight: 600; line-height: 1.35; }
+.fl-name small .fl-per { display: inline-flex; margin-left: 6px; }
+.fl-per i { font-style: normal; white-space: nowrap; }
+.fl-per .up { color: var(--up); } .fl-per .down { color: var(--down); } .fl-per .flat { color: var(--muted); }
+.fl-spark .fl-then.sel { stroke: var(--ink-2); stroke-dasharray: 3 2; }

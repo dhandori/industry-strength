@@ -12,6 +12,8 @@
   const ALIVE = ["상승 추세", "상승 전환 시도"];
   const DAYS = 40, SMOOTH = 5, TAIL = 8, RISE_N = 10, FALL_N = 8, FLAT = 3;
   const st = { k: 20, d: null, alive: false, open: new Set() };
+  // 어떤 기간을 골라도 20·60·200일 변화는 늘 같이 보여 준다(짧은 흐름이 긴 기간에 묻히지 않게)
+  const ALSO = [20, 60, 200];
 
   // 순위 → 백분위(1위=100, 꼴찌=0)
   const pct = (r, n) => r == null || n < 2 ? null : (1 - (r - 1) / (n - 1)) * 100;
@@ -30,8 +32,14 @@
     for (const it of d.items) (by[it.group] || (by[it.group] = [])).push(it);
     return Object.entries(by).map(([g, list]) => {
       const raw = [];
-      for (let t = Math.max(0, T - span); t < T; t++) raw.push(mean(list.map((it) => pct((H.rank[it.id] || [])[t], n))));
-      const sm = smooth(raw, sw);
+      for (let t = 0; t < T; t++) raw.push(mean(list.map((it) => pct((H.rank[it.id] || [])[t], n))));
+      const sm = smooth(raw, sw).slice(-span);
+      // 기간별 변화는 그 기간에 맞는 평균으로 따로 계산(200일을 골라도 20일 변화가 20일 평균에 묻히지 않게)
+      const per = {};
+      for (const P of new Set([...ALSO, k])) {
+        const sp = smooth(raw, smoothOf(P)), a = sp.at(-1), b = sp[sp.length - 1 - P];
+        per[P] = a == null || b == null ? null : a - b;
+      }
       const at = (j) => sm[sm.length - 1 - j];
       const tail = [];
       for (let j = TAIL - 1; j >= 0; j--) {
@@ -39,7 +47,7 @@
         if (x != null && b != null) tail.push({ x, y: x - b });
       }
       const now = at(0), then = at(k);
-      return { g, n: list.length, line: sm.slice(-len), now, delta: now == null || then == null ? null : now - then, tail,
+      return { g, n: list.length, line: sm.slice(-len), now, delta: now == null || then == null ? null : now - then, tail, per,
         top: list.filter((it) => it.rank != null && it.rank <= d.top_cut).length };
     }).filter((g) => g.now != null).sort((a, b) => (b.delta ?? -1e9) - (a.delta ?? -1e9));
   }
@@ -48,8 +56,11 @@
   function moves(d) {
     const H = d.history, T = H.dates.length, k = st.k;
     return d.items.filter((it) => it.rank != null && !it.stale).map((it) => {
-      const was = (H.rank[it.id] || [])[T - 1 - k];
-      return { it, was, now: it.rank, chg: was == null ? null : was - it.rank };
+      const seq = H.rank[it.id] || [];
+      const was = seq[T - 1 - k];
+      const per = {};
+      for (const P of ALSO) { const r = seq[T - 1 - P]; per[P] = r == null ? null : r - it.rank; }
+      return { it, was, now: it.rank, chg: was == null ? null : was - it.rank, per };
     }).filter((m) => m.chg != null);
   }
 
@@ -141,10 +152,12 @@
     let p = "", on = false;
     line.forEach((x, k) => { if (x == null) { on = false; return; } p += (on ? "L" : "M") + xs(k).toFixed(1) + " " + ys(x).toFixed(1); on = true; });
     const c = { up: "var(--up)", down: "var(--down)", flat: "var(--muted)" }[dir(delta)];
-    const kx = xs(line.length - 1 - st.k), ly = line.at(-1) == null ? null : ys(line.at(-1));
+    const ly = line.at(-1) == null ? null : ys(line.at(-1));
+    const marks = [...new Set([...ALSO, st.k])].filter((P) => P < line.length)
+      .map((P) => { const x = xs(line.length - 1 - P); return `<line x1="${x}" x2="${x}" y1="0" y2="${H}" class="fl-then${P === st.k ? " sel" : ""}"/>`; }).join("");
     return `<svg class="fl-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">
       <line x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}" class="fl-mid"/>
-      ${st.k < line.length ? `<line x1="${kx}" x2="${kx}" y1="0" y2="${H}" class="fl-then"/>` : ""}
+      ${marks}
       <path d="${p}" fill="none" stroke="${c}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
       ${ly == null ? "" : `<circle cx="${W}" cy="${ly}" r="2.6" fill="${c}"/>`}</svg>`;
   }
@@ -164,7 +177,7 @@
     const tag = ALIVE.includes(it.stage) ? `<em class="fl-ok" title="가격도 ${esc(it.stage)}">추세↑</em>`
       : up ? `<em class="fl-warn" title="순위는 올랐지만 가격 추세는 아직 ${esc(it.stage)}예요. 덜 빠져서 오른 순위일 수 있어요.">가격↓</em>` : "";
     return `<button class="fl-row" type="button" data-id="${it.id}" aria-label="${esc(it.name)} ${m.was}위에서 ${m.now}위">
-      <span class="fl-name"><b>${esc(it.name)}</b>${tag}<small>${esc(it.group)}</small></span>
+      <span class="fl-name"><b>${esc(it.name)}</b>${tag}<small>${esc(it.group)}${perLine(m.per, 0)}</small></span>
       ${track(m, d)}
       <span class="fl-rk"><small>${m.was}→</small><b>${m.now}위</b><span class="chg ${up ? "up" : "down"}">${up ? "▲" : "▼"}${Math.abs(m.chg)}</span></span>
     </button>`;
@@ -180,6 +193,15 @@
     return `<div class="fl-fold${open ? " open" : ""}">${rows.slice(0, keep).join("")}${tailKeep ? btn : ""}`
       + mid.map((r) => r.replace('<button class="', '<button class="fl-x ')).join("")
       + `${rows.slice(n - tailKeep).join("")}${tailKeep ? "" : btn}</div>`;
+  }
+
+  // 고른 기간 말고 나머지 기간(20·60·200일) 변화를 작게: 짧은 흐름과 긴 흐름이 같은 쪽인지 바로 보이게
+  function perLine(per, flat) {
+    const out = ALSO.filter((P) => P !== st.k && per[P] != null).map((P) => {
+      const v = Math.round(per[P]), c = Math.abs(v) <= flat || v === 0 ? "flat" : v > 0 ? "up" : "down";
+      return `<i class="${c}">${P}일 ${c === "up" ? "▲" : c === "down" ? "▼" : ""}${c === "flat" ? "–" : Math.abs(v)}</i>`;
+    });
+    return out.length ? `<span class="fl-per">${out.join("")}</span>` : "";
   }
 
   const scale = `<div class="fl-scale" aria-hidden="true"><span></span><span class="fl-axis"><em>← 하위</em><em>상위 25% · 1위 →</em></span><span></span></div>`;
@@ -204,7 +226,7 @@
     const gRows = fold("g", gf.map((g) => {
       const c = dir(g.delta);
       return `<button class="fl-g" type="button" data-group="${esc(g.g)}" title="${esc(g.g)} · 상위 25% ${g.top}/${g.n}개 · 누르면 아래 순위표를 이 분류로 걸러요">
-        <span class="fl-gn">${esc(g.g)} <em>${g.top}/${g.n}</em></span>
+        <span class="fl-gn"><span class="fl-gt">${esc(g.g)} <em>${g.top}/${g.n}</em></span>${perLine(g.per, FLAT)}</span>
         ${spark(g.line, g.delta)}
         <span class="fl-gv ${c}"><b>${Math.round(g.now)}</b><span>${c === "up" ? "▲" : c === "down" ? "▼" : "–"}${g.delta == null ? "" : Math.abs(Math.round(g.delta))}</span></span></button>`;
     }), 4, 3);
@@ -216,7 +238,7 @@
           <div class="fl-map-wrap" id="flMap"></div>
         </div>
         <div class="fl-col">
-          <h3>큰 분류 흐름 <span class="sub">선 = 최근 ${Math.max(DAYS, st.k + 10)}거래일 · 점선 = ${st.k}일 전 · 숫자 = 지금 강도와 변화</span></h3>
+          <h3>큰 분류 흐름 <span class="sub">선 = 최근 ${Math.max(DAYS, st.k + 10)}거래일 · 점선 = 20·60·200일 전(진한 점선 = ${st.k}일 전) · 숫자 = 지금 강도와 ${st.k}일 변화</span></h3>
           <div class="fl-groups">${gRows}</div>
         </div>
       </div>

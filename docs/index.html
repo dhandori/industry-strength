@@ -7,7 +7,7 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261023-f3">
+<link rel="stylesheet" href="style.css?v=20261023-f4">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>window.LightweightCharts || document.write('<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 </head>
@@ -51,7 +51,7 @@
       </div>
     </div>
     <div id="flow" class="flow"></div>
-    <p class="foot-note"><b>강도</b>는 분류 안 세부 산업들의 종합 순위를 0(꼴찌)~100(1위)으로 바꿔 평균한 값이에요(5·20일은 5일, 60일은 10일, 200일은 20일 이동평균). 지도에서 <b>오른쪽 위</b>로 갈수록 이미 강한데 더 강해지는 분류, <b>왼쪽 위</b>는 약했지만 힘이 붙는 분류예요. 줄 그림의 <b>빈 점</b>은 기간 전 자리, <b>찬 점</b>은 지금 자리예요. <b>추세↑</b>는 가격도 오르는 중, <b>가격↓</b>는 순위만 오르고 가격 추세는 아직 약한 산업이에요. 분류를 누르면 아래 순위표가 그 분류로 걸러지고, 세부 산업을 누르면 상세가 열려요.</p>
+    <p class="foot-note"><b>강도</b>는 분류 안 세부 산업들의 종합 순위를 0(꼴찌)~100(1위)으로 바꿔 평균한 값이에요(5·20일은 5일, 60일은 10일, 200일은 20일 이동평균). 지도에서 <b>오른쪽 위</b>로 갈수록 이미 강한데 더 강해지는 분류, <b>왼쪽 위</b>는 약했지만 힘이 붙는 분류예요. 분류·산업 이름 아래 작은 <b>20일·60일·200일</b> 숫자는 고른 기간과 상관없이 늘 보이는 다른 기간 변화예요(짧은 흐름과 긴 흐름이 같은 방향인지 확인). 줄 그림의 <b>빈 점</b>은 기간 전 자리, <b>찬 점</b>은 지금 자리예요. <b>추세↑</b>는 가격도 오르는 중, <b>가격↓</b>는 순위만 오르고 가격 추세는 아직 약한 산업이에요. 분류를 누르면 아래 순위표가 그 분류로 걸러지고, 세부 산업을 누르면 상세가 열려요.</p>
   </section>
 
   <section class="card" aria-labelledby="sig-h">
@@ -291,7 +291,7 @@
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="refresh.js?v=20261019-r1"></script>
-<script src="flow.js?v=20261023-f3"></script>
+<script src="flow.js?v=20261023-f4"></script>
 <script src="app.js?v=20261023-f3"></script>
 <script src="highs.js?v=20261023-f1"></script>
 </body>
