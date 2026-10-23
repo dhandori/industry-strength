@@ -11,7 +11,7 @@
   const WEAK = ["상승 둔화", "하락 추세", "바닥 다지기"];
   const ALIVE = ["상승 추세", "상승 전환 시도"];
   const DAYS = 40, SMOOTH = 5, TAIL = 8, RISE_N = 10, FALL_N = 8, FLAT = 3;
-  const st = { k: 20, d: null, alive: false };
+  const st = { k: 20, d: null, alive: false, open: new Set() };
 
   // 순위 → 백분위(1위=100, 꼴찌=0)
   const pct = (r, n) => r == null || n < 2 ? null : (1 - (r - 1) / (n - 1)) * 100;
@@ -160,6 +160,18 @@
     </button>`;
   }
 
+  // 휴대폰에서는 앞(과 끝) 몇 줄만 보이고 나머지는 '더 보기'로 접는다. PC는 다 보인다.
+  function fold(key, rows, keep, tailKeep = 0) {
+    const n = rows.length;
+    if (n <= keep + tailKeep + 1) return rows.join("");
+    const open = st.open.has(key), mid = rows.slice(keep, n - tailKeep);
+    const label = tailKeep ? `가운데 ${mid.length}개 더 보기` : `${mid.length}개 더 보기`;
+    const btn = `<button class="fl-more" type="button" data-fold="${key}" data-label="${label}">${open ? "접기" : label}</button>`;
+    return `<div class="fl-fold${open ? " open" : ""}">${rows.slice(0, keep).join("")}${tailKeep ? btn : ""}`
+      + mid.map((r) => r.replace('<button class="', '<button class="fl-x ')).join("")
+      + `${rows.slice(n - tailKeep).join("")}${tailKeep ? "" : btn}</div>`;
+  }
+
   const scale = `<div class="fl-scale" aria-hidden="true"><span></span><span class="fl-axis"><em>← 하위</em><em>상위 25% · 1위 →</em></span><span></span></div>`;
 
   function render(d) {
@@ -179,13 +191,13 @@
     // 밀려나는 쪽은 기간 시작 때 상위권(상위 25%)이던 산업 중에서만: 원래 약하던 산업이 더 약해진 건 흐름이 아님
     const fall = ms.filter((m) => m.chg < 0 && m.was <= d.top_cut).sort((a, b) => a.chg - b.chg).slice(0, FALL_N);
 
-    const gRows = gf.map((g) => {
+    const gRows = fold("g", gf.map((g) => {
       const c = dir(g.delta);
       return `<button class="fl-g" type="button" data-group="${esc(g.g)}" title="${esc(g.g)} · 상위 25% ${g.top}/${g.n}개 · 누르면 아래 순위표를 이 분류로 걸러요">
         <span class="fl-gn">${esc(g.g)} <em>${g.top}/${g.n}</em></span>
         ${spark(g.line, g.delta)}
         <span class="fl-gv ${c}"><b>${Math.round(g.now)}</b><span>${c === "up" ? "▲" : c === "down" ? "▼" : "–"}${g.delta == null ? "" : Math.abs(Math.round(g.delta))}</span></span></button>`;
-    }).join("");
+    }), 4, 3);
 
     el.innerHTML = `${headline(gf, riseTop)}
       <div class="fl-top">
@@ -202,11 +214,11 @@
         <div class="fl-col">
           <h3><span class="dot" style="color:var(--up)"></span>강해지는 세부 산업 <span class="sub">순위가 가장 많이 오른 순</span>
             <button class="toggle fl-alive" type="button" aria-pressed="${st.alive}" title="가격도 상승 추세·상승 전환 시도인 산업만">가격 추세 살아 있는 것만</button></h3>
-          ${rise.length ? scale + rise.map((m) => row(m, d)).join("") : `<p class="none">${st.alive ? "순위가 오른 산업 중 가격 추세까지 살아 있는 곳이 없어요." : "해당 없음"}</p>`}
+          ${rise.length ? scale + fold("r", rise.map((m) => row(m, d)), 5) : `<p class="none">${st.alive ? "순위가 오른 산업 중 가격 추세까지 살아 있는 곳이 없어요." : "해당 없음"}</p>`}
         </div>
         <div class="fl-col">
           <h3><span class="dot" style="color:var(--down)"></span>밀려나는 세부 산업 <span class="sub">${st.k}일 전 상위 25%였던 산업 중</span></h3>
-          ${fall.length ? scale + fall.map((m) => row(m, d)).join("") : `<p class="none">상위권에서 밀린 산업이 없어요.</p>`}
+          ${fall.length ? scale + fold("f", fall.map((m) => row(m, d)), 4) : `<p class="none">상위권에서 밀린 산업이 없어요.</p>`}
         </div>
       </div>`;
     drawMap(gf);
@@ -215,6 +227,12 @@
       b.addEventListener("click", () => pickGroup(b.dataset.group));
       b.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickGroup(b.dataset.group); } });
     });
+    $$(".fl-more", el).forEach((b) => b.addEventListener("click", () => {
+      const box = b.closest(".fl-fold"), k = b.dataset.fold;
+      const open = box.classList.toggle("open");
+      open ? st.open.add(k) : st.open.delete(k);
+      b.textContent = open ? "접기" : b.dataset.label;
+    }));
     $(".fl-alive", el).addEventListener("click", () => { st.alive = !st.alive; render(); });
   }
 
