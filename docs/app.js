@@ -359,6 +359,7 @@
         <td><span class="rk">${i.rank ?? "–"}</span>${chgOf(i)}</td>
         <td class="name"><b>${esc(i.name)}${i.stale ? '<span class="stale">지연</span>' : ""}</b><span>${subOf(i)}</span>${tags ? "<br>" + tags : ""}</td>
         <td><div class="bar" title="시장 안 순위 백분위 ${pctile(i)}% · 종합 강도 ${i.score == null ? "–" : Math.round(i.score)}점"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div></td>
+        <td class="c-rs"><div class="rs-cell">${rsNum(i)}<div>${rsOf(i)}${rsSub(i)}</div></div></td>
         <td class="num">${ret(i.chg1, i.rank1)}</td>
         <td class="num">${ret(i.ret5, i.rank5)}</td>
         <td class="num">${ret(i.ret20, i.rank20)}</td>
@@ -366,18 +367,17 @@
         <td>${checksOf(i, true)}</td>
         <td class="num">${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</td>
         <td><span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></td>
-        <td class="c-rs"><div class="rs-cell">${rsNum(i)}<div>${rsOf(i)}${rsSub(i)}</div></div></td>
       </tr>`;
     }).join("");
     // 휴대폰: 표 대신 카드. 1줄 순위·이름·상태, 2줄 강도·수익률, 3줄 추세 점검.
     $("#rankCards").innerHTML = rows.map((i) => `
       <button class="rcard${i.top ? " top" : ""}" type="button" data-id="${i.id}">
-        <div class="rc1"><span class="rk">${i.rank ?? "–"}</span>${chgOf(i)}<b class="rc-name">${esc(i.name)}</b><span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></div>
+        <div class="rc1"><span class="rk">${i.rank ?? "–"}</span>${chgOf(i)}<b class="rc-name">${esc(i.name)}</b>${i.rs_rating == null ? "" : `<span class="rc-rs">RS ${rsNum(i)}</span>`}<span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></div>
         <div class="rc-sub">${subOf(i)}</div>
         <div class="rc2"><div class="bar"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div>
           <span class="rc-ret"><em>당일</em>${ret(i.chg1, i.rank1)}</span><span class="rc-ret"><em>5일</em>${ret(i.ret5, i.rank5)}</span><span class="rc-ret"><em>20일</em>${ret(i.ret20, i.rank20)}</span><span class="rc-ret"><em>60일</em>${ret(i.ret60, i.rank60)}</span></div>
         <div class="rc3">${checksOf(i, true)}<span class="rc-dist">고점 대비 <b>${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</b></span></div>
-        <div class="rc4">${i.rs_rating == null ? "" : `<span class="rc-dist">RS 지수</span>${rsNum(i)}`}${rsOf(i)}<span class="rc-dist">RS선 1년 최고 대비 <b>${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"}</b> · 20일 시장 대비 <b class="ret ${cls(i.rs_ex20)}">${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}</b></span></div>
+        <div class="rc4">${rsOf(i)}<span class="rc-dist">RS선 1년 최고 대비 <b>${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"}</b> · 20일 시장 대비 <b class="ret ${cls(i.rs_ex20)}">${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}</b></span></div>
       </button>`).join("");
     if (!rows.length) {
       const msg = "조건에 맞는 산업이 없어요. 지금 이 조건에서는 가격이 오르고 있는 산업이 없어요.";
