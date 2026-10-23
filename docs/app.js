@@ -103,7 +103,7 @@
     else w.hidden = true;
     const groups = ["전체", ...new Set(d.items.map((i) => i.group))];
     $("#groupSel").innerHTML = groups.map((g) => `<option${g === state.group ? " selected" : ""}>${esc(g)}</option>`).join("");
-    renderTiles(d); renderSignals(d); renderExplore(d); renderTable(); renderHeat(d); renderGroups(d); renderBreadth(d);
+    renderTiles(d); window.__flow && window.__flow.render(d); renderSignals(d); renderExplore(d); renderTable(); renderHeat(d); renderGroups(d); renderBreadth(d);
   }
 
   // ---------- tiles
@@ -616,6 +616,7 @@
     if (!d) return;
     requestAnimationFrame(() => {
       renderBreadth(d);
+      window.__flow && window.__flow.redraw();
       if (state.openId && state.series[state.market]) drawDetail(d.items.find((x) => x.id === state.openId));
     });
   }

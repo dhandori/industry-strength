@@ -133,7 +133,8 @@
       draw(b ? b.value : null, l ? l.value : null, mdw(t));
     });
   }
-  const color50 = (c) => `color-mix(in srgb, ${c} 45%, transparent)`;
+  // 차트 라이브러리는 color-mix를 못 읽어서 #rrggbb → rgba로 바꾼다.
+  const color50 = (c) => { const m = /^#([0-9a-f]{6})$/i.exec(c); if (!m) return c; const v = parseInt(m[1], 16); return `rgba(${v >> 16}, ${(v >> 8) & 255}, ${v & 255}, 0.45)`; };
 
   // ---------- 강해지는 업종
   function strongRows(D) {
