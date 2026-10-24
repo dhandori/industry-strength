@@ -44,15 +44,18 @@
 
   // ---------- 화면 전환: 산업 강도 / 52주 신고가 (2026-10-21)
   state.view = "strength";
-  function setHash() { try { history.replaceState(null, "", "#" + state.market + (state.view === "highs" ? "-highs" : "")); } catch (e) {} }
+  function setHash() { try { history.replaceState(null, "", "#" + state.market + (state.view !== "strength" ? "-" + state.view : "")); } catch (e) {} }
   function setView(v) {
     state.view = v;
     $$(".view-tabs button").forEach((x) => x.setAttribute("aria-selected", x.dataset.view === v));
     $("#viewStrength").hidden = v !== "strength";
     $("#viewHighs").hidden = v !== "highs";
+    $("#viewMacro").hidden = v !== "macro";
     document.body.classList.toggle("v-highs", v === "highs");
+    document.body.classList.toggle("v-macro", v === "macro");
     setHash();
     if (v === "highs") window.__highs && window.__highs.show(state.market);
+    else if (v === "macro") window.__macro && window.__macro.show();
     else requestAnimationFrame(rerenderCharts);
     scrollTo({ top: 0 });
   }
@@ -660,6 +663,6 @@
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === h));
   }
   load();
-  window.__isRefresh && window.__isRefresh.init(() => { reloadData(); window.__highs && window.__highs.reload(); });
-  if (hv === "highs") addEventListener("DOMContentLoaded", () => setView("highs"), { once: true });
+  window.__isRefresh && window.__isRefresh.init(() => { reloadData(); window.__highs && window.__highs.reload(); window.__macro && window.__macro.reload(); });
+  if (hv === "highs" || hv === "macro") addEventListener("DOMContentLoaded", () => setView(hv), { once: true });
 })();
