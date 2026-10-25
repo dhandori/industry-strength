@@ -52,6 +52,7 @@
     const all = vs.concat(m20.filter((v) => v != null), m60.filter((v) => v != null));
     let lo = Math.min(...all), hi = Math.max(...all);
     const pad = (hi - lo) * 0.08 || Math.abs(hi) * 0.05 || 1; lo -= pad; hi += pad;
+    if (r.key === "fng") { lo = Math.max(0, lo); hi = Math.min(100, hi); }   // 공포탐욕은 0~100 밖으로 나가지 않게
     const x = (i) => L + (W - L - R) * i / (s.length - 1);
     const y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
     const path = (arr) => { let d = "", pen = false; arr.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? "L" : "M") + x(i).toFixed(1) + "," + y(v).toFixed(1); pen = true; }); return d; };
