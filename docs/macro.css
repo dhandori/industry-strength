@@ -9,8 +9,9 @@ body.v-macro #meta, body.v-macro .top-controls .seg { display: none; }
 .mx-verdict { border-left: 5px solid var(--c); }
 .mx-verdict .k { font-size: 12.5px; color: var(--ink-2); font-weight: 600; }
 .mx-verdict .big { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
-.mx-verdict .big b { font-size: 44px; line-height: 1; font-weight: 800; color: var(--c); letter-spacing: -0.03em; }
-.mx-verdict .big span { font-size: 20px; font-weight: 750; }
+.mx-verdict .big { flex-direction: column; align-items: flex-start; gap: 4px; }
+.mx-verdict .big b { font-size: 38px; line-height: 1; font-weight: 800; color: var(--c); letter-spacing: -0.03em; }
+.mx-verdict .big span { font-size: 13px; font-weight: 600; color: var(--muted); }
 .mx-verdict p { margin: 10px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.6; }
 .mx-ladder { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
 .mx-step { border: 1px solid var(--line); background: var(--surface-2); border-radius: 10px; padding: 10px 6px 9px; text-align: center; }
@@ -36,6 +37,11 @@ body.v-macro #meta, body.v-macro .top-controls .seg { display: none; }
 .mx-card { border-top: 4px solid var(--c); display: flex; flex-direction: column; }
 .mx-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
 .mx-name { font-weight: 700; font-size: 14.5px; }
+.mx-dir { display: inline-block; margin-top: 3px; font-size: 11.5px; font-weight: 700; color: var(--ink-2); background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; }
+.mx-chg em { font-style: normal; margin-left: 2px; }
+.mx-chart-t { font-size: 12.5px; font-weight: 700; color: var(--ink-2); margin: 4px 0 2px; }
+.mx-chart-t span { font-weight: 500; color: var(--muted); margin-left: 4px; }
+.mx-why b { color: var(--ink); }
 .mx-val { display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
 .mx-val b { font-size: 28px; font-weight: 750; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.15; }
 .mx-val .u { font-size: 13px; color: var(--muted); font-weight: 600; }
@@ -43,7 +49,7 @@ body.v-macro #meta, body.v-macro .top-controls .seg { display: none; }
 .mx-chg small { font-weight: 500; color: var(--muted); margin-right: 3px; }
 .mx-chg.worse { color: var(--mx2); } .mx-chg.better { color: var(--mx5); } .mx-chg.flat { color: var(--muted); }
 .mx-pos { margin-top: 10px; }
-.mx-pos-l { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); }
+.mx-pos-l { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--ink-2); }
 .mx-pos-l b { color: var(--ink); }
 /* 2026-10-25: 칸 막대 — 좋은 쪽/나쁜 쪽과 지금 칸이 한눈에 */
 .mx-zb { margin-top: 6px; }
