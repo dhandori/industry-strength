@@ -22,7 +22,16 @@ body.v-macro #meta, body.v-macro .top-controls .seg { display: none; }
 .mx-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap;
   color: var(--c); background: color-mix(in srgb, var(--c) 12%, transparent); border: 1px solid color-mix(in srgb, var(--c) 40%, transparent); }
 .mx-group-h { display: flex; align-items: baseline; gap: 8px; margin: 6px 2px -4px; }
-.mx-group-h h2 { font-size: 17px; font-weight: 750; margin: 0; }
+.mx-group-h h2, .mx-group-h h3 { font-size: 15.5px; font-weight: 700; margin: 0; color: var(--ink-2); }
+/* 2026-10-25: 나라별 묶음 — 미국 먼저, 굵은 구분선 뒤 한국 */
+.mx-market { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+.mx-market-h { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; padding: 10px 14px; border-radius: 10px;
+  background: var(--surface-2); border-left: 5px solid var(--mxk, var(--mx4)); }
+.mx-market-h h2 { font-size: 20px; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+.mx-us { --mxk: #2a78d6; } .mx-kr { --mxk: #d32f2f; }
+.mx-after { position: relative; margin-top: 22px; padding-top: 30px; border-top: 4px solid var(--ink); }
+.mx-after::before { content: "여기부터 한국 지표"; position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
+  padding: 2px 14px; border-radius: 999px; background: var(--ink); color: var(--surface); font-size: 12.5px; font-weight: 800; white-space: nowrap; }
 .mx-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .mx-card { border-top: 4px solid var(--c); display: flex; flex-direction: column; }
 .mx-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
@@ -36,6 +45,22 @@ body.v-macro #meta, body.v-macro .top-controls .seg { display: none; }
 .mx-pos { margin-top: 10px; }
 .mx-pos-l { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--muted); }
 .mx-pos-l b { color: var(--ink); }
+/* 2026-10-25: 칸 막대 — 좋은 쪽/나쁜 쪽과 지금 칸이 한눈에 */
+.mx-zb { margin-top: 6px; }
+.mx-zb-ends { display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; }
+.mx-zb-ends .good { color: var(--mx5); } .mx-zb-ends .bad { color: var(--mx1); }
+.mx-zb-pinrow { position: relative; height: 30px; }
+.mx-zb-pin { position: absolute; bottom: 0; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; }
+.mx-zb-pin span { background: var(--c); color: #fff; font-size: 12px; font-weight: 800; padding: 2px 8px; border-radius: 6px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.mx-zb-pin::after { content: ""; width: 0; height: 0; border: 6px solid transparent; border-top-color: var(--c); border-bottom: 0; }
+.mx-zb-row { display: grid; gap: 3px; }
+.mx-zb-box { text-align: center; padding: 7px 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--c) 14%, var(--surface)); border: 1px solid transparent; opacity: .55; min-width: 0; }
+.mx-zb-box b { display: block; font-size: 11.5px; font-weight: 700; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mx-zb-box small { display: block; font-size: 10px; color: var(--muted); margin-top: 1px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mx-zb-box.on { opacity: 1; background: var(--c); border-color: var(--c); box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--c); }
+.mx-zb-box.on b, .mx-zb-box.on small { color: #fff; }
+.mx-zb-note { margin-top: 8px; font-size: 12px; font-weight: 700; color: var(--mx2); }
+@media (max-width: 640px) { .mx-zb-box b { font-size: 10.5px; } .mx-zb-box small { font-size: 9px; } }
 .mx-track { position: relative; height: 9px; border-radius: 5px; margin-top: 4px;
   background: linear-gradient(90deg, var(--mx5) 0 50%, var(--mx4) 50% 75%, var(--mx3) 75% 90%, var(--mx2) 90% 97%, var(--mx1) 97% 100%); }
 .mx-track.fg { background: linear-gradient(90deg, var(--mx1) 0 10%, var(--mx2) 10% 25%, var(--mx3) 25% 40%, var(--mx4) 40% 55%, var(--mx5) 55% 75%, var(--mxfg) 75% 100%); }

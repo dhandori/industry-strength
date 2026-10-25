@@ -70,20 +70,34 @@
     return `<span class="mx-chg ${c}"><small>1개월</small>${esc(r.changeText)}</span>`;
   }
 
+  // 2026-10-25: 초록→빨강 그라데이션 대신 칸 5개(왼쪽 안전 → 오른쪽 위험). 지금 칸만 진하게, 나머지는 흐리게, 위에 '지금' 핀.
+  function zoneBar(zones, idx, frac, endL, endR, pinText) {
+    const n = zones.length, left = (idx + Math.max(0.06, Math.min(0.94, frac))) / n * 100;
+    const boxes = zones.map((z, i) => `<div class="mx-zb-box${i === idx ? " on" : ""}" style="--c:${z.c}"><b>${z.e} ${z.t}</b><small>${z.r}</small></div>`).join("");
+    return `<div class="mx-zb"><div class="mx-zb-ends"><span class="good">✅ ${endL}</span><span class="bad">${endR} ⛔</span></div>
+      <div class="mx-zb-pinrow"><div class="mx-zb-pin" style="left:${left}%;--c:${zones[idx].c}"><span>${pinText}</span></div></div>
+      <div class="mx-zb-row" style="grid-template-columns:repeat(${n},minmax(0,1fr))">${boxes}</div></div>`;
+  }
+  const RISK_ZONES = [[0, 50, 5], [50, 75, 4], [75, 90, 3], [90, 97, 2], [97, 100.0001, 1]];
   function pos(r) {
     if (r.riskPct == null) return "";
     const p = Math.max(0, Math.min(100, r.riskPct));
-    const what = r.risk === "both" ? "5년 중간값에서 떨어진 정도" : "최근 5년 중 위험한 쪽 위치";
-    return `<div class="mx-pos"><div class="mx-pos-l"><span>${what}</span><span><b>${p.toFixed(0)}%</b>${r.speedBump ? ` · 빠른 악화 +${r.speedBump}단계` : ""}</span></div>
-      <div class="mx-track"><div class="mx-mark" style="left:${p}%"></div></div>
-      <div class="mx-ticks"><span style="left:50%">50</span><span style="left:75%">75</span><span style="left:90%">90</span><span style="left:97%">97</span></div></div>`;
+    const idx = RISK_ZONES.findIndex(([a, b]) => p >= a && p < b), [a, b] = RISK_ZONES[idx];
+    const zones = RISK_ZONES.map(([lo, hi, lv]) => ({ c: col(lv), e: LV[lv][0], t: LV[lv][1], r: `${lo}~${Math.min(100, Math.round(hi))}%` }));
+    const what = r.risk === "both" ? "5년 중간값에서 얼마나 멀어졌나" : "최근 5년 중 위험한 쪽으로 어디쯤인가";
+    const note = r.speedBump ? `<div class="mx-zb-note">⚡ 최근 1개월 사이 빠르게 나빠져서 최종 단계는 ${r.speedBump}단계 더 위험하게 매겼어요 → ${r.emoji} ${esc(r.label)}</div>` : "";
+    return `<div class="mx-pos"><div class="mx-pos-l"><span>${what}</span></div>${zoneBar(zones, idx, (p - a) / (Math.min(100, b) - a), "안전", "위험", `지금 ${p.toFixed(0)}%`)}${note}</div>`;
   }
 
   function fng(r) {
     const c = r.compare || {}, p = Math.max(0, Math.min(100, r.value));
     const cell = (k, t) => `<div><b>${c[k] ?? "–"}</b><span>${t}</span></div>`;
-    return `<div class="mx-pos"><div class="mx-track fg"><div class="mx-mark" style="left:${p}%"></div></div>
-      <div class="mx-ticks"><span style="left:10%">10</span><span style="left:25%">25</span><span style="left:40%">40</span><span style="left:55%">55</span><span style="left:75%">75</span></div></div>
+    // 왼쪽 안전 → 오른쪽 위험으로 맞추려고 점수는 높은 쪽(탐욕)을 왼쪽에 둔다. 75 이상 과열은 따로 보라색.
+    const FZ = [[75, 100.0001, 0, "⚠️", "과열", "var(--mxfg)"], [55, 75, 5], [40, 55, 4], [25, 40, 3], [10, 25, 2], [0, 10, 1]];
+    const zones = FZ.map(([lo, hi, lv, e, t, cc]) => ({ c: cc || col(lv), e: e || LV[lv][0], t: t || LV[lv][1], r: `${Math.min(100, Math.round(hi))}~${lo}` }));
+    const idx = FZ.findIndex(([a, b]) => p >= a && p < b);
+    const lo = FZ[idx][0], hi = Math.min(100, FZ[idx][1]);
+    return `<div class="mx-pos"><div class="mx-pos-l"><span>점수가 높을수록 탐욕, 낮을수록 공포</span></div>${zoneBar(zones, idx, (hi - p) / (hi - lo), "탐욕(안심)", "공포(위험)", `지금 ${r.value}점`)}</div>
       <div class="mx-cmp"><div><b>${r.value}</b><span>오늘</span></div>${cell("prev", "전일")}${cell("week_ago", "1주 전")}${cell("month_ago", "1개월 전")}${cell("year_ago", "1년 전")}</div>
       ${r.crossCheck != null ? `<div class="mx-foot">교차 확인(finhacker.cz) ${r.crossCheck}${r.crossCheck === r.value ? " · 일치" : " · 차이 있음"}</div>` : ""}
       ${(r.series || []).length >= 15 ? chart(r) : `<div class="mx-foot">추이 그래프는 매일 값이 쌓이면(약 3주 뒤) 나타나요.</div>`}`;
@@ -122,12 +136,26 @@
         <div class="big"><b>${c.level ?? "–"}</b><span>단계 · ${esc(c.label)} ${c.emoji}</span></div><p>${esc(sentence(d))}</p></div>
       <div class="card"><div class="mx-ladder">${steps}</div>${alarms ? `<div class="mx-alarms">${alarms}</div>` : ""}
         <p class="foot-note">숫자는 단계별 지표 개수예요. 1단계(위기)에 가까울수록 위험해요. 단계는 최근 5년 중 위치와 1개월 변화 속도를 함께 보고 정해요.</p></div></section>`;
-    const groups = [["한국", ["한국 신용", "한국 금리"]], ["미국", ["미국 신용", "미국 금리", "미국 유동성"]], ["변동성", ["변동성"]], ["투자 심리", ["심리"]]];
-    groups.forEach(([title, names]) => {
-      const rows = d.indicators.filter((r) => names.includes(r.group));
+    // 2026-10-25 재배치: 미국 지표를 먼저, 굵은 구분선 뒤에 한국 지표.
+    // VKOSPI는 한국 변동성, CNN 공포탐욕지수는 미국 투자 심리로 각 나라 안에 넣는다(원본 group 값은 '변동성'·'심리'라 key로 나눈다).
+    const market = (r) => r.key === "vkospi" || /^kr_/.test(r.key) || /^한국/.test(r.group) ? "KR" : "US";
+    const sub = (r) => r.group === "변동성" ? "변동성" : r.group === "심리" ? "투자 심리" : "신용·금리·유동성";
+    const SUBS = ["신용·금리·유동성", "변동성", "투자 심리"];
+    const worstOf = (rows) => Math.min(6, ...rows.filter((r) => r.level).map((r) => r.level));
+    [["US", "🇺🇸", "미국"], ["KR", "🇰🇷", "한국"]].forEach(([mk, flag, title], i) => {
+      const rows = d.indicators.filter((r) => market(r) === mk);
       if (!rows.length) return;
-      const worst = Math.min(6, ...rows.filter((r) => r.level).map((r) => r.level));
-      h += `<div class="mx-group-h"><h2>${title}</h2><span class="sub">${rows.length}개 지표${worst <= 5 ? ` · 가장 나쁜 단계 ${LV[worst][0]} ${LV[worst][1]}` : ""}</span></div><div class="mx-grid">${rows.map(card).join("")}</div>`;
+      const w = worstOf(rows);
+      h += `<section class="mx-market mx-${mk.toLowerCase()}${i ? " mx-after" : ""}" aria-label="${title} 지표">
+        <div class="mx-market-h"><h2>${flag} ${title} 지표</h2><span class="sub">${rows.length}개${w <= 5 ? ` · 가장 나쁜 단계 ${LV[w][0]} ${LV[w][1]}` : ""}</span></div>`;
+      SUBS.forEach((s) => {
+        const sr = rows.filter((r) => sub(r) === s);
+        if (!sr.length) return;
+        const sw = worstOf(sr);
+        const label = mk === "KR" && s === "신용·금리·유동성" ? "신용·금리" : s;
+        h += `<div class="mx-group-h"><h3>${label}</h3><span class="sub">${sr.length}개 지표${sw <= 5 ? ` · 가장 나쁜 단계 ${LV[sw][0]} ${LV[sw][1]}` : ""}</span></div><div class="mx-grid">${sr.map(card).join("")}</div>`;
+      });
+      h += `</section>`;
     });
     $("#mxBody").innerHTML = h;
   }
