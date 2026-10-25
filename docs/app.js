@@ -40,6 +40,7 @@
     setHash();
     load();
     if (state.view === "highs") window.__highs && window.__highs.show(state.market);
+    if (state.view === "macro") window.__macro && window.__macro.rerender();
   }));
 
   // ---------- 화면 전환: 산업 강도 / 52주 신고가 (2026-10-21)

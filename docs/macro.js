@@ -235,7 +235,7 @@
     const steps = [5, 4, 3, 2, 1].map((lv) => `<div class="mx-step ${lv === c.level ? "on" : ""}" style="--c:${col(lv)}"><div class="n">${c.counts[lv] ?? 0}</div><div class="t">${LV[lv][0]} ${LV[lv][1]}</div><div class="mx-bar" style="opacity:${(c.counts[lv] ?? 0) ? .9 : .15}"></div></div>`).join("");
     const alarms = d.indicators.filter((r) => r.level && r.level <= 2).map((r) => `<span class="mx-chip" style="--c:${col(r.level)}">${r.emoji} ${esc(short(r))}</span>`).join("");
     let h = `<section class="mx-hero">
-      <div class="card mx-verdict" style="--c:${col(c.level)}"><div class="k">오늘 시장 위험도 (지표 ${c.available}개 종합)</div>
+      <div class="card mx-verdict" style="--c:${col(c.level)}"><div class="k">오늘 시장 위험도 (한국·미국 지표 ${c.available}개 종합)</div>
         <div class="big"><b>${c.emoji} ${esc(c.label)}</b><span>5단계 중 ${c.level ?? "–"}단계 · 1단계가 가장 위험</span></div><p>${esc(sentence(d))}</p></div>
       <div class="card"><div class="mx-ladder">${steps}</div>${alarms ? `<div class="mx-alarms">${alarms}</div>` : ""}
         <p class="foot-note">칸 안 숫자는 그 단계에 있는 지표 개수예요. <b>오른쪽(🔴 위기)으로 갈수록 위험</b>해요. 아래 칩은 지금 🟠경계 이상인 지표예요. 단계는 '최근 5년과 비교한 위치'와 '최근 한 달 동안 얼마나 빨리 변했는지'를 함께 보고 정해요.</p></div></section>`;
@@ -245,7 +245,9 @@
     const sub = (r) => r.group === "변동성" ? "변동성" : r.group === "심리" ? "투자 심리" : "신용·금리·유동성";
     const SUBS = ["신용·금리·유동성", "변동성", "투자 심리"];
     const worstOf = (rows) => Math.min(6, ...rows.filter((r) => r.level).map((r) => r.level));
-    [["US", "🇺🇸", "미국"], ["KR", "🇰🇷", "한국"]].forEach(([mk, flag, title], i) => {
+    // 2026-10-25: 위쪽 한국/미국 버튼(52주 신고가 탭과 같은 버튼)에 맞춰 고른 나라 지표만 보여 준다.
+    const cur = (window.__isMarket && window.__isMarket()) || "KR";
+    [["US", "🇺🇸", "미국"], ["KR", "🇰🇷", "한국"]].filter(([mk]) => mk === cur).forEach(([mk, flag, title], i) => {
       const rows = d.indicators.filter((r) => market(r) === mk);
       if (!rows.length) return;
       const w = worstOf(rows);
@@ -276,5 +278,5 @@
     finally { st.loading = null; }
   }
 
-  window.__macro = { show: () => load(false), reload: () => { st.data = null; if (!$("#viewMacro").hidden) load(true); } };
+  window.__macro = { show: () => load(false), rerender: () => { if (st.data && !$("#viewMacro").hidden) render(); }, reload: () => { st.data = null; if (!$("#viewMacro").hidden) load(true); } };
 })();
