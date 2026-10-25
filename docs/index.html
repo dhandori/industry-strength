@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="style.css?v=20261023-rs3">
-<link rel="stylesheet" href="macro.css?v=20261025-m3">
+<link rel="stylesheet" href="macro.css?v=20261025-m4">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>window.LightweightCharts || document.write('<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 </head>
@@ -277,6 +277,7 @@
       <li><b>속도</b>: 최근 1개월(21거래일) 변화가 지난 5년의 1개월 변화들보다 유난히 크면(표준점수 2 이상) 한 단계, 아주 크면(3 이상) 두 단계 더 위험하게 봐요. 숫자는 아직 낮아도 빠르게 나빠지는 지표를 놓치지 않기 위해서예요.</li>
       <li><b>장단기 금리차</b>는 너무 좁아지거나 뒤집혀도, 갑자기 크게 벌어져도 경기 신호라서 5년 중간값에서 양쪽으로 멀어질수록 위험하게 봐요.</li>
       <li><b>공포탐욕지수</b>는 점수 자체가 기준이에요. 10 이하 🔴, 25 이하 🟠, 40 이하 🟡, 55 이하 🔵, 그 위 🟢이고, 75 이상은 과열 주의(⚠️)를 따로 붙여요. 1개월 사이 20점 넘게 떨어지면 한 단계 더 위험하게 봐요.</li>
+      <li><b>VIX와 공포탐욕지수 함께 읽기</b>: 두 지표를 같은 ‘겁먹은 정도’ 5칸으로 바꿔 나란히 놓아요. VIX는 15 미만 안심, 15~20 평온, 20~25 조금 불안, 25~30 불안, 30 이상 겁먹음이고, 공포탐욕지수는 55점 이상 안심, 45~54 평온, 35~44 조금 불안, 25~34 불안, 25점 미만 겁먹음이에요. 두 칸 이상 벌어지면 ‘엇갈림’으로 표시하고 이유와 확인할 곳을 적어 줘요.</li>
       <li><b>배치</b>: 미국 지표(신용·금리·유동성 → VIX·VIX/VIX3M·MOVE → CNN 공포탐욕지수)를 먼저 보여 주고, 굵은 구분선 아래에 한국 지표(신용·금리 → VKOSPI)를 보여 줘요.</li>
       <li><b>종합 단계</b>는 13개 지표의 평균 위험도에, 🔴가 3개 이상이거나 🟠·🔴가 절반 이상이면 반 단계씩 더해 정해요.</li>
       <li><b>그래프</b>는 최근 약 2년이에요. 검은 선은 매일 값, 주황 점선은 20일 이동평균(약 1개월), 파란 점선은 60일 이동평균(약 3개월)이에요. 가로 점선은 기준선(0, VIX 20·30 등)이에요.</li>
