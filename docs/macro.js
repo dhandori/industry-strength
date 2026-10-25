@@ -147,13 +147,13 @@
       if (!rows.length) return;
       const w = worstOf(rows);
       h += `<section class="mx-market mx-${mk.toLowerCase()}${i ? " mx-after" : ""}" aria-label="${title} 지표">
-        <div class="mx-market-h"><h2>${flag} ${title} 지표</h2><span class="sub">${rows.length}개${w <= 5 ? ` · 가장 나쁜 단계 ${LV[w][0]} ${LV[w][1]}` : ""}</span></div>`;
+        <div class="mx-market-h"><h2>${flag} ${title} 지표</h2><span class="sub">${rows.length}개${w <= 5 ? ` · 가장 위험한 지표: ${LV[w][0]} ${LV[w][1]}` : ""}</span></div>`;
       SUBS.forEach((s) => {
         const sr = rows.filter((r) => sub(r) === s);
         if (!sr.length) return;
         const sw = worstOf(sr);
         const label = mk === "KR" && s === "신용·금리·유동성" ? "신용·금리" : s;
-        h += `<div class="mx-group-h"><h3>${label}</h3><span class="sub">${sr.length}개 지표${sw <= 5 ? ` · 가장 나쁜 단계 ${LV[sw][0]} ${LV[sw][1]}` : ""}</span></div><div class="mx-grid">${sr.map(card).join("")}</div>`;
+        h += `<div class="mx-group-h"><h3>${label}</h3><span class="sub">${sr.length}개 지표${sw <= 5 ? ` · 가장 위험한 지표: ${LV[sw][0]} ${LV[sw][1]}` : ""}</span></div><div class="mx-grid">${sr.map(card).join("")}</div>`;
       });
       h += `</section>`;
     });
