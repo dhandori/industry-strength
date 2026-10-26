@@ -70,6 +70,13 @@ jobs:
         timeout-minutes: 8
         run: python scripts/naver_upjong.py
 
+      # 섹터 워치 차트 카드(한국 업종 ETF 당일~200일 흐름). 같은 기준일 자료가 있으면 바로 끝난다.
+      - name: 섹터 흐름 수집
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 6
+        run: python scripts/sector_flow.py
+
       # 외국인·기관·개인 순매수. 새 거래일 자료가 없으면 한 종목만 확인하고 바로 끝난다.
       - name: 한국 수급 수집
         if: always()

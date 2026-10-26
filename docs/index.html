@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="ai.css?v=20261026-a4">
 <link rel="stylesheet" href="pairs.css?v=20261026-p3">
 <link rel="stylesheet" href="supply.css?v=20261026-s1">
+<link rel="stylesheet" href="sectorflow.css?v=20261026-sf1">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>window.LightweightCharts || document.write('<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 <script data-goatcounter="https://wamo-dhandori.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -51,9 +52,20 @@
   <section class="card sector-card" id="sectorCard" aria-labelledby="sec-h" hidden>
     <div class="card-head wrap">
       <h2 id="sec-h">섹터 워치 <span class="sub" id="secSub"></span></h2>
+      <button type="button" class="chip sf-toggle" id="secExpand" aria-expanded="false" aria-controls="secFlow" hidden>차트로 펼치기 ▾</button>
     </div>
     <div id="sectors" class="sectors" role="list"></div>
-    <p class="foot-note">S&amp;P 500 큰 업종 11개를 섹터 ETF(XLK, XLE 등) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 속한 산업만 보여요. 세부 산업은 가장 가까운 큰 업종 하나에 넣어 묶었어요.</p>
+    <div id="secFlow" class="sf" hidden>
+      <div class="sf-top">
+        <div class="seg small" id="sfSeg" aria-label="차트 기간"></div>
+        <p class="sf-meta" id="sfMeta"></p>
+      </div>
+      <div id="sfSum"></div>
+      <div class="sf-grid sf-bench" id="sfBench"></div>
+      <div class="sf-grid" id="sfGrid"></div>
+      <p class="foot-note" id="sfLegend"></p>
+    </div>
+    <p class="foot-note" id="secNote"></p>
   </section>
 
   <section class="card flow-card" aria-labelledby="flow-h">
@@ -426,10 +438,22 @@
 </div>
 
 <div id="tip" class="tip" role="tooltip" hidden></div>
+<div class="sf-modal" id="sfModal" hidden>
+  <div class="sf-dialog" role="dialog" aria-modal="true" aria-labelledby="sfmTitle">
+    <div class="sf-dhead"><h3 id="sfmTitle"></h3><button type="button" class="icon-btn" id="sfmClose" aria-label="닫기">✕</button></div>
+    <div class="seg small" id="sfmSeg" aria-label="기간"></div>
+    <p class="sf-msub" id="sfmSub"></p>
+    <div class="sf-mchart" id="sfmChart"></div>
+    <p class="sf-mlegend" id="sfmLegend"></p>
+    <div id="sfmStocks"></div>
+    <button type="button" class="chip sf-go" id="sfmGo" hidden></button>
+  </div>
+</div>
 <script src="refresh.js?v=20261027-t1"></script>
 <script src="flow.js?v=20261023-t4"></script>
 <script src="supply.js?v=20261026-s1"></script>
-<script src="app.js?v=20261026-s1"></script>
+<script src="app.js?v=20261026-sf1"></script>
+<script src="sectorflow.js?v=20261026-sf1"></script>
 <script src="highs.js?v=20261023-t1"></script>
 <script src="macro.js?v=20261025-m5"></script>
 <script src="ai.js?v=20261026-a5"></script>
