@@ -1,4 +1,4 @@
-"""산업 강도판 데이터 갱신 스크립트.
+"""시장 흐름판 데이터 갱신 스크립트.
 
 1) config/universe.json 의 세부 산업 대표 ETF 종가를 받는다 (Yahoo → 실패 시 네이버/stooq).
 2) data/prices/<시장>_close.csv, _volume.csv 에 누적 저장한다 (새로 받은 값이 기존 값을 덮어씀).

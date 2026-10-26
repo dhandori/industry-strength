@@ -1,4 +1,4 @@
-/* 산업 강도판 화면 */
+/* 시장 흐름판 화면 */
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
