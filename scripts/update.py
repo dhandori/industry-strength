@@ -296,7 +296,14 @@ def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     bdf = pd.DataFrame({t: (bench2 if bench2 is not None and mkt_of.get(t) in second_mkts else bench) for t in px.columns})
     rs = px / bdf
     rs_ma = rs.rolling(50, min_periods=50).mean()
-    k = {w: px / px.shift(w) - 1 for w in (1, 5, 20, 60)}
+    k = {w: px / px.shift(w) - 1 for w in (1, 5, 20, 60, 200)}
+    # 종목 RS 지수(1~99): 산업과 같은 오닐식 가중 수익률을 시장 안 전체 종목끼리 백분위로.
+    rsw = {63: 0.4, 126: 0.2, 189: 0.2, 252: 0.2}
+    sr = {w: px / px.shift(w) - 1 for w in rsw}
+    s_num = sum(sr[w].fillna(0) * wt for w, wt in rsw.items())
+    s_den = sum(sr[w].notna() * wt for w, wt in rsw.items())
+    s_perf = (s_num / s_den.replace(0, np.nan)).where(sr[63].notna())
+    s_rating = np.ceil(s_perf.rank(axis=1, pct=True) * 99).clip(1, 99)
     last = cal[-1]
     members = {}
     for it in m["items"]:
@@ -312,6 +319,8 @@ def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
                 "name": mb["name"], "code": mb["code"], "ticker": t,
                 "close": r(c, 2), "chg1": r(k[1].at[last, t] * 100), "ret5": r(k[5].at[last, t] * 100),
                 "ret20": r(k[20].at[last, t] * 100), "ret60": r(k[60].at[last, t] * 100),
+                "ret200": r(k[200].at[last, t] * 100),
+                "rs_rating": r(s_rating.at[last, t], 0),
                 "dist_high": r(dist.at[last, t] * 100),
                 "above50": None if pd.isna(ma50.at[last, t]) else bool(c > ma50.at[last, t]),
                 "rs_up": None if pd.isna(rs_ma.at[last, t]) else bool(rs.at[last, t] > rs_ma.at[last, t]),
@@ -353,8 +362,8 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
         bench_of[it["id"]] = "2" if use2 else "1"
     bdf = pd.DataFrame({i: (bench2 if bench_of[i] == "2" else bench) for i in ids})
 
-    rets = {w: px / px.shift(w) - 1 for w in (1, 5, 20, 60, 120)}
-    ranks = {w: rets[w].rank(axis=1, ascending=False, method="min") for w in (5, 20, 60)}
+    rets = {w: px / px.shift(w) - 1 for w in (1, 5, 20, 60, 120, 200)}
+    ranks = {w: rets[w].rank(axis=1, ascending=False, method="min") for w in (5, 20, 60, 200)}
     pcts = {w: rets[w].rank(axis=1, pct=True) * 100 for w in WEIGHTS}
     num = sum(pcts[w].fillna(0) * wt for w, wt in WEIGHTS.items())
     den = sum(pcts[w].notna() * wt for w, wt in WEIGHTS.items())
@@ -454,7 +463,9 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
             "close": r(c, 2), "chg1": r(rets[1].at[last, i] * 100),
             "ret5": r(rets[5].at[last, i] * 100), "ret20": r(rets[20].at[last, i] * 100),
             "ret60": r(rets[60].at[last, i] * 100), "ret120": r(rets[120].at[last, i] * 100),
+            "ret200": r(rets[200].at[last, i] * 100),
             "rank5": r(ranks[5].at[last, i], 0), "rank20": r(ranks[20].at[last, i], 0), "rank60": r(ranks[60].at[last, i], 0),
+            "rank200": r(ranks[200].at[last, i], 0),
             "score": r(score.at[last, i], 1), "rank": r(cr, 0),
             "rank_chg5": r(chg5, 0), "rank_chg20": r(chg20, 0),
             "top": bool(in_top.at[last, i]), "streak": streak,

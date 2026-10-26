@@ -7,7 +7,7 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261026-a3">
+<link rel="stylesheet" href="style.css?v=20261026-a4">
 <link rel="stylesheet" href="macro.css?v=20261025-m5">
 <link rel="stylesheet" href="ai.css?v=20261026-a4">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -96,6 +96,7 @@
           <button data-sort="rank5" aria-pressed="false">5일</button>
           <button data-sort="rank20" aria-pressed="false">20일</button>
           <button data-sort="rank60" aria-pressed="false">60일</button>
+          <button data-sort="rank200" aria-pressed="false">200일</button>
           <button data-sort="rank_chg5" aria-pressed="false">순위 상승</button>
           <button data-sort="rs_rating" aria-pressed="false" title="RS 지수(1~99)가 높은 순">RS</button>
         </div>
@@ -117,6 +118,7 @@
             <th class="num">5일</th>
             <th class="num">20일</th>
             <th class="num">60일</th>
+            <th class="num">200일</th>
             <th title="가격>50일선 · 50>150일선 · 150>200일선 · 200일선 상승 · 고점 대비 -15% 이내">추세 점검</th>
             <th class="num">고점<br>대비</th>
             <th>추세 상태</th>
@@ -126,6 +128,47 @@
       </table>
     </div>
     <p class="foot-note" id="tableNote"></p>
+  </section>
+
+  <section class="card" aria-labelledby="rsst-h">
+    <div class="card-head wrap">
+      <h2 id="rsst-h">RS 강한 종목 <span class="sub" id="rsstSub"></span></h2>
+      <div class="filters">
+        <div class="seg small" id="rsstSort" aria-label="종목 정렬 기준">
+          <button data-k="rs_rating" aria-pressed="true" title="RS 지수(1~99)가 높은 순">RS</button>
+          <button data-k="chg1" aria-pressed="false">당일</button>
+          <button data-k="ret5" aria-pressed="false">5일</button>
+          <button data-k="ret20" aria-pressed="false">20일</button>
+          <button data-k="ret60" aria-pressed="false">60일</button>
+          <button data-k="ret200" aria-pressed="false">200일</button>
+        </div>
+        <button class="toggle" id="rsstUp" aria-pressed="false" title="RS선이 50일 평균 위에 있는(시장보다 강한) 종목만 보기">시장보다 강한 종목만</button>
+        <select id="rsstGroup" aria-label="큰 분류 필터"></select>
+      </div>
+    </div>
+    <div id="rsstCards" class="rank-cards" aria-label="RS 강한 종목 (카드)"></div>
+    <div class="table-wrap">
+      <table class="rank-table rsst-table" id="rsstTable">
+        <thead>
+          <tr>
+            <th class="c-rank">순위</th>
+            <th class="c-name">종목</th>
+            <th>소속 산업</th>
+            <th class="c-rs" title="RS 지수(1~99, 오닐식: 최근 3개월 40%·6·9·12개월 각 20% 가중 수익률을 시장 안 전체 종목끼리 비교한 백분위, 80 이상 강함)">RS 지수</th>
+            <th class="num">당일</th>
+            <th class="num">5일</th>
+            <th class="num">20일</th>
+            <th class="num">60일</th>
+            <th class="num">200일</th>
+            <th class="num">고점<br>대비</th>
+            <th>추세 상태</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <button class="ex-more" id="rsstMore" type="button" hidden></button>
+    <p class="foot-note" id="rsstNote"></p>
   </section>
 
   <section class="card" aria-labelledby="heat-h">
@@ -327,7 +370,7 @@
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="refresh.js?v=20261023-t1"></script>
 <script src="flow.js?v=20261023-t4"></script>
-<script src="app.js?v=20261026-a2"></script>
+<script src="app.js?v=20261026-a3"></script>
 <script src="highs.js?v=20261023-t1"></script>
 <script src="macro.js?v=20261025-m5"></script>
 <script src="ai.js?v=20261026-a5"></script>

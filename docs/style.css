@@ -558,3 +558,14 @@ body.v-highs #meta { display: none; }
   .view-tabs button { flex-direction: column; gap: 1px; padding: 6px 2px 7px; font-size: 12.5px; white-space: nowrap; min-width: 0; }
   .view-tabs .vt-ico { font-size: 15px; line-height: 1.1; }
 }
+/* 200일 칸 추가(2026-10-26): 카드 수익률 5칸, 강도 막대는 위 한 줄 전체 */
+.rc2 { grid-template-columns: repeat(5, 1fr); }
+.rc2 .bar { grid-column: 1 / -1; }
+/* RS 강한 종목 박스 */
+.rsst-card { cursor: default; }
+.rank-table td.inds { min-width: 120px; max-width: 220px; white-space: normal; }
+.ind-link { all: unset; cursor: pointer; display: inline-block; font-size: 12px; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); border-radius: 6px; padding: 1px 6px; margin: 1px 4px 1px 0; line-height: 1.5; }
+.ind-link:hover, .ind-link:focus-visible { background: var(--accent-soft); }
+.rc-inds { margin-top: 7px; }
+#rsstMore { padding: 8px 4px 4px; display: block; }
+#rsstMore[hidden] { display: none; }

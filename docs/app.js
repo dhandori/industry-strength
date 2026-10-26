@@ -79,6 +79,20 @@
   }));
   $("#heatMore").addEventListener("click", () => { state.heatAll = !state.heatAll; renderHeat(state.data[state.market]); });
   $("#groupSel").addEventListener("change", (e) => { state.group = e.target.value; renderTable(); });
+  // RS 강한 종목 박스
+  Object.assign(state, { rsstSort: "rs_rating", rsstUp: false, rsstGroup: "전체", rsstAll: false });
+  $$("#rsstSort button").forEach((b) => b.addEventListener("click", () => {
+    state.rsstSort = b.dataset.k;
+    $$("#rsstSort button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    renderRsStocks(state.data[state.market]);
+  }));
+  $("#rsstUp").addEventListener("click", (e) => {
+    state.rsstUp = !state.rsstUp;
+    e.currentTarget.setAttribute("aria-pressed", state.rsstUp);
+    renderRsStocks(state.data[state.market]);
+  });
+  $("#rsstGroup").addEventListener("change", (e) => { state.rsstGroup = e.target.value; renderRsStocks(state.data[state.market]); });
+  $("#rsstMore").addEventListener("click", () => { state.rsstAll = !state.rsstAll; renderRsStocks(state.data[state.market]); });
   $("#rsOnly").addEventListener("click", (e) => {
     state.rsOnly = !state.rsOnly;
     e.currentTarget.setAttribute("aria-pressed", state.rsOnly);
@@ -122,7 +136,9 @@
     else w.hidden = true;
     const groups = ["전체", ...new Set(d.items.map((i) => i.group))];
     $("#groupSel").innerHTML = groups.map((g) => `<option${g === state.group ? " selected" : ""}>${esc(g)}</option>`).join("");
-    renderTiles(d); window.__flow && window.__flow.render(d); renderSignals(d); renderExplore(d); renderTable(); renderHeat(d); renderGroups(d); renderBreadth(d);
+    if (!groups.includes(state.rsstGroup)) state.rsstGroup = "전체";
+    $("#rsstGroup").innerHTML = groups.map((g) => `<option${g === state.rsstGroup ? " selected" : ""}>${esc(g)}</option>`).join("");
+    renderTiles(d); window.__flow && window.__flow.render(d); renderSignals(d); renderExplore(d); renderTable(); renderRsStocks(d); renderHeat(d); renderGroups(d); renderBreadth(d);
   }
 
   // ---------- tiles
@@ -371,6 +387,7 @@
         <td class="num">${ret(i.ret5, i.rank5)}</td>
         <td class="num">${ret(i.ret20, i.rank20)}</td>
         <td class="num">${ret(i.ret60, i.rank60)}</td>
+        <td class="num">${ret(i.ret200, i.rank200)}</td>
         <td>${checksOf(i, true)}</td>
         <td class="num">${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</td>
         <td><span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></td>
@@ -382,17 +399,82 @@
         <div class="rc1"><span class="rk">${i.rank ?? "–"}</span>${chgOf(i)}<b class="rc-name">${esc(i.name)}</b>${i.rs_rating == null ? "" : `<span class="rc-rs">RS ${rsNum(i)}</span>`}<span class="stage ${stageCls[i.stage] || ""}">${i.stage}</span></div>
         <div class="rc-sub">${subOf(i)}</div>
         <div class="rc2"><div class="bar"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div>
-          <span class="rc-ret"><em>당일</em>${ret(i.chg1, i.rank1)}</span><span class="rc-ret"><em>5일</em>${ret(i.ret5, i.rank5)}</span><span class="rc-ret"><em>20일</em>${ret(i.ret20, i.rank20)}</span><span class="rc-ret"><em>60일</em>${ret(i.ret60, i.rank60)}</span></div>
+          <span class="rc-ret"><em>당일</em>${ret(i.chg1, i.rank1)}</span><span class="rc-ret"><em>5일</em>${ret(i.ret5, i.rank5)}</span><span class="rc-ret"><em>20일</em>${ret(i.ret20, i.rank20)}</span><span class="rc-ret"><em>60일</em>${ret(i.ret60, i.rank60)}</span><span class="rc-ret"><em>200일</em>${ret(i.ret200, i.rank200)}</span></div>
         <div class="rc3">${checksOf(i, true)}<span class="rc-dist">고점 대비 <b>${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</b></span></div>
         <div class="rc4">${rsOf(i)}<span class="rc-dist">RS선 1년 최고 대비 <b>${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"}</b> · 20일 시장 대비 <b class="ret ${cls(i.rs_ex20)}">${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}</b></span></div>
       </button>`).join("");
     if (!rows.length) {
       const msg = "조건에 맞는 산업이 없어요. 지금 이 조건에서는 가격이 오르고 있는 산업이 없어요.";
-      $("#rankTable tbody").innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
+      $("#rankTable tbody").innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
       $("#rankCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
     }
     $$("#rankTable tbody tr[data-id], #rankCards .rcard").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
     $("#tableNote").innerHTML = `파란 띠는 종합 순위 상위 25%(${d.top_cut}위 이내)예요. 막대 길이는 전체 산업 중 몇 % 위치인지, 막대 옆 숫자는 종합 강도 점수예요. 수익률 아래 작은 숫자는 그 기간 수익률 순위예요.`;
+  }
+
+  // ---------- RS 강한 종목: 시장 안 전체 종목을 한 줄로 세운다 (같은 종목이 여러 산업에 있으면 한 번만).
+  const RSST_LABEL = { rs_rating: "RS 지수", chg1: "당일", ret5: "5일", ret20: "20일", ret60: "60일", ret200: "200일" };
+  function renderRsStocks(d) {
+    if (!d) return;
+    const byTicker = new Map();
+    for (const it of d.items) {
+      for (const m of it.members || []) {
+        if (m.missing) continue;
+        const cur = byTicker.get(m.ticker);
+        if (cur) { if (!cur.inds.some((x) => x.id === it.id)) cur.inds.push(it); }
+        else byTicker.set(m.ticker, { m, inds: [it] });
+      }
+    }
+    let rows = [...byTicker.values()].filter(({ m, inds }) => (state.rsstGroup === "전체" || inds.some((i) => i.group === state.rsstGroup))
+      && (!state.rsstUp || m.rs_up === true));
+    const k = state.rsstSort;
+    const hasRs = rows.some(({ m }) => m.rs_rating != null), has200 = rows.some(({ m }) => m.ret200 != null);
+    rows.sort((a, b) => {
+      const av = a.m[k], bv = b.m[k];
+      if (av == null && bv == null) return (b.m.ret20 ?? -1e9) - (a.m.ret20 ?? -1e9);
+      if (av == null) return 1; if (bv == null) return -1;
+      return bv - av || (b.m.ret20 ?? -1e9) - (a.m.ret20 ?? -1e9);
+    });
+    const total = rows.length, LIMIT = 30;
+    const shown = state.rsstAll ? rows : rows.slice(0, LIMIT);
+    const stageCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
+    const rsNum = (m) => m.rs_rating == null ? `<span class="rsub">–</span>` : `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}" title="RS 지수 ${m.rs_rating} (1~99, 1년 가중 수익률을 시장 안 전체 종목끼리 비교한 백분위)">${m.rs_rating}</b>`;
+    const rsChip = (m) => m.rs_up === true ? `<span class="rs-chip rs-up">시장보다 강함</span>` : m.rs_up === false ? `<span class="rs-chip rs-dn">시장보다 약함</span>` : "";
+    const r = (v) => `<span class="ret ${cls(v)}">${fmtPct(v)}</span>`;
+    const indBtns = (inds) => inds.map((i) => `<button class="ind-link" type="button" data-id="${i.id}" title="${esc(i.name)} 상세 보기">${esc(i.name)}</button>`).join("");
+    const code = (m) => esc(state.market === "KR" ? m.code : m.ticker);
+    $("#rsstTable tbody").innerHTML = shown.map(({ m, inds }, n) => `<tr>
+        <td><span class="rk">${n + 1}</span></td>
+        <td class="name"><b>${esc(m.name)}${m.stale ? '<span class="stale">지연</span>' : ""}</b><span>${code(m)} ${stockLinks(m, state.market)}</span></td>
+        <td class="inds">${indBtns(inds)}</td>
+        <td class="c-rs"><div class="rs-cell">${rsNum(m)}<div>${rsChip(m)}</div></div></td>
+        <td class="num">${r(m.chg1)}</td>
+        <td class="num">${r(m.ret5)}</td>
+        <td class="num">${r(m.ret20)}</td>
+        <td class="num">${r(m.ret60)}</td>
+        <td class="num">${r(m.ret200)}</td>
+        <td class="num">${m.dist_high == null ? "–" : m.dist_high.toFixed(1) + "%"}</td>
+        <td>${m.stage ? `<span class="stage ${stageCls[m.stage] || ""}">${m.stage}</span>` : ""}</td>
+      </tr>`).join("");
+    $("#rsstCards").innerHTML = shown.map(({ m, inds }, n) => `
+      <div class="rcard rsst-card">
+        <div class="rc1"><span class="rk">${n + 1}</span><b class="rc-name">${esc(m.name)}</b>${m.rs_rating == null ? "" : `<span class="rc-rs">RS ${rsNum(m)}</span>`}${m.stage ? `<span class="stage ${stageCls[m.stage] || ""}">${m.stage}</span>` : ""}</div>
+        <div class="rc-sub">${code(m)} ${stockLinks(m, state.market)} ${rsChip(m)}</div>
+        <div class="rc2"><span class="rc-ret"><em>당일</em>${r(m.chg1)}</span><span class="rc-ret"><em>5일</em>${r(m.ret5)}</span><span class="rc-ret"><em>20일</em>${r(m.ret20)}</span><span class="rc-ret"><em>60일</em>${r(m.ret60)}</span><span class="rc-ret"><em>200일</em>${r(m.ret200)}</span></div>
+        <div class="rc-inds">${indBtns(inds)}</div>
+      </div>`).join("");
+    if (!total) {
+      const msg = "조건에 맞는 종목이 없어요.";
+      $("#rsstTable tbody").innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
+      $("#rsstCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
+    }
+    const more = $("#rsstMore");
+    more.hidden = total <= LIMIT;
+    more.textContent = state.rsstAll ? `상위 ${LIMIT}개만 보기 ‹` : `전체 ${total}개 보기 ›`;
+    $$("#rsstTable .ind-link, #rsstCards .ind-link").forEach((b) => b.addEventListener("click", () => openDetail(b.dataset.id)));
+    $("#rsstSub").textContent = `${d.basis_date} 종가 · ${RSST_LABEL[k]} 높은 순 · ${total}종목`;
+    const pending = (!hasRs && k === "rs_rating") || (!has200 && k === "ret200") ? " 지금 데이터에는 이 값이 아직 없어서 20일 수익률 순으로 보여 드려요. 다음 자동 갱신부터 채워져요." : "";
+    $("#rsstNote").textContent = `시장 안 전체 종목을 한 줄로 세웠어요. 여러 산업에 함께 속한 종목은 한 번만 나오고, 소속 산업을 누르면 그 산업의 차트·상세가 열려요. RS 지수는 산업 순위의 RS 지수와 같은 방식(최근 3개월 40%·6·9·12개월 각 20%)으로 종목끼리 비교한 1~99 백분위예요. '시장보다 강함'은 종목 RS선(주가÷시장 지수)이 50일 평균 위라는 뜻이에요.${pending}`;
   }
 
   // ---------- heatmap
