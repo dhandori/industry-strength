@@ -12,7 +12,8 @@
   const KEY = "is-run-pending";
   const MAX_WAIT = 40 * 60000;
   // update.yml의 예약 시각(KST, 평일). 바꾸면 여기도 같이 바꾼다.
-  const SLOTS = [[6, 50, "미국"], [7, 30, "미국"], [8, 30, "미국"], [16, 40, "한국"], [17, 10, "한국"], [17, 40, "한국"], [18, 10, "한국"], [19, 30, "한국"]];
+  // 첫 수집: 한국 15:52, 미국 뉴욕 16:12(서머타임 05:12 / 해제 06:12 KST). 나머지는 안전망 재시도.
+  const SLOTS = [[5, 12, "미국"], [6, 12, "미국"], [6, 50, "미국"], [7, 30, "미국"], [8, 30, "미국"], [15, 52, "한국"], [16, 40, "한국"], [17, 10, "한국"], [17, 40, "한국"], [18, 10, "한국"], [19, 30, "한국"]];
 
   const $ = (s) => document.querySelector(s);
   const box = $("#runbar");
@@ -29,11 +30,11 @@
   // 가장 최근에 장이 끝난 거래일(휴장일은 모름 → "휴장일이면 정상" 문구로 안내).
   function expected(market) {
     if (market === "KR") {
-      const k = kstNow(); const after = weekday(k) && (k.getUTCHours() * 60 + k.getUTCMinutes()) >= 16 * 60;
+      const k = kstNow(); const after = weekday(k) && (k.getUTCHours() * 60 + k.getUTCMinutes()) >= 15 * 60 + 52;
       return ymd(after ? k : prevWeekday(k));
     }
     const ny = new Date(Date.now() + nyOffset() * 3600e3);
-    const after = weekday(ny) && (ny.getUTCHours() * 60 + ny.getUTCMinutes()) >= 16 * 60 + 15;
+    const after = weekday(ny) && (ny.getUTCHours() * 60 + ny.getUTCMinutes()) >= 16 * 60 + 12;
     return ymd(after ? ny : prevWeekday(ny));
   }
   function nyOffset() { // 미국 동부 서머타임: 3월 둘째 일요일 ~ 11월 첫째 일요일

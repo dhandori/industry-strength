@@ -25,7 +25,8 @@ OUT = ROOT / "docs" / "data" / "pairs.json"
 KST = timezone(timedelta(hours=9))
 KEEP = 260                      # 화면에 보낼 거래일 수(약 1년)
 # 장 마감 + 여유. 이 시각 전에 돌면 그날 칸은 아직 종가가 아니다.
-CLOSE = {"KR": ("Asia/Seoul", 15, 50), "US": ("America/New_York", 16, 20)}
+CLOSE = {"KR": ("Asia/Seoul", 15, 50), "US": ("America/New_York", 16, 10)}
+LATE_CLOSE = {"KR": {"2026-11-19": (16, 50)}}   # 수능날 16:30 마감
 
 
 def r(x, nd=4):
@@ -59,6 +60,7 @@ def drop_unclosed(s, market, now_utc):
         return s
     tz, hh, mm = CLOSE[market]
     local = now_utc.astimezone(ZoneInfo(tz))
+    hh, mm = LATE_CLOSE.get(market, {}).get(local.date().isoformat(), (hh, mm))
     if s.index[-1].date() == local.date() and (local.hour, local.minute) < (hh, mm):
         return s.iloc[:-1]
     return s

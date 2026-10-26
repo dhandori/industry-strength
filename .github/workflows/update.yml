@@ -4,6 +4,10 @@ on:
   # GitHub 예약 실행은 10~40분 늦거나 빠지기도 해서 여러 번 건다. 이미 최신이면 1분 안에 끝난다.
   # 시각을 바꾸면 docs/refresh.js 의 SLOTS 도 같이 바꾼다.
   schedule:
+    # 마감 전에 미리 출발해 scripts/wait_close.py가 목표 시각까지 기다린다(예약 출발 지연 흡수).
+    - cron: "20,35 6 * * 1-5"      # 15:20·15:35 KST 출발 → 한국 15:52 수집
+    - cron: "35,50 19,20 * * 1-5"  # 미국 마감 25·10분 전 출발 → 뉴욕 16:12 수집 (서머타임 19시대 / 해제 20시대 UTC)
+    # 아래는 안전망(이미 최신이면 1분 안에 끝난다).
     - cron: "40 7 * * 1-5"    # 16:40 KST 한국장 마감 후
     - cron: "10 8 * * 1-5"    # 17:10 KST 재시도
     - cron: "40 8 * * 1-5"    # 17:40 KST 재시도
@@ -30,7 +34,7 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 
@@ -42,6 +46,11 @@ jobs:
 
       - name: 패키지 설치
         run: pip install -r requirements.txt
+
+      - name: 마감 대기
+        if: github.event.schedule == '20,35 6 * * 1-5' || github.event.schedule == '35,50 19,20 * * 1-5'
+        timeout-minutes: 65
+        run: python scripts/wait_close.py
 
       - name: 가격 수집·계산
         run: python scripts/update.py

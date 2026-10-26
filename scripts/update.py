@@ -170,10 +170,11 @@ def drop_intraday(mkey: str, c: pd.DataFrame, v: pd.DataFrame) -> tuple[pd.DataF
         return c, v
     if mkey == "KR":
         now = datetime.now(ZoneInfo("Asia/Seoul"))
-        close_hm = (15, 45)
+        # 수능날은 16:30 마감(scripts/wait_close.py LATE와 같이 바꾼다)
+        close_hm = (16, 45) if now.date().isoformat() in ("2026-11-19",) else (15, 45)
     else:
         now = datetime.now(ZoneInfo("America/New_York"))
-        close_hm = (16, 15)
+        close_hm = (16, 10)
     today = pd.Timestamp(now.date())
     c.index = pd.to_datetime(c.index).normalize()
     v.index = pd.to_datetime(v.index).normalize()
