@@ -590,11 +590,26 @@
     const dates = S.dates;
     const panel = $(".drawer-panel");
     clearCharts(panel);
-    ["#cPrice", "#cRs", "#cRank"].forEach((q) => { $(q).innerHTML = ""; });
+    ["#cPrice", "#cRs", "#cRank", "#cBench"].forEach((q) => { $(q).innerHTML = ""; });
     const pf = (v) => v.toFixed(1);
+    // 바구니 지수 아래에 같은 날짜축의 시장 지수(시리즈 파일의 bench)를 붙이고 기간 수익률을 비교한다.
+    const bn = d.benchmark.name, bc = S.bench && S.bench.close;
+    const hasBench = !!(bc && bc.length === dates.length && bc.some((v) => v != null));
+    $("#capBench").hidden = $("#cBench").hidden = !hasBench;
+    if (hasBench) {
+      const k0 = dates.findIndex((_, k) => s.close[k] != null && bc[k] != null);
+      const k1 = dates.length - 1 - [...dates].reverse().findIndex((_, k) => s.close[dates.length - 1 - k] != null && bc[dates.length - 1 - k] != null);
+      const r = (a) => (a[k1] / a[k0] - 1) * 100;
+      const sg = (v) => `<b class="ret ${cls(v)}">${fmtPct(v)}</b>`;
+      if (k0 >= 0 && k1 > k0) {
+        const rt = r(s.close), rb = r(bc), ex = rt - rb;
+        $("#capBench").innerHTML = `${esc(bn)} · 같은 기간 — 대상 ${sg(rt)} · ${esc(bn)} ${sg(rb)} → 지수 대비 <b class="ret ${cls(ex)}">${ex > 0 ? "+" : ""}${ex.toFixed(1)}%p</b>`;
+      } else $("#capBench").textContent = `${bn} · 같은 기간 비교할 값이 부족해요.`;
+    }
     if (!hasLW()) {
       $("#lgPrice").innerHTML = ""; $("#lgRs").innerHTML = "";
       chartFallback($("#cPrice"), dates, [["바구니 지수", s.close, pf], ["20일선", s.ma20, pf], ["50일선", s.ma50, pf], ["200일선", s.ma200, pf]]);
+      if (hasBench) chartFallback($("#cBench"), dates, [[esc(bn), bc, (v) => v.toFixed(v >= 1000 ? 0 : 2)]]);
       chartFallback($("#cRs"), dates, [["RS선", s.rs, pf], ["RS 50일 평균", s.rs_ma50, pf]]);
       chartFallback($("#cRank"), d.history.dates, [["종합 순위", d.history.rank[it.id], (v) => Math.round(v) + "위"]]);
       return;
@@ -614,6 +629,12 @@
       { n: "200일선", c: css("--ma200"), s: m200, f: pf, last: lastOf(s.ma200) },
     ], c1);
 
+    let c4 = null;
+    if (hasBench) {
+      c4 = baseChart($("#cBench"), { fmt: (v) => v.toFixed(v >= 1000 ? 0 : 2) });
+      line(c4, dates, bc, css("--accent"), 2);
+      c4.timeScale().fitContent();
+    }
     const c2 = baseChart($("#cRs"), { fmt: (v) => v.toFixed(1) });
     const rs = line(c2, dates, s.rs, css("--accent"), 2);
     const rsm = line(c2, dates, s.rs_ma50, css("--ma20"), 1.5, { lastValueVisible: false });
@@ -628,8 +649,8 @@
     rk.applyOptions({ autoscaleInfoProvider: () => ({ priceRange: { minValue: 1, maxValue: d.n } }) });
     rk.createPriceLine({ price: d.top_cut + 0.5, color: css("--good"), lineWidth: 1, lineStyle: 2, axisLabelVisible: false, title: "상위 25%" });
     c3.timeScale().fitContent();
-    // 세 차트의 시간축을 함께 움직이게
-    const all = [c1, c2, c3];
+    // 차트들의 시간축을 함께 움직이게
+    const all = [c1, c2, c3, c4].filter(Boolean);
     all.forEach((c) => c.timeScale().subscribeVisibleLogicalRangeChange((r) => {
       if (!r || syncing) return; syncing = true;
       all.forEach((o) => { if (o !== c) o.timeScale().setVisibleLogicalRange(r); });
