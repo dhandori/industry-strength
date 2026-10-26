@@ -54,6 +54,39 @@ def fetch(tickers):
     raise RuntimeError(f"가격 수집 실패: {last}")
 
 
+# 야후가 한국 지수 일봉을 하루씩 빠뜨리는 날이 있다(2026-10-26 코스피·코스닥). 빠진 날은 네이버 지수 일봉으로 채운다.
+NAVER_INDEX = {"^KS11": "KOSPI", "^KQ11": "KOSDAQ"}
+
+
+def naver_index(symbol):
+    import re
+    import urllib.request
+    url = f"https://fchart.stock.naver.com/sise.nhn?symbol={symbol}&timeframe=day&count=520&requestType=0"
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+    text = urllib.request.urlopen(req, timeout=20).read().decode("euc-kr", errors="ignore")
+    rows = {}
+    for d, close in re.findall(r'data="(\d{8})\|[^|]*\|[^|]*\|[^|]*\|([0-9.]+)\|', text):
+        rows[pd.Timestamp(d)] = float(close)
+    return pd.Series(rows, dtype=float).sort_index()
+
+
+def fill_kr_index(close):
+    for ticker, symbol in NAVER_INDEX.items():
+        if ticker not in close:
+            continue
+        try:
+            nv = naver_index(symbol)
+        except Exception as e:  # 네이버도 실패하면 야후 값만 쓴다
+            print(f"[pairs] 네이버 {symbol} 보충 실패: {e}")
+            continue
+        if nv.empty:
+            continue
+        merged = close[ticker].combine_first(nv.reindex(nv.index.union(close.index)))
+        close = close.reindex(close.index.union(nv.index))
+        close[ticker] = merged
+    return close
+
+
 def drop_unclosed(s, market, now_utc):
     """장 마감 전 실행이면 오늘 칸(아직 종가 아님)을 뺀다."""
     if s.empty:
@@ -156,7 +189,7 @@ def main():
     now = datetime.now(timezone.utc)
     errors = []
     try:
-        close = fetch(tickers)
+        close = fill_kr_index(fetch(tickers))
     except RuntimeError as e:
         close, errors = None, [str(e)]
     groups = []
