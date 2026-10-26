@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="macro.css?v=20261025-m5">
 <link rel="stylesheet" href="ai.css?v=20261026-a4">
 <link rel="stylesheet" href="pairs.css?v=20261026-p3">
+<link rel="stylesheet" href="supply.css?v=20261026-s1">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>window.LightweightCharts || document.write('<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 <script data-goatcounter="https://wamo-dhandori.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -110,6 +111,7 @@
           <button data-sort="rank200" aria-pressed="false">200일</button>
           <button data-sort="rank_chg5" aria-pressed="false">순위 상승</button>
           <button data-sort="rs_rating" aria-pressed="false" title="RS 지수(1~99)가 높은 순">RS</button>
+          <button data-sort="sup20" aria-pressed="false" id="sortSup" hidden title="최근 20거래일 외국인+기관 순매수가 시가총액 대비 많은 순(한국만)">수급</button>
         </div>
         <button class="toggle" id="rsOnly" aria-pressed="false" title="RS선이 50일 평균 위에 있는(시장보다 강한) 산업만 보기">RS 강한 산업만</button>
         <button class="toggle" id="trendOnly" aria-pressed="false" title="가격이 실제로 오르는 중인 산업(상승 추세·상승 전환 시도)만 보기">오르는 산업만</button>
@@ -126,6 +128,7 @@
             <th class="c-name">산업</th>
             <th class="c-score">종합 강도</th>
             <th class="c-rs" title="숫자 = RS 지수(1~99, 오닐식: 최근 3개월 40%·6·9·12개월 각 20% 가중 수익률의 산업 간 백분위, 80 이상 강함). RS선 = 산업 지수 ÷ 시장 지수. 'RS 신고가'는 1년 최고, '시장보다 강함'은 RS선이 50일 평균 위, '시장보다 약함'은 아래. 아래 숫자는 RS선의 1년 최고치 대비 위치">RS 지수</th>
+            <th class="c-sup" title="최근 20거래일 외국인+기관 순매수 ÷ 시가총액(구성 종목 평균). 아래 작은 글씨는 그 기간 외국인+기관이 순매수한 종목 비율. 🔥동행 상승 ⚠️수급 이탈 👀매집 의심 ❄️동반 약세 (한국만)">수급<br><small>20일</small></th>
             <th class="num">당일</th>
             <th class="num">5일</th>
             <th class="num">20일</th>
@@ -167,6 +170,7 @@
             <th class="c-name">종목</th>
             <th>소속 산업</th>
             <th class="c-rs" title="RS 지수(1~99, 오닐식: 최근 3개월 40%·6·9·12개월 각 20% 가중 수익률을 시장 안 전체 종목끼리 비교한 백분위, 80 이상 강함)">RS 지수</th>
+            <th class="c-sup" title="최근 20거래일 외국인+기관 순매수 ÷ 시가총액. 아래는 외국인(외)·기관(기) 연속 매수·매도 일수 (한국만)">수급<br><small>20일</small></th>
             <th class="num">당일</th>
             <th class="num">5일</th>
             <th class="num">20일</th>
@@ -235,6 +239,27 @@
           <dd>1~99 사이 숫자예요. 최근 1년 수익률(최근 3개월에 40%, 6·9·12개월에 20%씩 무게)을 같은 시장의 다른 산업들과 비교한 등수를 백분위로 바꾼 값이에요. 오닐(IBD)의 RS 등급과 같은 방식이고, 80 이상이면 시장에서 상위 20% 안에 드는 강한 산업이에요. 5·20·60일로 매기는 종합 강도보다 더 긴 흐름을 봐요.</dd>
           <dt>RS선</dt>
           <dd>산업 바구니 지수를 시장 지수로 나눈 선이에요. 구성 종목 중 코스닥 종목이 절반을 넘으면 코스닥150, 아니면 코스피200과 비교해요(미국은 나스닥100·S&amp;P 500). 오르면 시장보다 강하다는 뜻이고, RS선이 신고가를 내면 시장 대비 강도가 1년 중 최고라는 뜻이에요.</dd>
+          <dt id="guide-supply">수급 (한국만)</dt>
+          <dd>외국인과 기관이 그 산업 종목을 사고 있는지 파는지예요. 한국 시장은 외국인·기관 매매가 주가 방향을 크게 좌우해서, 가격이 오를 때 이들도 같이 사는지 확인하는 용도로 써요.
+            <ul class="sup-guide">
+              <li><b>수급 강도</b>: 최근 20거래일(또는 5거래일) 외국인+기관 순매수 금액을 시가총액으로 나눈 값이에요. +0.5%면 시가총액의 0.5%만큼 사들였다는 뜻이에요. 금액 그대로 비교하면 대형주가 항상 1등이라 시가총액으로 나눴고, 산업 값은 구성 종목의 평균이에요(바구니 지수와 같은 같은 비중 기준).</li>
+              <li><b>사는 종목</b>: 구성 종목 중 20일 동안 외국인+기관이 순매수한 종목 비율이에요. 대장주 하나에만 돈이 몰리는지, 산업 전체로 들어오는지 알려 줘요.</li>
+              <li><b>판정 4칸</b>: 가격(종합 강도)과 수급(산업끼리 비교한 20일 수급 강도)을 합쳐 매겨요.
+                <table class="sup-quad"><thead><tr><th></th><th>외국인·기관이 삼<br><small>수급 상위 30%</small></th><th>외국인·기관이 팖<br><small>수급 하위 30%</small></th></tr></thead>
+                <tbody><tr><th>가격 강함<br><small>종합 강도 60점 이상<br>+ 상승 추세·상승 전환 시도</small></th><td class="q-up">🔥 <b>동행 상승</b><br>가장 좋은 모양</td><td class="q-warn">⚠️ <b>수급 이탈</b><br>힘이 약해질 수 있음</td></tr>
+                <tr><th>가격 약함<br><small>종합 강도 40점 이하<br>또는 하락 추세</small></th><td class="q-watch">👀 <b>매집 의심</b><br>지켜볼 후보</td><td class="q-down">❄️ <b>동반 약세</b><br>피할 곳</td></tr></tbody></table>
+                어느 칸에도 들지 않는 산업(점수 40~60, 수급 중간 등)에는 판정을 붙이지 않아요. 점수가 높아도 실제 가격이 내려가는 중이면 "가격 강함"으로 보지 않아요. 👀 매집 의심은 최근 5일도 순매수이거나 5일 넘게 연속으로 살 때만 붙여요.</li>
+              <li><b>쓰는 순서</b>
+                <ol class="sup-steps">
+                  <li><b>오늘의 신호</b>의 수급 신호 줄에서 🔥수급 동행 산업을 먼저 봐요.</li>
+                  <li>순위표 정렬을 <b>수급</b>으로 바꿔, 위쪽 산업 중 추세 상태가 좋은 곳을 골라요.</li>
+                  <li>산업을 눌러 상세 창의 <b>가격과 수급 같이 보기</b> 그래프에서 외국인·기관 선이 지수와 같은 방향인지 확인해요.</li>
+                  <li>구성 종목 표의 <b>외국인 5일, 기관 5일</b> 칸과 "n일째 매수" 표시로 실제로 사들이는 종목을 골라요.</li>
+                  <li>갖고 있는 종목의 산업에 ⚠️수급 이탈이 뜨면 손절선을 다시 점검해요. 👀매집 의심은 가격이 50일선을 되찾을 때까지 지켜보기만 해요.</li>
+                </ol></li>
+              <li><b>주의</b>: 수급은 가격보다 앞서는 신호가 아니라 <b>확인용</b>이에요. 가격 추세가 먼저예요. 외국인 순매수에는 지수 차익거래, ETF 설정·환매처럼 종목을 보고 산 게 아닌 돈도 섞여 있고, 연말 배당 시즌이나 지수 정기 변경일 전후에는 크게 흔들려요. 기타법인과 큰 덩어리를 주고받은 블록거래일(⚑)은 시장에서 사 모은 돈이 아니라서 수급 강도 계산에서 뺐어요.</li>
+              <li><b>자료</b>: 네이버 증권 투자자별 매매동향의 순매수 수량에 그날 종가를 곱한 추정 금액이라 실제와 몇 % 다를 수 있어요. 투자자별 자료가 확정되는 저녁(평일 18시쯤 이후)에 하루 한 번 새로 받아요. 장중 잠정치는 쓰지 않아요. 미국은 투자자별 매매가 매일 공개되지 않아서 수급 칸이 없어요.</li>
+            </ul></dd>
           <dt>추세 상태</dt>
           <dd><b>상승 추세</b>: 이동평균선이 위에서부터 50일·150일·200일 순서로 가지런히 놓이고(정배열) 200일선도 올라가는 중. 가장 좋은 상태예요.<br>
           <b>상승 전환 시도</b>: 가격이 50일선과 200일선 위로 올라왔지만 이동평균선 정렬은 아직 덜 된 상태. 하락을 끝내고 오르기 시작하는 초입일 수 있어요.<br>
@@ -370,6 +395,22 @@
       <div class="d-tags" id="dTags"></div>
       <h4>구성 종목 <span class="sub">20일 수익률 순 · 같은 비중</span></h4>
       <div class="mem-wrap" id="dMembers"></div>
+      <section id="dSupply" class="d-supply" hidden>
+        <h4>투자자별 수급 <span class="sub">외국인, 기관, 개인 순매수 · 한국만</span></h4>
+        <div id="dSupHead"></div>
+        <div class="mem-wrap" id="dSupTable"></div>
+        <h4 class="sup-ch">가격과 수급 같이 보기 <span class="sub">위: 바구니 지수와 50일선 · 아래: 투자자별 누적 순매수(억 원) · 그래프 위를 누르거나 움직이면 그날 값이 보여요</span></h4>
+        <div id="dSupChart" class="sup-chart"></div>
+        <details class="sup-how"><summary>이 그래프 읽는 법</summary>
+          <ul>
+            <li><b>누적 순매수</b>는 그래프 첫날부터 매일 순매수를 더해 간 값이에요. 선이 오르면 그 기간 동안 계속 샀다는 뜻이고, 내려가면 계속 팔았다는 뜻이에요. 높이보다 <b>기울기(방향)</b>가 중요해요.</li>
+            <li><b>가장 좋은 모양</b>: 위의 지수가 50일선 위에서 오르고, 아래의 외국인·기관 선도 같이 오르는 경우예요.</li>
+            <li><b>조심할 모양</b>: 지수는 오르는데 외국인·기관 선은 내려가고 개인 선(점선)만 오르는 경우예요. 큰손이 개인에게 넘기는 중일 수 있어요.</li>
+            <li><b>지켜볼 모양</b>: 지수는 내려가는데 외국인·기관 선이 오르는 경우예요. 누군가 싸게 모으는 중일 수 있지만, 가격이 50일선을 되찾기 전에는 확인이 안 된 상태예요.</li>
+          </ul>
+        </details>
+        <p class="foot-note" id="dSupNote"></p>
+      </section>
       <h4>바구니 지수와 이동평균선 <span class="sub">구성 종목 평균, 시작=100</span></h4>
       <div class="chart-legend" id="lgPrice"></div>
       <div id="cPrice" class="chart"></div>
@@ -387,7 +428,8 @@
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="refresh.js?v=20261027-t1"></script>
 <script src="flow.js?v=20261023-t4"></script>
-<script src="app.js?v=20261026-sw2"></script>
+<script src="supply.js?v=20261026-s1"></script>
+<script src="app.js?v=20261026-s1"></script>
 <script src="highs.js?v=20261023-t1"></script>
 <script src="macro.js?v=20261025-m5"></script>
 <script src="ai.js?v=20261026-a5"></script>

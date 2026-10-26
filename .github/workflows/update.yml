@@ -70,6 +70,13 @@ jobs:
         timeout-minutes: 8
         run: python scripts/naver_upjong.py
 
+      # 외국인·기관·개인 순매수. 새 거래일 자료가 없으면 한 종목만 확인하고 바로 끝난다.
+      - name: 한국 수급 수집
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 12
+        run: python scripts/supply_kr.py
+
       - name: 결과 저장 (실패해도 상태 기록)
         if: always()
         run: |

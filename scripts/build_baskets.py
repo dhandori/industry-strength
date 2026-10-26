@@ -212,6 +212,8 @@ def main():
             members.append({"code": c, "name": r["name"],
                             "ticker": f"{c}.KS" if r["market"] == "KOSPI" else f"{c}.KQ",
                             "market": r["market"], "mcap_eok": r["market_cap_eok_krw"],
+                            # 상장주식수(주). 수급 강도 = 순매수 금액 ÷ (주식수 × 그날 종가)
+                            **({"shares": int(r["shares_raw"]) * 1000} if str(r.get("shares_raw") or "").strip("0") else {}),
                             "path": " > ".join(p.replace("사업소개 후보: ", "") for p in path[1:4])})
         if len(members) < 2:
             problems.append(f"KR {name}: 구성 종목 {len(members)}개뿐")

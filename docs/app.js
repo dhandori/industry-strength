@@ -113,6 +113,7 @@
     $("#meta").textContent = "불러오는 중…";
     try {
       if (!state.data[m]) state.data[m] = await getJSON(`data/${m}.json`);
+      if (m === "KR" && window.__supply) await window.__supply.attach(state.data[m]);   // 한국 수급(없어도 화면은 그대로)
     } catch (e) {
       $("#meta").textContent = "데이터를 불러오지 못했어요. 잠시 후 새로고침해 주세요.";
       return;
@@ -122,7 +123,7 @@
   }
   // 새 데이터가 올라오면 캐시를 비우고 다시 그린다.
   let dataStamp = Date.now();
-  function reloadData() { state.data = {}; state.series = {}; dataStamp = Date.now(); load(); }
+  function reloadData() { state.data = {}; state.series = {}; dataStamp = Date.now(); window.__supply && window.__supply.reload(); load(); }
 
   // 당일 순위: 바구니 지수의 하루 변동(chg1)을 시장 안에서 줄 세운다.
   function addDayRank(d) {
@@ -224,13 +225,14 @@
         { t: "약화 경고", c: "var(--down)", any: ["상위권 이탈", "50일선 이탈"], help: "상위 25%에서 밀려났거나 50일선 아래로 내려간 산업" },
       ] },
     ];
+    if (d._sup && window.__supply) rows.push(window.__supply.signalRow());   // 한국만: 외국인·기관 수급과 가격을 합친 신호
     $("#signals").innerHTML = rows.map((row) => {
       const empties = [];
       const cards = row.groups.map((g) => {
         const keys = g.any || [g.t];
         const list = d.items.filter((i) => i.tags.some((t) => keys.includes(t)));
         const chip = (i) => {
-          const weak = !g.any && WEAK.includes(i.stage);
+          const weak = !g.any && !g.t.startsWith("수급") && g.t !== "매집 의심" && WEAK.includes(i.stage);
           return `<button class="chip${weak ? " weak" : ""}" data-id="${i.id}"${weak ? ` title="${weakHelp}"` : ""}>${esc(i.name)}${weak ? '<span class="chip-tail">순위↑ 가격↓</span>' : ""}</button>`;
         };
         const head = `<h3><span class="dot" style="color:${g.c}"></span>${g.t} <span class="cnt">${list.length}</span><button class="help" type="button" aria-label="${g.t} 뜻" data-help="${esc(g.help)}">?</button></h3>`;
@@ -401,7 +403,7 @@
       const av = a[k], bv = b[k];
       if (av == null && bv == null) return (a.rank ?? 999) - (b.rank ?? 999);
       if (av == null) return 1; if (bv == null) return -1;
-      return k === "rank_chg5" || k === "rs_rating" ? bv - av || a.rank - b.rank : av - bv;
+      return k === "rank_chg5" || k === "rs_rating" || k === "sup20" ? bv - av || a.rank - b.rank : av - bv;
     });
     const stageCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
     const ret = (v, rk) => `<span class="ret ${cls(v)}">${fmtPct(v)}</span><span class="rsub">${rk == null ? "–" : rk + "위"}</span>`;
@@ -419,6 +421,9 @@
     const rsOf = (i) => { const [t, c] = rsState(i); return `<span class="rs-chip ${c}" title="${rsTip(i)}">${t}</span>`; };
     const rsSub = (i) => i.rs_hi_dist == null ? "" : `<span class="rsub">RS 고점 ${i.rs_hi_dist >= -0.05 ? "0.0" : i.rs_hi_dist.toFixed(1)}%</span>`;
     const subOf = (i) => `대장 ${esc(i.leader || "–")} · ${i.n ?? 0}종목` + (i.streak ? ` · 상위권 ${i.streak}일째` : "") + (i.breadth50 == null ? "" : ` · 50일선 위 ${i.breadth50}%`) + (i.near_high ? ` · 신고가권 ${i.near_high}` : "");
+    const sup = d._sup && window.__supply;
+    $("#rankTable").classList.toggle("no-sup", !sup);
+    $("#sortSup").hidden = !sup;
     $("#rankTable tbody").innerHTML = rows.map((i) => {
       const tags = i.tags.filter((t) => !t.includes("이탈")).slice(0, 2).map((t) => `<span class="tag-mini">${t}</span>`).join("");
       return `<tr data-id="${i.id}" class="${i.top ? "top" : ""}">
@@ -426,6 +431,7 @@
         <td class="name"><b>${esc(i.name)}${i.stale ? '<span class="stale">지연</span>' : ""}</b><span>${subOf(i)}</span>${tags ? "<br>" + tags : ""}</td>
         <td><div class="bar" title="시장 안 순위 백분위 ${pctile(i)}% · 종합 강도 ${i.score == null ? "–" : Math.round(i.score)}점"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div></td>
         <td class="c-rs"><div class="rs-cell">${rsNum(i)}<div>${rsOf(i)}${rsSub(i)}</div></div></td>
+        <td class="c-sup">${sup ? sup.cell(i) : ""}</td>
         <td class="num">${ret(i.chg1, i.rank1)}</td>
         <td class="num">${ret(i.ret5, i.rank5)}</td>
         <td class="num">${ret(i.ret20, i.rank20)}</td>
@@ -444,15 +450,16 @@
         <div class="rc2"><div class="bar"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div>
           <span class="rc-ret"><em>당일</em>${ret(i.chg1, i.rank1)}</span><span class="rc-ret"><em>5일</em>${ret(i.ret5, i.rank5)}</span><span class="rc-ret"><em>20일</em>${ret(i.ret20, i.rank20)}</span><span class="rc-ret"><em>60일</em>${ret(i.ret60, i.rank60)}</span><span class="rc-ret"><em>200일</em>${ret(i.ret200, i.rank200)}</span></div>
         <div class="rc3">${checksOf(i, true)}<span class="rc-dist">고점 대비 <b>${i.dist_high == null ? "–" : i.dist_high.toFixed(1) + "%"}</b></span></div>
+        ${sup ? sup.card(i) : ""}
         <div class="rc4">${rsOf(i)}<span class="rc-dist">RS선 1년 최고 대비 <b>${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"}</b> · 20일 시장 대비 <b class="ret ${cls(i.rs_ex20)}">${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}</b></span></div>
       </button>`).join("");
     if (!rows.length) {
       const msg = "조건에 맞는 산업이 없어요. 지금 이 조건에서는 가격이 오르고 있는 산업이 없어요.";
-      $("#rankTable tbody").innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
+      $("#rankTable tbody").innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
       $("#rankCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
     }
     $$("#rankTable tbody tr[data-id], #rankCards .rcard").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
-    $("#tableNote").innerHTML = `파란 띠는 종합 순위 상위 25%(${d.top_cut}위 이내)예요. 막대 길이는 전체 산업 중 몇 % 위치인지, 막대 옆 숫자는 종합 강도 점수예요. 수익률 아래 작은 숫자는 그 기간 수익률 순위예요.`;
+    $("#tableNote").innerHTML = `파란 띠는 종합 순위 상위 25%(${d.top_cut}위 이내)예요. 막대 길이는 전체 산업 중 몇 % 위치인지, 막대 옆 숫자는 종합 강도 점수예요. 수익률 아래 작은 숫자는 그 기간 수익률 순위예요.` + (sup ? sup.tableNote(d) : "");
   }
 
   // ---------- RS 강한 종목: 시장 안 전체 종목을 한 줄로 세운다 (같은 종목이 여러 산업에 있으면 한 번만).
@@ -486,11 +493,14 @@
     const r = (v) => `<span class="ret ${cls(v)}">${fmtPct(v)}</span>`;
     const indBtns = (inds) => inds.map((i) => `<button class="ind-link" type="button" data-id="${i.id}" title="${esc(i.name)} 상세 보기">${esc(i.name)}</button>`).join("");
     const code = (m) => esc(state.market === "KR" ? m.code : m.ticker);
+    const sup = d._sup && window.__supply;
+    $("#rsstTable").classList.toggle("no-sup", !sup);
     $("#rsstTable tbody").innerHTML = shown.map(({ m, inds }, n) => `<tr>
         <td><span class="rk">${n + 1}</span></td>
         <td class="name"><b>${esc(m.name)}${m.stale ? '<span class="stale">지연</span>' : ""}</b><span>${code(m)} ${stockLinks(m, state.market)}</span></td>
         <td class="inds">${indBtns(inds)}</td>
         <td class="c-rs"><div class="rs-cell">${rsNum(m)}<div>${rsChip(m)}</div></div></td>
+        <td class="c-sup">${sup ? sup.stockCell(m) : ""}</td>
         <td class="num">${r(m.chg1)}</td>
         <td class="num">${r(m.ret5)}</td>
         <td class="num">${r(m.ret20)}</td>
@@ -503,12 +513,13 @@
       <div class="rcard rsst-card">
         <div class="rc1"><span class="rk">${n + 1}</span><b class="rc-name">${esc(m.name)}</b>${m.rs_rating == null ? "" : `<span class="rc-rs">RS ${rsNum(m)}</span>`}${m.stage ? `<span class="stage ${stageCls[m.stage] || ""}">${m.stage}</span>` : ""}</div>
         <div class="rc-sub">${code(m)} ${stockLinks(m, state.market)} ${rsChip(m)}</div>
+        ${sup && m.sup && m.sup.pct20 != null ? `<div class="rc-sub">수급 20일 ${sup.stockCell(m)}</div>` : ""}
         <div class="rc2"><span class="rc-ret"><em>당일</em>${r(m.chg1)}</span><span class="rc-ret"><em>5일</em>${r(m.ret5)}</span><span class="rc-ret"><em>20일</em>${r(m.ret20)}</span><span class="rc-ret"><em>60일</em>${r(m.ret60)}</span><span class="rc-ret"><em>200일</em>${r(m.ret200)}</span></div>
         <div class="rc-inds">${indBtns(inds)}</div>
       </div>`).join("");
     if (!total) {
       const msg = "조건에 맞는 종목이 없어요.";
-      $("#rsstTable tbody").innerHTML = `<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
+      $("#rsstTable tbody").innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
       $("#rsstCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
     }
     const more = $("#rsstMore");
@@ -664,6 +675,8 @@
     $("#dTitle").textContent = `${it.name}`;
     $("#dSub").textContent = `${it.group} · 구성 종목 ${it.n}개 · 같은 비중 · 지수 ${it.close == null ? "–" : it.close.toFixed(1)} (${fmtPct(it.chg1, 2)}) · ${it.last_date}`;
     renderMembers(it, d);
+    window.__supply ? window.__supply.drawer(it, d) : null;
+    if (!d._sup) { const b = document.getElementById("dSupply"); if (b) b.hidden = true; }
     const st = [
       ["종합 순위", it.rank == null ? "–" : `${it.rank}위 / ${d.n}`],
       ["5일 순위 변화", it.rank_chg5 == null ? "–" : it.rank_chg5 > 0 ? `▲${it.rank_chg5}` : it.rank_chg5 < 0 ? `▼${-it.rank_chg5}` : "변화 없음"],
@@ -683,6 +696,7 @@
     } catch (e) { $("#cPrice").textContent = "차트 데이터를 불러오지 못했어요."; return; }
     if (state.openId !== id) return;
     drawDetail(it);
+    if (d._sup && window.__supply) window.__supply.chart(it, d, state.series[state.market]);
   }
   function renderMembers(it, d) {
     const cur = d.currency;
@@ -695,17 +709,19 @@
       const naver = state.market === "KR" ? `<a href="https://m.stock.naver.com/domestic/stock/${encodeURIComponent(code)}/total" target="_blank" rel="noopener noreferrer">네이버</a>` : "";
       return `<span class="mem-links">${naver}<a href="${tv}" target="_blank" rel="noopener noreferrer">TradingView</a></span>`;
     };
-    const rows = (it.members || []).map((m) => m.missing ? `<tr><td>${esc(m.name)}</td><td colspan="6" class="rsub">가격 없음</td></tr>` : `
+    const sup = d._sup && window.__supply;
+    const rows = (it.members || []).map((m) => m.missing ? `<tr><td>${esc(m.name)}</td><td colspan="${sup ? 8 : 6}" class="rsub">가격 없음</td></tr>` : `
       <tr title="${esc(m.path || "")}">
-        <td><b>${esc(m.name)}</b>${m.stale ? '<span class="stale">지연</span>' : ""}<span class="rsub">${esc(m.code)} · ${fmtP(m.close)}${link(m)}</span></td>
+        <td><b>${esc(m.name)}</b>${m.stale ? '<span class="stale">지연</span>' : ""}${sup ? sup.blockMark(m) : ""}<span class="rsub">${esc(m.code)} · ${fmtP(m.close)}${link(m)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret20)}">${fmtPct(m.ret20)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret5)}">${fmtPct(m.ret5)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret60)}">${fmtPct(m.ret60)}</span></td>
         <td class="num">${m.dist_high == null ? "–" : m.dist_high.toFixed(1) + "%"}</td>
         <td>${m.above50 == null ? "–" : m.above50 ? '<span class="ok">위</span>' : '<span class="no">아래</span>'}</td>
         <td><span class="stage ${stCls[m.stage] || ""}">${m.stage}</span></td>
+        ${sup ? sup.memberCols(m) : ""}
       </tr>`).join("");
-    $("#dMembers").innerHTML = `<table class="mem-table"><thead><tr><th>종목</th><th class="num">20일</th><th class="num">5일</th><th class="num">60일</th><th class="num">고점 대비</th><th>50일선</th><th>추세 상태</th></tr></thead><tbody>${rows}</tbody></table>`;
+    $("#dMembers").innerHTML = `<table class="mem-table"><thead><tr><th>종목</th><th class="num">20일</th><th class="num">5일</th><th class="num">60일</th><th class="num">고점 대비</th><th>50일선</th><th>추세 상태</th>${sup ? sup.memberHead() : ""}</tr></thead><tbody>${rows}</tbody></table>`;
   }
 
   function drawDetail(it) {
@@ -798,7 +814,11 @@
     requestAnimationFrame(() => {
       renderBreadth(d);
       window.__flow && window.__flow.redraw();
-      if (state.openId && state.series[state.market]) drawDetail(d.items.find((x) => x.id === state.openId));
+      if (state.openId && state.series[state.market]) {
+        const it = d.items.find((x) => x.id === state.openId);
+        drawDetail(it);
+        if (d._sup && window.__supply) window.__supply.chart(it, d, state.series[state.market]);
+      }
     });
   }
 
