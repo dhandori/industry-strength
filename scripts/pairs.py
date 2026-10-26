@@ -122,7 +122,7 @@ def compute(p, close, now_utc):
     tail = slice(-KEEP, None)
     return {
         "id": p["id"], "a": p["a"], "b": p["b"], "a_name": p["a_name"], "b_name": p["b_name"],
-        "market": p["market"], "desc": p.get("desc", ""),
+        "market": p["market"], "desc": p.get("desc", ""), "up": p.get("up", ""), "down": p.get("down", ""),
         "basis_date": last.strftime("%Y-%m-%d"),
         "ratio": r(c, 6), "rsi": r(rv, 1), "z": r(zv, 2),
         "pos52": r((c - lo.iloc[-1]) / (hi.iloc[-1] - lo.iloc[-1]) * 100, 1) if hi.iloc[-1] > lo.iloc[-1] else None,
@@ -168,8 +168,8 @@ def main():
             except Exception as e:
                 errors.append(f"{p['a']}/{p['b']}: {e}")
                 old = prev.get(p["id"])
-                out.append(dict(old, ok=False) if old else {"id": p["id"], "a": p["a"], "b": p["b"], "a_name": p["a_name"],
-                                                         "b_name": p["b_name"], "market": p["market"], "desc": p.get("desc", ""), "ok": False})
+                out.append(dict(old, ok=False, desc=p.get("desc", ""), up=p.get("up", ""), down=p.get("down", "")) if old else {"id": p["id"], "a": p["a"], "b": p["b"], "a_name": p["a_name"],
+                                                         "b_name": p["b_name"], "market": p["market"], "desc": p.get("desc", ""), "up": p.get("up", ""), "down": p.get("down", ""), "ok": False})
         groups.append({"id": g["id"], "name": g["name"], "pairs": out})
     result = {"updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"), "groups": groups, "errors": errors}
     for g in groups:
