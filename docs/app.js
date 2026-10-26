@@ -69,9 +69,11 @@
   $$(".view-tabs button").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
   window.__isBoard = () => ({ data: state.data, open: openDetail });
   // 섹터 차트 카드에서 '세부 산업 순위 보기'를 누르면 섹터 칸을 누른 것과 같게 거른다.
-  window.__isSectorPick = (ticker) => {
+  window.__isSectorPick = (ticker, name, items) => {
     const d = state.data[state.market];
-    if (!d || !(d.sectors || []).some((x) => x.ticker === ticker)) return;
+    if (!d) return;
+    // 섹터 워치 칸에 없는 업종(미국 세부 업종 ETF)은 넘겨받은 세부 산업 목록으로 거른다.
+    state.flowSec = (d.sectors || []).some((x) => x.ticker === ticker) ? null : { ticker, name, items: items || [] };
     state.sector = ticker; state.group = "전체"; $("#groupSel").value = "전체";
     renderSectors(d); renderTable();
     document.getElementById("rank-h").closest("section").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -166,7 +168,7 @@
     const card = $("#sectorCard"), list = d && d.sectors;
     window.__secflow && window.__secflow.show(state.market);
     $("#secNote").textContent = state.market === "KR"
-      ? "한국 업종 19개를 대표 업종 ETF(KODEX 반도체, PLUS K방산 등) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 묶인 산업만 보여요. 전력기기, 전자부품, 통신, 리츠는 맞는 업종 ETF가 없어 칸이 없어요."
+      ? "한국 업종 20개를 대표 업종 ETF(KODEX 반도체, PLUS K방산 등) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 묶인 산업만 보여요. 원전, 전자부품, 통신, 리츠는 아직 칸이 없어요."
       : "S&P 500 큰 업종 11개를 섹터 ETF(XLK, XLE 등) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 속한 산업만 보여요. 세부 산업은 가장 가까운 큰 업종 하나에 넣어 묶었어요.";
     $("#sectors").hidden = !(list && list.length);
     card.hidden = !(list && list.length) && !(window.__secflow && window.__secflow.has(state.market));
@@ -403,7 +405,8 @@
   function renderTable() {
     const d = state.data[state.market];
     if (!d) return;
-    const sec = state.sector && (d.sectors || []).find((x) => x.ticker === state.sector);
+    const sec = state.sector && ((d.sectors || []).find((x) => x.ticker === state.sector)
+      || (state.flowSec && state.flowSec.ticker === state.sector ? state.flowSec : null));
     const fb = $("#secFilter");
     fb.hidden = !sec;
     if (sec) fb.innerHTML = `${esc(sec.name)} 소속만 보는 중 <b aria-hidden="true">✕</b>`;

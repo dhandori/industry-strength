@@ -124,26 +124,28 @@
     const board = window.__isBoard && window.__isBoard().data[market];
     const old = board && board.basis_date && board.basis_date !== d.basis;
     $("#sfSeg").innerHTML = PERIODS.map(([k, t]) => `<button type="button" data-k="${k}" aria-pressed="${k === period}">${t}</button>`).join("");
-    $("#sfMeta").textContent = `${d.basis.slice(5).replace("-", "/")} 종가 기준${old ? " (순위표보다 하루 전 자료)" : ""} · 점선 = ${BASE_NAME[period]} · 오른쪽은 소속 종목 시가총액 상위 5`;
+    $("#sfMeta").textContent = `${market === "US" ? "뉴욕 " : ""}${d.basis.slice(5).replace("-", "/")} 종가 기준${old ? " (순위표보다 하루 전 자료)" : ""} · 점선 = ${BASE_NAME[period]} · 오른쪽은 소속 종목 시가총액 상위 5`;
     $("#sfSum").innerHTML = summary(d, period);
     $("#sfBench").innerHTML = d.bench.map((s) => card(s, period, mret, "bench")).join("");
     $("#sfGrid").innerHTML = d.sectors.map((s) => card(s, period, mret, "sector")).join("");
     const mas = { "20d": "주황 = 5일선", "60d": "주황 = 20일선", "200d": "초록 = 50일선, 보라 = 200일선" }[period];
-    $("#sfLegend").innerHTML = `선은 ${BASE_NAME[period]}를 0%로 놓고 그린 흐름이에요. 점선 위로 올라간 부분은 빨강, 아래는 파랑이고 점은 기간 중 최고·최저예요.${mas ? ` ${mas}.` : ""} 칠한 칸은 ${HOT[period]}% 이상 움직인 경우예요. 종목 숫자는 정규장 종가 기준이라 장 마감 뒤 애프터마켓 가격과 다를 수 있어요. 카드를 누르면 큰 차트가 열려요.`;
+    $("#sfLegend").innerHTML = `선은 ${BASE_NAME[period]}를 0%로 놓고 그린 흐름이에요. 점선 위로 올라간 부분은 빨강, 아래는 파랑이고 점은 기간 중 최고·최저예요.${mas ? ` ${mas}.` : ""} 칠한 칸은 ${HOT[period]}% 이상 움직인 경우예요. 숫자는 모두 정규장 종가 기준이라 장 마감 뒤 애프터마켓 가격과 다를 수 있어요.${market === "US" ? " 이 카드는 위 섹터 워치(큰 업종 11개)보다 잘게 나눈 세부 업종 ETF예요. 장중 시각은 뉴욕 시각이에요." : ""} 카드를 누르면 큰 차트가 열려요.`;
   }
 
   // ---------- 큰 차트
   let big = null;
   function times(d, key, p) {
     // 분봉은 한국 시각을 그대로 UTC 시각처럼 넣어 축에 한국 시각이 보이게 한다.
+    const ses = d.session || { open: "09:00", minutes: 390, step1: 2, step5: 10 };
     const days = key === "1d" ? [d.basis] : d.dates.slice(-5);
-    const step = key === "1d" ? 2 : 10;
+    const step = key === "1d" ? ses.step1 : ses.step5;
+    const len = ses.minutes;
     const out = [];
     const cuts = key === "1d" ? [0] : (p.cuts || []);
     days.forEach((day, j) => {
       const startIdx = cuts[j] ?? 0, endIdx = j + 1 < cuts.length ? cuts[j + 1] : p.line.length;
-      const t0 = Date.parse(day + "T09:00:00Z") / 1000;
-      for (let k = startIdx; k < endIdx; k++) out.push(Math.min(t0 + (k - startIdx) * step * 60, t0 + 390 * 60));
+      const t0 = Date.parse(`${day}T${ses.open}:00Z`) / 1000;
+      for (let k = startIdx; k < endIdx; k++) out.push(Math.min(t0 + (k - startIdx) * step * 60, t0 + len * 60));
     });
     return out;
   }
@@ -226,7 +228,7 @@
     const go = $("#sfmGo");
     go.hidden = !s.ticker;
     go.textContent = `${s.name} 세부 산업 순위 보기 →`;
-    go.onclick = () => { closeBig(); window.__isSectorPick && window.__isSectorPick(s.ticker); };
+    go.onclick = () => { closeBig(); window.__isSectorPick && window.__isSectorPick(s.ticker, s.name, s.items); };
   }
 
   // ---------- 이벤트

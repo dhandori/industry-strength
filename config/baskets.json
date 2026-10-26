@@ -3819,6 +3819,16 @@
       "가전·렌탈",
       "카지노·여행"
      ]
+    },
+    {
+     "ticker": "487240.KS",
+     "code": "487240",
+     "name": "전력기기",
+     "en": "KODEX AI전력핵심설비",
+     "items": [
+      "변압기·전력기기",
+      "전선·케이블"
+     ]
     }
    ]
   },
@@ -6625,6 +6635,230 @@
      "code": "xlre.us",
      "name": "부동산",
      "en": "Real Estate",
+     "items": [
+      "데이터센터·통신 리츠",
+      "일반 리츠"
+     ]
+    }
+   ],
+   "flow": [
+    {
+     "ticker": "SMH",
+     "code": "SMH",
+     "name": "반도체",
+     "en": "VanEck 반도체",
+     "items": [
+      "AI 가속기(GPU·ASIC)",
+      "메모리·저장장치",
+      "전공정 장비",
+      "검사·계측",
+      "반도체 테스트",
+      "반도체 소재·부품",
+      "파운드리",
+      "아날로그·전력반도체",
+      "반도체 설계 SW·IP",
+      "AI 연결 반도체"
+     ]
+    },
+    {
+     "ticker": "IGV",
+     "code": "IGV",
+     "name": "소프트웨어",
+     "en": "iShares 소프트웨어",
+     "items": [
+      "데이터·클라우드 SW",
+      "기업용 SW·AI 앱"
+     ]
+    },
+    {
+     "ticker": "CIBR",
+     "code": "CIBR",
+     "name": "사이버보안",
+     "en": "First Trust 사이버보안",
+     "items": [
+      "사이버보안"
+     ]
+    },
+    {
+     "ticker": "FDN",
+     "code": "FDN",
+     "name": "인터넷",
+     "en": "First Trust 인터넷",
+     "items": [
+      "소비자 인터넷",
+      "전자상거래"
+     ]
+    },
+    {
+     "ticker": "GRID",
+     "code": "GRID",
+     "name": "전력 인프라",
+     "en": "First Trust 스마트그리드",
+     "items": [
+      "전력 인프라 공사",
+      "발전설비·전력망 장비",
+      "데이터센터 전력·냉각"
+     ]
+    },
+    {
+     "ticker": "NLR",
+     "code": "NLR",
+     "name": "원전·우라늄",
+     "en": "VanEck 원자력·우라늄",
+     "items": [
+      "원전·SMR·우라늄"
+     ]
+    },
+    {
+     "ticker": "XLU",
+     "code": "XLU",
+     "name": "유틸리티·발전",
+     "en": "SPDR 유틸리티",
+     "items": [
+      "독립발전(IPP)",
+      "유틸리티"
+     ]
+    },
+    {
+     "ticker": "ITA",
+     "code": "ITA",
+     "name": "방산·항공우주",
+     "en": "iShares 항공우주·방산",
+     "items": [
+      "방산",
+      "상업항공·항공부품",
+      "드론·방산테크",
+      "우주"
+     ]
+    },
+    {
+     "ticker": "IYT",
+     "code": "IYT",
+     "name": "운송",
+     "en": "iShares 운송",
+     "items": [
+      "철도·화물운송",
+      "항공사"
+     ]
+    },
+    {
+     "ticker": "ITB",
+     "code": "ITB",
+     "name": "주택건설",
+     "en": "iShares 주택건설",
+     "items": [
+      "주택건설",
+      "건자재"
+     ]
+    },
+    {
+     "ticker": "KBE",
+     "code": "KBE",
+     "name": "은행",
+     "en": "SPDR 은행",
+     "items": [
+      "대형 은행",
+      "지역은행"
+     ]
+    },
+    {
+     "ticker": "IAI",
+     "code": "IAI",
+     "name": "증권·자산운용",
+     "en": "iShares 증권·거래소",
+     "items": [
+      "투자은행·증권",
+      "자산운용·대체투자",
+      "거래소·금융데이터"
+     ]
+    },
+    {
+     "ticker": "XLE",
+     "code": "XLE",
+     "name": "에너지",
+     "en": "SPDR 에너지",
+     "items": [
+      "석유 메이저·탐사",
+      "LNG·미드스트림",
+      "정유"
+     ]
+    },
+    {
+     "ticker": "OIH",
+     "code": "OIH",
+     "name": "오일서비스",
+     "en": "VanEck 오일서비스",
+     "items": [
+      "오일서비스",
+      "해양시추"
+     ]
+    },
+    {
+     "ticker": "GDX",
+     "code": "GDX",
+     "name": "금광",
+     "en": "VanEck 금광",
+     "items": [
+      "금광"
+     ]
+    },
+    {
+     "ticker": "XME",
+     "code": "XME",
+     "name": "금속·광산",
+     "en": "SPDR 금속·광산",
+     "items": [
+      "구리·전략광물",
+      "철강·알루미늄"
+     ]
+    },
+    {
+     "ticker": "XBI",
+     "code": "XBI",
+     "name": "바이오텍",
+     "en": "SPDR 바이오텍",
+     "items": [
+      "바이오텍"
+     ]
+    },
+    {
+     "ticker": "XLV",
+     "code": "XLV",
+     "name": "제약·헬스케어",
+     "en": "SPDR 헬스케어",
+     "items": [
+      "비만 치료제",
+      "대형 제약",
+      "의료기기",
+      "건강보험·헬스케어 서비스",
+      "생명과학 도구"
+     ]
+    },
+    {
+     "ticker": "XRT",
+     "code": "XRT",
+     "name": "소매·소비",
+     "en": "SPDR 소매",
+     "items": [
+      "할인점·대형마트",
+      "의류·신발",
+      "외식"
+     ]
+    },
+    {
+     "ticker": "XLP",
+     "code": "XLP",
+     "name": "필수소비재",
+     "en": "SPDR 필수소비재",
+     "items": [
+      "필수소비재"
+     ]
+    },
+    {
+     "ticker": "XLRE",
+     "code": "XLRE",
+     "name": "리츠",
+     "en": "SPDR 부동산",
      "items": [
       "데이터센터·통신 리츠",
       "일반 리츠"

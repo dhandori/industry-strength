@@ -75,7 +75,31 @@ def fetch_yahoo(tickers: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
     return c, v
 
 
-def fetch_naver(code: str) -> tuple[pd.Series, pd.Series] | None:
+def naver_regular_close(code: str) -> pd.Series:
+    """네이버 분봉(최근 약 7거래일)에서 날짜별 정규장 마지막 가격(15:30 이하).
+
+    네이버 일봉 '종가'는 넥스트레이드 애프터마켓(~20:00) 가격이 섞인 통합 가격이라
+    정규장(KRX) 종가와 다르다(예: 2026-10-26 삼성전자 일봉 213,500원, 정규장 종가 213,000원).
+    """
+    import requests
+
+    url = f"https://fchart.stock.naver.com/sise.nhn?symbol={code}&timeframe=minute&count=2400&requestType=0"
+    r = requests.get(url, headers=UA, timeout=20)
+    r.raise_for_status()
+    last = {}
+    for item in ET.fromstring(r.content.decode("euc-kr", errors="ignore")).iter("item"):
+        p = item.get("data", "").split("|")
+        if len(p) >= 5 and p[4] not in ("", "null") and "0900" <= p[0][8:12] <= "1530":
+            last[pd.Timestamp(p[0][:8])] = float(p[4])      # 시간순이라 마지막 값이 남는다
+    return pd.Series(last, dtype=float).sort_index()
+
+
+def fetch_naver(code: str, recent_only: bool = False) -> tuple[pd.Series, pd.Series] | None:
+    """네이버 일봉. 분봉으로 확인되는 최근 거래일은 정규장 종가로 바꾼다.
+
+    recent_only: 이미 저장된 이력이 있는 종목이면 분봉으로 확인한 최근 거래일만 돌려준다.
+    (그보다 오래된 네이버 일봉 종가는 애프터마켓 가격이 섞여 있어 저장된 값을 덮어쓰면 안 된다.)
+    """
     import requests
 
     url = f"https://fchart.stock.naver.com/sise.nhn?symbol={code}&timeframe=day&count=520&requestType=0"
@@ -90,6 +114,20 @@ def fetch_naver(code: str) -> tuple[pd.Series, pd.Series] | None:
     if len(rows) < 20:
         return None
     df = pd.DataFrame(rows, columns=["d", "c", "v"]).set_index("d")
+    try:
+        reg = naver_regular_close(code)
+    except Exception as e:  # noqa: BLE001
+        log("네이버 분봉 실패", code, e)
+        reg = pd.Series(dtype=float)
+    if reg.empty:
+        if recent_only:
+            return None          # 정규장 종가를 확인할 수 없으면 저장된 값을 지키는 편이 낫다
+        log("정규장 종가 확인 불가, 네이버 일봉 그대로 사용", code)
+        return df["c"], df["v"]
+    hit = reg.index.intersection(df.index)
+    df.loc[hit, "c"] = reg.loc[hit]
+    if recent_only:
+        df = df.loc[hit]
     return df["c"], df["v"]
 
 
@@ -133,6 +171,10 @@ def fetch_market(mkey: str, m: dict) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
     entries = market_entries(mkey, m)
     by_ticker = {e["ticker"]: e for e in entries}
     source = {}
+    try:   # 이미 이력이 저장된 열(네이버 대체 수집 때 최근 거래일만 받는다)
+        stored = set(pd.read_csv(ROOT / f"data/prices/{mkey}_stocks_close.csv", nrows=0).columns)
+    except (OSError, ValueError):
+        stored = set()
     try:
         yc, yv = fetch_yahoo(list(by_ticker))
     except Exception as e:  # noqa: BLE001
@@ -145,7 +187,7 @@ def fetch_market(mkey: str, m: dict) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
             source[e["id"]] = "yahoo"
             continue
         try:
-            got = fetch_naver(e["code"]) if mkey == "KR" else fetch_stooq(e["code"])
+            got = fetch_naver(e["code"], recent_only=e["id"] in stored) if mkey == "KR" else fetch_stooq(e["code"])
         except Exception as ex:  # noqa: BLE001
             log("대체 수집 실패", t, ex)
             got = None
