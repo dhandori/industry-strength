@@ -10,6 +10,7 @@
 
 - **📊 산업 강도** 탭: 아래 '계산 방법'의 세부 산업 강도 순위. 맨 위 **산업 흐름** 카드(`docs/flow.js`)는 같은 순위 이력(`history.rank`)만으로 큰 분류 간 강도 이동(로테이션 지도·분류별 40거래일 선)과 5·20·60일 순위 이동이 큰 세부 산업을 보여 준다. 분류 강도 = 분류 안 세부 산업 순위 백분위 평균의 5일 평균.
 - **🚀 52주 신고가** 탭(`docs/highs.js`, `docs/data/highs.json`): 한국·미국 52주 신고가 종목의 흐름(신고가 수 추이, 강해지는 업종, 업종×날짜, 자주 나온 종목, 날짜별 명단). 데이터는 이 저장소의 Actions가 아니라 dhandori/global-high-radar 의 '52주 신고가 기록' 예약 작업이 한국장 17시·미국장 08시 기록 뒤 `docs/data/highs.json` 한 파일만 올린다. 두 탭은 시장 선택(한국/미국)과 산업 상세 서랍만 공유한다.
+- **🤖 AI 시장** 탭(`docs/ai.js`, `docs/data/ai_market.json`): OpenAI·Anthropic 매출 런레이트(Epoch AI), 오픈웨이트 vs 클로즈드 토큰 비중(OpenRouter, 주간), 토큰 비중 vs 지출 비중(Vercel AI Gateway, 매일). `scripts/ai_market.py`를 `.github/workflows/ai-market.yml`이 매일 09:20·12:20 KST에 돌린다. 텔레그램 알림(새 매출 보도·월요일 주간 요약)은 dhandori/wamo_claude_bot 의 `scripts/ai_market_alert.py`가 이 JSON을 읽어 보낸다.
 
 ## 계산 방법
 

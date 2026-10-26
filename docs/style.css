@@ -551,3 +551,8 @@ body.v-highs #meta { display: none; }
 .rank-table th.c-rs, .rank-table td.c-rs { border-left: 1px solid var(--line); }
 .rc-rs { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: var(--muted); }
 .rc-rs .rs-num { font-size: 14px; min-width: 28px; }
+/* 탭 4개(2026-10-26 AI 시장 추가): 휴대폰에서는 아이콘 위·이름 아래로 한 줄에 */
+@media (max-width: 560px) {
+  .view-tabs button { flex-direction: column; gap: 1px; padding: 6px 2px 7px; font-size: 12.5px; white-space: nowrap; min-width: 0; }
+  .view-tabs .vt-ico { font-size: 15px; line-height: 1.1; }
+}

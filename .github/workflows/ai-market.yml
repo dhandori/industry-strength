@@ -1,0 +1,45 @@
+name: AI 시장 자료 갱신
+
+on:
+  # 원자료 주기: Epoch AI 매출(새 보도 날 때, 대개 2~4주) · OpenRouter 토큰(주간, 월요일 09:00 KST 마감) · Vercel(매일)
+  # → 매일 두 번 확인한다. 월요일 09:20 실행에서 지난주 OpenRouter 주간 합계가 확정된다. 시각을 바꾸면 docs/ai.js 안내 문구도 같이 바꾼다.
+  schedule:
+    - cron: "20 0 * * *"    # 09:20 KST
+    - cron: "20 3 * * *"    # 12:20 KST 재시도·보충
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/ai_market.py"
+      - ".github/workflows/ai-market.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ai-market
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Epoch AI·OpenRouter·Vercel 수집
+        run: python scripts/ai_market.py
+      - name: 결과 저장
+        if: always()
+        run: |
+          git config user.name "industry-strength-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/data/ai_market.json
+          if git diff --cached --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "AI 시장 자료 갱신 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+            for i in 1 2 3; do git pull --rebase origin main && git push && break; sleep 5; done
+          fi
