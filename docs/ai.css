@@ -75,3 +75,15 @@ body.v-ai #meta { display: none; }
 }
 #viewAi .card h2 { white-space: normal; }
 @media (max-width: 560px) { #viewAi .card h2 .sub { display: block; margin: 2px 0 0; } }
+/* 상위 모델 순위 변화 */
+.ai-rl { font-size: 12px; font-weight: 600; }
+.ai-rl.up { font-weight: 800; }
+.ai-risers { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 8px; }
+.ai-riser { border-left: 4px solid var(--rc); background: var(--surface-2); border-radius: 8px; padding: 8px 10px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: 13px; }
+.ai-riser > b { color: var(--rc); font-size: 13.5px; }
+.ai-rmove { flex-basis: 100%; font-variant-numeric: tabular-nums; }
+.ai-rmove b { color: var(--rc); }
+.ai-rpct { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.ai-drops { margin: 10px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.6; }
+.ai-drops b { color: var(--down); margin-right: 4px; }
+.ai-drops span { color: var(--muted); font-size: 12px; }

@@ -97,6 +97,58 @@
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="오픈웨이트 토큰 비중 추이">${g}${s}</svg>`;
   }
 
+  // ---------- 3) 상위 모델 순위 변화(범프 차트): 최근 13주, 1~9위 + '9위 밖'
+  const RISE_COL = ["#e4572e", "#0f9488", "#7048c4", "#d99a00", "#2a78d6", "#c2185b"];
+  // 최근 back주 안에 상위 9개였는데 지금은 빠진 모델(가장 최근 순위)
+  function droppedOut(rc) {
+    const fw = (rc.weeks || []).filter((w) => !w.partial);
+    if (fw.length < 2) return [];
+    const now = new Set(fw.at(-1).models.map((m) => m.slug)), out = new Map();
+    for (const w of fw.slice(-1 - rc.back, -1)) for (const m of w.models) if (!now.has(m.slug)) out.set(m.slug, { slug: m.slug, rank: m.rank, week: w.week });
+    return [...out.values()].sort((a, b) => a.rank - b.rank);
+  }
+  const RANK_WEEKS = 8;   // 그래프는 최근 8주만(더 길면 모델 교체가 잦아 선이 엉킨다)
+  function rankChart(rc, W) {
+    const weeks = (rc.weeks || []).filter((w) => !w.partial).slice(-RANK_WEEKS);
+    if (weeks.length < 2) return "";
+    const last = weeks.at(-1), info = rc.info || {};
+    const riseIdx = Object.fromEntries((rc.risers || []).slice(0, RISE_COL.length).map((r, i) => [r.slug, i]));
+    const OUT = 10, narrow = W < 520;
+    const P = { l: 34, r: Math.round(Math.min(230, W * (narrow ? 0.46 : 0.34))), t: 10, b: 24 };
+    const H = P.t + P.b + OUT * (narrow ? 25 : 28);
+    const n = weeks.length, X = (i) => P.l + (i / (n - 1)) * (W - P.l - P.r), Y = (r) => P.t + (r - 0.5) * ((H - P.t - P.b) / OUT);
+    const rankOf = (w, s) => { const m = w.models.find((x) => x.slug === s); return m || null; };
+    let g = "";
+    for (let r = 1; r <= OUT; r++) g += `<text x="${P.l - 8}" y="${Y(r) + 4}" text-anchor="end" class="ai-tk">${r === OUT ? "밖" : r + "위"}</text>`;
+    g += `<line x1="${P.l}" x2="${W - P.r}" y1="${(Y(9) + Y(10)) / 2}" y2="${(Y(9) + Y(10)) / 2}" class="ai-grid mid"/>`;
+    weeks.forEach((w, i) => { if ((n - 1 - i) % (narrow ? 3 : 1) === 0) g += `<text x="${X(i)}" y="${H - 7}" text-anchor="middle" class="ai-tk">${md(w.week)}</text>`; });
+    // 지금 상위 9개는 굵게, 최근 몇 주 사이 상위권에서 밀려난 모델만 옅은 점선으로(오래전 것까지 그리면 선이 엉킨다)
+    const now = last.models.map((m) => m.slug);
+    const gone = droppedOut(rc).map((d) => d.slug);
+    const lineOf = (s, col, wd, op, dash) => {
+      const pts = weeks.map((w, i) => { const m = rankOf(w, s); return [X(i), Y(m ? m.rank : OUT), m]; });
+      // 처음 9위 안에 든 주 바로 전부터 그린다(그 전은 '밖'이 계속 이어져 겹치기만 함)
+      const first = pts.findIndex((p) => p[2]);
+      const seg = pts.slice(Math.max(0, first - 1));
+      const nm = (info[s] || {}).name || s;
+      return `<polyline fill="none" stroke="${col}" stroke-width="${wd}" stroke-opacity="${op}" stroke-linejoin="round" stroke-linecap="round"${dash ? ' stroke-dasharray="4 4"' : ""} points="${seg.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ")}"/>`
+        + seg.filter((p) => p[2]).map((p) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${wd + 1.2}" fill="${col}" fill-opacity="${op}" stroke="var(--surface)" stroke-width="1.2" ${tipAttr(`${nm} · ${weeks[pts.indexOf(p)].week} 주 · ${p[2].rank}위 · 전체 토큰의 ${pct(p[2].pct)}`)}/>`).join("");
+    };
+    let s = gone.map((x) => lineOf(x, "var(--muted)", 1.6, 0.7, true)).join("");
+    const order = [...now].sort((a, b) => (a in riseIdx) - (b in riseIdx));   // 뜨는 모델을 맨 위에 그린다
+    for (const x of order) s += x in riseIdx ? lineOf(x, RISE_COL[riseIdx[x]], 3, 1) : lineOf(x, "var(--ink-2)", 1.8, 0.55);
+    // 오른쪽 이름표
+    const maxCh = Math.floor((P.r - 14) / 7.2);
+    const cut = (t) => t.length > maxCh ? t.slice(0, maxCh - 1) + "…" : t;
+    let lb = "";
+    for (const m of last.models) {
+      const ri = riseIdx[m.slug], it = info[m.slug] || {};
+      const col = ri == null ? "var(--ink-2)" : RISE_COL[ri];
+      lb += `<text x="${W - P.r + 8}" y="${Y(m.rank) + 4}" class="ai-rl${ri == null ? "" : " up"}" fill="${col}" ${tipAttr(`${it.name} · ${pct(m.pct)} · ${{ open: "오픈웨이트", closed: "클로즈드" }[it.cls] || "미분류"}`)}>${esc(cut(it.name || m.slug))}</text>`;
+    }
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="상위 모델 순위 변화">${g}${s}${lb}</svg>`;
+  }
+
   // ---------- 화면
   function render() {
     const d = st.data, box = $("#aiBody");
@@ -168,6 +220,24 @@
         <p class="foot-note">같은 모델이라도 <b>토큰 비중</b>과 <b>돈(지출) 비중</b>은 크게 달라요. 싼 오픈웨이트 모델은 토큰을 많이 처리해도 돈은 적게 가져가고, 비싼 클로즈드 모델은 반대예요. Vercel은 날마다 상위 10개 모델만 공개해서 합이 100%가 아니에요(이날 토큰 ${pct(s.tokens.top10, 0)}, 지출 ${pct(s.cost.top10, 0)}).</p></section>`;
     }
 
+    // 순위 변화 카드
+    const rc = or.rank_chart || null;
+    let rcHtml = "";
+    if (rc && (rc.weeks || []).filter((w) => !w.partial).length >= 2) {
+      const fw = rc.weeks.filter((w) => !w.partial), lastW = fw.at(-1), baseW = fw[Math.max(0, fw.length - 1 - rc.back)];
+      const rs = (rc.risers || []).slice(0, RISE_COL.length), drops = droppedOut(rc);
+      const tag = (c) => `<span class="ai-tag ${c}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[c] || "미분류"}</span>`;
+      const chips = rs.map((r, i) => `<div class="ai-riser" style="--rc:${RISE_COL[i]}"><b>${esc(r.name)}</b>${tag(r.cls)}<span class="ai-rmove">${r.was ? r.was + "위" : "9위 밖"} → <b>${r.now}위</b></span><span class="ai-rpct">${r.pct_was != null ? pct(r.pct_was) + " → " : ""}${pct(r.pct)}</span></div>`).join("");
+      rcHtml = `<section class="card">
+        <div class="card-head wrap"><h2>누가 치고 올라오나 <span class="sub">OpenRouter 상위 모델 순위 · 최근 ${Math.min(RANK_WEEKS, fw.length)}주</span></h2></div>
+        <div id="aiRank"></div>
+        <h3 class="ai-h3">${md(baseW.week)} 주 → ${md(lastW.week)} 주(${rc.back}주 사이) 순위가 오른 모델</h3>
+        ${chips ? `<div class="ai-risers">${chips}</div>` : `<p class="none">4주 전보다 순위가 오른 모델이 없어요.</p>`}
+        ${drops.length ? `<p class="ai-drops"><b>밀려난 모델</b> ${drops.map((x) => `${esc((rc.info[x.slug] || {}).name || x.slug)} <span>(${md(x.week)} 주 ${x.rank}위 → 밖)</span>`).join(" · ")}</p>` : ""}
+        <p class="foot-note">OpenRouter가 주마다 공개하는 <b>상위 9개 모델</b>의 순위예요(10위부터는 ‘기타’로 묶여 공개되지 않아서 맨 아래 ‘밖’ 줄로 그렸어요). <b>색 굵은 선</b> = ${rc.back}주 전보다 순위가 오른 모델, 회색 선 = 지금 상위 9개 중 나머지, 점선 = 최근 ${rc.back}주 사이 상위 9개에서 밀려난 모델. 무료판(무료)은 OpenRouter가 따로 세서 따로 보여요. 점에 손가락·마우스를 대면 그 주 비중이 보여요.</p>
+      </section>`;
+    }
+
     box.innerHTML = `
       <section class="tiles ai-tiles">${tiles}</section>
       <section class="card">
@@ -179,6 +249,7 @@
         ${others ? `<h3 class="ai-h3">다른 AI 회사 최근 매출</h3><div class="ai-chips">${others}</div>` : ""}
         <p class="foot-note">자료: <a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI, ‘Data on AI companies’</a>(CC BY 4.0). 언론 보도·회사 발표를 모은 표라 <b>새 보도가 날 때만</b> 점이 늘어요(최근엔 2~4주에 한 번). 점에 손가락·마우스를 대면 원문 요약이 보여요. 런레이트 = 최근 한 달 매출 × 12, ARR = 반복 매출 연환산.</p>
       </section>
+      ${rcHtml}
       <section class="card">
         <div class="card-head wrap"><h2>오픈웨이트 vs 클로즈드 토큰 비중 <span class="sub">OpenRouter · 주간(월요일 마감)</span></h2></div>
         <div id="aiOpen"></div>
@@ -202,6 +273,7 @@
       </section>`;
     $("#aiRev").innerHTML = revenueChart(rv, width($("#aiRev")));
     $("#aiOpen").innerHTML = openChart(or, width($("#aiOpen")));
+    if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
   }
 

@@ -70,8 +70,10 @@ def openrouter(prev):
     ms = getj(base + "market-share")["data"]
     week_models = getj(base + "models?view=week")["data"]
     models = getj("https://openrouter.ai/api/v1/models")["data"]
-    meta = {m.get("canonical_slug") or m["id"]: m for m in models}
-    for m in models:
+    # 같은 canonical_slug에 배치·변형판이 여럿 있으면 이름이 짧은(기본판) 쪽을 쓴다
+    meta = {}
+    for m in sorted(models, key=lambda m: len(m.get("name") or "")):
+        meta.setdefault(m.get("canonical_slug") or m["id"], m)
         meta.setdefault(m["id"], m)
 
     def cls(slug):
@@ -134,7 +136,39 @@ def openrouter(prev):
         e["partial"] = partial(e["week"])
     weeks = [{"week": w["x"], "total": sum(w["ys"].values()), "authors": w["ys"], "partial": partial(w["x"])} for w in ms]
     return {"weeks": weeks, "latest": latest, "author_open_ratio": {a: round(r, 3) for a, r in ratio.items()},
-            "open_history": sorted(hist_actual.values(), key=lambda h: h["week"]), "open_est": est}
+            "open_history": sorted(hist_actual.values(), key=lambda h: h["week"]), "open_est": est,
+            "rank_chart": rank_chart(base, nice, cls, partial)}
+
+
+def rank_chart(base, nice, cls, partial, keep=13, back=4):
+    """OpenRouter 'Top Models' 차트(주마다 상위 9개 + Others)로 최근 13주 순위와 '치고 올라오는 모델'.
+    무료판(:free)은 OpenRouter가 따로 세므로 따로 둔다."""
+    raw = getj(base + "model-rankings-chart")["data"]["data"]
+    weeks = []
+    for w in raw[-(keep + 1):]:
+        tot = sum(w["ys"].values())
+        ms = sorted(((s, t) for s, t in w["ys"].items() if s != "Others"), key=lambda kv: -kv[1])
+        weeks.append({"week": w["x"], "partial": partial(w["x"]), "total": tot,
+                      "models": [{"slug": s, "rank": i + 1, "pct": round(t / tot * 100, 2)} for i, (s, t) in enumerate(ms)]})
+    slugs = {m["slug"] for w in weeks for m in w["models"]}
+
+    def label(s):
+        b, free = (s[:-5], True) if s.endswith(":free") else (s, False)
+        return nice(b) + (" (무료)" if free else "")
+    info = {s: {"name": label(s), "author": s.split("/", 1)[0], "cls": cls(s.split(":")[0]) or "unknown"} for s in slugs}
+    full = [w for w in weeks if not w["partial"]]
+    risers = []
+    if len(full) > back:
+        now, was = full[-1], full[-1 - back]
+        wr = {m["slug"]: m for m in was["models"]}
+        for m in now["models"]:
+            p = wr.get(m["slug"])
+            gain = (10 if p is None else p["rank"]) - m["rank"]   # 9위 밖은 10위로 친다
+            if gain > 0 or p is None:
+                risers.append({"slug": m["slug"], **info[m["slug"]], "now": m["rank"], "was": p["rank"] if p else None,
+                               "pct": m["pct"], "pct_was": p["pct"] if p else None, "gain": gain})
+        risers.sort(key=lambda r: (-r["gain"], r["now"]))
+    return {"weeks": weeks, "info": info, "risers": risers, "back": back}
 
 
 # ---------- 토큰 vs 지출: Vercel AI Gateway
