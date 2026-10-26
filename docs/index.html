@@ -7,7 +7,7 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261026-a4">
+<link rel="stylesheet" href="style.css?v=20261026-sw2">
 <link rel="stylesheet" href="macro.css?v=20261025-m5">
 <link rel="stylesheet" href="ai.css?v=20261026-a4">
 <link rel="stylesheet" href="pairs.css?v=20261026-p3">
@@ -45,6 +45,14 @@
   <div id="warn" class="warn" hidden></div>
 
   <section class="tiles" id="tiles" aria-label="시장 상태"></section>
+
+  <section class="card sector-card" id="sectorCard" aria-labelledby="sec-h" hidden>
+    <div class="card-head wrap">
+      <h2 id="sec-h">섹터 워치 <span class="sub" id="secSub"></span></h2>
+    </div>
+    <div id="sectors" class="sectors" role="list"></div>
+    <p class="foot-note">S&amp;P 500 큰 업종 11개를 섹터 ETF(XLK, XLE 등) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 속한 산업만 보여요. 세부 산업은 가장 가까운 큰 업종 하나에 넣어 묶었어요.</p>
+  </section>
 
   <section class="card flow-card" aria-labelledby="flow-h">
     <div class="card-head wrap">
@@ -105,6 +113,7 @@
         <button class="toggle" id="rsOnly" aria-pressed="false" title="RS선이 50일 평균 위에 있는(시장보다 강한) 산업만 보기">RS 강한 산업만</button>
         <button class="toggle" id="trendOnly" aria-pressed="false" title="가격이 실제로 오르는 중인 산업(상승 추세·상승 전환 시도)만 보기">오르는 산업만</button>
         <select id="groupSel" aria-label="큰 분류 필터"></select>
+        <button class="toggle sec-filter" id="secFilter" type="button" hidden></button>
       </div>
     </div>
     <div id="rankCards" class="rank-cards" aria-label="세부 산업 순위 (카드)"></div>
@@ -377,7 +386,7 @@
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="refresh.js?v=20261023-t1"></script>
 <script src="flow.js?v=20261023-t4"></script>
-<script src="app.js?v=20261026-p1"></script>
+<script src="app.js?v=20261026-sw2"></script>
 <script src="highs.js?v=20261023-t1"></script>
 <script src="macro.js?v=20261025-m5"></script>
 <script src="ai.js?v=20261026-a5"></script>

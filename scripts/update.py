@@ -114,6 +114,10 @@ def market_entries(mkey: str, m: dict) -> list[dict]:
     if m.get("benchmark2"):
         out.append({"id": "__bench2__", "ticker": m["benchmark2"]["ticker"], "code": m["benchmark2"]["code"]})
         seen.add(m["benchmark2"]["ticker"])
+    for sec in m.get("sectors") or []:     # 섹터 워치(큰 업종 ETF)
+        if sec["ticker"] not in seen:
+            seen.add(sec["ticker"])
+            out.append({"id": "__sec_" + sec["ticker"], "ticker": sec["ticker"], "code": sec["code"]})
     for it in m["items"]:
         for mb in it["members"]:
             if mb["ticker"] in seen:
@@ -557,6 +561,27 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
     return summary, series
 
 
+def sector_watch(m: dict, close: pd.DataFrame, basis: str) -> list[dict]:
+    """큰 업종 11개(섹터 ETF)의 당일·5일·20일 등락. 기준일 가격이 없으면 stale 로 표시."""
+    out = []
+    for sec in m.get("sectors") or []:
+        col = "__sec_" + sec["ticker"]
+        if col not in close:
+            continue
+        c = close[col].dropna()
+        c = c[c.index <= pd.Timestamp(basis)]
+        if len(c) < 21:
+            continue
+        last = c.iloc[-1]
+        out.append({"ticker": sec["ticker"], "name": sec["name"], "en": sec["en"], "items": sec["items"],
+                    "close": r(last), "chg1": r((last / c.iloc[-2] - 1) * 100),
+                    "ret5": r((last / c.iloc[-6] - 1) * 100), "ret20": r((last / c.iloc[-21] - 1) * 100),
+                    "spark": [r(x) for x in c.iloc[-20:].values],
+                    "date": c.index[-1].strftime("%Y-%m-%d"), "stale": c.index[-1].strftime("%Y-%m-%d") != basis})
+    out.sort(key=lambda x: (x["chg1"] is None, -(x["chg1"] or 0)))
+    return out
+
+
 def sanity(summary: dict) -> list[str]:
     """명백한 데이터 오류를 막는 점검. 문제가 있으면 메시지를 돌려준다."""
     probs = []
@@ -617,6 +642,7 @@ def main():
                 it["tags"].append("종목 확산")
         failed = sorted({mb["name"] for it in summary["items"] for mb in (it.get("members") or []) if mb.get("missing") or mb.get("stale")})
         summary["n_stocks"] = sum(it.get("n") or 0 for it in summary["items"])
+        summary["sectors"] = sector_watch(m, c, summary["basis_date"])
         probs = sanity(summary)
         if failed:
             probs.append(f"최신 가격이 없는 종목 {len(failed)}개: " + ", ".join(failed[:12]) + (" 외" if len(failed) > 12 else ""))

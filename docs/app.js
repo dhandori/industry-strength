@@ -36,7 +36,7 @@
   $$(".seg[role=tablist] button").forEach((b) => b.addEventListener("click", () => {
     state.market = b.dataset.market;
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x === b));
-    state.group = "전체"; state.exOpen = new Set(); state.exAll = new Set();
+    state.group = "전체"; state.sector = null; state.exOpen = new Set(); state.exAll = new Set();
     setHash();
     load();
     if (state.view === "highs") window.__highs && window.__highs.show(state.market);
@@ -82,6 +82,7 @@
   }));
   $("#heatMore").addEventListener("click", () => { state.heatAll = !state.heatAll; renderHeat(state.data[state.market]); });
   $("#groupSel").addEventListener("change", (e) => { state.group = e.target.value; renderTable(); });
+  $("#secFilter").addEventListener("click", () => { state.sector = null; renderSectors(state.data[state.market]); renderTable(); });
   // RS 강한 종목 박스
   Object.assign(state, { rsstSort: "rs_rating", rsstUp: false, rsstGroup: "전체", rsstAll: false });
   $$("#rsstSort button").forEach((b) => b.addEventListener("click", () => {
@@ -141,7 +142,41 @@
     $("#groupSel").innerHTML = groups.map((g) => `<option${g === state.group ? " selected" : ""}>${esc(g)}</option>`).join("");
     if (!groups.includes(state.rsstGroup)) state.rsstGroup = "전체";
     $("#rsstGroup").innerHTML = groups.map((g) => `<option${g === state.rsstGroup ? " selected" : ""}>${esc(g)}</option>`).join("");
-    renderTiles(d); window.__flow && window.__flow.render(d); renderSignals(d); renderExplore(d); renderTable(); renderRsStocks(d); renderHeat(d); renderGroups(d); renderBreadth(d);
+    renderTiles(d); renderSectors(d); window.__flow && window.__flow.render(d); renderSignals(d); renderExplore(d); renderTable(); renderRsStocks(d); renderHeat(d); renderGroups(d); renderBreadth(d);
+  }
+
+  // ---------- 섹터 워치: 큰 업종 11개 당일 등락. 칸을 누르면 순위표를 그 업종 소속으로 거른다.
+  function sparkSvg(vals) {
+    const v = (vals || []).filter((x) => x != null);
+    if (v.length < 2) return "";
+    const W = 60, H = 18, lo = Math.min(...v), hi = Math.max(...v), sp = hi - lo || 1;
+    const pts = v.map((x, k) => `${(k / (v.length - 1) * (W - 2) + 1).toFixed(1)},${(H - 2 - (x - lo) / sp * (H - 4)).toFixed(1)}`).join(" ");
+    return `<svg class="sec-spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts}"/></svg>`;
+  }
+  function renderSectors(d) {
+    const card = $("#sectorCard"), list = d && d.sectors;
+    card.hidden = !(list && list.length);
+    if (card.hidden) return;
+    const max = Math.max(...list.map((x) => Math.abs(x.chg1 || 0)), 0.5);
+    const up = list.filter((x) => (x.chg1 || 0) > 0).length;
+    const stale = list.some((x) => x.stale);
+    $("#secSub").textContent = `${list[0].date.slice(5).replace("-", "/")} 종가 · 오른 업종 ${up}개, 내린 업종 ${list.length - up}개${stale ? " · 일부 최신 아님" : ""}`;
+    $("#sectors").innerHTML = list.map((x) => {
+      const w = Math.max(3, Math.abs(x.chg1 || 0) / max * 50);
+      const on = state.sector === x.ticker;
+      return `<button type="button" role="listitem" class="sec-cell ${cls(x.chg1)}${on ? " on" : ""}${x.stale ? " stale" : ""}" data-sec="${esc(x.ticker)}" aria-pressed="${on}"
+        title="${esc(x.name)} (${esc(x.en)}, ${esc(x.ticker)}) · 종가 ${x.close} · 5일 ${fmtPct(x.ret5)} · 20일 ${fmtPct(x.ret20)} · 소속 세부 산업 ${x.items.length}개 · 작은 선 = 최근 20거래일">
+        <span class="sec-top"><b>${esc(x.name)}</b><em class="${cls(x.chg1)}-t">${fmtPct(x.chg1, 2)}</em></span>
+        <span class="sec-bar"><i class="${(x.chg1 || 0) >= 0 ? "pos" : "neg"}" style="width:${w.toFixed(1)}%"></i></span>
+        <span class="sec-bottom"><small>20일 <span class="${cls(x.ret20)}-t">${fmtPct(x.ret20)}</span></small>${sparkSvg(x.spark)}</span>
+      </button>`;
+    }).join("");
+    $("#sectors").querySelectorAll("[data-sec]").forEach((b) => b.addEventListener("click", () => {
+      state.sector = state.sector === b.dataset.sec ? null : b.dataset.sec;
+      state.group = "전체"; $("#groupSel").value = "전체";
+      renderSectors(d); renderTable();
+      if (state.sector) document.getElementById("rank-h").closest("section").scrollIntoView({ behavior: "smooth", block: "start" });
+    }));
   }
 
   // ---------- tiles
@@ -353,7 +388,12 @@
   function renderTable() {
     const d = state.data[state.market];
     if (!d) return;
+    const sec = state.sector && (d.sectors || []).find((x) => x.ticker === state.sector);
+    const fb = $("#secFilter");
+    fb.hidden = !sec;
+    if (sec) fb.innerHTML = `${esc(sec.name)} 소속만 보는 중 <b aria-hidden="true">✕</b>`;
     let rows = d.items.filter((i) => (state.group === "전체" || i.group === state.group)
+      && (!sec || sec.items.includes(i.name))
       && (!state.trendOnly || i.stage === "상승 추세" || i.stage === "상승 전환 시도")
       && (!state.rsOnly || i.rs_above_ma50 === true));
     const k = state.sort;

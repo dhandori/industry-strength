@@ -569,3 +569,30 @@ body.v-highs #meta { display: none; }
 .rc-inds { margin-top: 7px; }
 #rsstMore { padding: 8px 4px 4px; display: block; }
 #rsstMore[hidden] { display: none; }
+
+/* 섹터 워치: 큰 업종 11개 당일 등락 (미국) */
+.sector-card[hidden] { display: none; }
+.sectors { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+section[aria-labelledby="rank-h"] { scroll-margin-top: 160px; }
+.sec-cell { display: flex; flex-direction: column; gap: 5px; min-width: 0; padding: 9px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.sec-cell:hover { border-color: var(--accent); }
+.sec-cell.on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.sec-cell.stale { opacity: .7; }
+.sec-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; }
+.sec-top b { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sec-top em { font-style: normal; font-size: 14px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sec-bar { position: relative; display: block; height: 6px; border-radius: 3px; background: var(--grid); }
+.sec-bar::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--muted); opacity: .6; }
+.sec-bar i { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.sec-bar i.pos { left: 50%; background: var(--up); }
+.sec-bar i.neg { right: 50%; background: var(--down); }
+.sec-bottom { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.sec-bottom small { font-size: 11px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sec-spark { width: 48px; height: 18px; flex: none; }
+.sec-spark polyline { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-linejoin: round; }
+.sec-filter { border-color: var(--accent) !important; color: var(--accent) !important; }
+.sec-filter b { margin-left: 4px; }
+@media (max-width: 640px) {
+  .sectors { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
+  .sec-cell { flex: 0 0 160px; scroll-snap-align: start; }
+}
