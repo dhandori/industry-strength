@@ -53,13 +53,16 @@
     $("#viewHighs").hidden = v !== "highs";
     $("#viewMacro").hidden = v !== "macro";
     $("#viewAi").hidden = v !== "ai";
+    $("#viewPairs").hidden = v !== "pairs";
     document.body.classList.toggle("v-highs", v === "highs");
     document.body.classList.toggle("v-macro", v === "macro");
     document.body.classList.toggle("v-ai", v === "ai");
+    document.body.classList.toggle("v-pairs", v === "pairs");
     setHash();
     if (v === "highs") window.__highs && window.__highs.show(state.market);
     else if (v === "macro") window.__macro && window.__macro.show();
     else if (v === "ai") window.__ai && window.__ai.show();
+    else if (v === "pairs") window.__pairs && window.__pairs.show();
     else requestAnimationFrame(rerenderCharts);
     scrollTo({ top: 0 });
   }
@@ -770,6 +773,6 @@
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === h));
   }
   load();
-  window.__isRefresh && window.__isRefresh.init(() => { reloadData(); window.__highs && window.__highs.reload(); window.__macro && window.__macro.reload(); window.__ai && window.__ai.reload(); });
-  if (hv === "highs" || hv === "macro" || hv === "ai") addEventListener("DOMContentLoaded", () => setView(hv), { once: true });
+  window.__isRefresh && window.__isRefresh.init(() => { reloadData(); window.__highs && window.__highs.reload(); window.__macro && window.__macro.reload(); window.__ai && window.__ai.reload(); window.__pairs && window.__pairs.reload(); });
+  if (hv === "highs" || hv === "macro" || hv === "ai" || hv === "pairs") addEventListener("DOMContentLoaded", () => setView(hv), { once: true });
 })();

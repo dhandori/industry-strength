@@ -10,6 +10,7 @@
 <link rel="stylesheet" href="style.css?v=20261026-a4">
 <link rel="stylesheet" href="macro.css?v=20261025-m5">
 <link rel="stylesheet" href="ai.css?v=20261026-a4">
+<link rel="stylesheet" href="pairs.css?v=20261026-p1">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>window.LightweightCharts || document.write('<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 </head>
@@ -35,6 +36,7 @@
     <button role="tab" data-view="highs" aria-selected="false"><span class="vt-ico" aria-hidden="true">🚀</span>52주 신고가</button>
     <button role="tab" data-view="macro" aria-selected="false"><span class="vt-ico" aria-hidden="true">🌐</span>매크로 지수</button>
     <button role="tab" data-view="ai" aria-selected="false"><span class="vt-ico" aria-hidden="true">🤖</span>AI 시장</button>
+    <button role="tab" data-view="pairs" aria-selected="false"><span class="vt-ico" aria-hidden="true">⚖️</span>페어</button>
   </nav>
 </header>
 
@@ -331,6 +333,11 @@
   </details>
 </main>
 
+<main id="viewPairs" hidden>
+  <p class="pr-meta" id="pairsMeta">불러오는 중…</p>
+  <div id="pairsBody" style="display:grid;gap:14px"></div>
+</main>
+
 <main id="viewAi" hidden>
   <p class="ai-meta" id="aiMeta">불러오는 중…</p>
   <div id="aiBody" style="display:grid;gap:14px"></div>
@@ -370,9 +377,10 @@
 <div id="tip" class="tip" role="tooltip" hidden></div>
 <script src="refresh.js?v=20261023-t1"></script>
 <script src="flow.js?v=20261023-t4"></script>
-<script src="app.js?v=20261026-a3"></script>
+<script src="app.js?v=20261026-p1"></script>
 <script src="highs.js?v=20261023-t1"></script>
 <script src="macro.js?v=20261025-m5"></script>
 <script src="ai.js?v=20261026-a5"></script>
+<script src="pairs.js?v=20261026-p1"></script>
 </body>
 </html>

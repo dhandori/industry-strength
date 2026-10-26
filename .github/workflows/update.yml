@@ -49,6 +49,12 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RUN_TRIGGER: ${{ github.event_name }}
 
+      - name: 페어 상대강도 계산
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 5
+        run: python scripts/pairs.py
+
       - name: 네이버 업종 수집
         if: always()
         continue-on-error: true

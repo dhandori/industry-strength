@@ -1,0 +1,33 @@
+{
+  "_note": "페어 트레이딩 탭 목록. 비율 = a ÷ b (오르면 a가 b보다 강함). market은 장 마감 판정용(KR/US). 추가·삭제 후 main에 올리면 자동 갱신이 다시 계산한다.",
+  "groups": [
+    {
+      "id": "ai",
+      "name": "AI 흐름",
+      "pairs": [
+        {"id": "smh_igv", "a": "SMH", "b": "IGV", "a_name": "반도체", "b_name": "소프트웨어", "market": "US",
+         "desc": "하드웨어 대 소프트웨어 · AI 돈이 '곡괭이(칩)'와 '그 위의 서비스' 중 어디로 가는지"},
+        {"id": "smh_mags", "a": "SMH", "b": "MAGS", "a_name": "반도체", "b_name": "빅테크 7", "market": "US",
+         "desc": "설비투자를 받는 쪽(칩) 대 쓰는 쪽(빅테크)"},
+        {"id": "grid_smh", "a": "GRID", "b": "SMH", "a_name": "전력 인프라", "b_name": "반도체", "market": "US",
+         "desc": "AI 돈이 칩에서 전력·전기 설비로 번지는지"}
+      ]
+    },
+    {
+      "id": "regime",
+      "name": "시장 국면",
+      "pairs": [
+        {"id": "rsp_spy", "a": "RSP", "b": "SPY", "a_name": "S&P500 동일가중", "b_name": "S&P500", "market": "US",
+         "desc": "상승이 넓게 퍼졌는지(오름), 소수 대형주만 끄는지(내림)"},
+        {"id": "qqq_spy", "a": "QQQ", "b": "SPY", "a_name": "나스닥100", "b_name": "S&P500", "market": "US",
+         "desc": "성장주 대 시장 전체"},
+        {"id": "xly_xlp", "a": "XLY", "b": "XLP", "a_name": "경기소비재", "b_name": "필수소비재", "market": "US",
+         "desc": "위험선호(오름) 대 위험회피(내림)"},
+        {"id": "iwm_spy", "a": "IWM", "b": "SPY", "a_name": "러셀2000 소형주", "b_name": "S&P500", "market": "US",
+         "desc": "소형주 대 대형주 · 경기·금리 기대"},
+        {"id": "kq_ks", "a": "^KQ11", "b": "^KS11", "a_name": "코스닥", "b_name": "코스피", "market": "KR",
+         "desc": "한국 성장·소형주 대 대형주"}
+      ]
+    }
+  ]
+}
