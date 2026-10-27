@@ -40,15 +40,20 @@
     return out;
   }
 
-  // 최근 약 2년 선 그래프 — 가로축(달)·세로축(값)·20일/60일 이동평균
+  // 선 그래프 — 기간은 위쪽 버튼(20일·50일·200일·2년)으로 고른다. 이동평균(20일·60일)은 전체 자료로 계산한 뒤 자른다.
+  const SPANS = [[20, "20일"], [50, "50일"], [200, "200일"], [0, "2년"]];
+  try { const v = +localStorage.getItem("mx-span"); if (SPANS.some(([n]) => n === v)) st.span = v; } catch (e) {}
+  if (st.span == null) st.span = 0;
   function chart(r) {
-    const s = r.series || [];
-    if (s.length < 15) return "";
+    const full = r.series || [];
+    if (full.length < 15) return "";
+    const N = st.span && full.length > st.span ? st.span + 1 : full.length;   // 20일 = 20거래일 전부터 오늘까지
+    const off = full.length - N, s = full.slice(off);
     const small = innerWidth < 640, W = small ? 360 : 600, H = small ? 190 : 200, L = small ? 42 : 48, R = 10, T = 10, B = 26;
     const months = (Date.parse(s[s.length - 1][0]) - Date.parse(s[0][0])) / 2.63e9;
-    const step = months > 15 ? (small ? 6 : 3) : (small ? 3 : 2);   // 2년치는 3개월(휴대폰 6개월) 간격으로 가로축 글자
+    const fv = full.map((p) => p[1]);
     const ds = s.map((p) => p[0]), vs = s.map((p) => p[1]);
-    const m20 = ma(vs, 20), m60 = ma(vs, 60);
+    const m20 = ma(fv, 20).slice(off), m60 = ma(fv, 60).slice(off);
     const all = vs.concat(m20.filter((v) => v != null), m60.filter((v) => v != null));
     let lo = Math.min(...all), hi = Math.max(...all);
     const pad = (hi - lo) * 0.08 || Math.abs(hi) * 0.05 || 1; lo -= pad; hi += pad;
@@ -61,30 +66,47 @@
       const v = lo + (hi - lo) * k / 4, yy = y(v).toFixed(1);
       g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${num(v, r.unit)}</text>`;
     }
-    let xt = "", lastM = "";
-    ds.forEach((d, i) => {
-      const m = d.slice(0, 7);
-      if (m === lastM) return;
-      if (lastM && +d.slice(5, 7) % step === 1) {
-        const xx = x(i).toFixed(1);
-        xt += `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${xx}" y="${H - 8}" text-anchor="middle" font-size="11" fill="var(--muted)">${d.slice(2, 4)}.${d.slice(5, 7)}</text>`;
-      }
-      lastM = m;
-    });
+    const tick = (i, label) => { const xx = x(i).toFixed(1), end = W - R - x(i) < 18; return `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${end ? W - R : xx}" y="${H - 8}" text-anchor="${end ? "end" : "middle"}" font-size="11" fill="var(--muted)">${label}</text>`; };
+    let xt = "";
+    if (s.length <= 80) {
+      // 짧은 기간: 날짜(월/일) 눈금을 끝에서부터 고르게
+      const stride = Math.max(1, Math.ceil(s.length / (small ? 4 : 7)));
+      for (let i = s.length - 1; i >= 0; i -= stride) if (x(i) - L > 14) xt += tick(i, `${+ds[i].slice(5, 7)}/${+ds[i].slice(8, 10)}`);
+    } else {
+      const step = months > 15 ? (small ? 6 : 3) : months > 6 ? (small ? 3 : 2) : 1;   // 2년치는 3개월(휴대폰 6개월) 간격
+      let lastM = "";
+      ds.forEach((d, i) => {
+        const m = d.slice(0, 7);
+        if (m === lastM) return;
+        if (lastM && (+d.slice(5, 7) - 1) % step === 0) xt += tick(i, `${d.slice(2, 4)}.${d.slice(5, 7)}`);
+        lastM = m;
+      });
+    }
     const refs = [];
     if (r.unit === "bp") refs.push(0);
     if (r.key === "vix") refs.push(20, 30);
     if (r.key === "vix_ratio") refs.push(1);
     if (r.key === "fng") refs.push(25, 75);
     const rf = refs.filter((v) => v > lo && v < hi).map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--mx2)" stroke-dasharray="2 3" opacity=".7"/>`).join("");
-    const span = months >= 20 ? "최근 2년 흐름" : months >= 10 ? "최근 1년 흐름" : `최근 ${Math.max(1, Math.round(months))}개월 흐름`;
-    return `<div class="mx-chart"><div class="mx-chart-t">${span} <span>${ds[0].slice(2, 7).replace("-", ".")} ~ ${ds[ds.length - 1].slice(2, 7).replace("-", ".")}</span></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(nm(r))} 최근 추이">${g}${rf}
+    const span = st.span && N === st.span + 1 ? `최근 ${st.span}거래일 흐름` : months >= 20 ? "최근 2년 흐름" : months >= 10 ? "최근 1년 흐름" : `최근 ${Math.max(1, Math.round(months))}개월 흐름`;
+    const fmtD = (d) => s.length <= 80 ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : d.slice(2, 7).replace("-", ".");
+    // 기간 처음 → 지금 변화(지표 단위 그대로)
+    const dv = vs[vs.length - 1] - vs[0];
+    const u = r.unit === "bp" ? "bp" : r.unit === "점" ? "점" : r.unit === "x" ? "" : "";
+    const dTxt = `${dv > 0 ? "+" : dv < 0 ? "−" : ""}${num(Math.abs(dv), r.unit)}${u}`;
+    const mini = `<span class="mx-mini" role="group" aria-label="그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-span="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</span>`;
+    return `<div class="mx-chart">${mini}<div class="mx-chart-t">${span} <span>${fmtD(ds[0])} ~ ${fmtD(ds[ds.length - 1])} · 이 기간 ${num(vs[0], r.unit)} → ${num(vs[vs.length - 1], r.unit)} (${dTxt})</span></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(nm(r))} 최근 추이">${g}${rf}
       <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--muted)"/><line x1="${L}" x2="${L}" y1="${T}" y2="${H - B}" stroke="var(--muted)"/>${xt}
       <path d="${path(m60)}" fill="none" stroke="var(--ma50)" stroke-width="1.6" stroke-dasharray="5 3"/>
       <path d="${path(m20)}" fill="none" stroke="var(--ma20)" stroke-width="1.6" stroke-dasharray="4 3"/>
       <path d="${path(vs)}" fill="none" stroke="var(--price)" stroke-width="1.8" stroke-linejoin="round"/>
+      ${s.length <= 80 ? vs.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="1.8" fill="var(--price)"/>`).join("") : ""}
       <circle cx="${x(s.length - 1)}" cy="${y(vs[vs.length - 1])}" r="4.5" fill="${col(r.level)}" stroke="var(--surface)" stroke-width="2"/></svg>
       <div class="chart-legend"><span><i style="background:var(--price)"></i>매일 값</span><span><i style="background:var(--ma20)"></i>20일 평균(약 1개월)</span><span><i style="background:var(--ma50)"></i>60일 평균(약 3개월)</span></div></div>`;
+  }
+  // 그래프 기간 버튼(모든 지표 그래프에 함께 적용)
+  function spanBar() {
+    return `<div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-span="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div><span class="sub">모든 지표 그래프에 같이 적용돼요</span></div>`;
   }
 
   function chg(r) {
@@ -247,6 +269,7 @@
     const worstOf = (rows) => Math.min(6, ...rows.filter((r) => r.level).map((r) => r.level));
     // 2026-10-25: 위쪽 한국/미국 버튼(52주 신고가 탭과 같은 버튼)에 맞춰 고른 나라 지표만 보여 준다.
     const cur = (window.__isMarket && window.__isMarket()) || "KR";
+    h += spanBar();
     [["US", "🇺🇸", "미국"], ["KR", "🇰🇷", "한국"]].filter(([mk]) => mk === cur).forEach(([mk, flag, title], i) => {
       const rows = d.indicators.filter((r) => market(r) === mk);
       if (!rows.length) return;
@@ -264,6 +287,11 @@
       h += `</section>`;
     });
     $("#mxBody").innerHTML = h;
+    $("#mxBody").querySelectorAll("[data-span]").forEach((b) => b.addEventListener("click", () => {
+      st.span = +b.dataset.span;
+      try { localStorage.setItem("mx-span", st.span); } catch (e) {}
+      const y = scrollY; render(); scrollTo({ top: y });
+    }));
     $("#mxBody").querySelectorAll("[data-goview]").forEach((b) => b.addEventListener("click", () => {
       const t = document.querySelector(`[data-view="${b.dataset.goview}"]`);
       if (t) { t.click(); scrollTo({ top: 0 }); }
