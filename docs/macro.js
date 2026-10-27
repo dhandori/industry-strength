@@ -287,6 +287,7 @@
       h += `</section>`;
     });
     $("#mxBody").innerHTML = h;
+    window.__econ && window.__econ.render(cur);   // 미국이면 아래에 물가·고용(고통지수) 묶음
     $("#mxBody").querySelectorAll("[data-span]").forEach((b) => b.addEventListener("click", () => {
       st.span = +b.dataset.span;
       try { localStorage.setItem("mx-span", st.span); } catch (e) {}

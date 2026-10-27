@@ -125,3 +125,16 @@ body.v-macro #meta { display: none; }
 .mx-mini button { border: 0; background: transparent; padding: 2px 7px; border-radius: 6px; font-size: 11.5px; font-weight: 600; color: var(--muted); cursor: pointer; }
 .mx-mini button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
 .mx-chart::after { content: ""; display: block; clear: both; }
+/* 2026-10-27: 미국 물가·고용(고통지수) 묶음 — econ.js */
+.ec-sec { margin-top: 6px; }
+.ec-hero { display: grid; grid-template-columns: minmax(250px, 1fr) minmax(0, 1.6fr); gap: 16px; border-left: 5px solid var(--c); }
+@media (max-width: 820px) { .ec-hero { grid-template-columns: 1fr; } }
+.ec-hero .k { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.ec-big { display: flex; align-items: center; gap: 10px; margin: 4px 0 2px; }
+.ec-big b { font-size: 42px; font-weight: 800; line-height: 1; color: var(--c); letter-spacing: -0.03em; }
+.ec-formula { font-size: 13.5px; color: var(--ink-2); }
+.ec-hero p { margin: 8px 0 0; font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.ec-hero .ec-why { font-size: 12.5px; }
+.ec-date { font-size: 12.5px; color: var(--muted); font-weight: 600; margin-left: 6px; }
+.ec-chs { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12.5px; color: var(--ink-2); margin-top: 2px; }
+.ec-ch b.up { color: var(--up); } .ec-ch b.down { color: var(--down); }
