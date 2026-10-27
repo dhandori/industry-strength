@@ -596,3 +596,69 @@ section[aria-labelledby="rank-h"] { scroll-margin-top: 160px; }
   .sectors { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
   .sec-cell { flex: 0 0 160px; scroll-snap-align: start; }
 }
+
+/* 종목 상세 창 (2026-10-27, stock.js) — 산업 상세 서랍 위에 뜬다 */
+.lnk.sk-name { font: inherit; font-weight: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: left; border-bottom: 1px dotted color-mix(in srgb, currentColor 45%, transparent); }
+.lnk.sk-name:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.sk-hi { display: inline-block; margin-left: 4px; font-size: 11px; font-weight: 800; color: var(--up); white-space: nowrap; }
+.sk { position: fixed; inset: 0; z-index: 60; }
+.sk-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,.4); }
+.sk-panel { position: absolute; top: 0; right: 0; bottom: 0; width: min(640px, 100%); background: var(--surface); overflow-y: auto; box-shadow: -8px 0 30px rgba(0,0,0,.18); }
+.sk-head { position: sticky; top: 0; z-index: 2; background: var(--surface); border-bottom: 1px solid var(--line); padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; }
+.sk-head h3 { font-size: 19px; font-weight: 800; }
+.sk-head .meta b { font-weight: 700; }
+.sk-body { padding: 14px 16px 28px; }
+.sk-body h4 { font-size: 14px; font-weight: 700; margin: 20px 0 8px; }
+.sk-body h4 .sub { margin-left: 4px; }
+.sk-sum { background: var(--surface-2); border-radius: 12px; padding: 10px 13px; display: grid; gap: 3px; }
+.sk-sum p { margin: 0; font-size: 13.5px; line-height: 1.55; }
+.sk-path { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.sk-rets { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 12px; }
+.sk-ret { border: 1px solid var(--line); border-radius: 10px; padding: 7px 8px; display: grid; gap: 3px; }
+.sk-ret em { font-style: normal; font-size: 11.5px; color: var(--muted); }
+.sk-ret b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.sk-rbar { position: relative; height: 6px; background: var(--surface-2); border-radius: 3px; display: block; }
+.sk-rbar::after { content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px; width: 1px; background: var(--line); }
+.sk-rbar i { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.sk-rbar i.pos { left: 50%; background: var(--up); } .sk-rbar i.neg { right: 50%; background: var(--down); }
+.sk-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px; margin-top: 10px; }
+.sk-stats > div { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; }
+.sk-stats .k { font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.sk-stats .v { font-size: 15px; font-weight: 700; margin-top: 2px; }
+.sk-stats .h { font-size: 11.5px; color: var(--ink-2); margin-top: 3px; line-height: 1.4; }
+.sk-hstrip { display: flex; gap: 3px; flex-wrap: wrap; }
+.sk-hd { display: grid; justify-items: center; gap: 2px; width: 34px; }
+.sk-hd i { width: 100%; height: 16px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); }
+.sk-hd.on i { background: var(--up); border-color: var(--up); }
+.sk-hd em { font-style: normal; font-size: 10px; color: var(--muted); }
+.sk-ht { margin-top: 8px; }
+.sk-inds { display: grid; gap: 6px; }
+.sk-ind { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 11px; cursor: pointer; display: grid; gap: 2px; font-size: 12.5px; color: var(--ink-2); }
+.sk-ind b { font-size: 14px; color: var(--ink); }
+.sk-ind em { font-style: normal; font-weight: 700; } .sk-ind em.up { color: var(--up); } .sk-ind em.down { color: var(--down); }
+.sk-ind:hover, .sk-peer:hover { border-color: var(--accent); background: var(--accent-soft); }
+.sk-peers { display: grid; gap: 2px; }
+.sk-peer { display: grid; grid-template-columns: minmax(90px, 1.2fr) minmax(60px, 1.5fr) 62px 48px; gap: 8px; align-items: center; border: 1px solid transparent; background: none; border-radius: 8px; padding: 5px 6px; cursor: pointer; text-align: left; font-size: 13px; color: var(--ink); }
+.sk-peer.me { background: var(--accent-soft); cursor: default; font-weight: 700; }
+.sk-peer .pn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sk-peer b { text-align: right; font-variant-numeric: tabular-nums; }
+.sk-peer .pr { font-size: 11.5px; color: var(--muted); text-align: right; }
+.sk-note { margin: 8px 0 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
+.sk-none { color: var(--muted); font-size: 13px; }
+.sk-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.sk-links a { border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; color: var(--ink); text-decoration: none; }
+.sk-links a:hover { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 560px) {
+  .sk-rets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .sk-stats { grid-template-columns: 1fr 1fr; }
+  .sk-hd { width: 26px; }
+  .sk-peer { grid-template-columns: minmax(80px, 1fr) minmax(40px, 1fr) 58px; }
+  .sk-peer .pr { display: none; }
+}
+/* 52주 신고가 탭: 긴 카드 제목이 휴대폰에서 화면 밖으로 밀리지 않게 */
+#viewHighs .card h2 { white-space: normal; }
+@media (max-width: 560px) { #viewHighs .card h2 .sub { display: block; margin: 2px 0 0; } }
+.sk-hstrip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; }
+.sk-hd { width: auto; }
+.sk-tw { overflow-x: auto; }
+@media (max-width: 560px) { .sk-hd em { visibility: hidden; } .sk-hd:nth-last-child(5n+1) em { visibility: visible; } }

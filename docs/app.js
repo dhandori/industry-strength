@@ -275,6 +275,11 @@
   }
 
   // ---------- 외부 링크
+  // 종목 이름 → 종목 상세 창(stock.js) 단추 + 지금 52주 신고가 중이면 🚀 표시
+  function skBtn(m, market) {
+    const code = market === "KR" ? m.code : (m.ticker || m.code);
+    return `<button class="lnk sk-name" type="button" data-stock="${esc(code)}" data-sname="${esc(m.name)}" data-smarket="${market}" title="${esc(m.name)} 종목 상세">${esc(m.name)}</button>${window.__stock ? window.__stock.highMark(code, market) : ""}`;
+  }
   function stockLinks(m, market) {
     const code = m.code || m.ticker;
     if (market === "KR") {
@@ -385,7 +390,7 @@
         const showAll = state.exAll.has(sb.key) || ms.length <= 20;
         for (const m of (showAll ? ms : ms.slice(0, 20))) {
           const extra = m.value_mil != null ? `<em>거래대금 ${m.value_mil >= 100 ? Math.round(m.value_mil / 100).toLocaleString() + "억" : "1억 미만"}</em>` : `<em>${esc(m.code || "")}</em>`;
-          h += `<div class="ex-row lv2"><span class="chev"></span><span class="ex-name">${esc(m.name)} ${extra}${stockLinks(m, mk)}</span>${bar(m.v, mmx)}${val(m.v)}</div>`;
+          h += `<div class="ex-row lv2"><span class="chev"></span><span class="ex-name">${skBtn(m, mk)} ${extra}${stockLinks(m, mk)}</span>${bar(m.v, mmx)}${val(m.v)}</div>`;
         }
         if (!showAll) h += `<button class="ex-more" data-all="${esc(sb.key)}">전체 ${ms.length}개 보기 ›</button>`;
         if (sb.detail) h += `<button class="ex-more" data-id="${sb.detail}">${esc(sb.name)} 차트·상세 보기 ›</button>`;
@@ -513,7 +518,7 @@
     $("#rsstTable").classList.toggle("no-sup", !sup);
     $("#rsstTable tbody").innerHTML = shown.map(({ m, inds }, n) => `<tr>
         <td><span class="rk">${n + 1}</span></td>
-        <td class="name"><b>${esc(m.name)}${m.stale ? '<span class="stale">지연</span>' : ""}</b><span>${code(m)} ${stockLinks(m, state.market)}</span></td>
+        <td class="name"><b>${skBtn(m, state.market)}${m.stale ? '<span class="stale">지연</span>' : ""}</b><span>${code(m)} ${stockLinks(m, state.market)}</span></td>
         <td class="inds">${indBtns(inds)}</td>
         <td class="c-rs"><div class="rs-cell">${rsNum(m)}<div>${rsChip(m)}</div></div></td>
         <td class="c-sup">${sup ? sup.stockCell(m) : ""}</td>
@@ -527,7 +532,7 @@
       </tr>`).join("");
     $("#rsstCards").innerHTML = shown.map(({ m, inds }, n) => `
       <div class="rcard rsst-card">
-        <div class="rc1"><span class="rk">${n + 1}</span><b class="rc-name">${esc(m.name)}</b>${m.rs_rating == null ? "" : `<span class="rc-rs">RS ${rsNum(m)}</span>`}${m.stage ? `<span class="stage ${stageCls[m.stage] || ""}">${m.stage}</span>` : ""}</div>
+        <div class="rc1"><span class="rk">${n + 1}</span><b class="rc-name">${skBtn(m, state.market)}</b>${m.rs_rating == null ? "" : `<span class="rc-rs">RS ${rsNum(m)}</span>`}${m.stage ? `<span class="stage ${stageCls[m.stage] || ""}">${m.stage}</span>` : ""}</div>
         <div class="rc-sub">${code(m)} ${stockLinks(m, state.market)} ${rsChip(m)}</div>
         ${sup && m.sup && m.sup.pct20 != null ? `<div class="rc-sub">수급 20일 ${sup.stockCell(m)}</div>` : ""}
         <div class="rc2"><span class="rc-ret"><em>당일</em>${r(m.chg1)}</span><span class="rc-ret"><em>5일</em>${r(m.ret5)}</span><span class="rc-ret"><em>20일</em>${r(m.ret20)}</span><span class="rc-ret"><em>60일</em>${r(m.ret60)}</span><span class="rc-ret"><em>200일</em>${r(m.ret200)}</span></div>
@@ -728,7 +733,7 @@
     const sup = d._sup && window.__supply;
     const rows = (it.members || []).map((m) => m.missing ? `<tr><td>${esc(m.name)}</td><td colspan="${sup ? 8 : 6}" class="rsub">가격 없음</td></tr>` : `
       <tr title="${esc(m.path || "")}">
-        <td><b>${esc(m.name)}</b>${m.stale ? '<span class="stale">지연</span>' : ""}${sup ? sup.blockMark(m) : ""}<span class="rsub">${esc(m.code)} · ${fmtP(m.close)}${link(m)}</span></td>
+        <td><b>${skBtn(m, state.market)}</b>${m.stale ? '<span class="stale">지연</span>' : ""}${sup ? sup.blockMark(m) : ""}<span class="rsub">${esc(m.code)} · ${fmtP(m.close)}${link(m)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret20)}">${fmtPct(m.ret20)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret5)}">${fmtPct(m.ret5)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret60)}">${fmtPct(m.ret60)}</span></td>

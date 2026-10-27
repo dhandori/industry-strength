@@ -55,6 +55,16 @@
     if (!d._memIdx) { d._memIdx = {}; d.items.forEach((it) => (it.members || []).forEach((mm) => { const c = String(mm.code || "").toUpperCase(); if (c && !d._memIdx[c]) d._memIdx[c] = it; })); }
     return d._memIdx[String(code).toUpperCase()] || null;
   }
+  // 산업 강도 자료의 구성 종목 값(수익률·RS·추세) — 바구니에 든 종목만 있다
+  function memberOf(code) {
+    const b = window.__isBoard && window.__isBoard();
+    const d = b && b.data[st.market];
+    if (!d) return null;
+    if (!d._memObj) { d._memObj = {}; d.items.forEach((it) => (it.members || []).forEach((mm) => { if (mm.missing) return; [mm.code, mm.ticker].forEach((c) => { c = String(c || "").toUpperCase(); if (c && !d._memObj[c]) d._memObj[c] = mm; }); })); }
+    return d._memObj[String(code).toUpperCase()] || null;
+  }
+  const nameBtn = (r) => `<button class="lnk sk-name" type="button" data-stock="${esc(r.code)}" data-sname="${esc(r.name)}" data-smarket="${st.market}" title="${esc(r.name)} 종목 상세">${esc(r.name)}</button>`;
+  const STG = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
   const tvUrl = (code) => `https://www.tradingview.com/symbols/${encodeURIComponent(st.market === "KR" ? "KRX-" + code : code.replace(".", "-"))}/`;
 
   // ---------- 그리기
@@ -222,7 +232,7 @@
   const cap = (v) => st.market === "KR" ? (v >= 10000 ? `${Math.floor(v / 10000)}조 ${(v % 10000).toLocaleString("ko-KR")}억` : `${v.toLocaleString("ko-KR")}억`) : `${v.toLocaleString("en-US")}억$`;
   function stockCell(r) {
     const b = basketOf(r.code);
-    return `<b>${esc(r.name)}</b><span>${esc(r.code)} · <a href="${tvUrl(r.code)}" target="_blank" rel="noopener noreferrer">차트</a>${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판: ${esc(b.name)}</button>` : ""}</span>`;
+    return `<b>${nameBtn(r)}</b><span>${esc(r.code)} · <a href="${tvUrl(r.code)}" target="_blank" rel="noopener noreferrer">차트</a>${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판: ${esc(b.name)}</button>` : ""}</span>`;
   }
   function bindStock(el) {
     $$("[data-bid]", el).forEach((x) => x.addEventListener("click", (e) => { e.stopPropagation(); const b = window.__isBoard && window.__isBoard(); b && b.open(x.dataset.bid); }));
@@ -255,12 +265,16 @@
     } else {
       const { k, d } = st.sortT;
       const val = (r) => k === "name" ? r.name : k === "ind" ? r.ind : r[k];
+      flt.forEach((r) => { const mm = memberOf(r.code); r.ret20 = mm ? mm.ret20 : null; r.rs = mm ? mm.rs_rating : null; r.stage = mm ? mm.stage : null; });
       const list = [...flt].sort((a, b) => { const x = val(a), y = val(b); return (typeof x === "string" ? x.localeCompare(y, "ko") : (x ?? -1e18) - (y ?? -1e18)) * d || b.mcap - a.mcap; });
       const th = (key, label, numc) => `<th class="${numc ? "num " : ""}sortable${k === key ? " on" : ""}" data-k="${key}">${label}${k === key ? (d < 0 ? " ▼" : " ▲") : ""}</th>`;
-      el.innerHTML = `<div class="hx-wrap"><table class="hx-table"><thead><tr>${th("name", "종목", 0)}${th("ind", "업종", 0)}${th("chg", "등락률", 1)}${th("mcap", "시가총액", 1)}${th("run", "연속", 1)}${th("close", "종가", 1)}</tr></thead><tbody>
+      el.innerHTML = `<div class="hx-wrap"><table class="hx-table"><thead><tr>${th("name", "종목", 0)}${th("ind", "업종", 0)}${th("chg", "등락률", 1)}${th("mcap", "시가총액", 1)}${th("run", "연속", 1)}${th("close", "종가", 1)}${th("ret20", "20일", 1)}${th("rs", "RS", 1)}<th>추세</th></tr></thead><tbody>
         ${list.map((r) => `<tr class="${r.run >= 2 ? "streak" : ""}"><td class="hx-name">${stockCell(r)}</td><td>${esc(r.ind)}<span class="rsub">${esc(r.big)}</span></td>
           <td class="num"><span class="ret ${cls(r.chg)}">${pct(r.chg)}</span></td><td class="num">${cap(r.mcap)}</td>
-          <td class="num">${r.run >= 2 ? `<b>🔁 ${r.run}일째</b>` : r.isNew ? "🆕" : "1일"}</td><td class="num">${r.close == null ? "–" : st.market === "KR" ? Math.round(r.close).toLocaleString("ko-KR") : r.close.toFixed(2)}</td></tr>`).join("")}
+          <td class="num">${r.run >= 2 ? `<b>🔁 ${r.run}일째</b>` : r.isNew ? "🆕" : "1일"}</td><td class="num">${r.close == null ? "–" : st.market === "KR" ? Math.round(r.close).toLocaleString("ko-KR") : r.close.toFixed(2)}</td>
+          <td class="num">${r.ret20 == null ? '<span class="muted">–</span>' : `<span class="ret ${cls(r.ret20)}">${pct(r.ret20, 1)}</span>`}</td>
+          <td class="num">${r.rs == null ? '<span class="muted">–</span>' : `<b class="rs-num ${r.rs >= 80 ? "hi" : r.rs < 40 ? "lo" : ""}">${r.rs}</b>`}</td>
+          <td>${r.stage ? `<span class="stage ${STG[r.stage] || ""}">${esc(r.stage)}</span>` : '<span class="muted">–</span>'}</td></tr>`).join("")}
         </tbody></table></div>`;
       $$("#hxList th.sortable").forEach((t) => t.addEventListener("click", () => { st.sortT = { k: t.dataset.k, d: st.sortT.k === t.dataset.k ? -st.sortT.d : (["name", "ind"].includes(t.dataset.k) ? 1 : -1) }; renderDay(D); }));
     }
@@ -269,7 +283,7 @@
   function chip(r) {
     const b = basketOf(r.code);
     const tag = r.run >= 2 ? `<span class="tagc run">🔁${r.run}일째</span>` : r.isNew ? `<span class="tagc new">🆕</span>` : "";
-    return `<span class="schip${r.run >= 2 ? " run" : ""}" data-t="${esc(r.name)} · ${esc(r.code)} · ${pct(r.chg)} · 시총 ${cap(r.mcap)}${b ? " · 강도판 " + esc(b.name) : ""}"><a href="${tvUrl(r.code)}" target="_blank" rel="noopener noreferrer">${esc(r.name)}</a>${tag}<span class="ret ${cls(r.chg)}">${pct(r.chg, 1)}</span></span>`;
+    return `<span class="schip${r.run >= 2 ? " run" : ""}" data-t="${esc(r.name)} · ${esc(r.code)} · ${pct(r.chg)} · 시총 ${cap(r.mcap)}${b ? " · 강도판 " + esc(b.name) : ""}${(() => { const mm = memberOf(r.code); return mm ? ` · 20일 ${pct(mm.ret20, 1)} · RS ${mm.rs_rating ?? "–"} · ${mm.stage || ""}` : ""; })()} · 누르면 종목 상세">${nameBtn(r)}${tag}<span class="ret ${cls(r.chg)}">${pct(r.chg, 1)}</span></span>`;
   }
 
   const tip = () => $("#tip");
