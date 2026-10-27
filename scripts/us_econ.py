@@ -83,7 +83,7 @@ def pack(key, s, **kw):
 def main():
     dry = "--dry-run" in sys.argv
     raw = {k: fred(k) for k in ["CPIAUCSL", "CPILFESL", "PCEPILFE", "UNRATE", "UNEMPLOY", "ICSA", "CCSA",
-                                 "PAYEMS", "SAHMREALTIME", "T10YIE", "JTSJOL"]}
+                                 "PAYEMS", "SAHMREALTIME", "T10YIE", "JTSJOL", "DGS2", "DGS10", "DGS30"]}
     cpi = yoy(raw["CPIAUCSL"])
     un = dict(raw["UNRATE"])
     misery = [(d, round(v + un[d], 2)) for d, v in cpi if d in un]
@@ -101,6 +101,19 @@ def main():
     nfp = diff(raw["PAYEMS"])            # 천 명
     nfp3 = avg(nfp, 3)
 
+    # 미국 국채 금리(매일): 2년·10년·30년을 같은 날짜끼리 묶는다
+    y2, y10, y30 = (dict(raw[k]) for k in ("DGS2", "DGS10", "DGS30"))
+    tr = [[d, y2[d], v, y30[d]] for d, v in raw["DGS10"] if d in y2 and d in y30 and d >= KEEP_FROM]
+
+    def ago(n=None, days=None):
+        """n거래일 전(또는 days일 전 이전의 마지막 날) 값."""
+        if n is not None:
+            return tr[-1 - n] if len(tr) > n else None
+        cut = (datetime.strptime(tr[-1][0], "%Y-%m-%d") - timedelta(days=days)).strftime("%Y-%m-%d")
+        return next((r for r in reversed(tr) if r[0] <= cut), None)
+    treasury = {"date": tr[-1][0], "now": tr[-1][1:], "w1": ago(5), "m1": ago(days=30), "y1": ago(days=365),
+                "series": tr}
+
     data = {
         "updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"),
         "source": "FRED (St. Louis Fed)",
@@ -108,6 +121,7 @@ def main():
                    "cpi": cpi[-1][1], "unrate": un[misery[-1][0]],
                    "pct_rank": pct_rank, "avg": round(sum(mv) / len(mv), 2),
                    "peak": peak, "five_lo": min(five), "five_hi": max(five)},
+        "treasury": treasury,
         "indicators": [
             pack("cpi", cpi, extra=ann3(raw["CPIAUCSL"])[-1][1]),
             pack("core_cpi", yoy(raw["CPILFESL"]), extra=ann3(raw["CPILFESL"])[-1][1]),
@@ -121,6 +135,7 @@ def main():
             pack("vu", vu),
         ],
     }
+    print(f"국채 {tr[-1][0]}: 2년 {tr[-1][1]} · 10년 {tr[-1][2]} · 30년 {tr[-1][3]} ({len(tr)}일)")
     print(f"고통지수 {misery[-1][0]}: {last} (CPI {cpi[-1][1]} + 실업률 {un[misery[-1][0]]}) · 역사 백분위 {pct_rank}%")
     for i in data["indicators"]:
         print(f"  {i['key']:12} {i['date']} {i['value']} (직전 {i['prev']}, 1년 전 {i['year_ago']}) {len(i['series'])}점")

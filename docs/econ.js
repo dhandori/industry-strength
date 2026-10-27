@@ -152,6 +152,32 @@
     </article>`;
   }
 
+  // ---------- 미국 국채 금리 2년·10년·30년 (매일)
+  const TR = [["2년", "var(--ma20)", "연준 기준금리 예상을 가장 잘 따라가요. 내리면 시장이 금리 인하를 기대하는 중이에요."],
+    ["10년", "var(--price)", "주택담보대출·회사채 금리의 기준이 되는 대표 금리예요. 오르면 주식(특히 성장주) 값에 부담이에요."],
+    ["30년", "var(--ma200)", "가장 긴 국채 금리예요. 나라 빚·장기 물가에 대한 걱정이 크면 많이 올라요."]];
+  function treasury(t) {
+    if (!t || !t.series || t.series.length < 30) return "";
+    const s = t.series, f = (v) => v == null ? "–" : v.toFixed(2) + "%";
+    const bp = (a, b) => { if (a == null || b == null) return `<span class="muted">–</span>`; const v = Math.round((a - b) * 100); return `<b class="${v > 0 ? "up" : v < 0 ? "down" : ""}">${v > 0 ? "+" : ""}${v}bp</b>`; };
+    const row = (k) => `<tr><td><i class="ec-dot" style="background:${TR[k][1]}"></i><b>${TR[k][0]}</b></td><td class="num"><b>${f(t.now[k])}</b></td>
+      <td class="num">${bp(t.now[k], t.w1 && t.w1[k + 1])}</td><td class="num">${bp(t.now[k], t.m1 && t.m1[k + 1])}</td><td class="num">${bp(t.now[k], t.y1 && t.y1[k + 1])}</td></tr>`;
+    const months = st.span;
+    const svg = chart(s.map((r) => [r[0], r[2]]), { months, ax: (v) => v.toFixed(1), h: innerWidth < 640 ? 200 : 230,
+      lines: [{ v: s.map((r) => r[2]), c: TR[1][1], w: 2 }, { v: s.map((r) => r[1]), c: TR[0][1], w: 1.6 }, { v: s.map((r) => r[3]), c: TR[2][1], w: 1.6 }] });
+    const sp = (a, b) => Math.round((a - b) * 100);
+    const c102 = sp(t.now[1], t.now[0]), c3010 = sp(t.now[2], t.now[1]);
+    const curve = c102 < 0 ? `10년이 2년보다 <b>${-c102}bp 낮아요(역전)</b> — 과거엔 경기침체 앞에서 자주 나왔어요.` : `10년이 2년보다 <b>${c102}bp 높아요</b>${c102 < 30 ? "(거의 평평)" : ""}.`;
+    return `<article class="card mx-card ec-tr" style="--c:var(--accent)">
+      <div class="mx-head"><div><div class="mx-name">미국 국채 금리 (2년·10년·30년)</div></div><span class="ec-date">${+t.date.slice(5, 7)}/${+t.date.slice(8, 10)} 기준</span></div>
+      <div class="ec-tr-grid">
+        <div><table class="mem-table ec-tr-t"><thead><tr><th>만기</th><th class="num">지금</th><th class="num">1주</th><th class="num">1개월</th><th class="num">1년</th></tr></thead><tbody>${[0, 1, 2].map(row).join("")}</tbody></table>
+          <p class="ec-tr-note">${curve} 30년은 10년보다 ${c3010}bp 높아요. 표의 1주·1개월·1년은 그때보다 얼마나 올랐는지(bp = 0.01%p)예요.</p></div>
+        <div class="mx-chart">${svg}<div class="chart-legend">${[1, 0, 2].map((k) => `<span><i style="background:${TR[k][1]}"></i>${TR[k][0]}</span>`).join("")}</div></div>
+      </div>
+      <div class="mx-why"><b>무엇인가요?</b> 미국 정부가 2년·10년·30년 동안 돈을 빌릴 때 내는 이자예요. ${TR.map(([n, , w]) => `<b>${n}</b>: ${w}`).join(" ")}</div></article>`;
+  }
+
   function render(market) {
     const box = $("#mxEcon");
     if (!box) return;
@@ -160,12 +186,13 @@
     const d = st.data, I = Object.fromEntries(d.indicators.map((i) => [i.key, i]));
     const grp = (g) => d.indicators.filter((i) => DEF[i.key] && DEF[i.key].g === g).map(card).join("");
     box.innerHTML = `<section class="mx-market mx-us ec-sec" aria-label="미국 물가·고용">
-      <div class="mx-market-h"><h2>🇺🇸 물가·고용</h2><span class="sub">고통지수 · 인플레이션 · 실업 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
+      <div class="mx-market-h"><h2>🇺🇸 물가·고용</h2><span class="sub">고통지수 · 국채 금리 · 인플레이션 · 실업 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
       <div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="물가·고용 그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-ecspan="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div><span class="sub">월별 지표 기준(주간·일별 지표는 최대 5년)</span></div>
       ${hero(d.misery)}
+      <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
-      <p class="foot-note">자료: 세인트루이스 연준 FRED (CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 매일 밤 11시 20분·아침 7시 20분에 반영해요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
+      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레·국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 매일 밤 11시 20분·아침 7시 20분에 반영해요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
     </section>`;
     $$("[data-ecspan]", box).forEach((b) => b.addEventListener("click", () => {
       st.span = +b.dataset.ecspan;

@@ -662,3 +662,5 @@ section[aria-labelledby="rank-h"] { scroll-margin-top: 160px; }
 .sk-hd { width: auto; }
 .sk-tw { overflow-x: auto; }
 @media (max-width: 560px) { .sk-hd em { visibility: hidden; } .sk-hd:nth-last-child(5n+1) em { visibility: visible; } }
+/* 휴대폰: 순위표 정렬 버튼이 많아 화면 밖으로 밀리지 않게 줄바꿈 */
+@media (max-width: 560px) { #sortSeg { flex-wrap: wrap; } }
