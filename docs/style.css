@@ -664,3 +664,63 @@ section[aria-labelledby="rank-h"] { scroll-margin-top: 160px; }
 @media (max-width: 560px) { .sk-hd em { visibility: hidden; } .sk-hd:nth-last-child(5n+1) em { visibility: visible; } }
 /* 휴대폰: 순위표 정렬 버튼이 많아 화면 밖으로 밀리지 않게 줄바꿈 */
 @media (max-width: 560px) { #sortSeg { flex-wrap: wrap; } }
+
+/* ===== 화면 다듬기 (2026-10-28) — 바로가기 칩, 머리 접기, 맨 위로, 카드 제목·간격 ===== */
+/* 탭 안 바로가기 칩(ui.js) */
+.sec-nav { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; max-width: 1180px; margin: 0 auto; padding: 7px 16px 8px; border-top: 1px solid var(--line); }
+.sec-nav::-webkit-scrollbar { display: none; }
+.sec-nav button { flex: 0 0 auto; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 4px 11px; font-size: 12.5px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
+.sec-nav button:hover { border-color: var(--accent); color: var(--accent); }
+.sec-nav button.on { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+/* 바로가기로 갔을 때 카드 제목이 머리에 가리지 않게 */
+main > section, main .mx-group-h, main .mx-market, main .ec-sec, #mxBody > section { scroll-margin-top: calc(var(--hdr-h, 120px) + 10px); }
+/* 휴대폰: 내리면 머리를 접고 칩만 남김 */
+.top { transition: transform .22s ease; will-change: transform; }
+.top.folded { transform: translateY(calc(-1 * (var(--hdr-h, 150px) - var(--nav-h, 44px)))); }
+/* 맨 위로 */
+.to-top { position: fixed; right: 16px; bottom: 18px; z-index: 30; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--ink); font-size: 18px; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,.14); cursor: pointer; }
+.to-top:hover { border-color: var(--accent); color: var(--accent); }
+/* '더 보기' 단추 */
+.more-btn { display: block; margin: 12px auto 0; padding: 7px 18px; }
+@media (max-width: 560px) { .more-btn { width: 100%; } }
+
+/* 카드 제목·간격을 한결같이 */
+main { gap: 16px; padding-top: 14px; }
+.card { border-radius: 16px; }
+.card h2 { font-size: 17px; font-weight: 750; letter-spacing: -0.025em; }
+.card-head { margin-bottom: 14px; }
+.foot-note { line-height: 1.6; color: var(--muted); }
+.foot-note b { color: var(--ink-2); }
+.tiles .tile { transition: box-shadow .15s; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.num, .ret, .rk { font-variant-numeric: tabular-nums; }
+
+/* 휴대폰: 머리 한 줄 정리, 순위 카드 촘촘하게 */
+@media (max-width: 560px) {
+  .top-inner { padding: 10px 14px; }
+  .brand h1 { font-size: 17px; }
+  .meta { font-size: 11.5px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .sec-nav { padding: 6px 12px 7px; }
+  main { padding: 12px 12px 24px; gap: 12px; }
+  .card { padding: 14px; border-radius: 14px; }
+  .card h2 { font-size: 16px; }
+  .rcard { padding: 9px 11px; margin-bottom: 6px; border-radius: 11px; }
+  .rc2 { margin-top: 6px; gap: 6px; }
+  .rc3 { margin-top: 6px; }
+  .rc4, .rc5 { margin-top: 5px; font-size: 11.5px; }
+  .to-top { right: 12px; bottom: 14px; }
+}
+/* PC 순위표를 카드 폭 안에(2026-10-28): 추세 점검은 점만(이름은 머리글·툴팁), 산업 칸 넓게·설명 두 줄 */
+@media (min-width: 761px) {
+  .rank-table { font-size: 13px; }
+  .rank-table td { padding: 8px 6px; }
+  .rank-table th { padding: 8px 6px; }
+  .rank-table td.name { min-width: 200px; max-width: 260px; }
+  .rank-table td.name > span:not(.tag-mini) { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .rank-table .bar { min-width: 84px; gap: 6px; }
+  .rank-table .checks { gap: 4px; }
+  .rank-table .checks.labeled em { display: none; }
+  .rank-table .checks i { width: 10px; height: 10px; }
+}
+.rank-table td.name .name-tags { display: inline; margin-left: 4px; }
+.rank-table td.name .name-tags .tag-mini { margin: 0 3px 0 0; vertical-align: 1px; font-size: 10.5px; }

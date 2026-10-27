@@ -106,6 +106,11 @@
     renderRsStocks(state.data[state.market]);
   });
   $("#rsstGroup").addEventListener("change", (e) => { state.rsstGroup = e.target.value; renderRsStocks(state.data[state.market]); });
+  $("#rankMore").addEventListener("click", () => {
+    state.rankAll = !state.rankAll;
+    renderTable();
+    if (!state.rankAll) $("#rank-h").closest(".card").scrollIntoView({ block: "start" });
+  });
   $("#rsstMore").addEventListener("click", () => { state.rsstAll = !state.rsstAll; renderRsStocks(state.data[state.market]); });
   $("#rsOnly").addEventListener("click", (e) => {
     state.rsOnly = !state.rsOnly;
@@ -426,13 +431,18 @@
       if (av == null) return 1; if (bv == null) return -1;
       return k === "rank_chg5" || k === "rs_rating" || k === "sup20" ? bv - av || a.rank - b.rank : av - bv;
     });
+    // 2026-10-28: 처음엔 위쪽만(PC 25개·휴대폰 12개) 보여 주고 '전체 보기'로 펼친다 — 70줄이 한 번에 나와 화면이 너무 길었다
+    const allRows = rows, RLIM = innerWidth < 640 ? 12 : 25;
+    if (!state.rankAll && rows.length > RLIM + 3) rows = rows.slice(0, RLIM);
+    const rmore = $("#rankMore");
+    if (rmore) { rmore.hidden = allRows.length <= RLIM + 3; rmore.textContent = state.rankAll ? `위쪽 ${RLIM}개만 보기 ‹` : `나머지 ${allRows.length - RLIM}개 더 보기 ›`; }
     const stageCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
     const ret = (v, rk) => `<span class="ret ${cls(v)}">${fmtPct(v)}</span><span class="rsub">${rk == null ? "–" : rk + "위"}</span>`;
     // 막대 길이는 시장 안 순위 백분위(1위=100%, 꼴찌=0%): 점수가 55~90에 몰려도 차이가 보이게.
     const nAll = d.items.filter((x) => x.rank != null).length;
     const pctile = (i) => i.rank == null || nAll < 2 ? 0 : Math.round((1 - (i.rank - 1) / (nAll - 1)) * 100);
     const CHECK_LABELS = ["50", "50>150", "150>200", "200↑", "고점"];
-    const checksOf = (i, labels) => i.checks ? `<span class="checks${labels ? " labeled" : ""}" aria-label="추세 조건 ${i.checks.filter(Boolean).length}/5">${i.checks.map((c, k) => `<span class="ck"><i class="${c ? "on" : ""}"></i>${labels ? `<em>${CHECK_LABELS[k]}</em>` : ""}</span>`).join("")}</span>` : `<span class="rsub">데이터 부족</span>`;
+    const checksOf = (i, labels) => i.checks ? `<span class="checks${labels ? " labeled" : ""}" aria-label="추세 조건 ${i.checks.filter(Boolean).length}/5" title="${i.checks.map((c, k) => (c ? "●" : "○") + " " + ["가격>50일선", "50일>150일선", "150일>200일선", "200일선 상승", "고점 -15% 안"][k]).join("  ")}">${i.checks.map((c, k) => `<span class="ck"><i class="${c ? "on" : ""}"></i>${labels ? `<em>${CHECK_LABELS[k]}</em>` : ""}</span>`).join("")}</span>` : `<span class="rsub">데이터 부족</span>`;
     const chgOf = (i) => { const ch = i.rank_chg5; return ch == null ? "" : ch > 0 ? `<span class="chg up">▲${ch}</span>` : ch < 0 ? `<span class="chg down">▼${-ch}</span>` : `<span class="chg flat">–</span>`; };
     // RS 표시: 시장 지수 대비 강도. 신고가(1년 최고 -0.5% 이내) / 강함(50일 평균 위) / 약함(아래)
     const rsState = (i) => i.rs_hi_dist != null && i.rs_hi_dist >= -0.5 ? ["RS 신고가", "rs-hi"]
@@ -449,7 +459,7 @@
       const tags = i.tags.filter((t) => !t.includes("이탈")).slice(0, 2).map((t) => `<span class="tag-mini">${t}</span>`).join("");
       return `<tr data-id="${i.id}" class="${i.top ? "top" : ""}">
         <td><span class="rk">${i.rank ?? "–"}</span>${chgOf(i)}</td>
-        <td class="name"><b>${esc(i.name)}${i.stale ? '<span class="stale">지연</span>' : ""}</b><span>${subOf(i)}</span>${tags ? "<br>" + tags : ""}</td>
+        <td class="name"><b>${esc(i.name)}${i.stale ? '<span class="stale">지연</span>' : ""}${tags ? `<span class="name-tags">${tags}</span>` : ""}</b><span>${subOf(i)}</span></td>
         <td><div class="bar" title="시장 안 순위 백분위 ${pctile(i)}% · 종합 강도 ${i.score == null ? "–" : Math.round(i.score)}점"><i><b style="width:${pctile(i)}%"></b></i><span>${i.score == null ? "–" : Math.round(i.score)}</span></div></td>
         <td class="c-rs"><div class="rs-cell">${rsNum(i)}<div>${rsOf(i)}${rsSub(i)}</div></div></td>
         <td class="c-sup">${sup ? sup.cell(i) : ""}</td>
@@ -506,7 +516,7 @@
       if (av == null) return 1; if (bv == null) return -1;
       return bv - av || (b.m.ret20 ?? -1e9) - (a.m.ret20 ?? -1e9);
     });
-    const total = rows.length, LIMIT = 30;
+    const total = rows.length, LIMIT = innerWidth < 640 ? 15 : 30;
     const shown = state.rsstAll ? rows : rows.slice(0, LIMIT);
     const stageCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
     const rsNum = (m) => m.rs_rating == null ? `<span class="rsub">–</span>` : `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}" title="RS 지수 ${m.rs_rating} (1~99, 1년 가중 수익률을 시장 안 전체 종목끼리 비교한 백분위)">${m.rs_rating}</b>`;
