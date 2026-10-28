@@ -80,6 +80,70 @@ def pack(key, s, **kw):
             "series": [[dd, v] for dd, v in s if dd >= keep], **kw}
 
 
+def finra_margin():
+    """FINRA 신용융자 잔고(Debit Balances in Customers' Securities Margin Accounts, 백만 달러, 매월).
+    엑셀(xlsx)을 표준 라이브러리로 읽는다(zip 안 XML). 반환: [(YYYY-MM-01, 값)] 오래된 순."""
+    import re
+    import zipfile
+    import xml.etree.ElementTree as ET
+    url = "https://www.finra.org/sites/default/files/2021-03/margin-statistics.xlsx"
+    for i in range(3):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
+                raw = r.read()
+            break
+        except Exception:  # noqa: BLE001
+            if i == 2:
+                raise
+            time.sleep(5 * (i + 1))
+    z = zipfile.ZipFile(io.BytesIO(raw))
+    ns = {"m": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+    shared = []
+    if "xl/sharedStrings.xml" in z.namelist():
+        for si in ET.fromstring(z.read("xl/sharedStrings.xml")).findall("m:si", ns):
+            shared.append("".join(t.text or "" for t in si.iter("{%s}t" % ns["m"])))
+    out = []
+    for row in ET.fromstring(z.read("xl/worksheets/sheet1.xml")).iter("{%s}row" % ns["m"]):
+        cells = {}
+        for c in row.findall("m:c", ns):
+            col = re.match(r"[A-Z]+", c.get("r")).group()
+            v = c.find("m:v", ns)
+            if v is None:
+                t = c.find("m:is/m:t", ns)
+                cells[col] = t.text if t is not None else None
+            else:
+                cells[col] = shared[int(v.text)] if c.get("t") == "s" else v.text
+        ym, debit = cells.get("A"), cells.get("B")
+        if ym and re.fullmatch(r"\d{4}-\d{2}", str(ym).strip()) and debit:
+            out.append((f"{ym.strip()}-01", float(debit)))
+    return sorted(out)
+
+
+def margin_pack(debit):
+    """빚투(신용융자) 전년 대비 증가율 + 고점 신호(피크아웃)."""
+    g = yoy(debit)
+    vals = [v for _, v in g]
+    last = g[-1]
+    # 최근 12개월 최고 증가율과 그 뒤로 몇 달째 내려오는지
+    win = g[-12:]
+    peak = max(win, key=lambda p: p[1])
+    falls = 0
+    for i in range(len(g) - 1, 0, -1):
+        if g[i][1] < g[i - 1][1]:
+            falls += 1
+        else:
+            break
+    # 과거 큰 고점(증가율 40% 이상에서 앞뒤 6개월 중 최고)
+    peaks = []
+    for i, (d, v) in enumerate(g):
+        if v >= 40 and v == max(x for _, x in g[max(0, i - 6):i + 7]):
+            peaks.append([d, v])
+    return {**pack("margin", g, keep_from="1998-01-01"),
+            "level": debit[-1][1], "level_date": debit[-1][0], "level_year_ago": dict(debit).get(f"{int(last[0][:4]) - 1}{last[0][4:]}"),
+            "peak12": peak, "falls": falls, "pct_rank": round(sum(1 for v in vals if v <= last[1]) / len(vals) * 100),
+            "past_peaks": peaks}
+
+
 def main():
     dry = "--dry-run" in sys.argv
     raw = {k: fred(k) for k in ["CPIAUCSL", "CPILFESL", "PCEPILFE", "UNRATE", "UNEMPLOY", "ICSA", "CCSA",
@@ -114,6 +178,13 @@ def main():
     treasury = {"date": tr[-1][0], "now": tr[-1][1:], "w1": ago(5), "m1": ago(days=30), "y1": ago(days=365),
                 "series": tr}
 
+    try:
+        margin = margin_pack(finra_margin())
+        print(f"빚투 {margin['date']}: 전년 대비 {margin['value']}% (최근 12개월 최고 {margin['peak12']}, {margin['falls']}개월째 둔화)")
+    except Exception as e:  # noqa: BLE001  FINRA가 막혀도 나머지는 갱신
+        print(f"빚투 실패: {type(e).__name__}: {e}")
+        margin = (json.loads(OUT.read_text(encoding="utf-8")).get("margin") if OUT.exists() else None)
+
     data = {
         "updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"),
         "source": "FRED (St. Louis Fed)",
@@ -122,6 +193,7 @@ def main():
                    "pct_rank": pct_rank, "avg": round(sum(mv) / len(mv), 2),
                    "peak": peak, "five_lo": min(five), "five_hi": max(five)},
         "treasury": treasury,
+        "margin": margin,
         "indicators": [
             pack("cpi", cpi, extra=ann3(raw["CPIAUCSL"])[-1][1]),
             pack("core_cpi", yoy(raw["CPILFESL"]), extra=ann3(raw["CPILFESL"])[-1][1]),

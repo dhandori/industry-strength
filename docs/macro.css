@@ -150,3 +150,8 @@ body.v-macro #meta { display: none; }
 .mem-table.ec-tr-t { min-width: 0; }
 .ec-sec .foot-note { overflow-wrap: anywhere; }
 .ec-tr-t b.up { color: var(--up); } .ec-tr-t b.down { color: var(--down); }
+/* 2026-10-28: 빚투(신용융자) 카드 */
+.ec-story { margin: 8px 0 4px; font-size: 13.5px; line-height: 1.6; color: var(--ink-2); background: color-mix(in srgb, var(--c) 8%, var(--surface)); border-radius: 10px; padding: 9px 12px; }
+.ec-peaks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ec-peaks span { font-size: 12px; background: var(--surface-2); border-radius: 999px; padding: 3px 10px; color: var(--ink-2); }
+.ec-peaks b { color: var(--mx1); }

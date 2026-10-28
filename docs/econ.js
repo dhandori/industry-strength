@@ -53,7 +53,7 @@
     let s = series;
     if (opt.months) { const end = s.at(-1)[0]; const y = +end.slice(0, 4), m = +end.slice(5, 7) - opt.months; const from = `${y + Math.floor((m - 1) / 12)}-${String(((m - 1) % 12 + 12) % 12 + 1).padStart(2, "0")}-01`; s = s.filter((p) => p[0] >= from); }
     if (s.length < 2) return "";
-    const small = innerWidth < 640, W = small ? 360 : 600, H = opt.h || (small ? 170 : 180), L = small ? 40 : 46, R = 10, T = 10, B = 24;
+    const small = innerWidth < 640, W = small ? 360 : (opt.W || 600), H = opt.h || (small ? 170 : 180), L = small ? 40 : 46, R = 10, T = 10, B = 24;
     const lines = opt.lines || [{ v: s.map((p) => p[1]), c: "var(--price)", w: 1.8 }];
     if (opt.lines) lines.forEach((ln) => { ln.v = ln.v.slice(-s.length); });
     const vals = lines.flatMap((ln) => ln.v).concat(opt.ref || []).filter((v) => v != null);
@@ -63,6 +63,7 @@
     const x = (i) => L + (W - L - R) * i / (s.length - 1), y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
     let g = "";
     for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4, yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${opt.ax(v)}</text>`; }
+    if (opt.zone != null && opt.zone < hi) g += `<rect x="${L}" y="${T}" width="${W - L - R}" height="${Math.max(0, y(opt.zone) - T).toFixed(1)}" fill="var(--mx1)" opacity=".07"/>`;   // 위험 구간 칠하기
     (opt.ref || []).filter((v) => v > lo && v < hi).forEach((v) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--mx2)" stroke-dasharray="3 3"/>`; });
     // 가로축: 기간 길이에 맞춰 해(年) 또는 달
     const span = (Date.parse(s.at(-1)[0]) - Date.parse(s[0][0])) / 3.156e10;
@@ -89,6 +90,13 @@
       ln.v.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? "L" : "M") + x(i).toFixed(1) + "," + y(v).toFixed(1); pen = true; });
       body += `<path d="${d}" fill="none" stroke="${ln.c}" stroke-width="${ln.w || 1.6}"${ln.dash ? ` stroke-dasharray="${ln.dash}"` : ""} stroke-linejoin="round"/>`;
     }
+    // 표시할 점(예: 과거 고점) [날짜, 값, 글자]
+    (opt.marks || []).forEach(([d, v, t, below]) => {
+      const i = s.findIndex((p) => p[0] === d);
+      if (i < 0) return;
+      const xx = x(i), yy = y(v), right = xx > W - 60;
+      body += `<circle cx="${xx.toFixed(1)}" cy="${yy.toFixed(1)}" r="3.5" fill="var(--mx1)" stroke="var(--surface)" stroke-width="1.5"/><text x="${(xx + (right ? -6 : 0)).toFixed(1)}" y="${(below ? yy + 16 : yy - 7).toFixed(1)}" text-anchor="${right ? "end" : "middle"}" font-size="10.5" font-weight="700" fill="var(--mx1)" paint-order="stroke" stroke="var(--surface)" stroke-width="3">${esc(t)}</text>`;
+    });
     const lv = lines[0].v.at(-1);
     if (!opt.bars && lv != null) body += `<circle cx="${x(s.length - 1)}" cy="${y(lv)}" r="4.5" fill="${opt.dot || "var(--price)"}" stroke="var(--surface)" stroke-width="2"/>`;
     return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}<line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--muted)"/>${xt}${body}</svg>`;
@@ -178,6 +186,33 @@
       <div class="mx-why"><b>무엇인가요?</b> 미국 정부가 2년·10년·30년 동안 돈을 빌릴 때 내는 이자예요. ${TR.map(([n, , w]) => `<b>${n}</b>: ${w}`).join(" ")}</div></article>`;
   }
 
+  // ---------- 빚투(신용융자 잔고 증가율) — FINRA, 매월
+  const MPEAK = { "1998": "LTCM 위기", "2000": "닷컴 버블 정점", "2007": "금융위기 직전", "2010": "유럽 위기", "2021": "2022 하락장 앞" };
+  function margin(m) {
+    if (!m || !m.series || m.series.length < 24) return "";
+    const p12 = m.peak12, pk = p12[1], v = m.value;
+    const peakOut = pk >= 40 && v <= pk - 10 && m.falls >= 2;
+    const lv = peakOut ? [1, "피크아웃 경고"] : v >= 50 ? [2, "과열(역대 고점권)"] : v >= 30 ? [3, "높음"] : v >= 0 ? [5, "보통"] : [4, "빚 줄이는 중"];
+    const won = (x) => x >= 1e6 ? `${(x / 1e6).toFixed(2)}조 달러` : `${Math.round(x / 1e3).toLocaleString()}억 달러`;
+    const lvl = m.level ? `${won(m.level)}${m.level_year_ago ? ` (1년 전 ${won(m.level_year_ago)})` : ""}` : "";
+    const peaks = (m.past_peaks || []).filter((p) => p[0] !== p12[0]);
+    const marks = peaks.map((p) => [p[0], p[1], p[0].slice(0, 4)]);
+    if (pk >= 40) marks.push([p12[0], pk, `이번 ${pk.toFixed(0)}%`, true]);
+    const svg = chart(m.series, { months: 0, ref: [0, 50], zone: 50, ax: (x) => x.toFixed(0) + "%", dot: col(lv[0]), marks, W: 1000, h: innerWidth < 640 ? 210 : 300 });
+    const story = peakOut
+      ? `증가율이 ${ymK(p12[0])} <b>${pk.toFixed(0)}%</b>로 정점을 찍고 <b>${m.falls}개월 연속 내려와</b> 지금 ${v.toFixed(0)}%예요. 과거엔 이렇게 <b>정점에서 꺾일 때</b>가 주가 고점 신호였던 경우가 많았어요.`
+      : v >= 50 ? `빚을 내 주식을 사는 돈이 1년 새 ${v.toFixed(0)}% 늘었어요. 역대 고점권(50% 이상)이라, 여기서 증가율이 꺾이기 시작하면 고점 신호로 봐요.`
+      : `빚투 증가율 ${v.toFixed(0)}%. 50%를 넘었다가 꺾이는지가 핵심이에요.`;
+    return `<article class="card mx-card ec-mg" style="--c:${col(lv[0])}">
+      <div class="mx-head"><div><div class="mx-name">미국 빚투 (신용융자 잔고, 전년 대비 증가율)</div><div class="mx-dir">📈 50% 넘었다가 꺾이면 위험</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
+      <div class="mx-val"><b>${v.toFixed(1)}%</b><span class="ec-date">${ymK(m.date)}</span></div>
+      <div class="ec-chs"><span class="ec-ch">최근 12개월 최고 <b>${pk.toFixed(1)}%</b>(${ym(p12[0])}) → 지금 <b>${v.toFixed(1)}%</b></span>${m.falls ? `<span class="ec-ch"><b class="down">${m.falls}개월 연속 둔화</b></span>` : ""}<span class="ec-ch">1998년 이후 지금보다 낮았던 달 ${m.pct_rank}%</span>${lvl ? `<span class="ec-ch">잔고 ${lvl}</span>` : ""}</div>
+      <p class="ec-story">${story}</p>
+      <div class="mx-chart"><div class="mx-chart-t">1998년부터 흐름 <span>빨간 칠 = 50% 넘는 과열 구간 · 빨간 점 = 과거 큰 고점</span></div>${svg}</div>
+      ${peaks.length ? `<div class="ec-peaks">${peaks.map((p) => `<span><b>${p[0].slice(0, 4)}.${+p[0].slice(5, 7)}</b> ${p[1].toFixed(0)}%${MPEAK[p[0].slice(0, 4)] ? ` · ${MPEAK[p[0].slice(0, 4)]}` : ""}</span>`).join("")}</div>` : ""}
+      <div class="mx-why"><b>무엇인가요?</b> 미국 증권사 고객들이 증권사에서 돈을 빌려 주식을 산 금액(신용융자 잔고)이 1년 전보다 몇 % 늘었는지예요. 빚투가 빠르게 늘면 시장이 들뜬 상태이고, 증가세가 정점에서 꺾이면 더 사 줄 돈이 줄어들어 고점 신호가 되곤 했어요. 자료: FINRA 신용거래 통계(매월, 다음 달 셋째 주쯤 발표).</div></article>`;
+  }
+
   function render(market) {
     const box = $("#mxEcon");
     if (!box) return;
@@ -189,10 +224,11 @@
       <div class="mx-market-h"><h2>🇺🇸 물가·고용</h2><span class="sub">고통지수 · 국채 금리 · 인플레이션 · 실업 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
       <div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="물가·고용 그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-ecspan="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div><span class="sub">월별 지표 기준(주간·일별 지표는 최대 5년)</span></div>
       ${hero(d.misery)}
+      ${d.margin ? `<div class="mx-group-h"><h3>빚투 (신용융자)</h3><span class="sub">고점 신호 · 매월</span></div>${margin(d.margin)}` : ""}
       <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
-      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레·국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 매일 밤 11시 20분·아침 7시 20분에 반영해요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
+      <p class="foot-note">자료: 세인트루이스 연준 FRED (FINRA 신용거래 통계 · DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레·국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 매일 밤 11시 20분·아침 7시 20분에 반영해요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
     </section>`;
     $$("[data-ecspan]", box).forEach((b) => b.addEventListener("click", () => {
       st.span = +b.dataset.ecspan;
