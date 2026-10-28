@@ -202,17 +202,18 @@
     }
 
     // 바깥 링크
+    const L = window.__links;
     const links = KR ? [
-      ["네이버 종합", `https://m.stock.naver.com/domestic/stock/${code}/total`],
-      ["네이버 뉴스", `https://m.stock.naver.com/domestic/stock/${code}/news`],
-      ["네이버 재무", `https://m.stock.naver.com/domestic/stock/${code}/finance/annual`],
+      ["네이버 종합", L.naver(code, "total")],
+      ["네이버 뉴스", L.naver(code, "news")],
+      ["네이버 재무", L.naver(code, "finance/annual")],
       ["공시(DART)", `https://dart.fss.or.kr/dsab007/main.do?option=corp&textCrpNm=${encodeURIComponent(name)}`],
-      ["TradingView 차트", `https://www.tradingview.com/chart/?symbol=KRX:${code}`],
+      ["TradingView 차트", L.tvChart(code, "KR")],
     ] : [
-      ["TradingView 차트", `https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tick)}`],
-      ["Finviz", `https://finviz.com/quote.ashx?t=${encodeURIComponent(tick)}`],
-      ["Yahoo 뉴스", `https://finance.yahoo.com/quote/${encodeURIComponent(tick.replace(".", "-"))}/news`],
-      ["SEC 공시", `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&ticker=${encodeURIComponent(tick)}&type=&dateb=&owner=include&count=40`],
+      ["TradingView 차트", L.tvChart(tick, "US")],
+      ["Finviz", L.finviz(tick)],
+      ["Yahoo 뉴스", L.yahooNews(tick)],
+      ["SEC 공시", L.sec(tick)],
     ];
 
     const none = !m && !hx?.list.length && !sup;

@@ -3,6 +3,7 @@ name: 미국 물가·고용 자료 갱신
 on:
   # FRED 원자료: CPI(매월 중순)·고용보고서(매월 첫 금요일)·PCE(매월 말)·JOLTS(매월 초)·실업수당 청구(매주 목요일)·기대인플레·국채 금리(매일)
   # + FINRA 신용거래 통계(매월) · 네이버 증권 증시자금동향(한국 신용융자·예탁금, 매일)
+  # + 화면 링크용 미국 종목 TradingView 거래소 표(새 종목만)
   # 미국 동부 08:30 발표 = 한국 21:30(서머타임) / 22:30 → 그 뒤 밤에 한 번, 다음 날 아침에 한 번 확인한다.
   schedule:
     - cron: "20 14 * * *"   # 23:20 KST
@@ -12,6 +13,7 @@ on:
     branches: [main]
     paths:
       - "scripts/us_econ.py"
+      - "scripts/tv_symbols.py"
       - ".github/workflows/us-econ.yml"
 
 permissions:
@@ -32,11 +34,14 @@ jobs:
           python-version: "3.12"
       - name: FRED·FINRA·네이버 수집
         run: python scripts/us_econ.py
+      - name: TradingView 거래소 표(새 미국 종목만 확인)
+        continue-on-error: true
+        run: python scripts/tv_symbols.py
       - name: 결과 저장
         run: |
           git config user.name "industry-strength-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add docs/data/us_econ.json docs/data/kr_credit.json
+          git add docs/data/us_econ.json docs/data/kr_credit.json docs/data/tv_ex.json
           if git diff --cached --quiet; then
             echo "변경 없음"
           else

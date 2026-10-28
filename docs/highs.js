@@ -65,7 +65,7 @@
   }
   const nameBtn = (r) => `<button class="lnk sk-name" type="button" data-stock="${esc(r.code)}" data-sname="${esc(r.name)}" data-smarket="${st.market}" title="${esc(r.name)} 종목 상세">${esc(r.name)}</button>`;
   const STG = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
-  const tvUrl = (code) => `https://www.tradingview.com/symbols/${encodeURIComponent(st.market === "KR" ? "KRX-" + code : code.replace(".", "-"))}/`;
+  const tvUrl = (code) => window.__links.tvPage(code, st.market);
 
   // ---------- 그리기
   async function render(market) {

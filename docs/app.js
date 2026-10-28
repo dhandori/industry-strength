@@ -286,13 +286,14 @@
     return `<button class="lnk sk-name" type="button" data-stock="${esc(code)}" data-sname="${esc(m.name)}" data-smarket="${market}" title="${esc(m.name)} 종목 상세">${esc(m.name)}</button>${window.__stock ? window.__stock.highMark(code, market) : ""}`;
   }
   function stockLinks(m, market) {
-    const code = m.code || m.ticker;
+    const L = window.__links, code = m.code || m.ticker;
     if (market === "KR") {
-      return `<span class="xl"><a href="https://finance.naver.com/item/main.naver?code=${code}" target="_blank" rel="noopener" title="네이버 증권에서 보기">네이버</a><a href="https://www.tradingview.com/chart/?symbol=KRX:${code}" target="_blank" rel="noopener" title="TradingView 차트">TV</a></span>`;
+      return `<span class="xl"><a href="${L.naver(code)}" target="_blank" rel="noopener" title="네이버 증권에서 보기">네이버</a><a href="${L.tvChart(code, "KR")}" target="_blank" rel="noopener" title="TradingView 차트">TV</a></span>`;
     }
     const t = m.ticker || code;
-    return `<span class="xl"><a href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(t)}" target="_blank" rel="noopener" title="TradingView 차트">TV</a><a href="https://finviz.com/quote.ashx?t=${encodeURIComponent(t)}" target="_blank" rel="noopener" title="Finviz에서 보기">Finviz</a></span>`;
+    return `<span class="xl"><a href="${L.tvChart(t, "US")}" target="_blank" rel="noopener" title="TradingView 차트">TV</a><a href="${L.finviz(t)}" target="_blank" rel="noopener" title="Finviz에서 보기">Finviz</a></span>`;
   }
+
 
   // ---------- 업종 탐색 (분류 → 세부 산업 → 종목)
   state.exKey = "chg1"; state.exOpen = new Set(); state.exSrc = "board"; state.exAll = new Set();
@@ -736,8 +737,8 @@
     const link = (m) => {
       const code = String(m.code || "").trim();
       if (!/^[A-Za-z0-9.\-]{1,12}$/.test(code)) return "";
-      const tv = `https://www.tradingview.com/symbols/${encodeURIComponent(state.market === "KR" ? "KRX-" + code : code)}/`;
-      const naver = state.market === "KR" ? `<a href="https://m.stock.naver.com/domestic/stock/${encodeURIComponent(code)}/total" target="_blank" rel="noopener noreferrer">네이버</a>` : "";
+      const tv = window.__links.tvPage(state.market === "KR" ? code : (m.ticker || code), state.market);
+      const naver = state.market === "KR" ? `<a href="${window.__links.naver(code)}" target="_blank" rel="noopener noreferrer">네이버</a>` : "";
       return `<span class="mem-links">${naver}<a href="${tv}" target="_blank" rel="noopener noreferrer">TradingView</a></span>`;
     };
     const sup = d._sup && window.__supply;
