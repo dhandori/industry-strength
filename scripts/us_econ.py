@@ -115,12 +115,15 @@ def finra_margin():
                 cells[col] = shared[int(v.text)] if c.get("t") == "s" else v.text
         ym, debit = cells.get("A"), cells.get("B")
         if ym and re.fullmatch(r"\d{4}-\d{2}", str(ym).strip()) and debit:
-            out.append((f"{ym.strip()}-01", float(debit)))
+            num = lambda k: float(cells[k]) if cells.get(k) not in (None, "") else None  # noqa: E731
+            # B 신용융자(빚) · C 현금계좌 여유 현금 · D 신용계좌 여유 현금 (백만 달러)
+            out.append((f"{ym.strip()}-01", float(debit), num("C"), num("D")))
     return sorted(out)
 
 
-def margin_pack(debit):
-    """빚투(신용융자) 전년 대비 증가율 + 고점 신호(피크아웃)."""
+def margin_pack(rows, gdp=None):
+    """빚투(신용융자) 전년 대비 증가율 + 고점 신호(피크아웃) + 순신용 + GDP 대비."""
+    debit = [(d, b) for d, b, _, _ in rows]
     g = yoy(debit)
     vals = [v for _, v in g]
     last = g[-1]
@@ -141,7 +144,71 @@ def margin_pack(debit):
     return {**pack("margin", g, keep_from="1998-01-01"),
             "level": debit[-1][1], "level_date": debit[-1][0], "level_year_ago": dict(debit).get(f"{int(last[0][:4]) - 1}{last[0][4:]}"),
             "peak12": peak, "falls": falls, "pct_rank": round(sum(1 for v in vals if v <= last[1]) / len(vals) * 100),
-            "past_peaks": peaks}
+            "past_peaks": peaks,
+            # 투자자 순신용 = 여유 현금(현금계좌+신용계좌) − 신용융자. 음수가 클수록 빚이 현금보다 많음(십억 달러)
+            "net_credit": [[d, round(((c or 0) + (m or 0) - b) / 1000, 1)] for d, b, c, m in rows if c is not None and m is not None and d >= "1998-01-01"],
+            # 신용융자 ÷ 명목 GDP(%): 경제 규모에 비해 빚투가 얼마나 큰지(분기 GDP를 그 분기 달들에 씀)
+            "gdp_ratio": gdp_ratio(debit, gdp) if gdp else []}
+
+
+def gdp_ratio(debit, gdp):
+    q = sorted(gdp)
+    out = []
+    for d, b in debit:
+        g = next((v for qd, v in reversed(q) if qd <= d), None)
+        if g and d >= "1998-01-01":
+            out.append([d, round(b / 1000 / g * 100, 3)])
+    return out
+
+
+# ---------- 한국 빚투: 신용거래융자 잔고·고객예탁금 (네이버 증권 '증시자금동향', 매일, 억 원)
+KR_OUT = OUT.parent / "kr_credit.json"
+
+
+def kr_credit():
+    base = "https://stock.naver.com/api/domestic/market/trendDeposit"
+    ua = {"User-Agent": "Mozilla/5.0"}
+    def page(i):
+        with urllib.request.urlopen(urllib.request.Request(f"{base}?startIdx={i}&pageSize=200", headers=ua), timeout=60) as r:
+            return json.loads(r.read().decode("utf-8"))["content"]
+    prev = json.loads(KR_OUT.read_text(encoding="utf-8")) if KR_OUT.exists() else {}
+    have = {r[0]: r for r in prev.get("series") or []}
+    # 처음엔 2002년부터 전부(약 31쪽), 그다음부턴 최근 200일만 받아 이어 붙인다
+    pages = range(0, 40) if len(have) < 1000 else range(0, 1)
+    for i in pages:
+        rows = page(i)
+        if not rows:
+            break
+        for x in rows:
+            d = f"{x['bizdate'][:4]}-{x['bizdate'][4:6]}-{x['bizdate'][6:]}"
+            have[d] = [d, int(x["creditLoan"]), int(x["customerDeposit"])]
+        if len(pages) > 1:
+            time.sleep(0.4)
+    ser = sorted(have.values())
+    last = ser[-1]
+    d = datetime.strptime(last[0], "%Y-%m-%d")
+    def back(days):
+        cut = (d - timedelta(days=days)).strftime("%Y-%m-%d")
+        return next((r for r in reversed(ser) if r[0] <= cut), None)
+    y1 = back(365)
+    # 전년 대비 증가율(매일): 365일 전 이전의 마지막 날과 비교
+    import bisect
+    dates = [r[0] for r in ser]
+    yo = []
+    for r in ser:
+        cut = (datetime.strptime(r[0], "%Y-%m-%d") - timedelta(days=365)).strftime("%Y-%m-%d")
+        k = bisect.bisect_right(dates, cut) - 1
+        if k >= 0 and ser[k][1]:
+            yo.append([r[0], round((r[1] / ser[k][1] - 1) * 100, 1)])
+    ath = max(ser, key=lambda r: r[1])
+    yv = [v for _, v in yo]
+    peak12 = max(yo[-250:], key=lambda p: p[1]) if yo else None
+    return {"date": last[0], "credit": last[1], "deposit": last[2], "ratio": round(last[1] / last[2] * 100, 1),
+            "d1": back(1), "w1": back(7), "m1": back(30), "y1": y1, "ath": ath,
+            "yoy": yo[-1][1] if yo else None, "yoy_peak12": peak12,
+            "yoy_rank": round(sum(1 for v in yv if v <= yo[-1][1]) / len(yv) * 100) if yv else None,
+            # 전년 대비·비율 흐름은 화면에서 series로 계산한다(파일 크기 줄이기)
+            "series": ser}
 
 
 def main():
@@ -179,7 +246,7 @@ def main():
                 "series": tr}
 
     try:
-        margin = margin_pack(finra_margin())
+        margin = margin_pack(finra_margin(), fred("GDP"))
         print(f"빚투 {margin['date']}: 전년 대비 {margin['value']}% (최근 12개월 최고 {margin['peak12']}, {margin['falls']}개월째 둔화)")
     except Exception as e:  # noqa: BLE001  FINRA가 막혀도 나머지는 갱신
         print(f"빚투 실패: {type(e).__name__}: {e}")
@@ -211,6 +278,14 @@ def main():
     print(f"고통지수 {misery[-1][0]}: {last} (CPI {cpi[-1][1]} + 실업률 {un[misery[-1][0]]}) · 역사 백분위 {pct_rank}%")
     for i in data["indicators"]:
         print(f"  {i['key']:12} {i['date']} {i['value']} (직전 {i['prev']}, 1년 전 {i['year_ago']}) {len(i['series'])}점")
+    try:
+        kr = kr_credit()
+        kr["updated_at"] = data["updated_at"]
+        print(f"한국 빚투 {kr['date']}: 신용융자 {kr['credit']:,}억 · 예탁금 {kr['deposit']:,}억 · 비율 {kr['ratio']}% · 전년 대비 {kr['yoy']}% ({len(kr['series'])}일)")
+        if not dry:
+            KR_OUT.write_text(json.dumps(kr, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+    except Exception as e:  # noqa: BLE001
+        print(f"한국 빚투 실패: {type(e).__name__}: {e}")
     if dry:
         return
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")

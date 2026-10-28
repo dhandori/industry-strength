@@ -1,44 +1,44 @@
 name: 미국 물가·고용 자료 갱신
 
 on:
-  # FRED 원자료: CPI(매월 중순)·고용보고서(매월 첫 금요일)·PCE(매월 말)·JOLTS(매월 초)·실업수당 청구(매주 목요일)·기대인플레(매일)
-  # 미국 동부 08:30 발표 = 한국 21:30(서머타임) / 22:30 → 그 뒤 밤에 한 번, 다음 날 아침에 한 번 확인한다.
-  schedule:
-    - cron: "20 14 * * *"   # 23:20 KST
-    - cron: "20 22 * * *"   # 07:20 KST
-  workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "scripts/us_econ.py"
-      - ".github/workflows/us-econ.yml"
+ FRED 원자료: CPI# FRED 원자료: CPI(매월 중순)·고용보고서(매월 첫 금요일)·PCE(매월 말)·JOLTS(매월 초)·실업수당 청구(매주 목요일)·기대인플레(매일)
+ FRED 원자료: CPI# 미국 동부 08:30 발표 = 한국 21:30(서머타임) / 22:30 → 그 뒤 밤에 한 번, 다음 날 아침에 한 번 확인한다.
+ FRED 원자료: CPIschedule:
+ FRED 원자료: CPI  - cron: "20 14 * * *"   # 23:20 KST
+ FRED 원자료: CPI  - cron: "20 22 * * *"   # 07:20 KST
+ FRED 원자료: CPIworkflow_dispatch:
+ FRED 원자료: CPIpush:
+ FRED 원자료: CPI  branches: [main]
+ FRED 원자료: CPI  paths:
+ FRED 원자료: CPI    - "scripts/us_econ.py"
+ FRED 원자료: CPI    - ".github/workflows/us-econ.yml"
 
 permissions:
-  contents: write
+ FRED 원자료: CPIcontents: write
 
 concurrency:
-  group: us-econ
-  cancel-in-progress: false
+ FRED 원자료: CPIgroup: us-econ
+ FRED 원자료: CPIcancel-in-progress: false
 
 jobs:
-  update:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: FRED 수집
-        run: python scripts/us_econ.py
-      - name: 결과 저장
-        run: |
-          git config user.name "industry-strength-bot"
-          git config user.email "actions@users.noreply.github.com"
-          git add docs/data/us_econ.json
-          if git diff --cached --quiet; then
-            echo "변경 없음"
-          else
-            git commit -m "미국 물가·고용 자료 갱신 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
-            for i in 1 2 3; do git pull --rebase origin main && git push && break; sleep 5; done
-          fi
+ FRED 원자료: CPIupdate:
+ FRED 원자료: CPI  runs-on: ubuntu-latest
+ FRED 원자료: CPI  timeout-minutes: 10
+ FRED 원자료: CPI  steps:
+ FRED 원자료: CPI    - uses: actions/checkout@v4
+ FRED 원자료: CPI    - uses: actions/setup-python@v5
+ FRED 원자료: CPI      with:
+ FRED 원자료: CPI        python-version: "3.12"
+ FRED 원자료: CPI    - name: FRED 수집
+ FRED 원자료: CPI      run: python scripts/us_econ.py
+ FRED 원자료: CPI    - name: 결과 저장
+ FRED 원자료: CPI      run: |
+ FRED 원자료: CPI        git config user.name "industry-strength-bot"
+ FRED 원자료: CPI        git config user.email "actions@users.noreply.github.com"
+ FRED 원자료: CPI        git add docs/data/us_econ.json docs/data/kr_credit.json
+ FRED 원자료: CPI        if git diff --cached --quiet; then
+ FRED 원자료: CPI          echo "변경 없음"
+ FRED 원자료: CPI        else
+ FRED 원자료: CPI          git commit -m "미국 물가·고용 자료 갱신 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+ FRED 원자료: CPI          for i in 1 2 3; do git pull --rebase origin main && git push && break; sleep 5; done
+ FRED 원자료: CPI        fi

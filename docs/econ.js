@@ -213,10 +213,102 @@
       <div class="mx-why"><b>무엇인가요?</b> 미국 증권사 고객들이 증권사에서 돈을 빌려 주식을 산 금액(신용융자 잔고)이 1년 전보다 몇 % 늘었는지예요. 빚투가 빠르게 늘면 시장이 들뜬 상태이고, 증가세가 정점에서 꺾이면 더 사 줄 돈이 줄어들어 고점 신호가 되곤 했어요. 자료: FINRA 신용거래 통계(매월, 다음 달 셋째 주쯤 발표).</div></article>`;
   }
 
+  // ---------- 빚투 보조: 투자자 순신용, 빚투 ÷ GDP (미국, 매월)
+  function miniCard(o) {
+    return `<article class="card mx-card" style="--c:${col(o.lv[0])}">
+      <div class="mx-head"><div><div class="mx-name">${esc(o.n)}</div>${o.dir ? `<div class="mx-dir">${o.dir}</div>` : ""}</div><span class="mx-chip" style="--c:${col(o.lv[0])}">${esc(o.lv[1])}</span></div>
+      <div class="mx-val"><b>${o.v}</b><span class="ec-date">${o.date}</span></div>
+      <div class="ec-chs">${o.chs.map((c) => `<span class="ec-ch">${c}</span>`).join("")}</div>
+      <div class="mx-chart">${o.title ? `<div class="mx-chart-t">${o.title}</div>` : ""}${o.svg}${o.legend || ""}</div>
+      <div class="mx-why"><b>무엇인가요?</b> ${o.why}</div></article>`;
+  }
+  function marginExtra(m) {
+    const out = [];
+    const nc = m.net_credit || [];
+    if (nc.length > 24) {
+      const v = nc.at(-1)[1], low = nc.reduce((a, p) => (p[1] < a[1] ? p : a));
+      const lower = Math.round(nc.filter((p) => p[1] < v).length / nc.length * 100);   // 지금보다 빚이 더 많았던 달 비율
+      const lv = lower <= 3 ? [1, "역대 최저권(빚 최대)"] : lower <= 15 ? [2, "빚이 현금보다 크게 많음"] : lower <= 40 ? [3, "빚 많은 편"] : [5, "보통"];
+      const jo = (x) => `${x < 0 ? "−" : "+"}${(Math.abs(x) / 1000).toFixed(2)}조 달러`;
+      out.push(miniCard({ n: "투자자 순신용 (여유 현금 − 빚투)", dir: "📉 낮을수록(음수 클수록) 위험", lv, v: jo(v), date: ymK(nc.at(-1)[0]),
+        chs: [`${nc[0][0].slice(0, 4)}년 이후 지금보다 낮았던 달 ${lower}%`, `가장 낮았던 때 ${ym(low[0])} ${jo(low[1])}`],
+        svg: chart(nc, { months: 0, ref: [0], ax: (x) => (x / 1000).toFixed(1) + "조", dot: col(lv[0]), W: 600 }), title: `${nc[0][0].slice(0, 4)}년부터 흐름(FINRA가 여유 현금을 이때부터 공개)`,
+        why: "투자자들이 증권계좌에 넣어 둔 여유 현금에서 신용융자(빚)를 뺀 값이에요. 0보다 아래로 깊이 내려갈수록 현금보다 빚이 많다는 뜻이라, 시장이 흔들릴 때 반대매매로 더 크게 떨어질 수 있어요. 자료: FINRA." }));
+    }
+    const gr = m.gdp_ratio || [];
+    if (gr.length > 24) {
+      const v = gr.at(-1)[1], hi = gr.reduce((a, p) => (p[1] > a[1] ? p : a));
+      const rank = Math.round(gr.filter((p) => p[1] <= v).length / gr.length * 100);
+      const lv = rank >= 97 ? [1, "역대 최고권"] : rank >= 85 ? [2, "매우 높음"] : rank >= 65 ? [3, "높음"] : [5, "보통"];
+      const marks = (m.past_peaks || []).map((p) => { const g = gr.find((x) => x[0] === p[0]); return g ? [g[0], g[1], g[0].slice(0, 4)] : null; }).filter(Boolean);
+      out.push(miniCard({ n: "빚투 ÷ 미국 GDP", dir: "📈 오를수록 위험", lv, v: v.toFixed(2) + "%", date: ymK(gr.at(-1)[0]),
+        chs: [`1998년 이후 지금보다 낮았던 달 ${rank}%`, `가장 높았던 때 ${ym(hi[0])} ${hi[1].toFixed(2)}%`],
+        svg: chart(gr, { months: 0, ax: (x) => x.toFixed(1) + "%", dot: col(lv[0]), marks, W: 600 }), title: "1998년부터 흐름 · 빨간 점 = 빚투 증가율이 고점이던 때",
+        why: "신용융자 잔고를 미국 경제 규모(명목 GDP)로 나눈 값이에요. 물가·경제가 커지면 빚 금액도 자연히 커지니, 경제 규모에 비해 빚투가 얼마나 큰지로 과열을 봐요. 자료: FINRA·FRED(GDP, 분기)." }));
+    }
+    return out.length ? `<div class="mx-grid">${out.join("")}</div>` : "";
+  }
+
+  // ---------- 한국 빚투: 신용거래융자 잔고·고객예탁금 (네이버 증권, 매일)
+  function krCredit(k) {
+    const S = k.series || [];
+    if (S.length < 300) return "";
+    const dates = S.map((r) => r[0]);
+    const idxBefore = (cut) => { let lo = 0, hi = dates.length - 1, a = -1; while (lo <= hi) { const mid = (lo + hi) >> 1; if (dates[mid] <= cut) { a = mid; lo = mid + 1; } else hi = mid - 1; } return a; };
+    const yo = [];   // 2010년부터(2000년대 중반은 잔고가 작아 증가율이 수백~천 %로 튀어 그림을 망친다)
+    S.forEach((r) => { const d = new Date(r[0] + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - 365); const j = idxBefore(d.toISOString().slice(0, 10)); if (j >= 0 && S[j][1] && r[0] >= "2010-01-01") yo.push([r[0], Math.round((r[1] / S[j][1] - 1) * 1000) / 10]); });
+    const yoRank = Math.round(yo.filter((p) => p[1] <= k.yoy).length / yo.length * 100);
+    const ratio = S.map((r) => [r[0], Math.round(r[1] / r[2] * 1000) / 10]);
+    const jo = (x) => `${(x / 10000).toFixed(1)}조`;
+    const chg = (a, b, t) => { if (!b) return ""; const dv = a - b[1], pc = (a / b[1] - 1) * 100; return `${t} <b class="${dv > 0 ? "up" : dv < 0 ? "down" : ""}">${dv > 0 ? "+" : dv < 0 ? "−" : ""}${Math.abs(dv) >= 10000 ? (Math.abs(dv) / 10000).toFixed(1) + "조" : Math.round(Math.abs(dv)).toLocaleString() + "억"} (${pc > 0 ? "+" : ""}${pc.toFixed(1)}%)</b>`; };
+    const pk = k.yoy_peak12, fromAth = (k.credit / k.ath[1] - 1) * 100;
+    const peakOut = pk && pk[1] >= 40 && k.yoy <= pk[1] - 15 && fromAth <= -10;
+    const lv = peakOut ? [1, "피크아웃(빚투 줄어드는 중)"] : k.yoy >= 50 ? [2, "과열"] : k.yoy >= 25 ? [3, "높음"] : k.yoy >= 0 ? [5, "보통"] : [4, "빚 줄이는 중"];
+    // 과거 큰 고점(전년 대비 60% 이상, 앞뒤 약 반년 중 최고)
+    const marks = [];
+    yo.forEach((p, i) => { if (p[1] >= 60 && p[1] === Math.max(...yo.slice(Math.max(0, i - 120), i + 121).map((x) => x[1])) && !marks.some((m) => m[0].slice(0, 4) === p[0].slice(0, 4))) marks.push([p[0], p[1], p[0].slice(0, 4)]); });
+    const story = peakOut
+      ? `빚투 잔고가 ${ymK(k.ath[0])} <b>${jo(k.ath[1])}</b>로 사상 최고를 찍은 뒤 <b>${Math.abs(fromAth).toFixed(0)}% 줄었어요</b>. 1년 전 대비 증가율도 ${ymK(pk[0])} ${pk[1].toFixed(0)}%에서 지금 ${k.yoy.toFixed(0)}%로 꺾였어요. 빚투가 정점에서 꺾일 때는 개인 매수 힘이 약해지는 구간이었던 경우가 많아요.`
+      : k.yoy >= 50 ? `빚투가 1년 새 ${k.yoy.toFixed(0)}% 늘었어요. 과열 구간이라, 여기서 증가율이 꺾이면 고점 신호로 봐요.`
+      : `빚투 잔고 ${jo(k.credit)}, 1년 전보다 ${k.yoy.toFixed(0)}% 많아요.`;
+    const months = st.span;
+    const lvSvg = chart(S.map((r) => [r[0], r[1]]), { months, ax: (x) => (x / 10000).toFixed(0) + "조", dot: col(lv[0]), W: 1000, h: innerWidth < 640 ? 200 : 260,
+      lines: [{ v: S.map((r) => r[1]), c: "var(--price)", w: 2 }, { v: S.map((r) => r[2] * 0.25), c: "var(--ma50)", w: 1.3, dash: "4 3" }] });
+    const yoSvg = chart(yo, { months: 0, ref: [0, 50], zone: 50, ax: (x) => x.toFixed(0) + "%", dot: col(lv[0]), marks, W: 600 });
+    const rtSvg = chart(ratio, { months, ax: (x) => x.toFixed(0) + "%", dot: "var(--price)", W: 600 });
+    const rr = ratio.map((p) => p[1]), rRank = Math.round(rr.filter((v) => v <= k.ratio).length / rr.length * 100);
+    return `<section class="mx-market ec-sec ec-kr" aria-label="한국 빚투">
+      <div class="mx-market-h"><h2>🇰🇷 빚투 (신용거래융자)</h2><span class="sub">네이버 증권 증시자금동향 · ${esc(k.date)} 기준 · 2002년부터 매일</span></div>
+      <div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="빚투 그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-ecspan="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div></div>
+      <article class="card mx-card ec-mg" style="--c:${col(lv[0])}">
+        <div class="mx-head"><div><div class="mx-name">한국 신용거래융자 잔고 (빚내서 산 주식 금액)</div><div class="mx-dir">📈 크게 늘다가 꺾이면 위험</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
+        <div class="mx-val"><b>${jo(k.credit)} 원</b><span class="ec-date">${+k.date.slice(5, 7)}/${+k.date.slice(8, 10)}</span></div>
+        <div class="ec-chs"><span class="ec-ch">${chg(k.credit, k.w1, "1주")}</span><span class="ec-ch">${chg(k.credit, k.m1, "1개월")}</span><span class="ec-ch">${chg(k.credit, k.y1, "1년")}</span><span class="ec-ch">사상 최고 ${jo(k.ath[1])}(${ym(k.ath[0])}) 대비 <b class="${fromAth < 0 ? "down" : "up"}">${fromAth.toFixed(1)}%</b></span></div>
+        <p class="ec-story">${story}</p>
+        <div class="mx-chart"><div class="mx-chart-t">신용융자 잔고와 고객예탁금 <span>예탁금은 ¼로 줄여 같은 눈금에 그렸어요</span></div>${lvSvg}
+          <div class="chart-legend"><span><i style="background:var(--price)"></i>신용융자 잔고</span><span><i style="background:var(--ma50)"></i>고객예탁금 × ¼ (지금 ${jo(k.deposit)})</span></div></div>
+        <div class="mx-why"><b>무엇인가요?</b> 개인이 증권사에서 돈을 빌려 산 주식 금액(신용거래융자 잔고)이에요. 빚투가 빠르게 늘면 시장이 들뜬 상태이고, 주가가 떨어지면 반대매매(강제 처분)로 하락이 커질 수 있어요. 고객예탁금은 주식을 사려고 증권계좌에 넣어 둔 현금이에요.</div>
+      </article>
+      <div class="mx-grid">
+        ${miniCard({ n: "한국 빚투 증가율 (1년 전 대비)", dir: "📈 50% 넘었다가 꺾이면 위험", lv, v: (k.yoy > 0 ? "+" : "") + k.yoy.toFixed(1) + "%", date: `${+k.date.slice(5, 7)}/${+k.date.slice(8, 10)}`,
+          chs: [pk ? `최근 1년 최고 ${pk[1].toFixed(0)}%(${ym(pk[0])})` : "", `2010년 이후 지금보다 낮았던 날 ${yoRank}%`].filter(Boolean),
+          svg: yoSvg, title: "2010년부터 흐름 · 빨간 칠 = 50% 넘는 과열", why: "신용융자 잔고가 1년 전보다 몇 % 늘었는지예요. 미국 빚투 증가율과 같은 방식으로, 정점을 찍고 꺾일 때를 고점 신호로 봐요." })}
+        ${miniCard({ n: "신용융자 ÷ 고객예탁금", dir: "📈 오를수록 빚 비중 큼", lv: rRank >= 90 ? [2, "빚 비중 높음"] : rRank >= 70 ? [3, "높은 편"] : [5, "보통"], v: k.ratio.toFixed(1) + "%", date: `${+k.date.slice(5, 7)}/${+k.date.slice(8, 10)}`,
+          chs: [`2002년 이후 지금보다 낮았던 날 ${rRank}%`, `예탁금 ${jo(k.deposit)} · 1년 전 ${k.y1 ? jo(k.y1[2]) : "–"}`],
+          svg: rtSvg, title: "그래프 기간 버튼 적용", why: "주식 살 현금(예탁금)에 비해 빚(신용융자)이 얼마나 되는지예요. 높을수록 빚에 기대 오른 시장이라 충격에 약해요. 예탁금이 줄면서 비율이 오르면 더 조심할 신호예요." })}
+      </div>
+    </section>`;
+  }
+
   function render(market) {
     const box = $("#mxEcon");
     if (!box) return;
-    if (market !== "US") { box.innerHTML = ""; return; }
+    if (market !== "US") {
+      if (!st.kr) { loadKR(); box.innerHTML = ""; return; }
+      box.innerHTML = krCredit(st.kr);
+      bindSpan(box, market);
+      return;
+    }
     if (!st.data) { load(); return; }
     const d = st.data, I = Object.fromEntries(d.indicators.map((i) => [i.key, i]));
     const grp = (g) => d.indicators.filter((i) => DEF[i.key] && DEF[i.key].g === g).map(card).join("");
@@ -224,7 +316,7 @@
       <div class="mx-market-h"><h2>🇺🇸 물가·고용</h2><span class="sub">고통지수 · 국채 금리 · 인플레이션 · 실업 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
       <div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="물가·고용 그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-ecspan="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div><span class="sub">월별 지표 기준(주간·일별 지표는 최대 5년)</span></div>
       ${hero(d.misery)}
-      ${d.margin ? `<div class="mx-group-h"><h3>빚투 (신용융자)</h3><span class="sub">고점 신호 · 매월</span></div>${margin(d.margin)}` : ""}
+      ${d.margin ? `<div class="mx-group-h"><h3>빚투 (신용융자)</h3><span class="sub">고점 신호 · 매월</span></div>${margin(d.margin)}${marginExtra(d.margin)}` : ""}
       <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
@@ -237,11 +329,25 @@
     }));
   }
 
+  function bindSpan(box, market) {
+    $$("[data-ecspan]", box).forEach((b) => b.addEventListener("click", () => {
+      st.span = +b.dataset.ecspan;
+      try { localStorage.setItem("ec-span", st.span); } catch (e) {}
+      const y = scrollY; render(market); scrollTo({ top: y });
+    }));
+  }
+  async function loadKR() {
+    if (st.krLoading) return;
+    st.krLoading = true;
+    try { const r = await fetch("data/kr_credit.json?v=" + Date.now(), { cache: "no-store" }); if (r.ok) st.kr = await r.json(); } catch (e) {}
+    st.krLoading = false;
+    if (st.kr) render((window.__isMarket && window.__isMarket()) || "KR");
+  }
   async function load() {
     if (!st.loading) st.loading = fetch("data/us_econ.json?v=" + Date.now(), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
     try { st.data = await st.loading; } catch (e) { const b = $("#mxEcon"); if (b) b.innerHTML = `<div class="mx-empty">미국 물가·고용 자료를 불러오지 못했어요.</div>`; return; } finally { st.loading = null; }
     render((window.__isMarket && window.__isMarket()) || "KR");
   }
 
-  window.__econ = { render, reload: () => { st.data = null; } };
+  window.__econ = { render, reload: () => { st.data = null; st.kr = null; } };
 })();
