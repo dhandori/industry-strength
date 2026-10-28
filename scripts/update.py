@@ -41,10 +41,36 @@ def log(*a):
 
 
 # ---------------------------------------------------------------- 수집
+# 야후에서 받은 고가·저가(티커별). ATR(평균 변동폭) 계산에만 쓰고 저장하지 않는다. 네이버·stooq 대체 수집 종목은 없다.
+HIGH_LOW: dict[str, tuple[pd.Series, pd.Series]] = {}
+
+
+def atr14(ticker: str, close: pd.Series, last, n: int = 14):
+    """와일더 ATR(14일)과 종가 대비 %. 고가·저가가 없거나 이력이 짧으면 None."""
+    hl = HIGH_LOW.get(ticker)
+    if hl is None:
+        return None, None
+    h, l = hl
+    idx = close.index.normalize()
+    h = h.copy(); l = l.copy()
+    h.index = pd.to_datetime(h.index).tz_localize(None).normalize(); l.index = h.index
+    df = pd.DataFrame({"c": close.values, "h": h.reindex(idx).values, "l": l.reindex(idx).values}, index=idx)
+    df = df[df.index <= last].dropna()
+    if len(df) < n + 1 or df["c"].iloc[-1] <= 0:
+        return None, None
+    prev = df["c"].shift(1)
+    tr = pd.concat([df["h"] - df["l"], (df["h"] - prev).abs(), (df["l"] - prev).abs()], axis=1).max(axis=1).iloc[1:]
+    atr = tr.ewm(alpha=1 / n, adjust=False).mean().iloc[-1]
+    if pd.isna(atr) or atr <= 0:
+        return None, None
+    return float(atr), float(atr / df["c"].iloc[-1] * 100)
+
+
 def fetch_yahoo(tickers: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
     import yfinance as yf
 
     closes, vols = {}, {}
+    HIGH_LOW.clear()
     for attempt in range(3):
         todo = [t for t in tickers if t not in closes]
         if not todo:
@@ -63,6 +89,7 @@ def fetch_yahoo(tickers: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
                 if len(c) > 20:
                     closes[t] = c
                     vols[t] = sub["Volume"].reindex(c.index)
+                    HIGH_LOW[t] = (sub["High"].reindex(c.index), sub["Low"].reindex(c.index))
             except Exception:  # noqa: BLE001
                 pass
         if len(closes) < len(tickers):
@@ -362,7 +389,13 @@ def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
                 continue
             c = px.at[last, t]
             lv = px[t].last_valid_index()
+            try:
+                atr_v, atr_p = atr14(t, px[t].dropna(), last)
+            except Exception as ex:  # noqa: BLE001  보조 지표 하나 때문에 갱신 전체가 멈추면 안 된다
+                log("ATR 계산 실패", t, ex)
+                atr_v = atr_p = None
             rows.append({
+                "atr": r(atr_v, 2), "atr_pct": r(atr_p, 2),
                 "name": mb["name"], "code": mb["code"], "ticker": t,
                 "close": r(c, 2), "chg1": r(k[1].at[last, t] * 100), "ret5": r(k[5].at[last, t] * 100),
                 "ret20": r(k[20].at[last, t] * 100), "ret60": r(k[60].at[last, t] * 100),
