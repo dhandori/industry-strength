@@ -162,7 +162,7 @@
         if (m.atr != null && m.atr_pct != null) {
           const p = m.atr_pct * 2, over = p > 8, used = Math.min(p, 8);
           stat.push(["ATR 손절 (2×ATR)", `<b class="${over ? "no" : "ok"}">${money(m.close - m.atr * 2)} (−${p.toFixed(1)}%)</b>`, over ? "8%보다 넓어요 → 8% 한도에서 자르고, 변동성이 커서 비중을 줄이거나 더 좁은 자리에서만 사요." : "8% 안에 들어와요 → 이 폭을 손절로 쓰면 보통의 흔들림에는 안 털려요."]);
-          stat.push(["계좌 위험 1% 기준 비중", `<b>${Math.round(100 / used)}%</b>`, `손절 폭 ${used.toFixed(1)}%로 한 번에 계좌의 1%만 잃도록 할 때 살 수 있는 최대 비중이에요.`]);
+          stat.push(["계좌 위험 2% 기준 비중", `<b>${Math.round(200 / used)}%</b>`, `손절 폭 ${used.toFixed(1)}%로 한 번에 계좌의 2%만 잃도록 할 때 살 수 있는 최대 비중이에요.`]);
         }
       }
       if (m.dist_high != null) stat.push(["52주 고점 대비",`<b>${m.dist_high.toFixed(1)}%</b>`, m.dist_high >= -5 ? "고점 근처(신고가권)예요." : m.dist_high >= -15 ? "고점에서 크게 멀지 않아요." : "고점에서 꽤 내려와 있어요."]);
