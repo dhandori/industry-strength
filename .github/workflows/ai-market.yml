@@ -1,7 +1,7 @@
 name: AI 시장 자료 갱신
 
 on:
-  # 원자료 주기: Epoch AI 매출(새 보도 날 때, 대개 2~4주) · OpenRouter 토큰(주간, 월요일 09:00 KST 마감) · Vercel(매일)
+  # 원자료 주기: Epoch AI 매출(새 보도 날 때, 대개 2~4주) · SEC 상장 서류(올라올 때) · OpenRouter 토큰(주간, 월요일 09:00 KST 마감) · Vercel(매일)
   # → 매일 두 번 확인한다. 월요일 09:20 실행에서 지난주 OpenRouter 주간 합계가 확정된다. 시각을 바꾸면 docs/ai.js 안내 문구도 같이 바꾼다.
   schedule:
     - cron: "20 0 * * *"    # 09:20 KST
@@ -30,7 +30,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Epoch AI·OpenRouter·Vercel 수집
+      - name: Epoch AI·SEC·OpenRouter·Vercel 수집
+        env:
+          SEC_CONTACT: ${{ secrets.SEC_CONTACT }}   # SEC는 요청마다 연락처를 요구한다(공개 코드에 안 남게 비밀값으로)
         run: python scripts/ai_market.py
       - name: 결과 저장
         if: always()

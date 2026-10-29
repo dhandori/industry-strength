@@ -11,8 +11,8 @@
   const ymd = (s) => { const [y, m, d] = s.split("-"); return `${y.slice(2)}.${+m}.${+d}`; };
   const won = (usd) => usd >= 1e12 ? `${(usd / 1e12).toFixed(2).replace(/\.?0+$/, "")}조 달러` : `${Math.round(usd / 1e8).toLocaleString()}억 달러`;
   const pct = (v, d = 1) => v == null ? "–" : v.toFixed(d) + "%";
-  const TYPE = { "Annualized run rate": "런레이트", "Annual recurring revenue (ARR)": "ARR", target: "연말 목표" };
-  const CONF = { Confident: "확실", Likely: "유력", Speculative: "추측" };
+  const TYPE = { "Annualized run rate": "런레이트", "Annual recurring revenue (ARR)": "ARR", target: "연말 목표", s1: "S-1 공시 런레이트" };
+  const CONF = { Confident: "확실", Likely: "유력", Speculative: "추측", Filed: "공시" };
   const CO = { Anthropic: { c: "var(--ai-a)", basis: "총액 방식", help: "아마존 등 클라우드 파트너를 통해 판 금액 전체를 매출로 잡아요." },
     OpenAI: { c: "var(--ai-o)", basis: "순액 방식", help: "클라우드 파트너 판매분은 자기 몫만 매출로 잡아요." } };
   const AUTHOR = { deepseek: "DeepSeek", openai: "OpenAI", anthropic: "Anthropic", google: "Google", "x-ai": "xAI", "z-ai": "Z.ai", qwen: "Qwen",
@@ -100,13 +100,13 @@
     let g = `<defs><pattern id="aiHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="color-mix(in srgb, var(--ai-a) 18%, transparent)"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--ai-a)" stroke-width="2"/></pattern></defs>`;
     for (let v = 0; v <= ymax; v += step) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v * 1e8)}" y2="${Y(v * 1e8)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(v * 1e8) + 4}" text-anchor="end" class="ai-tk">${v ? v.toLocaleString() + "억" : "0"}</text>`;
     const narrow = W < 520;
-    let bars = "";
+    let bars = "", vals = "";
     qs.forEach((q, i) => {
       const x = X(i), w = bw * 0.62, y = Y(q.usd), est = q.kind !== "reported";
       const prev = qs[i - 1], gr = prev ? (q.usd / prev.usd - 1) * 100 : null;
       const tt = `${q.q} 매출 ${won(q.usd)}${est ? " (추정)" : ""} · ${q.where}${gr != null ? ` · 전분기 대비 +${gr.toFixed(0)}%` : ""}`;
       bars += `<rect x="${(x - w / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${(Y(0) - y).toFixed(1)}" rx="2" fill="${est ? "url(#aiHatch)" : "var(--ai-a)"}" stroke="${est ? "var(--ai-a)" : "none"}" stroke-dasharray="${est ? "3 2" : ""}" ${tipAttr(tt)}/>`;
-      if (!narrow || q.usd >= 3e9) bars += `<text x="${x}" y="${y - 5}" text-anchor="middle" class="ai-bv">${Math.round(q.usd / 1e8).toLocaleString()}${est ? "*" : ""}</text>`;
+      if (!narrow || q.usd >= 3e9) vals += `<text x="${x}" y="${y - 5}" text-anchor="middle" class="ai-bv">${Math.round(q.usd / 1e8).toLocaleString()}${est ? "*" : ""}</text>`;
       const [yy, qq] = q.q.split("Q");
       bars += `<text x="${x}" y="${H - P.b + 15}" text-anchor="middle" class="ai-tk">${narrow ? `${yy.slice(2)}.${qq}Q` : `${yy.slice(2)}년 ${qq}Q`}</text>`;
       if (gr != null) bars += `<text x="${x}" y="${H - P.b + 30}" text-anchor="middle" class="ai-gr"${narrow ? ' style="font-size:9px"' : ""}>${narrow ? "" : "+"}${gr.toFixed(0)}%</text>`;
@@ -119,7 +119,7 @@
       const e = tp.at(-1);
       line += `<text x="${e[0] - 6}" y="${e[1] - 8}" text-anchor="end" class="ai-tk" style="font-weight:700;fill:var(--ink-2)">4분기 합계 ${won(e[2])}</text>`;
     }
-    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="Anthropic 분기 매출(S-1)">${g}${bars}${line}</svg>`;
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="Anthropic 분기 매출(S-1)">${g}${bars}${line}${vals}</svg>`;
   }
 
   // ---------- 2) 오픈웨이트 토큰 비중 선 그래프
@@ -202,9 +202,17 @@
     const d = st.data, box = $("#aiBody");
     if (!d) return;
     const src = d.sources || {};
-    const bad = Object.entries(src).filter(([, v]) => !v.ok).map(([k]) => ({ revenue: "매출", openrouter: "OpenRouter", vercel: "Vercel" }[k] || k));
+    const bad = Object.entries(src).filter(([, v]) => !v.ok).map(([k]) => ({ revenue: "매출", openrouter: "OpenRouter", vercel: "Vercel", sec: "SEC 상장 서류" }[k] || k));
     $("#aiMeta").innerHTML = `갱신 ${esc(d.updated_at)} · 매일 09:20·12:20 KST 자동 수집${bad.length ? ` · <b class="ai-bad">이번 수집 실패: ${bad.join(", ")} (지난 값 표시)</b>` : ""}`;
-    const rv = d.revenue || { companies: {}, others: [] }, or = d.openrouter || {}, vc = d.vercel || null;
+    const rv0 = d.revenue || { companies: {}, others: [] }, or = d.openrouter || {}, vc = d.vercel || null;
+    // 상장 서류에 런레이트 금액이 실리면 그 회사 선의 마지막 점으로 넣는다(회사 공시라 가장 믿을 만함)
+    const rv = { ...rv0, companies: { ...rv0.companies } };
+    for (const [co, f] of Object.entries(rv0.filings || {})) {
+      if (!f.run_rate || !CO[co]) continue;
+      const pts = (rv.companies[co] || []).filter((x) => !(x.date === f.run_rate.date && x.type === "s1"));
+      pts.push({ date: f.run_rate.date, usd: f.run_rate.usd, type: "s1", confidence: "Filed", report_date: (f.doc || "").replace(/^Form /, ""), source: f.url, note: "상장 서류(S-1) 공시 런레이트" });
+      rv.companies[co] = pts.sort((a, b) => a.date.localeCompare(b.date));
+    }
     const lastOf = (c) => (rv.companies[c] || []).at(-1);
     const A = lastOf("Anthropic"), O = lastOf("OpenAI");
     const lt = or.latest || {};
@@ -234,15 +242,18 @@
     const fa = (rv.filings || {}).Anthropic;
     if (fa && (fa.quarters || []).length >= 2) {
       const q = fa.quarters, lq = q.at(-1), rq = q.filter((x) => x.kind === "reported").at(-1);
+      const runBox = fa.run_rate ? `<div class="ai-run"><span>S-1 공시 런레이트</span><b>${won(fa.run_rate.usd)}</b><em>${ymd(fa.run_rate.date)} 기준 · 최근 28일 사용료 × 13 + 월 구독료 × 12</em></div>` : "";
+      const hist = (fa.history || []).map((h) => `${h.form} ${ymd(h.filed)}`).join(" → ");
       const pend = (fa.pending || []).map((p) => `<li><b>${esc(p.what)}</b> ${esc(p.note)}</li>`).join("");
       const srcs = (fa.sources || []).map((x) => `<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>`).join(", ");
       fHtml = `<section class="card">
         <div class="card-head wrap"><h2>Anthropic 실제 분기 매출 <span class="sub">${esc(fa.doc)} · 감사받은 공시 숫자</span></h2></div>
         <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>분기 매출(공시)</span><span><i class="ai-hatch"></i>추정(*)</span><span><i style="background:var(--ink-2);height:3px"></i>최근 4분기 합계</span></div>
+        ${runBox}
         <div id="aiFile"></div>
         <p class="foot-note">막대 위 숫자 단위는 억 달러, 아래 %는 전분기 대비 증가율이에요. 마지막 공시 분기 ${esc(rq.q)} 매출 ${won(rq.usd)}를 4배 하면 연환산 약 <b>${won(rq.usd * 4)}</b>${lq.kind !== "reported" ? `, ${esc(lq.q)} 추정치 기준이면 약 <b>${won(lq.usd * 4)}</b>` : ""}예요. ${lq.kind !== "reported" ? `<b>*${esc(lq.q)}</b>는 ${esc(lq.where)}.` : ""} 매출 인식: ${esc(fa.basis)}.</p>
         ${pend ? `<div class="ai-warn"><b>수정 S-1에서 채워질 칸</b><ul class="ai-pend">${pend}</ul></div>` : ""}
-        <p class="foot-note">자료: <a href="${esc(fa.url)}" target="_blank" rel="noopener">SEC EDGAR</a> · 정리 ${srcs}. 이 카드는 사람이 config/ai_revenue_manual.json을 고쳐서 갱신해요.</p>
+        <p class="foot-note">자료: <a href="${esc(fa.url)}" target="_blank" rel="noopener">SEC EDGAR</a> · 정리 ${srcs}. ${fa.auto ? `SEC EDGAR에서 <b>매일 자동 확인</b>해요. 수정 S-1이나 최종 투자설명서가 올라오면 다음 수집 때 바로 바뀌어요.${hist ? ` 반영된 서류: ${esc(hist)}.` : ""}` : "SEC 자동 수집이 아직 꺼져 있어 수동 입력값을 보여 줘요."}</p>
       </section>`;
     }
 
@@ -333,6 +344,7 @@
         <div class="card-head"><h2>출처와 갱신 주기</h2></div>
         <div class="ai-tw"><table class="mem-table"><thead><tr><th>항목</th><th>출처</th><th>원자료 갱신</th><th>이 탭 반영</th></tr></thead><tbody>
           <tr><td>매출 런레이트</td><td><a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI</a></td><td>새 보도가 날 때(대개 2~4주에 한 번)</td><td>매일 확인 · 새 보도는 텔레그램 알림</td></tr>
+          <tr><td>상장 서류 분기 매출·런레이트</td><td><a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=2130357&amp;type=S-1" target="_blank" rel="noopener">SEC EDGAR</a></td><td>서류가 올라올 때(S-1 → 수정 S-1 → 최종 투자설명서)</td><td>매일 확인 · 새 서류면 자동 반영</td></tr>
           <tr><td>토큰 점유율</td><td><a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter</a></td><td>주간(월요일 09:00 KST 마감)</td><td>매일 확인 · 월요일에 주간 요약 알림</td></tr>
           <tr><td>토큰 vs 지출</td><td><a href="https://vercel.com/ai-gateway/leaderboards" target="_blank" rel="noopener">Vercel AI Gateway</a></td><td>매일</td><td>매일</td></tr>
         </tbody></table></div>

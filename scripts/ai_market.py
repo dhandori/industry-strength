@@ -6,13 +6,18 @@
 - 토큰 점유율: OpenRouter 순위 화면이 쓰는 자료. 주 단위(월요일 00:00 UTC = 09:00 KST 마감).
   오픈웨이트 여부는 OpenRouter 모델 목록의 hugging_face_id(가중치 공개 저장소)가 있는지로 판정.
 - 토큰 vs 지출: Vercel AI Gateway 순위 화면에 박힌 하루 단위 상위 10개 모델 비중.
+- 상장 서류(S-1·S-1/A·424B): SEC EDGAR에서 매일 확인. 새 서류가 올라오면 본문에서 분기 매출표,
+  '런레이트 $__ (날짜 기준)', 'N분기 매출 $__' 문구를 읽는다. SEC는 요청마다 연락처를 요구해서
+  환경변수 SEC_CONTACT(깃허브 비밀값)가 있을 때만 돈다. 없으면 config/ai_revenue_manual.json 값을 쓴다.
 
 python scripts/ai_market.py            # 수집 + 저장
 python scripts/ai_market.py --dry-run  # 저장하지 않고 요약만 출력
 """
 import csv
+import html
 import io
 import json
+import os
 import re
 import sys
 import urllib.request
@@ -66,13 +71,113 @@ def epoch():
     return {"companies": out, "others": sorted(others.values(), key=lambda x: -x["usd"])}
 
 
+# ---------- 상장 서류: SEC EDGAR
+SEC_CIK = {"Anthropic": 2130357}            # OpenAI 등은 공개 S-1을 내면 여기에 CIK를 더한다
+SEC_FORMS = ("424B4", "424B1", "S-1/A", "S-1")
+MON = {m: i for i, m in enumerate(["January", "February", "March", "April", "May", "June", "July", "August",
+                                    "September", "October", "November", "December"], 1)}
+
+
+def _d(s):
+    m = re.match(r"(\w+) (\d{1,2}), (\d{4})", s)
+    return f"{m.group(3)}-{MON[m.group(1)]:02d}-{int(m.group(2)):02d}" if m and m.group(1) in MON else None
+
+
+def _q(end):
+    y, mo = int(end[:4]), int(end[5:7])
+    return f"{y}Q{(mo - 1) // 3 + 1}"
+
+
+def _usd(num, unit):
+    return float(num.replace(",", "")) * (1e9 if unit.lower().startswith("b") else 1e6)
+
+
+def parse_s1(t):
+    """S-1 본문(태그 뺀 글)에서 분기 매출·런레이트를 읽는다. 금액 칸이 비어 있으면 pending으로 남긴다."""
+    q = {}
+    # 1) MD&A 분기 매출표: 'Three Months Ended (in millions) <날짜들> Revenue $ 376 $ 787 ...'
+    for m in re.finditer(r"Three Months Ended \(in millions\) ((?:[A-Z][a-z]+ \d{1,2}, \d{4} ){2,12})Revenue((?: \$? ?[\d,]+){2,12})", t):
+        ds = [_d(x) for x in re.findall(r"[A-Z][a-z]+ \d{1,2}, \d{4}", m.group(1))]
+        vs = [float(v.replace(",", "")) * 1e6 for v in re.findall(r"[\d,]+", m.group(2))][:len(ds)]
+        if len(vs) == len(ds) and all(ds):
+            for d, v in zip(ds, vs):
+                q[d] = {"q": _q(d), "end": d, "usd": v, "kind": "reported", "where": "S-1 MD&A 분기표"}
+            break
+    # 2) 본문 문구: '$197 million for the three months ended December 31, 2024'
+    for m in re.finditer(r"\$([\d,.]+) (million|billion) for the three months ended ([A-Z][a-z]+ \d{1,2}, \d{4})", t):
+        d = _d(m.group(3))
+        if d and d not in q:
+            q[d] = {"q": _q(d), "end": d, "usd": _usd(m.group(1), m.group(2)), "kind": "reported", "where": "S-1 본문"}
+    pending = []
+    # 3) 금액이 빈칸인 분기: 'revenue for the three months ended September 30, 2026 was 86 times our revenue for ... December 31, 2024'
+    for m in re.finditer(r"revenue for the three months ended ([A-Z][a-z]+ \d{1,2}, \d{4}) was (\d+(?:\.\d+)?) times our revenue for the three months ended ([A-Z][a-z]+ \d{1,2}, \d{4})", t):
+        d, k, b = _d(m.group(1)), float(m.group(2)), _d(m.group(3))
+        if d and d not in q and b in q:
+            q[d] = {"q": _q(d), "end": d, "usd": round(q[b]["usd"] * k / 1e6) * 1e6, "kind": "derived",
+                    "where": f"S-1 문구 '{_q(b)}의 {m.group(2)}배'로 계산(금액 칸은 빈칸)"}
+            pending.append({"what": f"{_q(d)} 매출 금액", "note": "서류에 금액 칸이 비어 있어 배수로 계산한 추정치예요. 수정 S-1에서 확정돼요."})
+    # 4) 런레이트: 'our Run-Rate Revenue was $ as of October 31, 2026' (빈칸) 또는 '$123.4 billion'
+    run = None
+    for m in re.finditer(r"Run-Rate Revenue was \$ ?(?:([\d,.]+) ?(billion|million))? ?as of ([A-Z][a-z]+ \d{1,2}, \d{4})", t):
+        d = _d(m.group(3))
+        if m.group(1):
+            run = {"date": d, "usd": _usd(m.group(1), m.group(2))}
+            break
+        pending.insert(0, {"what": f"런레이트({d} 기준)", "note": "서류에 금액 칸이 비어 있어요. 로드쇼 전 수정 S-1에서 채워질 가능성이 커요."})
+        break
+    defn = re.search(r"Run-Rate Revenue ?” is an operating metric.{20,500}?multiplied by 1[23]\.(?:.{0,300}?multiplied by 1[23]\.)?", t)
+    return {"quarters": sorted(q.values(), key=lambda x: x["end"]), "run_rate": run, "pending": pending,
+            "run_def": re.sub(r"\s+", " ", defn.group(0))[:700] if defn else None}
+
+
+def sec_filings(prev):
+    contact = os.environ.get("SEC_CONTACT", "").strip()
+    if not contact:
+        raise RuntimeError("SEC_CONTACT 없음(깃허브 비밀값을 넣으면 자동 수집)")
+    ua = {"User-Agent": f"industry-strength {contact}"}
+
+    def sec(url, timeout=120):
+        with urllib.request.urlopen(urllib.request.Request(url, headers=ua), timeout=timeout) as r:
+            return r.read()
+    out = {}
+    for co, cik in SEC_CIK.items():
+        sub = json.loads(sec(f"https://data.sec.gov/submissions/CIK{cik:010d}.json"))
+        r = sub["filings"]["recent"]
+        idx = [i for i, f in enumerate(r["form"]) if f in SEC_FORMS]
+        if not idx:
+            continue
+        i = idx[0]   # 가장 최근 서류
+        acc = r["accessionNumber"][i]
+        meta = {"form": r["form"][i], "filed": r["filingDate"][i], "accession": acc,
+                "url": f"https://www.sec.gov/Archives/edgar/data/{cik}/{acc.replace('-', '')}/{r['primaryDocument'][i]}",
+                "history": [{"form": r["form"][j], "filed": r["filingDate"][j]} for j in idx[:8]]}
+        old = (prev or {}).get(co) or {}
+        if old.get("accession") == acc and old.get("quarters"):
+            out[co] = {**old, **meta}          # 같은 서류면 다시 받지 않는다(본문이 14MB 안팎)
+            continue
+        t = html.unescape(re.sub(r"<[^>]+>", " ", sec(meta["url"], 300).decode("utf-8", "ignore")))
+        p = parse_s1(re.sub(r"\s+", " ", t))
+        if len(p["quarters"]) < 2:
+            raise RuntimeError(f"{co}: 분기 매출표를 못 읽음({meta['form']} {meta['filed']})")
+        out[co] = {**meta, **p}
+        print(f"SEC {co}: 새 서류 {meta['form']} {meta['filed']} · 분기 {len(p['quarters'])}개 · 런레이트 {p['run_rate']}")
+    return out
+
+
 # ---------- 매출 보충: config/ai_revenue_manual.json (S-1 분기 매출, Epoch에 아직 없는 최신 보도)
 def manual(rv):
     if not MANUAL.exists():
         return rv
     m = json.loads(MANUAL.read_text(encoding="utf-8"))
     rv = dict(rv or {"companies": {}, "others": []})
-    rv["filings"] = m.get("filings") or {}
+    fil = {k: dict(v) for k, v in (m.get("filings") or {}).items()}
+    # SEC에서 읽은 값이 있으면 그걸 쓰고, 설명(doc·basis·sources)만 수동 파일에서 가져온다
+    for co, s in (rv.get("sec") or {}).items():
+        base = fil.get(co, {})
+        fil[co] = {**base, "quarters": s["quarters"], "pending": s["pending"], "run_rate": s.get("run_rate"),
+                   "doc": f"Form {s['form']} ({s['filed']} 제출)", "url": s["url"], "auto": True,
+                   "history": s.get("history"), "run_def": s.get("run_def")}
+    rv["filings"] = fil
     day = lambda d: datetime.strptime(d, "%Y-%m-%d").date()
     sup = []
     for x in m.get("supplements") or []:
@@ -265,6 +370,16 @@ def main():
         data["vercel"] = prev.get("vercel")
         data["sources"]["vercel"] = {**(prev.get("sources", {}).get("vercel") or {}), "ok": False, "error": type(e).__name__}
 
+    try:
+        sec = sec_filings((prev.get("revenue") or {}).get("sec"))
+        data["sources"]["sec"] = {"ok": True, "fetched_at": data["updated_at"]}
+    except Exception as e:  # noqa: BLE001
+        print(f"sec: {type(e).__name__}: {e}")
+        sec = (prev.get("revenue") or {}).get("sec")
+        if os.environ.get("SEC_CONTACT"):
+            data["sources"]["sec"] = {**(prev.get("sources", {}).get("sec") or {}), "ok": False, "error": type(e).__name__}
+    if data.get("revenue") is not None:
+        data["revenue"] = {**data["revenue"], "sec": sec} if sec else data["revenue"]
     try:
         data["revenue"] = manual(data.get("revenue"))
     except Exception as e:  # noqa: BLE001
