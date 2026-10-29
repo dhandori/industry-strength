@@ -50,7 +50,11 @@
     const P = { l: 46, r: 92, t: 14, b: 26 };
     const series = Object.keys(CO).map((c) => ({ c, pts: (rv.companies[c] || []).filter((x) => x.date >= "2024-01-01") }));
     const sup = (rv.supplements || []).filter((x) => CO[x.company]);
-    const all = series.flatMap((s) => s.pts).concat(sup);
+    const dd = (a, b) => Math.abs(Date.parse(a) - Date.parse(b)) / 864e5;
+    const fresh = (rv.news || []).filter((g) => CO[g.company] && g.metric === "run" && g.kind === "reported" && !g.superseded
+      && !(rv.companies[g.company] || []).some((e) => Math.abs(e.usd - g.usd) <= 0.05 * g.usd && (dd(e.date, g.date) <= 30 || dd(e.report_date || e.date, g.date) <= 30))
+      && (rv.companies[g.company] || []).every((e) => e.date < g.date));
+    const all = series.flatMap((s) => s.pts).concat(sup, fresh);
     if (!all.length) return "<p class='none'>매출 자료가 없어요.</p>";
     const t0 = Date.parse("2024-01-01"), t1 = Math.max(...all.map((x) => Date.parse(x.date))) + 20 * 864e5;
     const ymax = Math.ceil(Math.max(...all.map((x) => x.usd)) / 1e9 / 10) * 10;
@@ -68,6 +72,11 @@
       dots += s.pts.map((p) => `<circle cx="${X(p.date).toFixed(1)}" cy="${Y(p.usd).toFixed(1)}" r="4" fill="${col}" stroke="var(--surface)" stroke-width="1.5" ${tipAttr(`${s.c} · ${p.date} 기준 ${won(p.usd)} (${TYPE[p.type] || p.type}, ${CONF[p.confidence] || p.confidence || "–"}) · 보도 ${p.report_date || "–"}`)}/>`).join("");
       const last = s.pts.at(-1);
       ends.push({ c: s.c, col, x: X(last.date), y: Y(last.usd), t: `${s.c} ${won(last.usd)}`, d: md(last.date) });
+    }
+    for (const x of fresh) {
+      const col = CO[x.company].c, cx = X(x.date), cy = Y(x.usd), lr = (series.find((s) => s.c === x.company) || { pts: [] }).pts.at(-1);
+      if (lr) lines += `<line x1="${X(lr.date).toFixed(1)}" y1="${Y(lr.usd).toFixed(1)}" x2="${cx.toFixed(1)}" y2="${cy.toFixed(1)}" stroke="${col}" stroke-width="1.6" stroke-dasharray="1 3" stroke-linecap="round"/>`;
+      dots += `<path d="M${cx.toFixed(1)} ${(cy - 6).toFixed(1)}l6 6-6 6-6-6z" fill="${col}" stroke="var(--surface)" stroke-width="1.5" ${tipAttr(`${x.company} · 기사 ${x.date} ${won(x.usd)} (${x.outlets.length}곳 보도, 미검증) · ${x.title}`)}/>`;
     }
     // 보충 점(회사가 투자자에게 밝힌 연말 목표 등): 마지막 실제 점에서 점선으로 잇고 속 빈 동그라미
     const sends = [];
@@ -202,7 +211,7 @@
     const d = st.data, box = $("#aiBody");
     if (!d) return;
     const src = d.sources || {};
-    const bad = Object.entries(src).filter(([, v]) => !v.ok).map(([k]) => ({ revenue: "매출", openrouter: "OpenRouter", vercel: "Vercel", sec: "SEC 상장 서류" }[k] || k));
+    const bad = Object.entries(src).filter(([, v]) => !v.ok).map(([k]) => ({ revenue: "매출", openrouter: "OpenRouter", vercel: "Vercel", news: "뉴스", sec: "SEC 상장 서류" }[k] || k));
     $("#aiMeta").innerHTML = `갱신 ${esc(d.updated_at)} · 매일 09:20·12:20 KST 자동 수집${bad.length ? ` · <b class="ai-bad">이번 수집 실패: ${bad.join(", ")} (지난 값 표시)</b>` : ""}`;
     const rv0 = d.revenue || { companies: {}, others: [] }, or = d.openrouter || {}, vc = d.vercel || null;
     // 상장 서류에 런레이트 금액이 실리면 그 회사 선의 마지막 점으로 넣는다(회사 공시라 가장 믿을 만함)
@@ -235,6 +244,8 @@
     const supRows = (rv.supplements || []).filter((x) => CO[x.company]).map((x) => ({ c: x.company, date: x.date, usd: x.usd, type: "target", confidence: "회사 설명(보도)", report_date: x.report_date, source: x.source, note: x.note }));
     const recent = Object.keys(CO).flatMap((c) => (rv.companies[c] || []).map((x) => ({ c, ...x }))).concat(supRows).sort((a, b) => (b.date + b.report_date).localeCompare(a.date + a.report_date)).slice(0, 8);
     const repRows = recent.map((x) => `<tr><td class="tnum">${ymd(x.date)}${x.type === "target" ? " <small>(목표)</small>" : ""}</td><td><span class="ai-dot" style="background:${CO[x.c].c}"></span>${x.c}</td><td class="num"><b>${won(x.usd)}</b></td><td>${TYPE[x.type] || esc(x.type)}</td><td>${CONF[x.confidence] || esc(x.confidence || "–")}</td><td>${x.source ? `<a href="${esc(x.source)}" target="_blank" rel="noopener noreferrer" ${tipAttr(x.note || "")}>출처 ↗</a>` : "–"}</td></tr>`).join("");
+    const NK = { run: "런레이트", quarter: "분기 매출" };
+    const newsRows = (rv.news || []).filter((g) => CO[g.company]).slice(0, 10).map((g) => `<tr class="${g.superseded ? "ai-sup" : ""}"><td class="tnum">${ymd(g.date)}</td><td><span class="ai-dot" style="background:${CO[g.company].c}"></span>${g.company}</td><td class="num"><b>${won(g.usd)}</b></td><td>${g.quarter ? esc(g.quarter) + " " : ""}${NK[g.metric]}${g.kind === "target" ? ' <span class="ai-ntag target">전망</span>' : ""}${g.superseded ? ' <span class="ai-ntag">정정됨</span>' : ""}</td><td>${g.outlets.length}곳</td><td><a href="${esc(g.link)}" target="_blank" rel="noopener noreferrer" ${tipAttr(g.title + " · " + g.outlets.join(", "))}>${esc(g.outlets[0])} ↗</a></td></tr>`).join("");
     const others = (rv.others || []).slice(0, 8).map((x) => `<span class="ai-chip" ${tipAttr(`${x.company} · ${x.date} 기준 · ${TYPE[x.type] || x.type || "매출"}`)}>${esc(x.company)} <b>${won(x.usd)}</b><em>${ymd(x.date)}</em></span>`).join("");
 
     // S-1 분기 매출 카드
@@ -242,6 +253,9 @@
     const fa = (rv.filings || {}).Anthropic;
     if (fa && (fa.quarters || []).length >= 2) {
       const q = fa.quarters, lq = q.at(-1), rq = q.filter((x) => x.kind === "reported").at(-1);
+      const nq = (rv.news || []).filter((g) => g.company === "Anthropic" && g.metric === "quarter" && g.quarter);
+      const newsQ = nq.map((g) => { const f = q.find((x) => x.q === g.quarter); const tag = g.kind === "target" ? "전망" : f && f.kind === "reported" ? "공시와 비교" : "새 숫자";
+        return `<li><b>${esc(g.quarter)} ${won(g.usd)}</b> <span class="ai-ntag ${g.kind}">${tag}</span> ${ymd(g.date)} · ${g.outlets.length}곳 보도${f ? ` (서류 ${won(f.usd)}${f.kind !== "reported" ? " 추정" : ""})` : ""} · <a href="${esc(g.link)}" target="_blank" rel="noopener noreferrer">${esc(g.outlets[0])} ↗</a></li>`; }).join("");
       const runBox = fa.run_rate ? `<div class="ai-run"><span>S-1 공시 런레이트</span><b>${won(fa.run_rate.usd)}</b><em>${ymd(fa.run_rate.date)} 기준 · 최근 28일 사용료 × 13 + 월 구독료 × 12</em></div>` : "";
       const hist = (fa.history || []).map((h) => `${h.form} ${ymd(h.filed)}`).join(" → ");
       const pend = (fa.pending || []).map((p) => `<li><b>${esc(p.what)}</b> ${esc(p.note)}</li>`).join("");
@@ -252,8 +266,9 @@
         ${runBox}
         <div id="aiFile"></div>
         <p class="foot-note">막대 위 숫자 단위는 억 달러, 아래 %는 전분기 대비 증가율이에요. 마지막 공시 분기 ${esc(rq.q)} 매출 ${won(rq.usd)}를 4배 하면 연환산 약 <b>${won(rq.usd * 4)}</b>${lq.kind !== "reported" ? `, ${esc(lq.q)} 추정치 기준이면 약 <b>${won(lq.usd * 4)}</b>` : ""}예요. ${lq.kind !== "reported" ? `<b>*${esc(lq.q)}</b>는 ${esc(lq.where)}.` : ""} 매출 인식: ${esc(fa.basis)}.</p>
+        ${newsQ ? `<h3 class="ai-h3">기사 보도 분기 매출 <span class="sub">구글 뉴스 자동 판독</span></h3><ul class="ai-nq">${newsQ}</ul>` : ""}
         ${pend ? `<div class="ai-warn"><b>수정 S-1에서 채워질 칸</b><ul class="ai-pend">${pend}</ul></div>` : ""}
-        <p class="foot-note">자료: <a href="${esc(fa.url)}" target="_blank" rel="noopener">SEC EDGAR</a> · 정리 ${srcs}. ${fa.auto ? `SEC EDGAR에서 <b>매일 자동 확인</b>해요. 수정 S-1이나 최종 투자설명서가 올라오면 다음 수집 때 바로 바뀌어요.${hist ? ` 반영된 서류: ${esc(hist)}.` : ""}` : "SEC 자동 수집이 아직 꺼져 있어 수동 입력값을 보여 줘요."}</p>
+        <p class="foot-note">자료: <a href="${esc(fa.url)}" target="_blank" rel="noopener">SEC EDGAR</a> · 정리 ${srcs}. ${fa.auto ? `SEC EDGAR에서 <b>매일 자동 확인</b>해요. 수정 S-1이나 최종 투자설명서가 올라오면 다음 수집 때 바로 바뀌어요.${hist ? ` 반영된 서류: ${esc(hist)}.` : ""}` : "SEC 자동 수집이 실패해 수동 입력값을 보여 줘요."} 새 분기 숫자가 기사로 먼저 나오면 '기사 보도'에 자동으로 떠요.</p>
       </section>`;
     }
 
@@ -323,8 +338,11 @@
         <div class="ai-warn"><b>두 회사 숫자를 그냥 비교·합산하면 안 돼요.</b> Anthropic은 아마존 같은 클라우드 파트너를 통한 판매의 <b>총액</b>을, OpenAI는 <b>자기 몫</b>만 매출로 잡아요. 그래서 같은 장사를 해도 Anthropic 쪽 숫자가 크게 나와요. ${sumNote}</div>
         <h3 class="ai-h3">최근 보도</h3>
         <div class="ai-tw"><table class="mem-table ai-rep"><thead><tr><th>기준일</th><th>회사</th><th class="num">연환산 매출</th><th>종류</th><th>신뢰도</th><th>출처</th></tr></thead><tbody>${repRows}</tbody></table></div>
+        ${newsRows ? `<h3 class="ai-h3">기사에서 자동으로 잡은 숫자 <span class="sub">구글 뉴스 · 매일 판독</span></h3>
+        <div class="ai-tw"><table class="mem-table ai-rep"><thead><tr><th>보도일</th><th>회사</th><th class="num">금액</th><th>종류</th><th>보도</th><th>기사</th></tr></thead><tbody>${newsRows}</tbody></table></div>
+        <p class="foot-note">기사 제목에 나온 금액을 자동으로 읽은 값이라 <b>미검증</b>이에요. 같은 숫자를 두 곳 이상 쓰거나 주요 매체가 쓴 것만 남겼고, 나중에 정정 기사가 나온 숫자는 줄을 그었어요. 기준일은 실적 시점이 아니라 보도일이에요.</p>` : ""}
         ${others ? `<h3 class="ai-h3">다른 AI 회사 최근 매출</h3><div class="ai-chips">${others}</div>` : ""}
-        <p class="foot-note">자료: <a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI, ‘Data on AI companies’</a>(CC BY 4.0). 언론 보도·회사 발표를 모은 표라 <b>새 보도가 날 때만</b> 점이 늘어요(최근엔 2~4주에 한 번). <b>속 빈 점과 점선</b>은 Epoch에 아직 없는 최신 보도(회사가 투자자에게 밝힌 연말 목표)로, 실제 실적이 아니에요. 점에 손가락·마우스를 대면 원문 요약이 보여요. 런레이트 = 최근 한 달 매출 × 12, ARR = 반복 매출 연환산.</p>
+        <p class="foot-note">자료: <a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI, ‘Data on AI companies’</a>(CC BY 4.0). 언론 보도·회사 발표를 모은 표라 <b>새 보도가 날 때만</b> 점이 늘어요(최근엔 2~4주에 한 번). <b>속 빈 점과 점선</b>은 회사가 투자자에게 밝힌 연말 목표로 실제 실적이 아니에요. <b>마름모</b>는 Epoch에 아직 없는 새 기사 숫자(자동 판독)예요. 점에 손가락·마우스를 대면 원문 요약이 보여요. 런레이트 = 최근 한 달 매출 × 12, ARR = 반복 매출 연환산.</p>
       </section>
       ${fHtml}
       ${rcHtml}
@@ -344,7 +362,8 @@
         <div class="card-head"><h2>출처와 갱신 주기</h2></div>
         <div class="ai-tw"><table class="mem-table"><thead><tr><th>항목</th><th>출처</th><th>원자료 갱신</th><th>이 탭 반영</th></tr></thead><tbody>
           <tr><td>매출 런레이트</td><td><a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI</a></td><td>새 보도가 날 때(대개 2~4주에 한 번)</td><td>매일 확인 · 새 보도는 텔레그램 알림</td></tr>
-          <tr><td>상장 서류 분기 매출·런레이트</td><td><a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=2130357&amp;type=S-1" target="_blank" rel="noopener">SEC EDGAR</a></td><td>서류가 올라올 때(S-1 → 수정 S-1 → 최종 투자설명서)</td><td>매일 확인 · 새 서류면 자동 반영</td></tr>
+          <tr><td>기사 속 매출 숫자</td><td><a href="https://news.google.com/search?q=Anthropic%20OR%20OpenAI%20%22run%20rate%22" target="_blank" rel="noopener">구글 뉴스</a></td><td>기사 날 때</td><td>매일 자동 판독(두 곳 이상 또는 주요 매체가 쓴 숫자만)</td></tr>
+          <tr><td>S-1 분기 매출</td><td><a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=2130357&amp;type=S-1" target="_blank" rel="noopener">SEC EDGAR</a></td><td>서류가 올라올 때</td><td>매일 확인 · 새 서류면 자동 반영</td></tr>
           <tr><td>토큰 점유율</td><td><a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter</a></td><td>주간(월요일 09:00 KST 마감)</td><td>매일 확인 · 월요일에 주간 요약 알림</td></tr>
           <tr><td>토큰 vs 지출</td><td><a href="https://vercel.com/ai-gateway/leaderboards" target="_blank" rel="noopener">Vercel AI Gateway</a></td><td>매일</td><td>매일</td></tr>
         </tbody></table></div>

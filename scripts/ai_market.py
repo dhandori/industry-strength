@@ -6,9 +6,11 @@
 - 토큰 점유율: OpenRouter 순위 화면이 쓰는 자료. 주 단위(월요일 00:00 UTC = 09:00 KST 마감).
   오픈웨이트 여부는 OpenRouter 모델 목록의 hugging_face_id(가중치 공개 저장소)가 있는지로 판정.
 - 토큰 vs 지출: Vercel AI Gateway 순위 화면에 박힌 하루 단위 상위 10개 모델 비중.
-- 상장 서류(S-1·S-1/A·424B): SEC EDGAR에서 매일 확인. 새 서류가 올라오면 본문에서 분기 매출표,
-  '런레이트 $__ (날짜 기준)', 'N분기 매출 $__' 문구를 읽는다. SEC는 요청마다 연락처를 요구해서
-  환경변수 SEC_CONTACT(깃허브 비밀값)가 있을 때만 돈다. 없으면 config/ai_revenue_manual.json 값을 쓴다.
+- 뉴스: 구글 뉴스 검색(RSS)에서 'run rate·annualized revenue·분기 매출' 기사 제목의 금액을 읽는다.
+  같은 숫자를 두 곳 이상(또는 주요 매체 한 곳)이 쓴 것만 채택. 목표·전망 표현은 따로 표시.
+- 상장 서류(S-1·S-1/A·424B): SEC EDGAR에서 매일 확인. 새 서류면 본문에서 분기 매출표, '런레이트 $__ (날짜 기준)',
+  'N분기 매출 $__' 문구를 읽는다. SEC는 요청마다 연락처를 요구해서 환경변수 SEC_CONTACT(깃허브 비밀값)로 넣는다.
+  없거나 실패하면 config/ai_revenue_manual.json 값을 쓴다.
 
 python scripts/ai_market.py            # 수집 + 저장
 python scripts/ai_market.py --dry-run  # 저장하지 않고 요약만 출력
@@ -20,6 +22,7 @@ import json
 import os
 import re
 import sys
+import urllib.parse
 import urllib.request
 import zipfile
 from datetime import datetime, timedelta, timezone
@@ -69,6 +72,87 @@ def epoch():
     for c in out:
         out[c].sort(key=lambda x: (x["date"], x["report_date"]))
     return {"companies": out, "others": sorted(others.values(), key=lambda x: -x["usd"])}
+
+
+# ---------- 뉴스: 구글 뉴스 검색에서 매출 숫자 자동 판독
+NEWS_Q = ['{c} "run rate"', '{c} "annualized revenue"', '{c} ARR revenue billion', '{c} quarterly revenue billion']
+TRUST = ("Reuters", "Bloomberg", "CNBC", "Financial Times", "FT", "The Wall Street Journal", "WSJ", "The Information",
+         "TechCrunch", "Axios", "The New York Times", "Yahoo Finance", "Fortune", "The Verge", "Business Insider")
+SKIP = re.compile(r"valu(e|ation|ed|es)|less than|more than previously|below|above|behind|gap|lead|ahead of|loss|lost|burn|spend|"
+                  r"compute|deal|contract|raise|funding|round|invest|stock|buy|profit|winner|lower than|higher than|trails|short of|"
+                  r"\bby (?:us)?\$|\bcut\b|slash|drop|fall|decline|estimate|margin|income|ad business|\bads?\b|advertis|segment|division|unit\b|codex|claude code|chatgpt plus|in focus|haul", re.I)
+OTHER_CO = ("microsoft", "amazon", "google", "alphabet", "nvidia", "oracle", "spacex", "xai", "meta", "apple", "softbank")
+PROJ = re.compile(r"\b(to top|to hit|to reach|to exceed|expect|project|forecast|target|goal|aim|could|will|may|pitch|"
+                  r"set to|on track|on pace|by (year-end|end of)|20(2[7-9]|3\d))", re.I)
+AMT = re.compile(r"(?:US)?\$\s?(\d+(?:\.\d+)?)\s?(billion|bn|b)\b", re.I)
+
+
+def news():
+    out = []
+    for c in MAIN:
+        seen = set()
+        for q in NEWS_Q:
+            url = "https://news.google.com/rss/search?" + urllib.parse.urlencode({"q": q.format(c=c) + " when:180d", "hl": "en-US", "gl": "US", "ceid": "US:en"})
+            xml = get(url, 30).decode("utf-8", "ignore")
+            for it in re.findall(r"<item>(.*?)</item>", xml, re.S):
+                tt = html.unescape(re.search(r"<title>(.*?)</title>", it, re.S).group(1))
+                if tt in seen:
+                    continue
+                seen.add(tt)
+                head, _, outlet = tt.rpartition(" - ")
+                head = head or tt
+                low = head.lower()
+                # 주어가 이 회사인 제목만(다른 회사 이름이 먼저 나오면 그 회사 기사)
+                pos = {k: low.find(k.lower()) for k in MAIN + OTHER_CO if k.lower() in low}
+                if c not in pos or min(pos, key=pos.get) != c or SKIP.search(head):
+                    continue
+                am = AMT.search(head)
+                if not am:
+                    continue
+                if re.search(r"run[- ]rate|annuali[sz]ed|\barr\b|recurring", low):
+                    metric = "run"
+                elif re.search(r"\bq[1-4]\b|quarter", low):
+                    metric = "quarter"
+                else:
+                    continue
+                pd = re.search(r"<pubDate>(.*?)</pubDate>", it)
+                day = datetime.strptime(pd.group(1)[5:16], "%d %b %Y").strftime("%Y-%m-%d") if pd else None
+                link = re.search(r"<link>(.*?)</link>", it)
+                qn = re.search(r"\bq([1-4])\b", low) or re.search(r"\b(first|second|third|fourth)[- ]quarter", low)
+                if qn and not qn.group(1).isdigit():
+                    qn = type("Q", (), {"group": lambda self, i, v=str(["first", "second", "third", "fourth"].index(qn.group(1)) + 1): v})()
+                out.append({"company": c, "metric": metric, "kind": "target" if PROJ.search(head) else "reported",
+                            "usd": float(am.group(1)) * 1e9, "date": day, "title": head.strip(), "outlet": outlet.strip(),
+                            "link": link.group(1) if link else "", "quarter": f"Q{qn.group(1)}" if qn else None})
+    # 같은 회사·종류·금액(±3%)·14일 안의 기사는 한 묶음
+    out.sort(key=lambda x: x["date"] or "")
+    groups = []
+    for x in out:
+        g = next((g for g in groups if g["company"] == x["company"] and g["metric"] == x["metric"] and g["kind"] == x["kind"]
+                  and abs(g["usd"] - x["usd"]) <= 0.03 * g["usd"] and x["date"] and g["date"]
+                  and (datetime.strptime(x["date"], "%Y-%m-%d") - datetime.strptime(g["last"], "%Y-%m-%d")).days <= 14), None)
+        if g:
+            g["n"] += 1
+            g["last"] = x["date"]
+            if x["outlet"] not in g["outlets"]:
+                g["outlets"].append(x["outlet"])
+        else:
+            groups.append({**x, "n": 1, "last": x["date"], "outlets": [x["outlet"]]})
+    # 분기 기사는 몇 년 몇 분기인지 붙인다(보도일 기준 가장 최근에 끝난 그 분기)
+    for g in groups:
+        if g["quarter"] and g["date"]:
+            y, mo, qi = int(g["date"][:4]), int(g["date"][5:7]), int(g["quarter"][1])
+            g["quarter"] = f"{y if qi * 3 <= mo or qi * 3 - mo < 3 else y - 1}Q{qi}"   # 진행 중인 분기 전망도 올해로
+    # 나중에 '정정·수정' 기사가 나오면 앞선 숫자는 정정됨으로 표시
+    for g in groups:
+        for h in groups:
+            if h is not g and h["company"] == g["company"] and h["metric"] == g["metric"] == "run" and h["date"] > g["date"] \
+                    and (datetime.strptime(h["date"], "%Y-%m-%d") - datetime.strptime(g["date"], "%Y-%m-%d")).days <= 30 \
+                    and re.search(r"correct|revis|restat", h["title"], re.I) and g["kind"] == h["kind"] == "reported":
+                g["superseded"] = h["date"]
+    # 기사 두 곳 이상이거나 주요 매체 한 곳이면 채택
+    keep = [g for g in groups if len(g["outlets"]) >= 2 or any(t.lower() in g["outlets"][0].lower() for t in TRUST)]
+    return sorted(keep, key=lambda g: g["date"], reverse=True)[:40]
 
 
 # ---------- 상장 서류: SEC EDGAR
@@ -380,6 +464,15 @@ def main():
             data["sources"]["sec"] = {**(prev.get("sources", {}).get("sec") or {}), "ok": False, "error": type(e).__name__}
     if data.get("revenue") is not None:
         data["revenue"] = {**data["revenue"], "sec": sec} if sec else data["revenue"]
+    try:
+        nw = news()
+        data["sources"]["news"] = {"ok": True, "fetched_at": data["updated_at"]}
+    except Exception as e:  # noqa: BLE001
+        print(f"news: 실패 {type(e).__name__}: {e}")
+        nw = (prev.get("revenue") or {}).get("news")
+        data["sources"]["news"] = {**(prev.get("sources", {}).get("news") or {}), "ok": False, "error": type(e).__name__}
+    if data.get("revenue") is not None and nw is not None:
+        data["revenue"] = {**data["revenue"], "news": nw}
     try:
         data["revenue"] = manual(data.get("revenue"))
     except Exception as e:  # noqa: BLE001
