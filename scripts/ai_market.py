@@ -20,7 +20,9 @@ import zipfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-OUT = Path(__file__).resolve().parent.parent / "docs" / "data" / "ai_market.json"
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "docs" / "data" / "ai_market.json"
+MANUAL = ROOT / "config" / "ai_revenue_manual.json"
 UA = {"User-Agent": "Mozilla/5.0 (industry-strength ai_market; +https://dhandori.github.io/industry-strength/)"}
 KST = timezone(timedelta(hours=9))
 MAIN = ("OpenAI", "Anthropic")
@@ -62,6 +64,25 @@ def epoch():
     for c in out:
         out[c].sort(key=lambda x: (x["date"], x["report_date"]))
     return {"companies": out, "others": sorted(others.values(), key=lambda x: -x["usd"])}
+
+
+# ---------- 매출 보충: config/ai_revenue_manual.json (S-1 분기 매출, Epoch에 아직 없는 최신 보도)
+def manual(rv):
+    if not MANUAL.exists():
+        return rv
+    m = json.loads(MANUAL.read_text(encoding="utf-8"))
+    rv = dict(rv or {"companies": {}, "others": []})
+    rv["filings"] = m.get("filings") or {}
+    day = lambda d: datetime.strptime(d, "%Y-%m-%d").date()
+    sup = []
+    for x in m.get("supplements") or []:
+        # Epoch에 같은 회사·비슷한 날짜(±20일)·비슷한 금액(±10%) 점이 생기면 보충 점은 뺀다(중복 방지)
+        dup = any(abs((day(e["date"]) - day(x["date"])).days) <= 20 and abs(e["usd"] - x["usd"]) <= 0.1 * x["usd"]
+                  for e in (rv.get("companies", {}).get(x["company"]) or []))
+        if not dup:
+            sup.append(x)
+    rv["supplements"] = sup
+    return rv
 
 
 # ---------- 토큰: OpenRouter
@@ -244,6 +265,10 @@ def main():
         data["vercel"] = prev.get("vercel")
         data["sources"]["vercel"] = {**(prev.get("sources", {}).get("vercel") or {}), "ok": False, "error": type(e).__name__}
 
+    try:
+        data["revenue"] = manual(data.get("revenue"))
+    except Exception as e:  # noqa: BLE001
+        print(f"보충 자료: 실패 {type(e).__name__}: {e}")
     rv, orr, vc = data.get("revenue") or {}, data.get("openrouter") or {}, data.get("vercel") or {}
     for c in MAIN:
         last = (rv.get("companies", {}).get(c) or [{}])[-1]

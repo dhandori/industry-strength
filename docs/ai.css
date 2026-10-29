@@ -87,3 +87,10 @@ body.v-ai #meta { display: none; }
 .ai-drops { margin: 10px 0 0; font-size: 13px; color: var(--ink-2); line-height: 1.6; }
 .ai-drops b { color: var(--down); margin-right: 4px; }
 .ai-drops span { color: var(--muted); font-size: 12px; }
+/* S-1 분기 매출 카드 (2026-10-29) */
+.ai-bv { font-size: 11px; font-weight: 700; fill: var(--ink); }
+.ai-gr { font-size: 10.5px; font-weight: 700; fill: var(--up, #1a9a52); }
+.chart-legend i.ai-hatch { background: repeating-linear-gradient(45deg, var(--ai-a) 0 2px, color-mix(in srgb, var(--ai-a) 18%, transparent) 2px 5px) !important; }
+.ai-pend { margin: 6px 0 0; padding-left: 18px; }
+.ai-pend li { margin: 3px 0; }
+.ai-bv { paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }

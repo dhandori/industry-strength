@@ -11,7 +11,7 @@
   const ymd = (s) => { const [y, m, d] = s.split("-"); return `${y.slice(2)}.${+m}.${+d}`; };
   const won = (usd) => usd >= 1e12 ? `${(usd / 1e12).toFixed(2).replace(/\.?0+$/, "")}조 달러` : `${Math.round(usd / 1e8).toLocaleString()}억 달러`;
   const pct = (v, d = 1) => v == null ? "–" : v.toFixed(d) + "%";
-  const TYPE = { "Annualized run rate": "런레이트", "Annual recurring revenue (ARR)": "ARR" };
+  const TYPE = { "Annualized run rate": "런레이트", "Annual recurring revenue (ARR)": "ARR", target: "연말 목표" };
   const CONF = { Confident: "확실", Likely: "유력", Speculative: "추측" };
   const CO = { Anthropic: { c: "var(--ai-a)", basis: "총액 방식", help: "아마존 등 클라우드 파트너를 통해 판 금액 전체를 매출로 잡아요." },
     OpenAI: { c: "var(--ai-o)", basis: "순액 방식", help: "클라우드 파트너 판매분은 자기 몫만 매출로 잡아요." } };
@@ -49,7 +49,8 @@
     const H = Math.round(Math.max(220, Math.min(320, W * 0.45)));
     const P = { l: 46, r: 92, t: 14, b: 26 };
     const series = Object.keys(CO).map((c) => ({ c, pts: (rv.companies[c] || []).filter((x) => x.date >= "2024-01-01") }));
-    const all = series.flatMap((s) => s.pts);
+    const sup = (rv.supplements || []).filter((x) => CO[x.company]);
+    const all = series.flatMap((s) => s.pts).concat(sup);
     if (!all.length) return "<p class='none'>매출 자료가 없어요.</p>";
     const t0 = Date.parse("2024-01-01"), t1 = Math.max(...all.map((x) => Date.parse(x.date))) + 20 * 864e5;
     const ymax = Math.ceil(Math.max(...all.map((x) => x.usd)) / 1e9 / 10) * 10;
@@ -57,7 +58,7 @@
     const Y = (v) => P.t + (1 - v / 1e9 / ymax) * (H - P.t - P.b);
     let g = "";
     for (let v = 0; v <= ymax; v += ymax <= 40 ? 10 : 20) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v * 1e9)}" y2="${Y(v * 1e9)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(v * 1e9) + 4}" text-anchor="end" class="ai-tk">${v ? v * 10 + "억" : "0"}</text>`;
-    for (const y of [2024, 2025, 2026]) { const x = X(`${y}-01-01`); if (x >= P.l) g += `<text x="${x}" y="${H - 8}" class="ai-tk" text-anchor="middle">${y}</text><line x1="${x}" x2="${x}" y1="${P.t}" y2="${H - P.b}" class="ai-grid"/>`; }
+    for (const y of [2024, 2025, 2026, 2027]) { const x = X(`${y}-01-01`); if (x >= P.l && x <= W - P.r) g += `<text x="${x}" y="${H - 8}" class="ai-tk" text-anchor="middle">${y}</text><line x1="${x}" x2="${x}" y1="${P.t}" y2="${H - P.b}" class="ai-grid"/>`; }
     let lines = "", dots = "", labels = "";
     const ends = [];
     for (const s of series) {
@@ -68,10 +69,57 @@
       const last = s.pts.at(-1);
       ends.push({ c: s.c, col, x: X(last.date), y: Y(last.usd), t: `${s.c} ${won(last.usd)}`, d: md(last.date) });
     }
-    ends.sort((a, b) => a.y - b.y);
-    for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 30) ends[i].y = ends[i - 1].y + 30;
+    // 보충 점(회사가 투자자에게 밝힌 연말 목표 등): 마지막 실제 점에서 점선으로 잇고 속 빈 동그라미
+    const sends = [];
+    for (const x of sup) {
+      const col = CO[x.company].c, lastReal = (series.find((s) => s.c === x.company) || { pts: [] }).pts.at(-1);
+      if (lastReal) lines += `<line x1="${X(lastReal.date).toFixed(1)}" y1="${Y(lastReal.usd).toFixed(1)}" x2="${X(x.date).toFixed(1)}" y2="${Y(x.usd).toFixed(1)}" stroke="${col}" stroke-width="1.6" stroke-dasharray="4 4" opacity="0.8"/>`;
+      dots += `<circle cx="${X(x.date).toFixed(1)}" cy="${Y(x.usd).toFixed(1)}" r="4.5" fill="var(--surface)" stroke="${col}" stroke-width="2" ${tipAttr(`${x.company} · ${x.label} ${won(x.usd)} · 보도 ${x.report_date} · ${x.note}`)}/>`;
+      sends.push({ col, x: X(x.date), y: Y(x.usd), t: `목표 ${won(x.usd)}`, d: x.company });
+    }
+    const near = (a, b) => Math.abs(a.x - b.x) < 150;
+    const allL = [...sends.map((e) => ({ e, s: 1 })), ...ends.map((e) => ({ e, s: 0 }))].sort((a, b) => a.e.y - b.e.y);
+    for (let i = 1; i < allL.length; i++) for (let j = 0; j < i; j++) if (near(allL[i].e, allL[j].e) && allL[i].e.y - allL[j].e.y < 30) allL[i].e.y = allL[j].e.y + 30;
+    for (const e of sends) labels += `<text x="${e.x + 8}" y="${e.y + 1}" class="ai-end" fill="${e.col}" opacity="0.85">${esc(e.t)}</text><text x="${e.x + 8}" y="${e.y + 15}" class="ai-tk">${e.d} 연말</text>`;
+    if (!sends.length) { ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 30) ends[i].y = ends[i - 1].y + 30; }
     for (const e of ends) labels += `<text x="${e.x + 8}" y="${e.y + 1}" class="ai-end" fill="${e.col}">${esc(e.t)}</text><text x="${e.x + 8}" y="${e.y + 15}" class="ai-tk">${e.d} 기준</text>`;
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="OpenAI·Anthropic 런레이트 추이">${g}${lines}${dots}${labels}</svg>`;
+  }
+
+  // ---------- 1-2) S-1 실제 분기 매출 막대 + 최근 4분기 합계 선
+  function filingChart(f, W) {
+    const qs = f.quarters || [];
+    if (qs.length < 2) return "";
+    const ttm = qs.map((q, i) => i >= 3 ? qs.slice(i - 3, i + 1).reduce((a, b) => a + b.usd, 0) : null);
+    const H = Math.round(Math.max(240, Math.min(320, W * 0.48)));
+    const P = { l: 50, r: 14, t: 24, b: 44 };
+    const vmax = Math.max(...qs.map((q) => q.usd), ...ttm.filter((v) => v)) / 1e8;
+    const step = vmax > 300 ? 100 : vmax > 150 ? 50 : 25, ymax = Math.ceil(vmax / step) * step;
+    const n = qs.length, bw = (W - P.l - P.r) / n;
+    const X = (i) => P.l + bw * (i + 0.5), Y = (v) => P.t + (1 - v / 1e8 / ymax) * (H - P.t - P.b);
+    let g = `<defs><pattern id="aiHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="color-mix(in srgb, var(--ai-a) 18%, transparent)"/><line x1="0" y1="0" x2="0" y2="6" stroke="var(--ai-a)" stroke-width="2"/></pattern></defs>`;
+    for (let v = 0; v <= ymax; v += step) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v * 1e8)}" y2="${Y(v * 1e8)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(v * 1e8) + 4}" text-anchor="end" class="ai-tk">${v ? v.toLocaleString() + "억" : "0"}</text>`;
+    const narrow = W < 520;
+    let bars = "";
+    qs.forEach((q, i) => {
+      const x = X(i), w = bw * 0.62, y = Y(q.usd), est = q.kind !== "reported";
+      const prev = qs[i - 1], gr = prev ? (q.usd / prev.usd - 1) * 100 : null;
+      const tt = `${q.q} 매출 ${won(q.usd)}${est ? " (추정)" : ""} · ${q.where}${gr != null ? ` · 전분기 대비 +${gr.toFixed(0)}%` : ""}`;
+      bars += `<rect x="${(x - w / 2).toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${(Y(0) - y).toFixed(1)}" rx="2" fill="${est ? "url(#aiHatch)" : "var(--ai-a)"}" stroke="${est ? "var(--ai-a)" : "none"}" stroke-dasharray="${est ? "3 2" : ""}" ${tipAttr(tt)}/>`;
+      if (!narrow || q.usd >= 3e9) bars += `<text x="${x}" y="${y - 5}" text-anchor="middle" class="ai-bv">${Math.round(q.usd / 1e8).toLocaleString()}${est ? "*" : ""}</text>`;
+      const [yy, qq] = q.q.split("Q");
+      bars += `<text x="${x}" y="${H - P.b + 15}" text-anchor="middle" class="ai-tk">${narrow ? `${yy.slice(2)}.${qq}Q` : `${yy.slice(2)}년 ${qq}Q`}</text>`;
+      if (gr != null) bars += `<text x="${x}" y="${H - P.b + 30}" text-anchor="middle" class="ai-gr"${narrow ? ' style="font-size:9px"' : ""}>${narrow ? "" : "+"}${gr.toFixed(0)}%</text>`;
+    });
+    const tp = ttm.map((v, i) => v ? [X(i), Y(v), v, qs[i]] : null).filter(Boolean);
+    let line = "";
+    if (tp.length >= 2) {
+      line = `<polyline fill="none" stroke="var(--ink-2)" stroke-width="2.2" stroke-linejoin="round" points="${tp.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ")}"/>`;
+      line += tp.map((p) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="${p[3].kind !== "reported" ? "var(--surface)" : "var(--ink-2)"}" stroke="var(--ink-2)" stroke-width="1.5" ${tipAttr(`${p[3].q}까지 최근 4분기 합계 ${won(p[2])}${p[3].kind !== "reported" ? " (3분기 추정 포함)" : ""}`)}/>`).join("");
+      const e = tp.at(-1);
+      line += `<text x="${e[0] - 6}" y="${e[1] - 8}" text-anchor="end" class="ai-tk" style="font-weight:700;fill:var(--ink-2)">4분기 합계 ${won(e[2])}</text>`;
+    }
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="Anthropic 분기 매출(S-1)">${g}${bars}${line}</svg>`;
   }
 
   // ---------- 2) 오픈웨이트 토큰 비중 선 그래프
@@ -176,9 +224,27 @@
 
     // 매출 카드
     const sumNote = A && O ? `두 회사를 더하면 약 <b>${won(A.usd + O.usd)}</b>지만, 계산법(총액·순액)과 시점(${md(A.date)}·${md(O.date)})이 달라 참고용이에요.` : "";
-    const recent = Object.keys(CO).flatMap((c) => (rv.companies[c] || []).map((x) => ({ c, ...x }))).sort((a, b) => (b.date + b.report_date).localeCompare(a.date + a.report_date)).slice(0, 8);
-    const repRows = recent.map((x) => `<tr><td class="tnum">${ymd(x.date)}</td><td><span class="ai-dot" style="background:${CO[x.c].c}"></span>${x.c}</td><td class="num"><b>${won(x.usd)}</b></td><td>${TYPE[x.type] || esc(x.type)}</td><td>${CONF[x.confidence] || esc(x.confidence || "–")}</td><td>${x.source ? `<a href="${esc(x.source)}" target="_blank" rel="noopener noreferrer" ${tipAttr(x.note || "")}>출처 ↗</a>` : "–"}</td></tr>`).join("");
+    const supRows = (rv.supplements || []).filter((x) => CO[x.company]).map((x) => ({ c: x.company, date: x.date, usd: x.usd, type: "target", confidence: "회사 설명(보도)", report_date: x.report_date, source: x.source, note: x.note }));
+    const recent = Object.keys(CO).flatMap((c) => (rv.companies[c] || []).map((x) => ({ c, ...x }))).concat(supRows).sort((a, b) => (b.date + b.report_date).localeCompare(a.date + a.report_date)).slice(0, 8);
+    const repRows = recent.map((x) => `<tr><td class="tnum">${ymd(x.date)}${x.type === "target" ? " <small>(목표)</small>" : ""}</td><td><span class="ai-dot" style="background:${CO[x.c].c}"></span>${x.c}</td><td class="num"><b>${won(x.usd)}</b></td><td>${TYPE[x.type] || esc(x.type)}</td><td>${CONF[x.confidence] || esc(x.confidence || "–")}</td><td>${x.source ? `<a href="${esc(x.source)}" target="_blank" rel="noopener noreferrer" ${tipAttr(x.note || "")}>출처 ↗</a>` : "–"}</td></tr>`).join("");
     const others = (rv.others || []).slice(0, 8).map((x) => `<span class="ai-chip" ${tipAttr(`${x.company} · ${x.date} 기준 · ${TYPE[x.type] || x.type || "매출"}`)}>${esc(x.company)} <b>${won(x.usd)}</b><em>${ymd(x.date)}</em></span>`).join("");
+
+    // S-1 분기 매출 카드
+    let fHtml = "";
+    const fa = (rv.filings || {}).Anthropic;
+    if (fa && (fa.quarters || []).length >= 2) {
+      const q = fa.quarters, lq = q.at(-1), rq = q.filter((x) => x.kind === "reported").at(-1);
+      const pend = (fa.pending || []).map((p) => `<li><b>${esc(p.what)}</b> ${esc(p.note)}</li>`).join("");
+      const srcs = (fa.sources || []).map((x) => `<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>`).join(", ");
+      fHtml = `<section class="card">
+        <div class="card-head wrap"><h2>Anthropic 실제 분기 매출 <span class="sub">${esc(fa.doc)} · 감사받은 공시 숫자</span></h2></div>
+        <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>분기 매출(공시)</span><span><i class="ai-hatch"></i>추정(*)</span><span><i style="background:var(--ink-2);height:3px"></i>최근 4분기 합계</span></div>
+        <div id="aiFile"></div>
+        <p class="foot-note">막대 위 숫자 단위는 억 달러, 아래 %는 전분기 대비 증가율이에요. 마지막 공시 분기 ${esc(rq.q)} 매출 ${won(rq.usd)}를 4배 하면 연환산 약 <b>${won(rq.usd * 4)}</b>${lq.kind !== "reported" ? `, ${esc(lq.q)} 추정치 기준이면 약 <b>${won(lq.usd * 4)}</b>` : ""}예요. ${lq.kind !== "reported" ? `<b>*${esc(lq.q)}</b>는 ${esc(lq.where)}.` : ""} 매출 인식: ${esc(fa.basis)}.</p>
+        ${pend ? `<div class="ai-warn"><b>수정 S-1에서 채워질 칸</b><ul class="ai-pend">${pend}</ul></div>` : ""}
+        <p class="foot-note">자료: <a href="${esc(fa.url)}" target="_blank" rel="noopener">SEC EDGAR</a> · 정리 ${srcs}. 이 카드는 사람이 config/ai_revenue_manual.json을 고쳐서 갱신해요.</p>
+      </section>`;
+    }
 
     // OpenRouter 카드
     const full = (or.weeks || []).filter((w) => !w.partial);
@@ -247,8 +313,9 @@
         <h3 class="ai-h3">최근 보도</h3>
         <div class="ai-tw"><table class="mem-table ai-rep"><thead><tr><th>기준일</th><th>회사</th><th class="num">연환산 매출</th><th>종류</th><th>신뢰도</th><th>출처</th></tr></thead><tbody>${repRows}</tbody></table></div>
         ${others ? `<h3 class="ai-h3">다른 AI 회사 최근 매출</h3><div class="ai-chips">${others}</div>` : ""}
-        <p class="foot-note">자료: <a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI, ‘Data on AI companies’</a>(CC BY 4.0). 언론 보도·회사 발표를 모은 표라 <b>새 보도가 날 때만</b> 점이 늘어요(최근엔 2~4주에 한 번). 점에 손가락·마우스를 대면 원문 요약이 보여요. 런레이트 = 최근 한 달 매출 × 12, ARR = 반복 매출 연환산.</p>
+        <p class="foot-note">자료: <a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI, ‘Data on AI companies’</a>(CC BY 4.0). 언론 보도·회사 발표를 모은 표라 <b>새 보도가 날 때만</b> 점이 늘어요(최근엔 2~4주에 한 번). <b>속 빈 점과 점선</b>은 Epoch에 아직 없는 최신 보도(회사가 투자자에게 밝힌 연말 목표)로, 실제 실적이 아니에요. 점에 손가락·마우스를 대면 원문 요약이 보여요. 런레이트 = 최근 한 달 매출 × 12, ARR = 반복 매출 연환산.</p>
       </section>
+      ${fHtml}
       ${rcHtml}
       <section class="card">
         <div class="card-head wrap"><h2>오픈웨이트 vs 클로즈드 토큰 비중 <span class="sub">OpenRouter · 주간(월요일 마감)</span></h2></div>
@@ -273,6 +340,7 @@
       </section>`;
     $("#aiRev").innerHTML = revenueChart(rv, width($("#aiRev")));
     $("#aiOpen").innerHTML = openChart(or, width($("#aiOpen")));
+    if ($("#aiFile")) $("#aiFile").innerHTML = filingChart(fa, width($("#aiFile")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
   }

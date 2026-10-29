@@ -11,6 +11,7 @@ on:
     branches: [main]
     paths:
       - "scripts/ai_market.py"
+      - "config/ai_revenue_manual.json"
       - ".github/workflows/ai-market.yml"
 
 permissions:
