@@ -65,7 +65,7 @@
     let g = "";
     for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4, yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${opt.ax(v)}</text>`; }
     if (opt.zone != null && opt.zone < hi) g += `<rect x="${L}" y="${T}" width="${W - L - R}" height="${Math.max(0, y(opt.zone) - T).toFixed(1)}" fill="var(--mx1)" opacity=".07"/>`;   // 위험 구간 칠하기
-    (opt.ref || []).filter((v) => v > lo && v < hi).forEach((v) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--mx2)" stroke-dasharray="3 3"/>`; });
+    (opt.ref || []).filter((v) => v > lo && v < hi).forEach((v) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${opt.refC || "var(--mx2)"}" stroke-dasharray="3 3"/>`; });
     // 가로축: 기간 길이에 맞춰 해(年) 또는 달
     const span = (Date.parse(s.at(-1)[0]) - Date.parse(s[0][0])) / 3.156e10;
     const every = span > 40 ? 10 : span > 15 ? 5 : span > 6 ? 2 : span > 2.5 ? 1 : 0;
@@ -148,7 +148,7 @@
     const lines = months && cpiS.length
       ? [{ v: sub.map((p) => p[1]), c: "var(--price)", w: 2.4 }, { v: sub.map((p) => cm[p[0]] ?? null), c: "var(--ma20)", w: 1.4, dash: "4 3" }, { v: sub.map((p) => um[p[0]] ?? null), c: "var(--ma50)", w: 1.4, dash: "4 3" }]
       : null;
-    const svg = chart(lines ? sub : s, { months, ref: [m.avg], ax: (v) => v.toFixed(0), dot: col(lv[0]), lines, h: innerWidth < 640 ? 190 : 210 });
+    const svg = chart(lines ? sub : s, { months, ref: [m.avg], refC: "var(--muted)", ax: (v) => v.toFixed(0), dot: col(lv[0]), lines, h: innerWidth < 640 ? 190 : 210 });
     // 2026-10-30: 맨 위 따로 튀던 큰 카드 → 경기 묶음 첫 카드(다른 지표 카드와 같은 모양, 접으면 값·구성만)
     return `<article class="card mx-card ec-hero" style="--c:${col(lv[0])}">
       <div class="mx-head"><div><div class="mx-name">미국 고통지수 (Misery Index)</div><div class="mx-dir">물가상승률 + 실업률 · 높을수록 체감 경기 나쁨</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
@@ -156,7 +156,7 @@
       <div class="ec-hero-b">
         <div class="ec-hero-l"><p>${dir}. 1948년 이후 지금보다 낮았던 달이 <b>${m.pct_rank}%</b>예요. 역대 평균 ${m.avg.toFixed(1)}, 최근 5년 ${m.five_lo.toFixed(1)}~${m.five_hi.toFixed(1)}, 가장 높았던 때는 ${ymK(m.peak[0])} ${m.peak[1].toFixed(1)}이에요.</p>
           <p class="ec-why"><b>무엇인가요?</b> 물가가 오르는 고통과 일자리를 잃는 고통을 더한 숫자예요. 높을수록 사람들이 체감하는 경기가 나쁘고, 소비·선거·정책에 압력이 커져요. 10을 넘으면 높은 편, 7 아래면 편한 편으로 봐요.</p></div>
-        <div class="ec-hero-r"><div class="mx-chart">${svg}<div class="chart-legend"><span><i style="background:var(--price)"></i>고통지수</span>${lines ? `<span><i style="background:var(--ma20)"></i>물가상승률</span><span><i style="background:var(--ma50)"></i>실업률</span>` : ""}<span><i style="background:var(--mx2)"></i>역대 평균 ${m.avg.toFixed(1)}</span></div></div></div>
+        <div class="ec-hero-r"><div class="mx-chart">${svg}<div class="chart-legend"><span><i style="background:var(--price)"></i>고통지수</span>${lines ? `<span><i style="background:var(--ma20)"></i>물가상승률</span><span><i style="background:var(--ma50)"></i>실업률</span>` : ""}<span><i style="background:var(--muted)"></i>역대 평균 ${m.avg.toFixed(1)}</span></div></div></div>
       </div>
     </article>`;
   }
