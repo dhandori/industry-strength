@@ -314,15 +314,21 @@
     if (!st.data) { load(); return; }
     const d = st.data, I = Object.fromEntries(d.indicators.map((i) => [i.key, i]));
     const grp = (g) => d.indicators.filter((i) => DEF[i.key] && DEF[i.key].g === g).map(card).join("");
-    box.innerHTML = `<section class="mx-market mx-us ec-sec" aria-label="미국 물가·고용">
-      <div class="mx-market-h"><h2>🇺🇸 물가·고용</h2><span class="sub">빚투 · 국채 금리 · 인플레이션 · 실업 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
-      <div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="물가·고용 그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-ecspan="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div><span class="sub">월별 지표 기준(주간·일별 지표는 최대 5년)</span></div>
-      ${d.margin ? `<div class="mx-group-h"><h3>빚투 (신용융자)</h3><span class="sub">고점 신호 · 매월</span></div>${margin(d.margin)}${marginExtra(d.margin)}` : ""}
-      <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
+    // 2026-10-30 순서 정비: 경기(물가·고용·국채 금리)와 빚투를 따로 묶는다. 화면 순서는 macro.css 의 order 가 정한다
+    // (고통지수 → 시장 위험도 → 경기 → 시장 지표 → 빚투). 그래프 기간 버튼은 두 묶음에 같이 둔다.
+    const spanBar = (lab) => `<div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="${lab} 그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-ecspan="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div><span class="sub">월별 지표 기준(주간·일별 지표는 최대 5년)</span></div>`;
+    box.innerHTML = `<section class="mx-market mx-us ec-sec ec-a" aria-label="미국 경기">
+      <div class="mx-market-h"><h2>🇺🇸 경기 (물가·고용·금리)</h2><span class="sub">고통지수를 이루는 물가·실업과 국채 금리 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
+      ${spanBar("경기")}
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
-      <p class="foot-note">자료: 세인트루이스 연준 FRED (FINRA 신용거래 통계 · DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레·국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 매일 밤 11시 20분·아침 7시 20분에 반영해요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
-    </section>`;
+      <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
+      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레·국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 매일 밤 11시 20분·아침 7시 20분에 반영해요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
+    </section>${d.margin ? `<section class="mx-market mx-us ec-sec ec-b" aria-label="미국 빚투">
+      <div class="mx-market-h"><h2>🇺🇸 빚투 (신용융자)</h2><span class="sub">빚내서 산 주식이 너무 많은지 · 고점 신호 · 매월 · FINRA 신용거래 통계</span></div>
+      ${spanBar("빚투")}
+      ${margin(d.margin)}${marginExtra(d.margin)}
+    </section>` : ""}`;
     if (top) top.innerHTML = hero(d.misery);
     bindSpan(box, market);
   }

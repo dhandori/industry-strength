@@ -274,8 +274,8 @@
       const rows = d.indicators.filter((r) => market(r) === mk);
       if (!rows.length) return;
       const w = worstOf(rows);
-      h += `<section class="mx-market mx-${mk.toLowerCase()}${i ? " mx-after" : ""}" aria-label="${title} 지표">
-        <div class="mx-market-h"><h2>${flag} ${title} 지표</h2><span class="sub">지표 ${rows.length}개${w <= 5 ? ` · 가장 위험한 지표: ${LV[w][0]} ${LV[w][1]}` : ""}</span></div>`;
+      h += `<section class="mx-market mx-${mk.toLowerCase()}${i ? " mx-after" : ""}" aria-label="${title} 시장 지표">
+        <div class="mx-market-h"><h2>${flag} ${title} 시장 지표</h2><span class="sub">지표 ${rows.length}개${w <= 5 ? ` · 가장 위험한 지표: ${LV[w][0]} ${LV[w][1]}` : ""}</span></div>`;
       SUBS.forEach((s) => {
         const sr = rows.filter((r) => sub(r) === s);
         if (!sr.length) return;

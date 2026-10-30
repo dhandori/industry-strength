@@ -156,9 +156,9 @@ body.v-macro #meta { display: none; }
 .ec-peaks span { font-size: 12px; background: var(--surface-2); border-radius: 999px; padding: 3px 10px; color: var(--ink-2); }
 .ec-peaks b { color: var(--mx1); }
 /* 2026-10-30: 카드 접기(mxfold.js) — 접힌 카드는 이름·상태·값만 */
-.mxf-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--muted); margin: 10px 0 2px; }
+.mxf-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12.5px; color: var(--muted); margin: 0; }
+.mxf-bar[hidden] { display: none; }
 .mxf-bar button { flex: none; }
-#mxTop:not(:empty) { margin-bottom: 4px; }
 .mx-grid { align-items: start; }
 .mxf > .mx-head { cursor: pointer; position: relative; }
 .mxf:not(.open) { cursor: pointer; position: relative; }
@@ -173,3 +173,12 @@ body.v-macro #meta { display: none; }
 .mxf-x { align-self: flex-end; display: block; margin: 6px 0 -4px auto; border: 0; background: transparent; padding: 4px 2px; font: inherit; font-size: 12px; font-weight: 700; color: var(--accent); cursor: pointer; }
 @media (hover: hover) { .mxf:not(.open):hover { box-shadow: 0 0 0 2px var(--accent-soft); } }
 .mx-duo.mxf:not(.open) { display: flex; flex-direction: column; }
+/* 2026-10-30 순서 정비: 두 그릇(#mxBody=macro.js, #mxEcon=econ.js)을 풀어 main 격자에서 order 로 섞는다
+   고통지수 → 시장 위험도 → (카드 접기 안내) → 경기 → 시장 지표(기간 버튼 포함) → 빚투 → 판정 방법 */
+#mxBody, #mxEcon { display: contents; }
+#mxMeta { order: 0; } #mxTop { order: 1; } #mxBody > .mx-hero { order: 2; } #mxfBar { order: 3; }
+#mxEcon > .ec-a { order: 4; } #mxBody > .mx-span { order: 5; } #mxBody > .mx-market, #mxBody > .mx-empty { order: 6; }
+#mxEcon > .ec-b, #mxEcon > .ec-kr, #mxEcon > .mx-empty { order: 7; } #viewMacro > .mx-method { order: 9; }
+#mxTop:empty { display: none; }
+/* 국채 금리 카드는 접혀도 표가 보이므로 펼치기 단추를 표 아래로(표 숫자를 가리지 않게) */
+.ec-tr.mxf:not(.open) > .mxf-x { position: static; margin: 8px 0 -4px auto; }

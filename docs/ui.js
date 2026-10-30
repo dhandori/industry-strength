@@ -33,7 +33,9 @@
     items = m ? [...m.querySelectorAll(SEL)].filter((h) => h.offsetParent && label(h)).map((h) => {
       const el = h.closest(".mx-group-h") || h.closest("section") || h;
       return { el, t: label(h).replace(/^[\u{1F1E6}-\u{1F1FF}]{2}\s*/u, "") };
-    }).filter((x) => !seen.has(x.el) && seen.add(x.el)) : [];
+    }).filter((x) => !seen.has(x.el) && seen.add(x.el))
+      // 매크로 탭은 CSS order 로 화면 순서가 코드 순서와 다르다 → 화면 위치 순으로
+      .sort((a, b) => a.el.getBoundingClientRect().top - b.el.getBoundingClientRect().top) : [];
     nav.hidden = items.length < 3;
     if (!nav.hidden) {
       nav.innerHTML = items.map((x, i) => `<button type="button" data-i="${i}">${esc(x.t)}</button>`).join("");

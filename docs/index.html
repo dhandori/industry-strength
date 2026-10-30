@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="style.css?v=20261030-mv3">
-<link rel="stylesheet" href="macro.css?v=20261030-f2">
+<link rel="stylesheet" href="macro.css?v=20261030-o2">
 <link rel="stylesheet" href="ai.css?v=20261026-a4">
 <link rel="stylesheet" href="pairs.css?v=20261026-p3">
 <link rel="stylesheet" href="supply.css?v=20261026-s1">
@@ -366,19 +366,19 @@
   <p class="mx-meta" id="mxMeta">불러오는 중…</p>
   <div id="mxTop"></div>
   <div class="mxf-bar" id="mxfBar" hidden><span>카드를 누르면 그래프와 설명이 펼쳐져요.</span><button type="button" class="toggle" id="mxfAll">모두 펼치기</button></div>
-  <div id="mxBody" style="display:grid;gap:14px"></div>
-  <div id="mxEcon" style="display:grid;gap:14px"></div>
+  <div id="mxBody"></div>
+  <div id="mxEcon"></div>
   <details class="card mx-method">
     <summary>판정 방법 자세히 보기</summary>
     <ul>
-      <li><b>미국 물가·고용</b>(미국을 골랐을 때 맨 아래, 고통지수만 탭 맨 위): 고통지수(CPI 전년 대비 상승률 + 실업률), 물가 4개(CPI·근원 CPI·근원 PCE·10년 기대인플레), 고용 6개(실업률·삼의 법칙·비농업 고용 증감·신규/계속 실업수당 청구·구인 건수÷실업자 수)예요. 위험 단계(🟢~🔴) 종합에는 넣지 않고 따로 보여 줘요. 자료는 FRED이고 발표가 나면 그날 밤 11시 20분·다음 날 아침 7시 20분에 반영돼요.</li>
+      <li><b>화면 순서</b>(미국): 고통지수 → 오늘 시장 위험도 → 경기(물가·고용·국채 금리) → 시장 지표(신용·유동성 → 변동성 → 투자 심리) → 빚투. 한국: 시장 위험도 → 한국 지표 → 빚투.</li>
+      <li><b>미국 물가·고용</b>: 고통지수(CPI 전년 대비 상승률 + 실업률), 물가 4개(CPI·근원 CPI·근원 PCE·10년 기대인플레), 고용 6개(실업률·삼의 법칙·비농업 고용 증감·신규/계속 실업수당 청구·구인 건수÷실업자 수)예요. 위험 단계(🟢~🔴) 종합에는 넣지 않고 따로 보여 줘요. 자료는 FRED이고 발표가 나면 그날 밤 11시 20분·다음 날 아침 7시 20분에 반영돼요.</li>
       <li><b>수준</b>: 지표가 최근 5년 동안 ‘위험한 쪽’으로 몇 % 위치에 있는지 봐요. 하위 50%는 🟢정상, 50~75%는 🔵관심, 75~90%는 🟡주의, 90~97%는 🟠경계, 97% 이상은 🔴위기예요.</li>
       <li><b>속도</b>: 최근 1개월(21거래일) 변화가 지난 5년의 1개월 변화들보다 유난히 크면(표준점수 2 이상) 한 단계, 아주 크면(3 이상) 두 단계 더 위험하게 봐요. 숫자는 아직 낮아도 빠르게 나빠지는 지표를 놓치지 않기 위해서예요.</li>
       <li><b>장단기 금리차</b>는 너무 좁아지거나 뒤집혀도, 갑자기 크게 벌어져도 경기 신호라서 5년 중간값에서 양쪽으로 멀어질수록 위험하게 봐요.</li>
       <li><b>공포탐욕지수</b>는 점수 자체가 기준이에요. 10 이하 🔴, 25 이하 🟠, 40 이하 🟡, 55 이하 🔵, 그 위 🟢이고, 75 이상은 과열 주의(⚠️)를 따로 붙여요. 1개월 사이 20점 넘게 떨어지면 한 단계 더 위험하게 봐요.</li>
       <li><b>VIX와 공포탐욕지수 함께 읽기</b>: 두 지표를 같은 ‘겁먹은 정도’ 5칸으로 바꿔 나란히 놓아요. VIX는 15 미만 안심, 15~20 평온, 20~25 조금 불안, 25~30 불안, 30 이상 겁먹음이고, 공포탐욕지수는 55점 이상 안심, 45~54 평온, 35~44 조금 불안, 25~34 불안, 25점 미만 겁먹음이에요. 두 칸 이상 벌어지면 ‘엇갈림’으로 표시하고 이유와 확인할 곳을 적어 줘요.</li>
-      <li><b>배치</b>: 미국 지표(신용·금리·유동성 → VIX·VIX/VIX3M·MOVE → CNN 공포탐욕지수)를 먼저 보여 주고, 굵은 구분선 아래에 한국 지표(신용·금리 → VKOSPI)를 보여 줘요.</li>
-      <li><b>종합 단계</b>는 13개 지표의 평균 위험도에, 🔴가 3개 이상이거나 🟠·🔴가 절반 이상이면 반 단계씩 더해 정해요.</li>
+            <li><b>종합 단계</b>는 13개 지표의 평균 위험도에, 🔴가 3개 이상이거나 🟠·🔴가 절반 이상이면 반 단계씩 더해 정해요.</li>
       <li><b>그래프</b>는 위쪽이나 그래프 오른쪽 위 버튼으로 기간을 고를 수 있어요(20일·50일·200일·2년, 거래일 기준, 기본 2년, 고른 기간은 다음에 열어도 유지). 제목 옆에 그 기간 처음 값 → 지금 값과 변화를 적어 둬요. 검은 선은 매일 값, 주황 점선은 20일 이동평균(약 1개월), 파란 점선은 60일 이동평균(약 3개월)이에요. 가로 점선은 기준선(0, VIX 20·30 등)이에요.</li>
     </ul>
     <p class="foot-note">자료: 한국은행 ECOS(시장금리) · 미국 연준 FRED(ICE BofA 스프레드, 금리차, VIX, 연준 자산·TGA·역레포) · Yahoo(MOVE) · 한국투자증권(VKOSPI) · feargreedmeter.com / finhacker.cz(CNN 공포탐욕지수). 투자 판단의 참고 자료이며 위험을 예측하거나 보증하지 않아요.</p>
@@ -462,11 +462,11 @@
 <script src="app.js?v=20261028-l1"></script>
 <script src="sectorflow.js?v=20261026-sf2"></script>
 <script src="highs.js?v=20261028-l1"></script>
-<script src="econ.js?v=20261030-f1"></script>
-<script src="macro.js?v=20261027-e1"></script>
+<script src="econ.js?v=20261030-o1"></script>
+<script src="macro.js?v=20261030-o1"></script>
 <script src="ai.js?v=20261026-a5"></script>
 <script src="pairs.js?v=20261026-p2"></script>
 <script src="mxfold.js?v=20261030-f2"></script>
-<script src="ui.js?v=20261028-u2"></script>
+<script src="ui.js?v=20261030-o1"></script>
 </body>
 </html>
