@@ -12,7 +12,8 @@
   const WEAK = ["상승 둔화", "하락 추세", "바닥 다지기"];
   const ALIVE = ["상승 추세", "상승 전환 시도"];
   const SMOOTH = 5, RISE_N = 10, FALL_N = 8, FLAT = 3;
-  const st = { k: 20, d: null, alive: false, open: new Set() };
+  // shut: 접어 둔 묶음(처음엔 소외·제자리를 접는다 — 추세추종에 덜 급한 쪽)
+  const st = { k: 20, d: null, alive: false, open: new Set(), shut: new Set(["lag", "flat"]) };
   // 어떤 기간을 골라도 20·60·200일 변화는 늘 같이 보여 준다(짧은 흐름이 긴 기간에 묻히지 않게)
   const ALSO = [20, 60, 200];
 
@@ -110,8 +111,15 @@
     const name = (l) => l.map((g) => `<button class="lnk" type="button" data-group="${esc(g.g)}">${esc(g.g)}</button>`).join(", ");
     const news = ins.length || outs.length ? `<p class="mv-news">${ins.length ? `<span class="in">⬆ 강세로 올라선 분류 <b>${name(ins)}</b></span>` : ""}${outs.length ? `<span class="out">⬇ 강세에서 내려온 분류 <b>${name(outs)}</b></span>` : ""}</p>` : "";
     return news + `<div class="mv-scale" aria-hidden="true"><span></span><span class="mv-axis"><em>0 · 약함</em><em>50</em><em>강함 · 100</em></span><span></span></div>`
-      + ZONES().filter(([z]) => by[z]).map(([z, t, sub]) => `<div class="mv-zone z-${z}"><h4><b>${t}</b> ${sub} <span>${by[z].length}</span></h4>
-        ${by[z].sort((p, q) => Math.abs(q.delta ?? 0) - Math.abs(p.delta ?? 0)).map(line).join("")}</div>`).join("");
+      + ZONES().filter(([z]) => by[z]).map(([z, t, sub]) => {
+        const list = by[z].sort((p, q) => Math.abs(q.delta ?? 0) - Math.abs(p.delta ?? 0)), shut = st.shut.has(z);
+        // 접혀 있어도 이름과 변화는 한 줄로 보인다
+        const brief = list.map((g) => `${esc(g.g)} <i>${g.delta == null ? "" : (g.delta > 0 ? "▲" : g.delta < 0 ? "▼" : "") + Math.abs(Math.round(g.delta))}</i>`).join(" · ");
+        return `<div class="mv-zone z-${z}${shut ? " shut" : ""}">
+          <button class="mv-zh" type="button" data-zone="${z}" aria-expanded="${!shut}"><b>${t}</b> ${sub} <span>${list.length}개 <em>${shut ? "펼치기 ▾" : "접기 ▴"}</em></span></button>
+          <p class="mv-brief">${brief}</p>
+          <div class="mv-rows">${list.map(line).join("")}</div></div>`;
+      }).join("");
   }
 
   // 판 읽는 법(접었다 펴기)
@@ -262,6 +270,12 @@
     }));
     const hp = $(".fl-help", el); if (hp) hp.addEventListener("toggle", () => { helpOpen = hp.open; });
     $(".fl-alive", el).addEventListener("click", () => { st.alive = !st.alive; render(); });
+    $$(".mv-zh", el).forEach((b) => b.addEventListener("click", () => {
+      const z = b.dataset.zone, box = b.closest(".mv-zone"), shut = box.classList.toggle("shut");
+      shut ? st.shut.add(z) : st.shut.delete(z);
+      b.setAttribute("aria-expanded", !shut);
+      $("em", b).textContent = shut ? "펼치기 ▾" : "접기 ▴";
+    }));
   }
 
   // 분류를 누르면 세부 산업 순위표를 그 분류로 거르고 그리로 이동
