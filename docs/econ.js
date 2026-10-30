@@ -1,7 +1,7 @@
 /* 매크로 탭 '미국 물가·고용(고통지수)' 묶음 (2026-10-27 추가)
    자료: data/us_econ.json — scripts/us_econ.py 가 FRED 공개 자료로 만든다(.github/workflows/us-econ.yml).
    매크로 탭에서 '미국'을 골랐을 때만 #mxEcon 에 그린다. macro.js 는 render 끝에 window.__econ.render(시장) 만 부른다.
-   2026-10-30: 고통지수 카드는 탭 맨 위(#mxTop)에 따로 그린다. */
+   2026-10-30: 고통지수는 경기 묶음의 첫 카드(맨 위에 따로 두니 튀어서 옮김). */
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -149,15 +149,15 @@
       ? [{ v: sub.map((p) => p[1]), c: "var(--price)", w: 2.4 }, { v: sub.map((p) => cm[p[0]] ?? null), c: "var(--ma20)", w: 1.4, dash: "4 3" }, { v: sub.map((p) => um[p[0]] ?? null), c: "var(--ma50)", w: 1.4, dash: "4 3" }]
       : null;
     const svg = chart(lines ? sub : s, { months, ref: [m.avg], ax: (v) => v.toFixed(0), dot: col(lv[0]), lines, h: innerWidth < 640 ? 190 : 210 });
-    return `<article class="card ec-hero" style="--c:${col(lv[0])}">
-      <div class="ec-hero-l">
-        <div class="k">미국 고통지수 (Misery Index) · ${ymK(m.date)}</div>
-        <div class="ec-big"><b>${m.value.toFixed(1)}</b><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
-        <div class="ec-formula">물가상승률 <b>${m.cpi.toFixed(1)}%</b> + 실업률 <b>${m.unrate.toFixed(1)}%</b></div>
-        <p>${dir}. 1948년 이후 지금보다 낮았던 달이 <b>${m.pct_rank}%</b>예요. 역대 평균 ${m.avg.toFixed(1)}, 최근 5년 ${m.five_lo.toFixed(1)}~${m.five_hi.toFixed(1)}, 가장 높았던 때는 ${ymK(m.peak[0])} ${m.peak[1].toFixed(1)}이에요.</p>
-        <p class="ec-why"><b>무엇인가요?</b> 물가가 오르는 고통과 일자리를 잃는 고통을 더한 숫자예요. 높을수록 사람들이 체감하는 경기가 나쁘고, 소비·선거·정책에 압력이 커져요. 10을 넘으면 높은 편, 7 아래면 편한 편으로 봐요.</p>
+    // 2026-10-30: 맨 위 따로 튀던 큰 카드 → 경기 묶음 첫 카드(다른 지표 카드와 같은 모양, 접으면 값·구성만)
+    return `<article class="card mx-card ec-hero" style="--c:${col(lv[0])}">
+      <div class="mx-head"><div><div class="mx-name">미국 고통지수 (Misery Index)</div><div class="mx-dir">물가상승률 + 실업률 · 높을수록 체감 경기 나쁨</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
+      <div class="mx-val"><b>${m.value.toFixed(1)}</b><span class="ec-date">${ymK(m.date)}</span><span class="ec-formula">= 물가 <b>${m.cpi.toFixed(1)}%</b> + 실업 <b>${m.unrate.toFixed(1)}%</b></span></div>
+      <div class="ec-hero-b">
+        <div class="ec-hero-l"><p>${dir}. 1948년 이후 지금보다 낮았던 달이 <b>${m.pct_rank}%</b>예요. 역대 평균 ${m.avg.toFixed(1)}, 최근 5년 ${m.five_lo.toFixed(1)}~${m.five_hi.toFixed(1)}, 가장 높았던 때는 ${ymK(m.peak[0])} ${m.peak[1].toFixed(1)}이에요.</p>
+          <p class="ec-why"><b>무엇인가요?</b> 물가가 오르는 고통과 일자리를 잃는 고통을 더한 숫자예요. 높을수록 사람들이 체감하는 경기가 나쁘고, 소비·선거·정책에 압력이 커져요. 10을 넘으면 높은 편, 7 아래면 편한 편으로 봐요.</p></div>
+        <div class="ec-hero-r"><div class="mx-chart">${svg}<div class="chart-legend"><span><i style="background:var(--price)"></i>고통지수</span>${lines ? `<span><i style="background:var(--ma20)"></i>물가상승률</span><span><i style="background:var(--ma50)"></i>실업률</span>` : ""}<span><i style="background:var(--mx2)"></i>역대 평균 ${m.avg.toFixed(1)}</span></div></div></div>
       </div>
-      <div class="ec-hero-r"><div class="mx-chart">${svg}<div class="chart-legend"><span><i style="background:var(--price)"></i>고통지수</span>${lines ? `<span><i style="background:var(--ma20)"></i>물가상승률</span><span><i style="background:var(--ma50)"></i>실업률</span>` : ""}<span><i style="background:var(--mx2)"></i>역대 평균 ${m.avg.toFixed(1)}</span></div></div></div>
     </article>`;
   }
 
@@ -320,6 +320,7 @@
     box.innerHTML = `<section class="mx-market mx-us ec-sec ec-a" aria-label="미국 경기">
       <div class="mx-market-h"><h2>🇺🇸 경기 (물가·고용·금리)</h2><span class="sub">고통지수를 이루는 물가·실업과 국채 금리 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
       ${spanBar("경기")}
+      <div class="mx-group-h"><h3>고통지수</h3><span class="sub">물가와 실업을 한 숫자로 · 매월</span></div>${hero(d.misery)}
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
       <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
@@ -329,7 +330,6 @@
       ${spanBar("빚투")}
       ${margin(d.margin)}${marginExtra(d.margin)}
     </section>` : ""}`;
-    if (top) top.innerHTML = hero(d.misery);
     bindSpan(box, market);
   }
 
