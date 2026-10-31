@@ -110,12 +110,15 @@
     if (!opt.bars && lv != null) body += `<circle cx="${x(s.length - 1)}" cy="${y(lv)}" r="4.5" fill="${opt.dot || "var(--price)"}" stroke="var(--surface)" stroke-width="2"/>`;
     return `<svg viewBox="0 0 ${W} ${H}" role="img">${g}<line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--muted)"/>${xt}${body}</svg>`;
   }
-  // 그래프마다 기간 단추 (2026-10-31). 매일·매주 자료 = 20·60·200거래일 + 2년·전체, 매월 자료 = 1년·2년·5년·10년·전체
+  // 그래프마다 기간 단추 (2026-10-31). 매일·매주 자료 = 20·60·200거래일 + 2년·5년·전체, 매월 자료 = 1년·2년·5년·10년·20년·전체
   // (매월 자료는 한 달에 점 하나라 20·60거래일로는 그릴 게 없다). 위쪽 '그래프 기간' 버튼을 누르면 모두 그 기간으로 돌아간다.
-  const DSP = [[20, "20일"], [60, "60일"], [200, "200일"], ["m24", "2년"], ["m0", "전체"]];
-  const MSP = [["m12", "1년"], ["m24", "2년"], ["m60", "5년"], ["m120", "10년"], ["m0", "전체"]];
-  st.cs = {};
-  const spOf = (key, daily, def) => st.cs[key] ?? def ?? (daily ? (st.span === 24 ? "m24" : "m0") : `m${st.span}`);
+  const DSP = [[20, "20일"], [60, "60일"], [200, "200일"], ["m24", "2년"], ["m60", "5년"], ["m0", "전체"]];
+  const MSP = [["m12", "1년"], ["m24", "2년"], ["m60", "5년"], ["m120", "10년"], ["m240", "20년"], ["m0", "전체"]];
+  // 장기로 봐야 하는 지표는 처음부터 길게(2026-10-31). 위쪽 '그래프 기간' 버튼을 누르면 모두 그 기간으로 맞춘다
+  // (일자리 증감·실업수당 청구는 2020년 코로나 때 값이 수십 배로 튀어 길게 보면 나머지가 납작해지므로 묶음 기본값 그대로)
+  const ECON_DEF = { misery: "m0", treasury: "m0", breakeven: "m0", cpi: "m120", core_cpi: "m120", core_pce: "m120", unrate: "m120", sahm: "m120", vu: "m120", kr_credit: "m0", kr_ratio: "m0" };
+  st.cs = { ...ECON_DEF };
+  const spOf = (key, daily, def) => st.cs[key] ?? def ?? (daily ? (st.span === 24 ? "m24" : st.span === 0 ? "m0" : "m60") : `m${st.span}`);
   const spOpt = (key, daily, def) => { const v = spOf(key, daily, def); return typeof v === "number" ? { days: v } : { months: +v.slice(1) }; };
   const pick = (key, daily, def) => { const v = spOf(key, daily, def); return `<span class="mx-mini" role="group" aria-label="이 그래프 기간">${(daily ? DSP : MSP).map(([n, t]) => `<button type="button" data-ecs="${key}" data-v="${n}" aria-pressed="${v === n}">${t}</button>`).join("")}</span>`; };
 

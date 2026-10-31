@@ -21,7 +21,8 @@ OUT = Path(__file__).resolve().parent.parent / "docs" / "data" / "us_econ.json"
 KST = timezone(timedelta(hours=9))
 # FRED는 브라우저인 척하는 User-Agent(Mozilla/…)를 막는다 → 봇 이름 그대로 밝힌다
 UA = {"User-Agent": "industry-strength-bot/1.0 (+https://github.com/dhandori/industry-strength)"}
-KEEP_FROM = "2014-01-01"   # 화면 그래프는 최근 10년 남짓이면 충분(고통지수만 전체 역사)
+KEEP_FROM = "1990-01-01"   # 월별 지표는 1990년부터(장기로 봐야 함, 2026-10-31). 고통지수는 전체 역사
+TREASURY_FROM = "2014-01-01"   # 국채 금리(매일)는 파일이 너무 커지지 않게 2014년부터
 
 
 def fred(series_id):
@@ -234,7 +235,7 @@ def main():
 
     # 미국 국채 금리(매일): 2년·10년·30년을 같은 날짜끼리 묶는다
     y2, y10, y30 = (dict(raw[k]) for k in ("DGS2", "DGS10", "DGS30"))
-    tr = [[d, y2[d], v, y30[d]] for d, v in raw["DGS10"] if d in y2 and d in y30 and d >= KEEP_FROM]
+    tr = [[d, y2[d], v, y30[d]] for d, v in raw["DGS10"] if d in y2 and d in y30 and d >= TREASURY_FROM]
 
     def ago(n=None, days=None):
         """n거래일 전(또는 days일 전 이전의 마지막 날) 값."""
@@ -265,12 +266,12 @@ def main():
             pack("cpi", cpi, extra=ann3(raw["CPIAUCSL"])[-1][1]),
             pack("core_cpi", yoy(raw["CPILFESL"]), extra=ann3(raw["CPILFESL"])[-1][1]),
             pack("core_pce", yoy(raw["PCEPILFE"]), extra=ann3(raw["PCEPILFE"])[-1][1]),
-            pack("breakeven", raw["T10YIE"], keep_from="2021-01-01"),
+            pack("breakeven", raw["T10YIE"], keep_from="2016-01-01"),
             pack("unrate", raw["UNRATE"]),
             pack("sahm", raw["SAHMREALTIME"]),
             pack("payrolls", nfp, extra=nfp3[-1][1]),
-            pack("claims", raw["ICSA"], extra=claims4[-1][1], keep_from="2021-06-01"),
-            pack("cont_claims", raw["CCSA"], keep_from="2021-06-01"),
+            pack("claims", raw["ICSA"], extra=claims4[-1][1], keep_from="2000-01-01"),
+            pack("cont_claims", raw["CCSA"], keep_from="2000-01-01"),
             pack("vu", vu),
         ],
     }

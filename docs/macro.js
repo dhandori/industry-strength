@@ -43,20 +43,45 @@
   // 선 그래프 — 기간은 위쪽 버튼(모든 그래프) 또는 그래프마다 붙은 버튼(그 그래프만)으로 고른다. 20·60·200은 거래일.
   // 이동평균(20일·60일)은 전체 자료로 계산한 뒤 자른다. (2026-10-31: 50일 → 60일, 그래프마다 따로 바꾸기)
   const SPANS = [[20, "20일"], [60, "60일"], [200, "200일"], [0, "2년"]];
-  st.cs = {};   // 그래프마다 따로 고른 기간 (지표 key → 거래일 수, 0 = 2년)
+  // 장기(5년·10년·전체, 매주 값): data/macro_long.json(scripts/macro_long.py, FRED·Yahoo)이 있는 미국 지표만 (2026-10-31)
+  const LONG = { y5: [5, "5년"], y10: [10, "10년"], yall: [0, "전체"] };
+  // 장기로 봐야 하는 지표는 처음부터 길게. 위쪽 '그래프 기간' 버튼을 누르면 모두 그 기간으로 맞춘다
+  const LONG_DEF = { us_curve: "y10", us_liq: "y10", us_hy: "yall", us_ig: "yall" };
+  st.cs = { ...LONG_DEF };   // 그래프마다 따로 고른 기간 (지표 key → 거래일 수, 0 = 2년, y5·y10·yall = 장기)
+  st.long = null;
+  const wkKey = (d) => Math.floor((Date.parse(d) / 864e5 + 3) / 7);   // 월요일 시작 주 번호
   try { const v = +localStorage.getItem("mx-span"); if (SPANS.some(([n]) => n === v)) st.span = v; } catch (e) {}
   if (st.span == null) st.span = 0;
   function chart(r) {
     const full = r.series || [];
     if (full.length < 15) return "";
-    const sp = st.cs[r.key] ?? st.span;
-    const N = sp && full.length > sp ? sp + 1 : full.length;   // 20일 = 20거래일 전부터 오늘까지
-    const off = full.length - N, s = full.slice(off);
+    const lg = st.long && st.long[r.key];
+    let sp = st.cs[r.key] ?? st.span;
+    if (typeof sp === "string" && !(lg && LONG[sp])) sp = 0;
+    const isLong = typeof sp === "string";
     const small = innerWidth < 640, W = small ? 360 : 600, H = small ? 190 : 200, L = small ? 42 : 48, R = 10, T = 10, B = 26;
+    let s, m20, m60, N = 0;
+    if (isLong) {
+      // 최근 2년(wamo_macro, 매일)을 주마다 마지막 값으로 줄여 장기 자료 뒤에 잇는다
+      const wk = []; let last = null;
+      full.forEach((p) => { const k = wkKey(p[0]); if (k === last) wk[wk.length - 1] = p; else { wk.push(p); last = k; } });
+      const comb = lg.filter((p) => p[0] < full[0][0]).concat(wk);
+      const yrs = LONG[sp][0];
+      let from = comb[0][0];
+      if (yrs) { const e = new Date(comb.at(-1)[0] + "T00:00:00Z"); e.setUTCFullYear(e.getUTCFullYear() - yrs); from = e.toISOString().slice(0, 10); }
+      const off = Math.max(0, comb.findIndex((p) => p[0] >= from));
+      s = comb.slice(off);
+      m20 = ma(comb.map((p) => p[1]), 52).slice(off);   // 52주 평균(약 1년)
+      m60 = [];
+    } else {
+      N = sp && full.length > sp ? sp + 1 : full.length;   // 20일 = 20거래일 전부터 오늘까지
+      const off = full.length - N;
+      s = full.slice(off);
+      const fv = full.map((p) => p[1]);
+      m20 = ma(fv, 20).slice(off); m60 = ma(fv, 60).slice(off);
+    }
     const months = (Date.parse(s[s.length - 1][0]) - Date.parse(s[0][0])) / 2.63e9;
-    const fv = full.map((p) => p[1]);
     const ds = s.map((p) => p[0]), vs = s.map((p) => p[1]);
-    const m20 = ma(fv, 20).slice(off), m60 = ma(fv, 60).slice(off);
     const all = vs.concat(m20.filter((v) => v != null), m60.filter((v) => v != null));
     let lo = Math.min(...all), hi = Math.max(...all);
     const pad = (hi - lo) * 0.08 || Math.abs(hi) * 0.05 || 1; lo -= pad; hi += pad;
@@ -75,6 +100,11 @@
       // 짧은 기간: 날짜(월/일) 눈금을 끝에서부터 고르게
       const stride = Math.max(1, Math.ceil(s.length / (small ? 4 : 7)));
       for (let i = s.length - 1; i >= 0; i -= stride) if (x(i) - L > 14) xt += tick(i, `${+ds[i].slice(5, 7)}/${+ds[i].slice(8, 10)}`);
+    } else if (months > 40) {
+      // 3년 넘게: 해(年) 눈금 — 길수록 띄엄띄엄
+      const yrs = months / 12, every = yrs > 30 ? 10 : yrs > 14 ? (small ? 5 : 2) : yrs > 7 ? (small ? 2 : 1) : 1;
+      let lastY = "";
+      ds.forEach((d, i) => { const yy = d.slice(0, 4); if (yy === lastY) return; if (lastY && +yy % every === 0) xt += tick(i, small || every > 1 ? yy : `${yy.slice(2)}년`); lastY = yy; });
     } else {
       const step = months > 15 ? (small ? 6 : 3) : months > 6 ? (small ? 3 : 2) : 1;   // 2년치는 3개월(휴대폰 6개월) 간격
       let lastM = "";
@@ -91,13 +121,14 @@
     if (r.key === "vix_ratio") refs.push(1);
     if (r.key === "fng") refs.push(25, 75);
     const rf = refs.filter((v) => v > lo && v < hi).map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--mx2)" stroke-dasharray="2 3" opacity=".7"/>`).join("");
-    const span = sp && N === sp + 1 ? `최근 ${sp}거래일 흐름` : months >= 20 ? "최근 2년 흐름" : months >= 10 ? "최근 1년 흐름" : `최근 ${Math.max(1, Math.round(months))}개월 흐름`;
+    const span = isLong ? (LONG[sp][0] ? `최근 ${LONG[sp][0]}년 흐름(매주)` : `${ds[0].slice(0, 4)}년부터 흐름(매주)`) : sp && N === sp + 1 ? `최근 ${sp}거래일 흐름` : months >= 20 ? "최근 2년 흐름" : months >= 10 ? "최근 1년 흐름" : `최근 ${Math.max(1, Math.round(months))}개월 흐름`;
     const fmtD = (d) => s.length <= 80 ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : d.slice(2, 7).replace("-", ".");
     // 기간 처음 → 지금 변화(지표 단위 그대로)
     const dv = vs[vs.length - 1] - vs[0];
     const u = r.unit === "bp" ? "bp" : r.unit === "점" ? "점" : r.unit === "x" ? "" : "";
     const dTxt = `${dv > 0 ? "+" : dv < 0 ? "−" : ""}${num(Math.abs(dv), r.unit)}${u}`;
-    const mini = `<span class="mx-mini" role="group" aria-label="이 그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-cspan="${n}" data-key="${esc(r.key)}" aria-pressed="${sp === n}">${t}</button>`).join("")}</span>`;
+    const opts = SPANS.concat(lg ? Object.entries(LONG).map(([k, [, t]]) => [k, t]) : []);
+    const mini = `<span class="mx-mini" role="group" aria-label="이 그래프 기간">${opts.map(([n, t]) => `<button type="button" data-cspan="${n}" data-key="${esc(r.key)}" aria-pressed="${sp === n}">${t}</button>`).join("")}</span>`;
     return `<div class="mx-chart">${mini}<div class="mx-chart-t">${span} <span>${fmtD(ds[0])} ~ ${fmtD(ds[ds.length - 1])} · 이 기간 ${num(vs[0], r.unit)} → ${num(vs[vs.length - 1], r.unit)} (${dTxt})</span></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(nm(r))} 최근 추이">${g}${rf}
       <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--muted)"/><line x1="${L}" x2="${L}" y1="${T}" y2="${H - B}" stroke="var(--muted)"/>${xt}
       <path d="${path(m60)}" fill="none" stroke="var(--ma50)" stroke-width="1.6" stroke-dasharray="5 3"/>
@@ -105,7 +136,7 @@
       <path d="${path(vs)}" fill="none" stroke="var(--price)" stroke-width="1.8" stroke-linejoin="round"/>
       ${s.length <= 80 ? vs.map((v, i) => `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="1.8" fill="var(--price)"/>`).join("") : ""}
       <circle cx="${x(s.length - 1)}" cy="${y(vs[vs.length - 1])}" r="4.5" fill="${col(r.level)}" stroke="var(--surface)" stroke-width="2"/></svg>
-      <div class="chart-legend"><span><i style="background:var(--price)"></i>매일 값</span><span><i style="background:var(--ma20)"></i>20일 평균(약 1개월)</span><span><i style="background:var(--ma50)"></i>60일 평균(약 3개월)</span></div></div>`;
+      <div class="chart-legend">${isLong ? `<span><i style="background:var(--price)"></i>매주 값</span><span><i style="background:var(--ma20)"></i>52주 평균(약 1년)</span>` : `<span><i style="background:var(--price)"></i>매일 값</span><span><i style="background:var(--ma20)"></i>20일 평균(약 1개월)</span><span><i style="background:var(--ma50)"></i>60일 평균(약 3개월)</span>`}</div></div>`;
   }
   // 그래프 기간 버튼(모든 지표 그래프에 함께 적용)
   function spanBar() {
@@ -302,7 +333,8 @@
       if (!b) return;
       const r = st.data && st.data.indicators.find((x) => x.key === b.dataset.key), box = b.closest(".mx-chart");
       if (!r || !box) return;
-      st.cs[r.key] = +b.dataset.cspan;
+      const v = b.dataset.cspan;
+      st.cs[r.key] = /^\d+$/.test(v) ? +v : v;
       box.outerHTML = chart(r);
     });
     $("#mxBody").querySelectorAll("[data-goview]").forEach((b) => b.addEventListener("click", () => {
@@ -312,6 +344,9 @@
   }
 
   async function load(force) {
+    // 장기 자료는 따로(없어도 2년 그래프는 그대로). 오면 다시 그린다
+    if (!st.long && !st.longLoading) st.longLoading = fetch("data/macro_long.json?v=" + Date.now(), { cache: "no-store" }).then((r) => r.ok ? r.json() : null)
+      .then((j) => { if (j && j.series) { st.long = j.series; if (st.data && !$("#viewMacro").hidden) { const y = scrollY; render(); scrollTo({ top: y }); } } }).catch(() => {});
     if (st.data && !force) return render();
     if (!st.loading) st.loading = fetch(SRC + "?v=" + Date.now(), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
     try { st.data = await st.loading; render(); }

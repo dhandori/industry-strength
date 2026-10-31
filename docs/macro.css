@@ -181,3 +181,5 @@ body.v-macro #meta { display: none; }
 #mxTop:empty { display: none; }
 /* 국채 금리 카드는 접혀도 표가 보이므로 펼치기 단추를 표 아래로(표 숫자를 가리지 않게) */
 .ec-tr.mxf:not(.open) > .mxf-x { position: static; margin: 8px 0 -4px auto; }
+/* 2026-10-31: 그래프 기간 단추가 7개까지 늘어 휴대폰에선 제목을 누르지 않게 단추 줄을 따로(오른쪽 정렬) */
+@media (max-width: 640px) { .mx-mini { float: none; display: flex; width: fit-content; max-width: 100%; margin: 0 0 6px auto; overflow-x: auto; } }
