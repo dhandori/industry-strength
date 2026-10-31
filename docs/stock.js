@@ -162,6 +162,10 @@
         if (m.atr != null && m.atr_pct != null) {
           const p = m.atr_pct * 2, over = p > 8, used = Math.min(p, 8);
           stat.push(["ATR 손절 (2×ATR)", `<b class="${over ? "no" : "ok"}">${money(m.close - m.atr * 2)} (−${p.toFixed(1)}%)</b>`, over ? "8%보다 넓어요 → 8% 한도에서 자르고, 변동성이 커서 비중을 줄이거나 더 좁은 자리에서만 사요." : "8% 안에 들어와요 → 이 폭을 손절로 쓰면 보통의 흔들림에는 안 털려요."]);
+          // 실제로 쓸 손절: 2×ATR과 8% 중 좁은 쪽. 8% 한도가 하루 평균 변동폭의 몇 배인지도 함께 본다.
+          stat.push(["적용 최대 손절폭", `<b class="ok">−${used.toFixed(1)}%</b> <small>${money(over ? m.close * 0.92 : m.close - m.atr * 2)}</small>`, over ? "2×ATR이 8%보다 넓어서 8% 한도로 잘랐어요." : "2×ATR이 8% 안이라 2×ATR 손절가를 그대로 써요."]);
+          const capAtr = 8 / m.atr_pct, tight = capAtr < 1.5;
+          stat.push(["8% = 몇 ATR", `<b class="${tight ? "sk-warn" : capAtr >= 2 ? "ok" : ""}">${capAtr.toFixed(1)} ATR</b>`, tight ? `8%가 하루 평균 흔들림의 ${capAtr.toFixed(1)}배뿐이라 평소 움직임에도 털리기 쉬워요. 매수를 미루거나 비중을 줄여요.` : capAtr >= 2 ? "8% 한도가 평소 흔들림보다 넉넉해요." : "8% 한도가 빠듯한 편이에요."]);
           stat.push(["계좌 위험 2% 기준 비중", `<b>${Math.round(200 / used)}%</b>`, `손절 폭 ${used.toFixed(1)}%로 한 번에 계좌의 2%만 잃도록 할 때 살 수 있는 최대 비중이에요.`]);
         }
       }

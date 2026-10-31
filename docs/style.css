@@ -746,3 +746,4 @@ main { gap: 16px; padding-top: 14px; }
 }
 .rank-table td.name .name-tags { display: inline; margin-left: 4px; }
 .rank-table td.name .name-tags .tag-mini { margin: 0 3px 0 0; vertical-align: 1px; font-size: 10.5px; }
+.sk-stats .sk-warn { color: #e07b00; } /* 8% 한도가 1.5 ATR 미만: 변동성 경고(주황) */
