@@ -40,14 +40,17 @@
     return out;
   }
 
-  // 선 그래프 — 기간은 위쪽 버튼(20일·50일·200일·2년)으로 고른다. 이동평균(20일·60일)은 전체 자료로 계산한 뒤 자른다.
-  const SPANS = [[20, "20일"], [50, "50일"], [200, "200일"], [0, "2년"]];
+  // 선 그래프 — 기간은 위쪽 버튼(모든 그래프) 또는 그래프마다 붙은 버튼(그 그래프만)으로 고른다. 20·60·200은 거래일.
+  // 이동평균(20일·60일)은 전체 자료로 계산한 뒤 자른다. (2026-10-31: 50일 → 60일, 그래프마다 따로 바꾸기)
+  const SPANS = [[20, "20일"], [60, "60일"], [200, "200일"], [0, "2년"]];
+  st.cs = {};   // 그래프마다 따로 고른 기간 (지표 key → 거래일 수, 0 = 2년)
   try { const v = +localStorage.getItem("mx-span"); if (SPANS.some(([n]) => n === v)) st.span = v; } catch (e) {}
   if (st.span == null) st.span = 0;
   function chart(r) {
     const full = r.series || [];
     if (full.length < 15) return "";
-    const N = st.span && full.length > st.span ? st.span + 1 : full.length;   // 20일 = 20거래일 전부터 오늘까지
+    const sp = st.cs[r.key] ?? st.span;
+    const N = sp && full.length > sp ? sp + 1 : full.length;   // 20일 = 20거래일 전부터 오늘까지
     const off = full.length - N, s = full.slice(off);
     const small = innerWidth < 640, W = small ? 360 : 600, H = small ? 190 : 200, L = small ? 42 : 48, R = 10, T = 10, B = 26;
     const months = (Date.parse(s[s.length - 1][0]) - Date.parse(s[0][0])) / 2.63e9;
@@ -88,13 +91,13 @@
     if (r.key === "vix_ratio") refs.push(1);
     if (r.key === "fng") refs.push(25, 75);
     const rf = refs.filter((v) => v > lo && v < hi).map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--mx2)" stroke-dasharray="2 3" opacity=".7"/>`).join("");
-    const span = st.span && N === st.span + 1 ? `최근 ${st.span}거래일 흐름` : months >= 20 ? "최근 2년 흐름" : months >= 10 ? "최근 1년 흐름" : `최근 ${Math.max(1, Math.round(months))}개월 흐름`;
+    const span = sp && N === sp + 1 ? `최근 ${sp}거래일 흐름` : months >= 20 ? "최근 2년 흐름" : months >= 10 ? "최근 1년 흐름" : `최근 ${Math.max(1, Math.round(months))}개월 흐름`;
     const fmtD = (d) => s.length <= 80 ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : d.slice(2, 7).replace("-", ".");
     // 기간 처음 → 지금 변화(지표 단위 그대로)
     const dv = vs[vs.length - 1] - vs[0];
     const u = r.unit === "bp" ? "bp" : r.unit === "점" ? "점" : r.unit === "x" ? "" : "";
     const dTxt = `${dv > 0 ? "+" : dv < 0 ? "−" : ""}${num(Math.abs(dv), r.unit)}${u}`;
-    const mini = `<span class="mx-mini" role="group" aria-label="그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-span="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</span>`;
+    const mini = `<span class="mx-mini" role="group" aria-label="이 그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-cspan="${n}" data-key="${esc(r.key)}" aria-pressed="${sp === n}">${t}</button>`).join("")}</span>`;
     return `<div class="mx-chart">${mini}<div class="mx-chart-t">${span} <span>${fmtD(ds[0])} ~ ${fmtD(ds[ds.length - 1])} · 이 기간 ${num(vs[0], r.unit)} → ${num(vs[vs.length - 1], r.unit)} (${dTxt})</span></div><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(nm(r))} 최근 추이">${g}${rf}
       <line x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" stroke="var(--muted)"/><line x1="${L}" x2="${L}" y1="${T}" y2="${H - B}" stroke="var(--muted)"/>${xt}
       <path d="${path(m60)}" fill="none" stroke="var(--ma50)" stroke-width="1.6" stroke-dasharray="5 3"/>
@@ -106,7 +109,7 @@
   }
   // 그래프 기간 버튼(모든 지표 그래프에 함께 적용)
   function spanBar() {
-    return `<div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-span="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div><span class="sub">모든 지표 그래프에 같이 적용돼요</span></div>`;
+    return `<div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-span="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div><span class="sub">모든 그래프에 같이 적용 · 그래프마다 붙은 버튼은 그 그래프만 · 20·60·200일은 거래일</span></div>`;
   }
 
   function chg(r) {
@@ -289,10 +292,19 @@
     $("#mxBody").innerHTML = h;
     window.__econ && window.__econ.render(cur);   // 미국이면 아래에 물가·고용(고통지수) 묶음
     $("#mxBody").querySelectorAll("[data-span]").forEach((b) => b.addEventListener("click", () => {
-      st.span = +b.dataset.span;
+      st.span = +b.dataset.span; st.cs = {};
       try { localStorage.setItem("mx-span", st.span); } catch (e) {}
       const y = scrollY; render(); scrollTo({ top: y });
     }));
+    // 그래프 하나만 기간 바꾸기: 그 그래프만 다시 그린다(카드가 펼쳐진 상태 그대로). #mxBody는 그대로라 한 번만 건다
+    if (!st.csBound) st.csBound = true, $("#mxBody").addEventListener("click", (e) => {
+      const b = e.target.closest("[data-cspan]");
+      if (!b) return;
+      const r = st.data && st.data.indicators.find((x) => x.key === b.dataset.key), box = b.closest(".mx-chart");
+      if (!r || !box) return;
+      st.cs[r.key] = +b.dataset.cspan;
+      box.outerHTML = chart(r);
+    });
     $("#mxBody").querySelectorAll("[data-goview]").forEach((b) => b.addEventListener("click", () => {
       const t = document.querySelector(`[data-view="${b.dataset.goview}"]`);
       if (t) { t.click(); scrollTo({ top: 0 }); }
