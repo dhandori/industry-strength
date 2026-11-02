@@ -382,7 +382,7 @@ def rank_chart(base, nice, cls, partial, keep=13, back=4):
 
 
 # ---------- 토큰 vs 지출: Vercel AI Gateway
-def vercel(open_names):
+def vercel(open_names, prev_history=None):
     s = get("https://vercel.com/ai-gateway/leaderboards").decode("utf-8", "ignore").replace('\\"', '"')
     days = {}
     for m in re.finditer(r'\{"day":"(\d{4}-\d\d-\d\d)T[^"]*","metric":"(tokens|cost)","chef_values":(\[\[.*?\]\])\}', s):
@@ -413,10 +413,15 @@ def vercel(open_names):
 
     last = both[-1]
     rows, s_ = summary(last)
-    hist = []
-    for d in both[-120:]:
+    # 날마다 쌓는다(2026-11-02 사용자 요청: 지출 비중도 시간 누적 그래프). Vercel 페이지에는 최근 몇십 일만 보이므로
+    # 지난 기록(prev_history)에 이번에 받은 날을 덮어 합친다. 같은 날은 이번에 받은 값이 이긴다.
+    hist = {h["day"]: h for h in (prev_history or []) if isinstance(h, dict) and h.get("day")}
+    for d in both:
         _, sd = summary(d)
-        hist.append({"day": d, "open_tokens": sd["tokens"]["open"], "open_cost": sd["cost"]["open"]})
+        hist[d] = {"day": d, "open_tokens": sd["tokens"]["open"], "open_cost": sd["cost"]["open"],
+                   "closed_tokens": sd["tokens"]["closed"], "closed_cost": sd["cost"]["closed"],
+                   "top10_tokens": sd["tokens"]["top10"], "top10_cost": sd["cost"]["top10"]}
+    hist = [hist[d] for d in sorted(hist)][-1100:]
     return {"day": last, "models": sorted(rows.values(), key=lambda r: -((r["tokens"] or 0) + (r["cost"] or 0))),
             "share": s_, "history": hist}
 
@@ -447,7 +452,7 @@ def main():
             data[key] = prev.get(key)
             data["sources"][key] = {**(prev.get("sources", {}).get(key) or {}), "ok": False, "error": f"{type(e).__name__}"}
     try:
-        data["vercel"] = vercel(open_name_table())
+        data["vercel"] = vercel(open_name_table(), (prev.get("vercel") or {}).get("history"))
         data["sources"]["vercel"] = {"ok": True, "fetched_at": data["updated_at"]}
     except Exception as e:  # noqa: BLE001
         print(f"vercel: 실패 {type(e).__name__}: {e}")

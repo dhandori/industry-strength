@@ -131,6 +131,30 @@
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="Anthropic 분기 매출(S-1)">${g}${bars}${line}${vals}</svg>`;
   }
 
+  // ---------- 토큰 vs 지출: 오픈웨이트 비중의 날짜별 추이(Vercel, 매일 쌓임)
+  function spendChart(vc, W) {
+    const hist = (vc && vc.history || []).filter((h) => h.open_tokens != null && h.open_cost != null);
+    if (hist.length < 2) return "";
+    const H = 200, P = { l: 36, r: 14, t: 12, b: 24 }, n = hist.length;
+    const X = (i) => P.l + (i / (n - 1)) * (W - P.l - P.r), Y = (v) => P.t + (1 - v / 100) * (H - P.t - P.b);
+    let g = "";
+    for (const v of [0, 25, 50, 75, 100]) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="ai-grid${v === 50 ? " mid" : ""}"/><text x="${P.l - 6}" y="${Y(v) + 4}" text-anchor="end" class="ai-tk">${v}%</text>`;
+    const step = Math.max(1, Math.round(n / Math.max(3, Math.floor(W / 90))));
+    // 마지막 날짜 바로 앞의 눈금은 글자가 겹치므로 뺀다.
+    hist.forEach((h, i) => { if ((i % step === 0 && n - 1 - i >= step * 0.6) || i === n - 1) g += `<text x="${X(i)}" y="${H - 7}" text-anchor="${i === n - 1 ? "end" : i === 0 ? "start" : "middle"}" class="ai-tk">${md(h.day)}</text>`; });
+    const line = (key, col) => `<polyline fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" points="${hist.map((h, i) => `${X(i).toFixed(1)},${Y(h[key]).toFixed(1)}`).join(" ")}"/>`;
+    let s = line("open_tokens", "var(--ai-tok)") + line("open_cost", "var(--ai-cost)");
+    // 손가락·마우스를 대면 그날 두 값을 함께 본다(날짜마다 투명한 세로 띠).
+    const bw = (W - P.l - P.r) / Math.max(1, n - 1);
+    hist.forEach((h, i) => {
+      const tt = `${h.day} · 오픈웨이트 토큰 ${pct(h.open_tokens)} · 지출 ${pct(h.open_cost)}${h.closed_cost != null ? ` · 클로즈드 지출 ${pct(h.closed_cost)}` : ""}`;
+      s += `<rect x="${(X(i) - bw / 2).toFixed(1)}" y="${P.t}" width="${bw.toFixed(1)}" height="${H - P.t - P.b}" fill="transparent" ${tipAttr(tt)}/>`;
+    });
+    const last = hist[n - 1];
+    s += `<circle cx="${X(n - 1)}" cy="${Y(last.open_tokens)}" r="4" fill="var(--ai-tok)"/><circle cx="${X(n - 1)}" cy="${Y(last.open_cost)}" r="4" fill="var(--ai-cost)"/>`;
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="오픈웨이트 토큰 비중과 지출 비중 추이">${g}${s}</svg>`;
+  }
+
   // ---------- 2) 오픈웨이트 토큰 비중 선 그래프
   function openChart(or, W) {
     const H = 200, P = { l: 36, r: 14, t: 12, b: 24 };
@@ -307,6 +331,11 @@
           <div class="ai-kv"><span>클로즈드</span><b class="tok">토큰 ${pct(s.tokens.closed)}</b><b class="cost">지출 ${pct(s.cost.closed)}</b></div>
           <div class="ai-kv muted"><span>미분류</span><b class="tok">토큰 ${pct(s.tokens.unknown)}</b><b class="cost">지출 ${pct(s.cost.unknown)}</b></div>
         </div>
+        <h3 class="ai-h3">오픈웨이트 비중 추이 <span class="sub">${vc.history && vc.history.length ? `${md(vc.history[0].day)}부터 ${vc.history.length}일 · 매일 쌓임` : ""}</span></h3>
+        <div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span><span><i style="background:var(--ai-cost)"></i>지출 비중</span></div>
+        <div id="aiSpend" class="ai-chart"></div>
+        <p class="foot-note">상위 10개 모델 중 오픈웨이트 모델이 차지한 <b>토큰</b>과 <b>돈(지출)</b>의 비율이에요. 두 선 사이가 벌어질수록 오픈웨이트가 싸게 많이 쓰인다는 뜻이에요. 그날 상위 10개에 어떤 모델이 들어오느냐에 따라 하루 사이에 크게 뛸 수 있어요.</p>
+        <h3 class="ai-h3">${esc(vc.day)} 모델별</h3>
         <div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span><span><i style="background:var(--ai-cost)"></i>지출 비중</span></div>
         <div class="ai-vlist">${rows}</div>
         <p class="foot-note">같은 모델이라도 <b>토큰 비중</b>과 <b>돈(지출) 비중</b>은 크게 달라요. 싼 오픈웨이트 모델은 토큰을 많이 처리해도 돈은 적게 가져가고, 비싼 클로즈드 모델은 반대예요. Vercel은 날마다 상위 10개 모델만 공개해서 합이 100%가 아니에요(이날 토큰 ${pct(s.tokens.top10, 0)}, 지출 ${pct(s.cost.top10, 0)}).</p></section>`;
@@ -371,6 +400,7 @@
       </section>`;
     $("#aiRev").innerHTML = revenueChart(rv, width($("#aiRev")));
     $("#aiOpen").innerHTML = openChart(or, width($("#aiOpen")));
+    if ($("#aiSpend")) $("#aiSpend").innerHTML = spendChart(vc, width($("#aiSpend")));
     if ($("#aiFile")) $("#aiFile").innerHTML = filingChart(fa, width($("#aiFile")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
