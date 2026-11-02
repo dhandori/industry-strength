@@ -131,66 +131,62 @@
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="Anthropic 분기 매출(S-1)">${g}${bars}${line}${vals}</svg>`;
   }
 
-  // ---------- 토큰 vs 지출: 오픈웨이트 비중의 날짜별 추이(Vercel, 매일 쌓임)
-  // 위 OpenRouter 그래프와 같은 방식: '오픈/클로즈드로 분류된 몫 중 오픈웨이트 비율'(미분류·10위 밖은 분모에서 뺀다).
+  // '오픈/클로즈드로 분류된 몫 중 오픈웨이트 비율'(미분류·10위 밖은 분모에서 뺀다).
   const openRatio = (o, c) => (o != null && c != null && o + c > 0 ? (o / (o + c)) * 100 : null);
-  // 오픈웨이트 vs 클로즈드를 '토큰' 띠와 '지출' 띠 두 줄로(같은 날짜 축, 같은 0~100% 기준). 띠 아래 청록 = 오픈웨이트,
-  // 위 남색 = 클로즈드. 위 OpenRouter 그래프와 같은 색·같은 계산(분류된 몫 중 비율)이다.
-  function spendChart(vc, W) {
-    // 분류된 몫(오픈+클로즈드)이 전체의 30%도 안 되는 날은 비율이 0%나 100%로 튀므로 그리지 않는다(8월~9월 초 자료).
-    const enough = (o, c) => o != null && c != null && o + c >= 30;
-    const hist = (vc && vc.history || []).filter((h) => enough(h.open_tokens, h.closed_tokens) && enough(h.open_cost, h.closed_cost))
-      .map((h) => ({ day: h.day, tok: openRatio(h.open_tokens, h.closed_tokens), cost: openRatio(h.open_cost, h.closed_cost) }));
-    if (hist.length < 2) return "";
-    const n = hist.length, P = { l: 44, r: 14, t: 8, b: 24 }, band = 78, gap = 22, H = P.t + band * 2 + gap + P.b;
-    const X = (i) => P.l + (i / (n - 1)) * (W - P.l - P.r);
-    let g = "", s = "";
-    [["tok", "토큰"], ["cost", "지출"]].forEach(([key, label], r) => {
-      const top = P.t + r * (band + gap), Y = (v) => top + (1 - v / 100) * band;
-      const pts = hist.map((h, i) => `${X(i).toFixed(1)},${Y(h[key]).toFixed(1)}`).join(" ");
-      s += `<polygon points="${X(0)},${Y(100)} ${pts} ${X(n - 1)},${Y(100)}" class="ai-area-closed"/>`;
-      s += `<polygon points="${X(0)},${Y(0)} ${pts} ${X(n - 1)},${Y(0)}" class="ai-area-open"/>`;
-      s += `<polyline fill="none" stroke="var(--ai-open)" stroke-width="2" points="${pts}"/>`;
-      g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(50)}" y2="${Y(50)}" class="ai-grid mid"/>`;
-      g += `<text x="${P.l - 6}" y="${top + band / 2 + 4}" text-anchor="end" class="ai-tk ai-band-lb">${label}</text>`;
-      g += `<text x="${P.l - 6}" y="${top + 9}" text-anchor="end" class="ai-tk">100</text><text x="${P.l - 6}" y="${top + band}" text-anchor="end" class="ai-tk">0</text>`;
-      const last = hist[n - 1][key];
-      s += `<text x="${W - P.r - 4}" y="${Y(last) + 14}" text-anchor="end" class="ai-band-v open">${Math.round(last)}%</text>`;
-      s += `<text x="${W - P.r - 4}" y="${Y(last) - 6}" text-anchor="end" class="ai-band-v closed">${Math.round(100 - last)}%</text>`;
+  // ---------- 2) 오픈웨이트 vs 클로즈드(토큰·지출)
+  // 오픈웨이트 vs 클로즈드 한 그래프: 위 줄 = 토큰(OpenRouter 주간, 모든 모델), 아래 줄 = 지출(Vercel 매일을 주 평균).
+  // 줄마다 아래 청록이 오픈웨이트, 위 남색이 클로즈드(합 100%). 둘 다 '분류된 몫 중 비율'로 같은 기준이다.
+  // 지출은 공개하는 곳이 Vercel뿐이라 그 값을 쓰고, 토큰은 더 넓게 세는 OpenRouter를 쓴다(2026-11-02 사용자: 중복 합치기).
+  function costWeeks(vc, weeks) {
+    const enough = (o, c) => o != null && c != null && o + c >= 30;   // 분류된 몫이 30% 미만인 날은 튄다(8월~9월 초)
+    const days = (vc && vc.history || []).filter((h) => enough(h.open_cost, h.closed_cost));
+    return weeks.map((w) => {
+      const end = new Date(Date.parse(w + "T00:00:00Z") + 7 * 864e5).toISOString().slice(0, 10);
+      const ds = days.filter((h) => h.day >= w && h.day < end);
+      return ds.length ? { v: ds.reduce((t, h) => t + openRatio(h.open_cost, h.closed_cost), 0) / ds.length, n: ds.length } : null;
     });
-    const step = Math.max(1, Math.round(n / Math.max(3, Math.floor(W / 90))));
-    hist.forEach((h, i) => { if ((i % step === 0 && n - 1 - i >= step * 0.6) || i === n - 1) g += `<text x="${X(i)}" y="${H - 7}" text-anchor="${i === n - 1 ? "end" : i === 0 ? "start" : "middle"}" class="ai-tk">${md(h.day)}</text>`; });
-    const bw = (W - P.l - P.r) / Math.max(1, n - 1);
-    hist.forEach((h, i) => {
-      const tt = `${h.day} · 토큰: 오픈웨이트 ${pct(h.tok)} / 클로즈드 ${pct(100 - h.tok)} · 지출: 오픈웨이트 ${pct(h.cost)} / 클로즈드 ${pct(100 - h.cost)}`;
-      s += `<rect x="${(X(i) - bw / 2).toFixed(1)}" y="${P.t}" width="${bw.toFixed(1)}" height="${band * 2 + gap}" fill="transparent" ${tipAttr(tt)}/>`;
-    });
-    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="오픈웨이트 대 클로즈드: 토큰 비중과 지출 비중 추이">${g}${s}</svg>`;
   }
-
-  // ---------- 2) 오픈웨이트 토큰 비중 선 그래프
-  function openChart(or, W) {
-    const H = 200, P = { l: 36, r: 14, t: 12, b: 24 };
+  function openChart(or, vc, W) {
     const est = (or.open_est || []).filter((e) => e.open_pct != null);
     if (est.length < 2) return "";
     const act = Object.fromEntries((or.open_history || []).map((h) => [h.week, h]));
-    const n = est.length, X = (i) => P.l + (i / (n - 1)) * (W - P.l - P.r), Y = (v) => P.t + (1 - v / 100) * (H - P.t - P.b);
-    let g = "";
-    for (const v of [0, 25, 50, 75, 100]) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="ai-grid${v === 50 ? " mid" : ""}"/><text x="${P.l - 6}" y="${Y(v) + 4}" text-anchor="end" class="ai-tk">${v}%</text>`;
-    est.forEach((e, i) => { if (i % 8 === 0 || i === n - 1) g += `<text x="${X(i)}" y="${H - 7}" text-anchor="middle" class="ai-tk">${md(e.week)}</text>`; });
-    const full = est.filter((e) => !e.partial);
-    const path = (arr) => arr.map((e) => `${X(est.indexOf(e)).toFixed(1)},${Y(e.open_pct).toFixed(1)}`).join(" ");
-    // 선 아래 청록 = 오픈웨이트, 위 남색 = 클로즈드(아래 Vercel 그래프와 같은 모양).
-    let s = `<polygon points="${X(0)},${Y(100)} ${path(full)} ${X(est.indexOf(full.at(-1)))},${Y(100)}" class="ai-area-closed"/>`;
-    s += `<polygon points="${X(0)},${Y(0)} ${path(full)} ${X(est.indexOf(full.at(-1)))},${Y(0)}" class="ai-area-open"/>`;
-    s += `<polyline fill="none" stroke="var(--ai-open)" stroke-width="2.2" points="${path(full)}"/>`;
-    est.forEach((e, i) => {
-      const a = act[e.week];
-      const tt = `${e.week} 주 · 오픈웨이트 ${pct(a ? a.open_pct : e.open_pct)}${a ? " (모델 단위 실측)" : " (회사별 추정)"}${e.partial ? " · 진행 중인 주" : ""}`;
-      if (a) s += `<circle cx="${X(i)}" cy="${Y(a.open_pct)}" r="5" fill="var(--ai-open)" stroke="var(--surface)" stroke-width="2" ${tipAttr(tt)}/>`;
-      else s += `<circle cx="${X(i)}" cy="${Y(e.open_pct)}" r="${e.partial ? 4 : 7}" fill="${e.partial ? "var(--surface)" : "transparent"}" stroke="${e.partial ? "var(--ai-open)" : "none"}" stroke-dasharray="2 2" stroke-width="1.5" ${tipAttr(tt)}/>`;
+    const cost = costWeeks(vc, est.map((e) => e.week));
+    const n = est.length, P = { l: 36, r: 14, t: 8, b: 24 }, band = 92, gap = 26, H = P.t + band * 2 + gap + P.b;
+    const X = (i) => P.l + (i / (n - 1)) * (W - P.l - P.r);
+    const tokOf = (e) => (act[e.week] ? act[e.week].open_pct : e.open_pct);
+    const bands = [
+      { label: "토큰 · OpenRouter", pts: est.map((e, i) => (e.partial ? null : [i, tokOf(e)])) },
+      { label: "지출 · Vercel 주 평균", pts: cost.map((c, i) => (c ? [i, c.v] : null)) },
+    ];
+    let g = "", s = "";
+    bands.forEach((bd, r) => {
+      const top = P.t + r * (band + gap), Y = (v) => top + (1 - v / 100) * band;
+      for (const v of [0, 50, 100]) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="ai-grid${v === 50 ? " mid" : ""}"/><text x="${P.l - 6}" y="${Y(v) + 4}" text-anchor="end" class="ai-tk">${v}%</text>`;
+      const pts = bd.pts.filter(Boolean);
+      g += `<text x="${P.l + 4}" y="${top + 13}" class="ai-tk ai-band-lb">${bd.label}</text>`;
+      if (pts.length < 2) { g += `<text x="${(P.l + W - P.r) / 2}" y="${top + band / 2}" text-anchor="middle" class="ai-tk">자료 없음</text>`; return; }
+      const line = pts.map(([i, v]) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+      const x0 = X(pts[0][0]), x1 = X(pts.at(-1)[0]);
+      s += `<polygon points="${x0},${Y(100)} ${line} ${x1},${Y(100)}" class="ai-area-closed"/>`;
+      s += `<polygon points="${x0},${Y(0)} ${line} ${x1},${Y(0)}" class="ai-area-open"/>`;
+      s += `<polyline fill="none" stroke="var(--ai-open)" stroke-width="2.2" points="${line}"/>`;
+      const last = pts.at(-1)[1];
+      s += `<text x="${x1 - 4}" y="${Y(last) + 15}" text-anchor="end" class="ai-band-v open">${Math.round(last)}%</text>`;
+      s += `<text x="${x1 - 4}" y="${Y(last) - 6}" text-anchor="end" class="ai-band-v closed">${Math.round(100 - last)}%</text>`;
+      if (r === 0) est.forEach((e, i) => {   // 모델 단위 실측 주는 찬 점, 진행 중인 주는 점선 동그라미
+        if (act[e.week]) s += `<circle cx="${X(i)}" cy="${Y(act[e.week].open_pct)}" r="4" fill="var(--ai-open)" stroke="var(--surface)" stroke-width="1.5"/>`;
+        else if (e.partial) s += `<circle cx="${X(i)}" cy="${Y(e.open_pct)}" r="4" fill="var(--surface)" stroke="var(--ai-open)" stroke-dasharray="2 2" stroke-width="1.5"/>`;
+      });
     });
-    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="오픈웨이트 토큰 비중 추이">${g}${s}</svg>`;
+    est.forEach((e, i) => { if ((i % 8 === 0 && n - 1 - i >= 4) || i === n - 1) g += `<text x="${X(i)}" y="${H - 7}" text-anchor="${i === n - 1 ? "end" : i === 0 ? "start" : "middle"}" class="ai-tk">${md(e.week)}</text>`; });
+    const bw = (W - P.l - P.r) / Math.max(1, n - 1);
+    est.forEach((e, i) => {
+      const a = act[e.week], c = cost[i], t = tokOf(e);
+      const tt = `${e.week} 주${e.partial ? "(진행 중)" : ""} · 토큰: 오픈웨이트 ${pct(t)} / 클로즈드 ${pct(100 - t)}${a ? " (모델 단위 실측)" : " (회사별 추정)"}`
+        + ` · 지출: ${c ? `오픈웨이트 ${pct(c.v)} / 클로즈드 ${pct(100 - c.v)} (Vercel ${c.n}일 평균)` : "자료 없음"}`;
+      s += `<rect x="${(X(i) - bw / 2).toFixed(1)}" y="${P.t}" width="${bw.toFixed(1)}" height="${band * 2 + gap}" fill="transparent" ${tipAttr(tt)}/>`;
+    });
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="오픈웨이트 대 클로즈드: 토큰 비중과 지출 비중 추이">${g}${s}</svg>`;
   }
 
   // ---------- 3) 상위 모델 순위 변화(범프 차트): 최근 13주, 1~9위 + '9위 밖'
@@ -276,7 +272,7 @@
     const coTile = (c, x) => x ? tile(`${c} 런레이트`, `<b style="color:${CO[c].c}">${won(x.usd)}</b>`, `${ymd(x.date)} 기준 · <span class="ai-basis" ${tipAttr(CO[c].help)}>${CO[c].basis}</span>`) : "";
     let tiles = coTile("Anthropic", A) + coTile("OpenAI", O);
     tiles += tile("오픈웨이트 토큰 비중", `<b style="color:var(--ai-open)">${pct(openNow)}</b>`, `OpenRouter ${lt.week ? md(lt.week) + " 주" : ""}${dOpen != null ? ` · 전주 대비 <b class="${dOpen >= 0 ? "up" : "down"}">${dOpen >= 0 ? "▲" : "▼"}${Math.abs(dOpen).toFixed(1)}%p</b>` : ""}`);
-    if (vc) tiles += tile("오픈웨이트: 토큰 vs 지출", `<b style="color:var(--ai-open)">${pct(openRatio(vc.share.tokens.open, vc.share.tokens.closed), 0)}</b><span class="ai-vs">vs</span><b>${pct(openRatio(vc.share.cost.open, vc.share.cost.closed), 0)}</b>`, `Vercel 상위 10개 중 분류된 모델 · ${md(vc.day)}`);
+    if (vc) tiles += tile("오픈웨이트 지출 비중", `<b style="color:var(--ai-open)">${pct(openRatio(vc.share.cost.open, vc.share.cost.closed))}</b>`, `Vercel ${md(vc.day)} · 토큰 비중은 같은 날 ${pct(openRatio(vc.share.tokens.open, vc.share.tokens.closed), 0)}`);
 
     // 매출 카드
     const sumNote = A && O ? `두 회사를 더하면 약 <b>${won(A.usd + O.usd)}</b>지만, 계산법(총액·순액)과 시점(${md(A.date)}·${md(O.date)})이 달라 참고용이에요.` : "";
@@ -346,10 +342,6 @@
           <div class="ai-kv"><span>클로즈드</span><b class="tok">토큰 ${pct(s.tokens.closed)}</b><b class="cost">지출 ${pct(s.cost.closed)}</b></div>
           <div class="ai-kv muted"><span>미분류</span><b class="tok">토큰 ${pct(s.tokens.unknown)}</b><b class="cost">지출 ${pct(s.cost.unknown)}</b></div>
         </div>
-        <h3 class="ai-h3">오픈웨이트 vs 클로즈드 추이 <span class="sub">토큰과 지출 · 매일 쌓임</span></h3>
-        <div class="chart-legend"><span class="ai-lg open"><i></i>오픈웨이트</span><span class="ai-lg closed"><i></i>클로즈드</span></div>
-        <div id="aiSpend" class="ai-chart"></div>
-        <p class="foot-note">위 줄은 <b>토큰</b>, 아래 줄은 <b>돈(지출)</b>이에요. 줄마다 아래 청록이 오픈웨이트, 위 남색이 클로즈드 몫이고 둘을 더하면 100%예요. Vercel 상위 10개 모델 가운데 오픈·클로즈드로 분류된 몫만 100으로 놓았어요(위 OpenRouter 그래프와 같은 계산, 출처가 달라 값이 똑같지는 않아요). 토큰 줄보다 지출 줄의 청록이 얇을수록 오픈웨이트가 싸게 많이 쓰인다는 뜻이에요. 분류된 몫이 30%도 안 되는 날(8월~9월 초)은 빼고 그렸어요.</p>
         <h3 class="ai-h3">${esc(vc.day)} 모델별</h3>
         <div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span><span><i style="background:var(--ai-cost)"></i>지출 비중</span></div>
         <div class="ai-vlist">${rows}</div>
@@ -391,10 +383,10 @@
       ${fHtml}
       ${rcHtml}
       <section class="card">
-        <div class="card-head wrap"><h2>오픈웨이트 vs 클로즈드 토큰 비중 <span class="sub">OpenRouter · 주간(월요일 마감)</span></h2></div>
+        <div class="card-head wrap"><h2>오픈웨이트 vs 클로즈드 <span class="sub">토큰 OpenRouter · 지출 Vercel · 주간(월요일 마감)</span></h2></div>
         <div class="chart-legend"><span class="ai-lg open"><i></i>오픈웨이트</span><span class="ai-lg closed"><i></i>클로즈드</span></div>
         <div id="aiOpen"></div>
-        <p class="foot-note">선 = 분류된 토큰 중 오픈웨이트(가중치 공개) 모델 비율. <b>찬 점</b>은 모델 하나하나를 분류한 실측(이 탭을 만든 주부터 쌓여요), 선은 회사별 오픈웨이트 비중을 최근 주 기준으로 환산한 추정이에요. 점선 동그라미는 아직 진행 중인 이번 주예요.</p>
+        <p class="foot-note">두 줄 모두 같은 기준이에요: 오픈·클로즈드로 분류된 몫을 100%로 놓고 <b>아래 청록 = 오픈웨이트(가중치 공개)</b>, 위 남색 = 클로즈드. <b>위 줄 토큰</b>은 모든 모델을 세는 OpenRouter 주간 값이에요(찬 점 = 모델 하나하나를 분류한 실측, 선 = 회사별 비중으로 환산한 추정, 점선 동그라미 = 진행 중인 이번 주). <b>아래 줄 지출</b>은 돈 비중을 공개하는 곳이 Vercel뿐이라 Vercel 상위 10개 모델의 매일 값을 같은 주로 평균했어요(분류된 몫이 30% 미만인 날은 뺐고, Vercel 자료가 쌓이기 전 주는 비어 있어요). 칸에 손가락·마우스를 대면 그 주 두 값이 함께 보여요.</p>
         ${lw ? `<h3 class="ai-h3">회사별 토큰 점유율 <span class="sub">${md(lw.week)} 주 · 전체 ${(lw.total / 1e12).toFixed(0)}조 토큰</span></h3>
         <div class="ai-bar">${bar}</div><div class="ai-legend">${legend}</div>
         <p class="foot-note">청록 = 주로 오픈웨이트 모델을 내는 회사, 남색 = 주로 클로즈드 모델 회사, 회색 = 기타·미분류. 칸에 손가락·마우스를 대면 그 회사 토큰 중 오픈웨이트 비율이 보여요.</p>` : ""}
@@ -415,8 +407,7 @@
         <p class="foot-note">투자 판단의 참고 자료예요. 보도 수치는 회사마다 기준이 달라 직접 비교에 주의하세요.</p>
       </section>`;
     $("#aiRev").innerHTML = revenueChart(rv, width($("#aiRev")));
-    $("#aiOpen").innerHTML = openChart(or, width($("#aiOpen")));
-    if ($("#aiSpend")) $("#aiSpend").innerHTML = spendChart(vc, width($("#aiSpend")));
+    $("#aiOpen").innerHTML = openChart(or, vc, width($("#aiOpen")));
     if ($("#aiFile")) $("#aiFile").innerHTML = filingChart(fa, width($("#aiFile")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
