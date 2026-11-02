@@ -153,13 +153,9 @@ tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-thr
 .cp-lgb:not(.off) { border-color: color-mix(in srgb, var(--c) 45%, transparent); }
 .cp-hov { fill: transparent; } .cp-hov:hover { fill: color-mix(in srgb, var(--ink) 6%, transparent); }
 
-/* 토큰 vs 지출 추이: 오픈웨이트·클로즈드를 두 그래프로 나눈다(넓은 화면 2열, 휴대폰 1열) */
-.ai-spend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 720px) { .ai-spend-grid { grid-template-columns: 1fr; } }
-.ai-spend-grid > div { min-width: 0; }
-.ai-spend-h { margin: 4px 0 2px; font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
-.ai-spend-h i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-.ai-spend-h i.open { background: var(--ai-open); } .ai-spend-h i.closed { background: var(--ai-closed); }
-.ai-spend-h span { font-weight: 400; font-size: 12.5px; color: var(--ink-2, inherit); }
-.ai-spend-h b.tok { color: var(--ai-tok); } .ai-spend-h b.cost { color: var(--ai-cost); }
-.chart-legend i.dash { background: repeating-linear-gradient(90deg, var(--ai-cost) 0 6px, transparent 6px 10px) !important; }
+/* 오픈웨이트(청록) vs 클로즈드(남색) 몫: OpenRouter·Vercel 두 그래프가 같은 모양 */
+.ai-area-open { fill: color-mix(in srgb, var(--ai-open) 26%, transparent); }
+.ai-area-closed { fill: color-mix(in srgb, var(--ai-closed) 20%, transparent); }
+.ai-band-lb { font-weight: 700; fill: var(--ink, currentColor); }
+.ai-band-v { font-size: 12px; font-weight: 700; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.ai-band-v.open { fill: var(--ai-open); } .ai-band-v.closed { fill: var(--ai-closed); }
