@@ -1,7 +1,7 @@
 {
- "updated_at": "2026-11-03 00:40 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/41473816531",
- "trigger": "push",
+ "updated_at": "2026-11-03 01:09 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/41478587249",
+ "trigger": "schedule",
  "markets": {
   "KR": {
    "ok": true,
