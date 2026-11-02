@@ -134,30 +134,43 @@
   // ---------- 토큰 vs 지출: 오픈웨이트 비중의 날짜별 추이(Vercel, 매일 쌓임)
   // 위 OpenRouter 그래프와 같은 방식: '오픈/클로즈드로 분류된 몫 중 오픈웨이트 비율'(미분류·10위 밖은 분모에서 뺀다).
   const openRatio = (o, c) => (o != null && c != null && o + c > 0 ? (o / (o + c)) * 100 : null);
-  function spendChart(vc, W) {
+  // kind = "open" | "closed": 그 모델 묶음의 토큰 비중 선과 지출 비중 선. 두 묶음을 더하면 100%다.
+  function spendChart(vc, W, kind) {
     // 분류된 몫(오픈+클로즈드)이 전체의 30%도 안 되는 날은 비율이 0%나 100%로 튀므로 그리지 않는다(8월~9월 초 자료).
     const enough = (o, c) => o != null && c != null && o + c >= 30;
     const hist = (vc && vc.history || []).filter((h) => enough(h.open_tokens, h.closed_tokens) && enough(h.open_cost, h.closed_cost))
-      .map((h) => ({ ...h, tok: openRatio(h.open_tokens, h.closed_tokens), cost: openRatio(h.open_cost, h.closed_cost) }));
+      .map((h) => {
+        const tok = openRatio(h.open_tokens, h.closed_tokens), cost = openRatio(h.open_cost, h.closed_cost);
+        return { ...h, tok: kind === "open" ? tok : 100 - tok, cost: kind === "open" ? cost : 100 - cost };
+      });
     if (hist.length < 2) return "";
-    const H = 200, P = { l: 36, r: 14, t: 12, b: 24 }, n = hist.length;
+    const H = 190, P = { l: 36, r: 14, t: 12, b: 24 }, n = hist.length;
     const X = (i) => P.l + (i / (n - 1)) * (W - P.l - P.r), Y = (v) => P.t + (1 - v / 100) * (H - P.t - P.b);
     let g = "";
     for (const v of [0, 25, 50, 75, 100]) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="ai-grid${v === 50 ? " mid" : ""}"/><text x="${P.l - 6}" y="${Y(v) + 4}" text-anchor="end" class="ai-tk">${v}%</text>`;
     const step = Math.max(1, Math.round(n / Math.max(3, Math.floor(W / 90))));
     // 마지막 날짜 바로 앞의 눈금은 글자가 겹치므로 뺀다.
     hist.forEach((h, i) => { if ((i % step === 0 && n - 1 - i >= step * 0.6) || i === n - 1) g += `<text x="${X(i)}" y="${H - 7}" text-anchor="${i === n - 1 ? "end" : i === 0 ? "start" : "middle"}" class="ai-tk">${md(h.day)}</text>`; });
-    const line = (key, col) => `<polyline fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" points="${hist.map((h, i) => `${X(i).toFixed(1)},${Y(h[key]).toFixed(1)}`).join(" ")}"/>`;
-    let s = line("tok", "var(--ai-tok)") + line("cost", "var(--ai-cost)");
-    // 손가락·마우스를 대면 그날 두 값을 함께 본다(날짜마다 투명한 세로 띠).
+    const line = (key, col, dash) => `<polyline fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"${dash ? ' stroke-dasharray="6 4"' : ""} points="${hist.map((h, i) => `${X(i).toFixed(1)},${Y(h[key]).toFixed(1)}`).join(" ")}"/>`;
+    // 토큰 = 실선, 지출 = 점선. 색은 아래 범례와 같다(토큰 파랑, 지출 노랑).
+    let s = line("tok", "var(--ai-tok)", false) + line("cost", "var(--ai-cost)", true);
+    const name = kind === "open" ? "오픈웨이트" : "클로즈드";
     const bw = (W - P.l - P.r) / Math.max(1, n - 1);
     hist.forEach((h, i) => {
-      const tt = `${h.day} · 분류된 모델 중 오픈웨이트: 토큰 ${pct(h.tok)} · 지출 ${pct(h.cost)} (상위 10개 기준 오픈 토큰 ${pct(h.open_tokens)}·클로즈드 ${pct(h.closed_tokens)})`;
+      const tt = `${h.day} · ${name} · 토큰 ${pct(h.tok)} · 지출 ${pct(h.cost)}`;
       s += `<rect x="${(X(i) - bw / 2).toFixed(1)}" y="${P.t}" width="${bw.toFixed(1)}" height="${H - P.t - P.b}" fill="transparent" ${tipAttr(tt)}/>`;
     });
     const last = hist[n - 1];
     s += `<circle cx="${X(n - 1)}" cy="${Y(last.tok)}" r="4" fill="var(--ai-tok)"/><circle cx="${X(n - 1)}" cy="${Y(last.cost)}" r="4" fill="var(--ai-cost)"/>`;
-    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="오픈웨이트 토큰 비중과 지출 비중 추이">${g}${s}</svg>`;
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="${name} 모델의 토큰 비중과 지출 비중 추이">${g}${s}</svg>`;
+  }
+  // 그래프 머리: 묶음 이름과 마지막 날 값
+  function spendHead(vc, kind) {
+    const s = vc && vc.share; if (!s) return "";
+    const t = openRatio(s.tokens.open, s.tokens.closed), c = openRatio(s.cost.open, s.cost.closed);
+    if (t == null || c == null) return "";
+    const tv = kind === "open" ? t : 100 - t, cv = kind === "open" ? c : 100 - c;
+    return `<h4 class="ai-spend-h"><i class="${kind}"></i>${kind === "open" ? "오픈웨이트 모델" : "클로즈드 모델"} <span>${md(vc.day)} 토큰 <b class="tok">${pct(tv)}</b> · 지출 <b class="cost">${pct(cv)}</b></span></h4>`;
   }
 
   // ---------- 2) 오픈웨이트 토큰 비중 선 그래프
@@ -337,9 +350,12 @@
           <div class="ai-kv muted"><span>미분류</span><b class="tok">토큰 ${pct(s.tokens.unknown)}</b><b class="cost">지출 ${pct(s.cost.unknown)}</b></div>
         </div>
         <h3 class="ai-h3">오픈웨이트 비중 추이 <span class="sub">분류된 모델 중 · 매일 쌓임</span></h3>
-        <div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span><span><i style="background:var(--ai-cost)"></i>지출 비중</span></div>
-        <div id="aiSpend" class="ai-chart"></div>
-        <p class="foot-note">Vercel 상위 10개 모델 가운데 오픈웨이트·클로즈드로 <b>분류된 몫만 100으로 놓고</b> 오픈웨이트가 차지한 <b>토큰</b>과 <b>돈(지출)</b> 비율이에요. 위 OpenRouter 그래프와 같은 계산 방식이라 두 그래프를 나란히 볼 수 있어요(출처가 달라 값이 똑같지는 않아요). 분류된 몫이 30%도 안 되는 날(8월~9월 초)은 비율이 튀어서 빼고 그렸어요. 두 선 사이가 벌어질수록 오픈웨이트가 싸게 많이 쓰인다는 뜻이에요. 그날 상위 10개에 어떤 모델이 들어오느냐에 따라 하루 사이에 크게 뛸 수 있어요.</p>
+        <div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중(실선)</span><span><i class="dash" style="background:var(--ai-cost)"></i>지출 비중(점선)</span></div>
+        <div class="ai-spend-grid">
+          <div>${spendHead(vc, "open")}<div id="aiSpendOpen" class="ai-chart"></div></div>
+          <div>${spendHead(vc, "closed")}<div id="aiSpendClosed" class="ai-chart"></div></div>
+        </div>
+        <p class="foot-note">Vercel 상위 10개 모델 가운데 오픈웨이트·클로즈드로 <b>분류된 몫만 100으로 놓고</b> 각 묶음이 차지한 <b>토큰</b>과 <b>돈(지출)</b> 비율이에요. 왼쪽(오픈웨이트)과 오른쪽(클로즈드)을 더하면 100%예요. 위 OpenRouter 그래프와 같은 계산 방식이라 두 그래프를 나란히 볼 수 있어요(출처가 달라 값이 똑같지는 않아요). 분류된 몫이 30%도 안 되는 날(8월~9월 초)은 비율이 튀어서 빼고 그렸어요. 두 선 사이가 벌어질수록 오픈웨이트가 싸게 많이 쓰인다는 뜻이에요. 그날 상위 10개에 어떤 모델이 들어오느냐에 따라 하루 사이에 크게 뛸 수 있어요.</p>
         <h3 class="ai-h3">${esc(vc.day)} 모델별</h3>
         <div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span><span><i style="background:var(--ai-cost)"></i>지출 비중</span></div>
         <div class="ai-vlist">${rows}</div>
@@ -405,7 +421,8 @@
       </section>`;
     $("#aiRev").innerHTML = revenueChart(rv, width($("#aiRev")));
     $("#aiOpen").innerHTML = openChart(or, width($("#aiOpen")));
-    if ($("#aiSpend")) $("#aiSpend").innerHTML = spendChart(vc, width($("#aiSpend")));
+    if ($("#aiSpendOpen")) $("#aiSpendOpen").innerHTML = spendChart(vc, width($("#aiSpendOpen"), 240), "open");
+    if ($("#aiSpendClosed")) $("#aiSpendClosed").innerHTML = spendChart(vc, width($("#aiSpendClosed"), 240), "closed");
     if ($("#aiFile")) $("#aiFile").innerHTML = filingChart(fa, width($("#aiFile")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
