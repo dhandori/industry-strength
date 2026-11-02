@@ -155,8 +155,8 @@
     const X = (i) => P.l + (i / (n - 1)) * (W - P.l - P.r);
     const tokOf = (e) => (act[e.week] ? act[e.week].open_pct : e.open_pct);
     const bands = [
-      { label: "토큰 · OpenRouter", pts: est.map((e, i) => (e.partial ? null : [i, tokOf(e)])) },
-      { label: "지출 · Vercel 주 평균", pts: cost.map((c, i) => (c ? [i, c.v] : null)) },
+      { label: "토큰 비중 (OpenRouter)", pts: est.map((e, i) => (e.partial ? null : [i, tokOf(e)])) },
+      { label: "지출 비중 (Vercel, 주 평균)", pts: cost.map((c, i) => (c ? [i, c.v] : null)) },
     ];
     let g = "", s = "";
     bands.forEach((bd, r) => {
@@ -182,8 +182,8 @@
     const bw = (W - P.l - P.r) / Math.max(1, n - 1);
     est.forEach((e, i) => {
       const a = act[e.week], c = cost[i], t = tokOf(e);
-      const tt = `${e.week} 주${e.partial ? "(진행 중)" : ""} · 토큰: 오픈웨이트 ${pct(t)} / 클로즈드 ${pct(100 - t)}${a ? " (모델 단위 실측)" : " (회사별 추정)"}`
-        + ` · 지출: ${c ? `오픈웨이트 ${pct(c.v)} / 클로즈드 ${pct(100 - c.v)} (Vercel ${c.n}일 평균)` : "자료 없음"}`;
+      const tt = `${md(e.week)} 주${e.partial ? "(진행 중)" : ""} · 오픈웨이트 대 클로즈드 · 토큰 비중 ${pct(t)} 대 ${pct(100 - t)}${a ? "(모델별 실측)" : "(회사별 추정)"}`
+        + ` · 지출 비중 ${c ? `${pct(c.v)} 대 ${pct(100 - c.v)}(Vercel ${c.n}일 평균)` : "자료 없음"}`;
       s += `<rect x="${(X(i) - bw / 2).toFixed(1)}" y="${P.t}" width="${bw.toFixed(1)}" height="${band * 2 + gap}" fill="transparent" ${tipAttr(tt)}/>`;
     });
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="오픈웨이트 대 클로즈드: 토큰 비중과 지출 비중 추이">${g}${s}</svg>`;
@@ -284,7 +284,7 @@
       if (ds.length && sum("open_cost") > 0) mult = (sum("closed_cost") / sum("closed_tokens")) / (sum("open_cost") / sum("open_tokens"));
     }
     const chg = (d) => d == null ? "" : `<b class="${d >= 0 ? "up" : "down"}">${d >= 0 ? "▲" : "▼"}${Math.abs(d).toFixed(1)}%p</b>`;
-    tiles += tile("오픈웨이트 비중", `<b style="color:var(--ai-open)">${pct(openNow)}</b><span class="ai-vs">토큰</span>${cNow ? ` <b style="color:var(--ai-open)">${pct(cNow.v)}</b><span class="ai-vs">지출</span>` : ""}`, `토큰 OpenRouter${lt.week ? " " + md(lt.week) + " 주" : ""} · 지출 Vercel${cNow ? " " + md(cNow.week) + " 주" : ""}`);
+    tiles += tile("오픈웨이트 비중", `<span class="ai-vs">토큰</span> <b style="color:var(--ai-open)">${pct(openNow)}</b>${cNow ? ` <span class="ai-vs">지출</span> <b style="color:var(--ai-open)">${pct(cNow.v)}</b>` : ""}`, `${lt.week ? md(lt.week) + " 주 · " : ""}토큰은 OpenRouter, 지출은 Vercel 기준`);
 
     // 매출 카드
     const sumNote = A && O ? `두 회사를 더하면 약 <b>${won(A.usd + O.usd)}</b>지만, 계산법(총액·순액)과 시점(${md(A.date)}·${md(O.date)})이 달라 참고용이에요.` : "";
@@ -343,7 +343,7 @@
     if (vc) {
       const cm = vc.models.filter((m) => m.cost != null).sort((x, y) => y.cost - x.cost).slice(0, 10);
       const cmax = Math.max(1, ...cm.map((m) => m.cost));
-      costRows = cm.map((m, i) => `<div class="ai-mrow"><span class="ai-rk">${i + 1}</span><span class="ai-mn"><b>${esc(m.name)}</b><small>토큰 ${m.tokens == null ? "10위 밖" : pct(m.tokens)}</small></span><span class="ai-tag ${m.cls}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[m.cls]}</span><span class="ai-mbar"><i class="${m.cls}" style="width:${m.cost / cmax * 100}%"></i></span><span class="num">${pct(m.cost)}</span></div>`).join("");
+      costRows = cm.map((m, i) => `<div class="ai-mrow"><span class="ai-rk">${i + 1}</span><span class="ai-mn"><b>${esc(m.name)}</b><small>토큰 비중 ${m.tokens == null ? "10위 밖" : pct(m.tokens)}</small></span><span class="ai-tag ${m.cls}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[m.cls]}</span><span class="ai-mbar"><i class="${m.cls}" style="width:${m.cost / cmax * 100}%"></i></span><span class="num">${pct(m.cost)}</span></div>`).join("");
     }
 
     // 순위 변화 카드
@@ -381,25 +381,25 @@
       ${fHtml}
       ${rcHtml}
       <section class="card">
-        <div class="card-head wrap"><h2>오픈웨이트 vs 클로즈드 <span class="sub">토큰 OpenRouter · 지출 Vercel · 주간(월요일 마감)</span></h2></div>
+        <div class="card-head wrap"><h2>오픈웨이트 vs 클로즈드 <span class="sub">토큰 비중은 OpenRouter, 지출 비중은 Vercel 기준 · 매주 월요일 마감</span></h2></div>
         <div class="ai-oc">
-          <div class="ai-ock"><span>토큰 중 오픈웨이트</span><b>${pct(openNow)}</b><small>OpenRouter ${lt.week ? md(lt.week) + " 주" : ""}${dOpen != null ? " · 전주 " + chg(dOpen) : ""}</small></div>
-          <div class="ai-ock"><span>지출 중 오픈웨이트</span><b>${cNow ? pct(cNow.v) : "–"}</b><small>${cNow ? `Vercel ${md(cNow.week)} 주${cNow.partial ? "(진행 중)" : ""} ${cNow.n}일 평균${dCost != null ? " · 전주 " + chg(dCost) : ""}` : "자료 없음"}</small></div>
-          ${mult ? `<div class="ai-ock alt"><span>토큰당 값</span><b>클로즈드 ≈ ${mult.toFixed(1)}배</b><small>오픈웨이트 대비 · Vercel 같은 주 합계</small></div>` : ""}
+          <div class="ai-ock"><span>오픈웨이트 토큰 비중</span><b>${pct(openNow)}</b><small>OpenRouter · ${lt.week ? md(lt.week) + " 주" : ""}${dOpen != null ? " · 전주보다 " + chg(dOpen) : ""}</small></div>
+          <div class="ai-ock"><span>오픈웨이트 지출 비중</span><b>${cNow ? pct(cNow.v) : "–"}</b><small>${cNow ? `Vercel · ${md(cNow.week)} 주${cNow.partial ? "(진행 중)" : ""} ${cNow.n}일 평균${dCost != null ? " · 전주보다 " + chg(dCost) : ""}` : "자료 없음"}</small></div>
+          ${mult ? `<div class="ai-ock alt"><span>토큰당 가격</span><b>클로즈드가 ${mult.toFixed(1)}배</b><small>오픈웨이트보다 비쌈 · Vercel ${md(cNow.week)} 주 합계</small></div>` : ""}
         </div>
         <div class="chart-legend"><span class="ai-lg open"><i></i>오픈웨이트</span><span class="ai-lg closed"><i></i>클로즈드</span></div>
         <div id="aiOpen"></div>
-        <p class="foot-note">두 줄 모두 <b>오픈·클로즈드로 분류된 몫을 100%</b>로 놓은 비율이에요(아래 청록 = 오픈웨이트, 위 남색 = 클로즈드). 찬 점 = 모델 하나하나를 분류한 실측, 선 = 회사별 비중으로 환산한 추정, 점선 동그라미 = 진행 중인 이번 주. 칸에 손가락·마우스를 대면 그 주 두 값이 함께 보여요.</p>
+        <p class="foot-note">두 그래프 모두 오픈웨이트와 클로즈드 모델의 몫만 더해 100%로 놓고 나눈 비율이에요(미분류는 뺌). 아래 청록이 오픈웨이트, 위 남색이 클로즈드예요. 찬 점은 모델별로 분류해 잰 실측값, 선은 회사별 비율로 환산한 추정값, 점선 동그라미는 아직 끝나지 않은 이번 주예요. 그래프에 손가락이나 마우스를 대면 그 주의 두 비중이 함께 보여요.</p>
         <div class="ai-two">
-          <div><h3 class="ai-h3">토큰을 많이 쓴 모델 <span class="sub">OpenRouter ${lt.week ? md(lt.week) + " 주" : ""} · 전체 토큰 대비</span></h3>
+          <div><h3 class="ai-h3">토큰 비중 상위 모델 <span class="sub">OpenRouter · ${lt.week ? md(lt.week) + " 주" : ""}</span></h3>
             <div class="ai-mlist">${topRows}</div></div>
-          ${costRows ? `<div><h3 class="ai-h3">돈을 많이 가져간 모델 <span class="sub">Vercel ${md(vc.day)} · 전체 지출 대비</span></h3>
+          ${costRows ? `<div><h3 class="ai-h3">지출 비중 상위 모델 <span class="sub">Vercel · ${md(vc.day)} 하루</span></h3>
             <div class="ai-mlist">${costRows}</div></div>` : ""}
         </div>
         ${lw ? `<h3 class="ai-h3">회사별 토큰 점유율 <span class="sub">${md(lw.week)} 주 · 전체 ${(lw.total / 1e12).toFixed(0)}조 토큰</span></h3>
         <div class="ai-bar">${bar}</div><div class="ai-legend">${legend}</div>` : ""}
-        <p class="foot-note"><b>읽는 법</b>: 싼 오픈웨이트 모델은 토큰을 많이 처리해도 돈은 적게 가져가고, 비싼 클로즈드 모델은 반대라서 두 비중이 크게 벌어져요. 오른쪽 목록의 ‘토큰 n%’는 같은 날 Vercel 토큰 비중이에요. 회사 칸은 그 회사 토큰의 절반 이상이 오픈웨이트면 청록, 아니면 남색, 기타·미분류는 회색이고, 손가락·마우스를 대면 그 회사의 오픈웨이트 비율이 보여요.</p>
-        <p class="foot-note">자료: 토큰 <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter Rankings</a>(모든 모델, 주간) · 지출 <a href="https://vercel.com/ai-gateway/leaderboards" target="_blank" rel="noopener">Vercel AI Gateway</a>(돈 비중을 공개하는 유일한 곳. 매일 상위 10개 모델만 공개해 주 평균으로 씀, 분류된 몫이 30% 미만인 날은 뺌). 둘 다 API로 쓰인 양이라 시장 전체가 아니라 <b>개발자들이 고르는 경향</b>이에요. 오픈웨이트 판정은 Hugging Face 가중치 주소가 있는지로 했어요(OpenRouter 미분류 ${pct(lt.pct && lt.pct.unknown)}).</p>
+        <p class="foot-note"><b>읽는 법</b>: 오픈웨이트 모델은 값이 싸서 토큰 비중은 높아도 지출 비중은 낮아요. 클로즈드 모델은 그 반대예요. 오른쪽 목록 이름 옆의 ‘토큰 비중’은 같은 날 Vercel 기준이에요. 회사별 막대는 그 회사 토큰의 절반 이상이 오픈웨이트면 청록, 아니면 남색, 기타·미분류는 회색이에요. 막대에 손가락이나 마우스를 대면 그 회사의 오픈웨이트 비율이 보여요.</p>
+        <p class="foot-note">자료: 토큰 비중은 <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter Rankings</a>(모든 모델, 주간), 지출 비중은 <a href="https://vercel.com/ai-gateway/leaderboards" target="_blank" rel="noopener">Vercel AI Gateway</a>예요. 지출 비중을 공개하는 곳은 Vercel뿐이고, 매일 상위 10개 모델만 공개해서 한 주 평균을 썼어요. 분류된 몫이 30%가 안 되는 날은 뺐어요. 두 곳 모두 API로 쓰인 양이라 시장 전체가 아니라 <b>개발자들이 어떤 모델을 고르는지</b>를 보여 줘요. 오픈웨이트 여부는 Hugging Face에 가중치가 공개돼 있는지로 판단했어요(OpenRouter 미분류 ${pct(lt.pct && lt.pct.unknown)}).</p>
       </section>
       <section class="card ai-src">
         <div class="card-head"><h2>출처와 갱신 주기</h2></div>
