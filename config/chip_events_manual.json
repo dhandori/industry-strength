@@ -1,0 +1,153 @@
+{
+ "_설명": "CPU 가격 인상 타임라인의 기본 사건(사람이 출처를 확인해 넣은 것). 자동 뉴스 판독이 놓치거나 제목에 숫자가 없는 사건을 채운다. pct_lo~pct_hi는 인상률(%), kind는 reported(실시) 또는 plan(예정·보도). segment는 server·pc·all. memory_contract는 트렌드포스의 분기 계약가 전망(전 분기 대비 %).",
+ "cpu": [
+  {
+   "date": "2026-02-04",
+   "company": "Intel·AMD",
+   "segment": "server",
+   "pct_lo": 10,
+   "pct_hi": 15,
+   "kind": "plan",
+   "title": "2026년 서버 CPU 물량이 사실상 매진돼 서버 CPU 가격을 10~15% 올릴 계획이라는 보도 (소비자용은 보합)",
+   "outlet": "TrendForce (Cailian Press 인용)",
+   "link": "https://www.trendforce.com/news/?p=52778"
+  },
+  {
+   "date": "2026-03-15",
+   "company": "Intel",
+   "segment": "pc",
+   "pct_lo": 5,
+   "pct_hi": 10,
+   "kind": "reported",
+   "title": "인텔이 3월 PC용 CPU 가격을 올림 (ODM 기준 소비자용 5~10% 상승)",
+   "outlet": "TrendForce (Commercial Times 인용)",
+   "link": "https://www.trendforce.com/news/2026/04/22/news-server-cpu-prices-up-as-much-as-20-since-march-intel-may-raise-prices-another-8-",
+   "date_note": "3월 중 시행, 날짜는 대략"
+  },
+  {
+   "date": "2026-04-01",
+   "company": "Intel",
+   "segment": "server",
+   "pct_lo": 10,
+   "pct_hi": 20,
+   "kind": "reported",
+   "title": "인텔이 4월 1일 서버 CPU 가격을 조정 (3월 이후 서버 CPU 10~20% 상승)",
+   "outlet": "TrendForce (Commercial Times 인용)",
+   "link": "https://www.trendforce.com/news/2026/04/22/news-server-cpu-prices-up-as-much-as-20-since-march-intel-may-raise-prices-another-8-"
+  },
+  {
+   "date": "2026-04-22",
+   "company": "AMD",
+   "segment": "server",
+   "pct_lo": 16,
+   "pct_hi": 17,
+   "kind": "plan",
+   "title": "AMD가 2분기와 3분기 두 차례 서버 CPU 가격을 올려 누적 16~17% 인상할 계획이라는 보도",
+   "outlet": "TrendForce (Commercial Times 인용)",
+   "link": "https://www.trendforce.com/news/2026/04/22/news-server-cpu-prices-up-as-much-as-20-since-march-intel-may-raise-prices-another-8-"
+  },
+  {
+   "date": "2026-07-07",
+   "company": "Intel",
+   "segment": "server",
+   "pct_lo": 12,
+   "pct_hi": 12,
+   "kind": "reported",
+   "title": "인텔 가격 인상: 최상위 제온 6980P가 12,460달러에서 13,955달러로 약 12% 상승, 일부 데스크톱 칩도 30~50달러 인상",
+   "outlet": "TrendForce (Tom's Hardware 인용)",
+   "link": "https://www.trendforce.com/news/?p=60279"
+  },
+  {
+   "date": "2026-07-23",
+   "company": "Intel·AMD",
+   "segment": "server",
+   "pct_lo": 40,
+   "pct_hi": 40,
+   "kind": "reported",
+   "basis": "ytd",
+   "title": "중국 서버 CPU 가격이 일부 제품에서 연초보다 40% 넘게 오름, 인텔·AMD는 중국 고객과 장기 공급 계약 체결",
+   "outlet": "TrendForce (Reuters 인용)",
+   "link": "https://www.trendforce.com/news/?p=61431"
+  },
+  {
+   "date": "2026-10-12",
+   "company": "Intel",
+   "segment": "all",
+   "pct_lo": 20,
+   "pct_hi": 20,
+   "kind": "reported",
+   "upto": true,
+   "title": "AI PC와 서버 수요, TSMC 원가 상승으로 인텔이 최대 20% 가격 인상 (AMD도 조정 검토)",
+   "outlet": "TrendForce",
+   "link": "https://trendforce.com/news/2026/10/12/news-cpu-price-hike-wave-intel-reportedly-up-to-20-qualcomm-10-amd-may-join-as-tsmc-costs-climb"
+  },
+  {
+   "date": "2026-10-12",
+   "company": "Qualcomm",
+   "segment": "all",
+   "pct_lo": 10,
+   "pct_hi": 10,
+   "kind": "reported",
+   "title": "퀄컴이 칩 가격을 10% 인상",
+   "outlet": "TrendForce",
+   "link": "https://trendforce.com/news/2026/10/12/news-cpu-price-hike-wave-intel-reportedly-up-to-20-qualcomm-10-amd-may-join-as-tsmc-costs-climb"
+  }
+ ],
+ "memory_contract": [
+  {
+   "date": "2026-02-04",
+   "product": "D램",
+   "qtr": "2026Q1",
+   "pct_lo": 90,
+   "pct_hi": 95,
+   "title": "트렌드포스가 1분기 일반 D램 계약가 상승 전망을 55~60%에서 90~95%로 크게 올림 (낸드는 33~38%에서 55~60%로)",
+   "outlet": "TrendForce",
+   "link": "https://www.trendforce.com/news/?p=52778",
+   "qoq": true
+  },
+  {
+   "date": "2026-02-04",
+   "product": "낸드",
+   "qtr": "2026Q1",
+   "pct_lo": 55,
+   "pct_hi": 60,
+   "title": "트렌드포스가 1분기 낸드 계약가 상승 전망을 33~38%에서 55~60%로 올림",
+   "outlet": "TrendForce",
+   "link": "https://www.trendforce.com/news/?p=52778",
+   "qoq": true
+  },
+  {
+   "date": "2026-07-09",
+   "product": "서버 D램",
+   "qtr": "2026Q3",
+   "pct_lo": 13,
+   "pct_hi": 18,
+   "title": "장기 계약이 인상 폭을 눌러 3분기 서버 D램 계약가는 전 분기보다 13~18% 오를 전망",
+   "outlet": "TrendForce",
+   "link": "https://dramexchange.com/WeeklyResearch/Post/2/12762.html",
+   "qoq": true
+  },
+  {
+   "date": "2026-09-30",
+   "product": "D램",
+   "qtr": "2026Q4",
+   "pct_lo": 10,
+   "pct_hi": 15,
+   "title": "AI 서버 수요가 받쳐 4분기 일반 D램 계약가는 전 분기보다 10~15% 오를 전망 (상승 속도는 완만해짐)",
+   "outlet": "TrendForce (TechNews 인용)",
+   "link": "https://cdn.technews.tw/2026/09/30/ai-server-incremental-demand-supports-4q26-memory-contract-price-increase-consumer-pressure-unabated",
+   "qoq": true
+  },
+  {
+   "date": "2026-09-30",
+   "product": "낸드",
+   "qtr": "2026Q4",
+   "pct_lo": 15,
+   "pct_hi": 20,
+   "title": "4분기 낸드 계약가는 전 분기보다 15~20% 오를 전망 (AI 수요가 끌어올리고 소비자 수요는 약함)",
+   "outlet": "TrendForce (TechNews 인용)",
+   "link": "https://cdn.technews.tw/2026/09/30/ai-server-incremental-demand-supports-4q26-memory-contract-price-increase-consumer-pressure-unabated",
+   "qoq": true
+  }
+ ]
+}

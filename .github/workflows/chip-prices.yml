@@ -1,0 +1,46 @@
+name: 반도체 가격 자료 갱신
+
+on:
+  # DRAMeXchange 현물가는 평일 11:00·14:20(대만 시각) 세션 뒤 갱신 = 12:00·15:20 KST 무렵
+  # → 평일 12:40·16:40 KST에 읽어 하루 한 줄씩 쌓는다. 시각을 바꾸면 docs/chips.js 안내 문구도 같이 바꾼다.
+  schedule:
+    - cron: "40 3 * * 1-5"   # 12:40 KST
+    - cron: "40 7 * * 1-5"   # 16:40 KST
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/chip_prices.py"
+      - "config/chip_events_manual.json"
+      - ".github/workflows/chip-prices.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chip-prices
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: DRAMeXchange 현물가·계약가 전망·CPU 인상 기사 수집
+        run: python scripts/chip_prices.py
+      - name: 결과 저장
+        if: always()
+        run: |
+          git config user.name "industry-strength-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/data/chip_prices.json
+          if git diff --cached --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "반도체 가격 자료 갱신 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+            for i in 1 2 3; do git pull --rebase origin main && git push && break; sleep 5; done
+          fi

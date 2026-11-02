@@ -101,3 +101,36 @@ body.v-ai #meta { display: none; }
 .ai-ntag.reported { color: var(--ai-a); background: color-mix(in srgb, var(--ai-a) 14%, transparent); }
 tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-through; }
 .ai-nq { margin: 4px 0 8px; padding-left: 18px; font-size: 13px; } .ai-nq li { margin: 4px 0; }
+
+/* 반도체 가격 카드 (2026-11-02, docs/chips.js) — cp- 접두어 */
+:root { --cp-mem: #2a78d6; --cp-intel: #1f6fd1; --cp-amd: #d2452f; --cp-qc: #0f9488; --cp-arm: #8a5cd6; --cp-both: #7a7a74; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --cp-mem: #5aa2f0; --cp-intel: #5b9cf0; --cp-amd: #f07a62; --cp-qc: #2cc2b3; --cp-arm: #a98af0; --cp-both: #a8a69f; } }
+:root[data-theme="dark"] { --cp-mem: #5aa2f0; --cp-intel: #5b9cf0; --cp-amd: #f07a62; --cp-qc: #2cc2b3; --cp-arm: #a98af0; --cp-both: #a8a69f; }
+.cp-card .ai-meta { margin: -4px 0 4px; }
+.cp-tile { text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.cp-tile .v { font-size: 22px; }
+.cp-tile.on { border-color: var(--cp-mem); box-shadow: 0 0 0 1px var(--cp-mem) inset; }
+.cp-chart-head { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin: 14px 0 0; font-size: 14px; }
+.cp-chart-head .muted, .cp-tbl .muted { color: var(--muted); font-size: 12px; }
+.cp-axis { stroke: var(--ink-2); stroke-width: 1; opacity: .55; }
+.cp-line { fill: none; stroke: var(--cp-mem); stroke-width: 2.4; stroke-linejoin: round; }
+.cp-band { fill: color-mix(in srgb, var(--cp-mem) 13%, transparent); stroke: none; }
+.cp-range { stroke: color-mix(in srgb, var(--cp-mem) 40%, transparent); stroke-width: 6; stroke-linecap: round; }
+.cp-ma { fill: none; stroke: var(--ink-2); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.cp-dot { fill: var(--cp-mem); stroke: var(--surface); stroke-width: 1.5; }
+.cp-lg-band { background: color-mix(in srgb, var(--cp-mem) 22%, transparent) !important; height: 10px !important; border-radius: 2px !important; }
+.cp-tbl td, .cp-tbl th { white-space: nowrap; }
+.cp-tbl small { color: var(--muted); font-size: 11.5px; }
+.cp-tbl tr[data-pick] { cursor: pointer; }
+.cp-tbl tr.on td { background: var(--accent-soft); }
+.cp-title { max-width: 360px; overflow: hidden; text-overflow: ellipsis; }
+.cp-done { font-size: 11.5px; font-weight: 700; color: var(--up); background: color-mix(in srgb, var(--up) 12%, transparent); padding: 1px 7px; border-radius: 999px; }
+.cp-crows { display: grid; gap: 6px; }
+.cp-crow { display: grid; grid-template-columns: 88px 74px 1fr 76px auto; align-items: center; gap: 10px; font-size: 13px; }
+.cp-q { font-weight: 700; } .cp-prod { color: var(--ink-2); }
+.cp-cbar { position: relative; height: 12px; background: var(--surface-2); border-radius: 6px; }
+.cp-cbar i { position: absolute; top: 0; bottom: 0; border-radius: 6px; opacity: .85; }
+.cp-crow a { color: var(--accent); text-decoration: none; font-size: 12px; white-space: nowrap; }
+@media (max-width: 560px) { .cp-crow { grid-template-columns: 70px 1fr 64px; } .cp-crow .cp-cbar, .cp-crow a { display: none; } }
+.cp-card .up { color: var(--up); } .cp-card .down { color: var(--down); }
+.cp-card .cp-cbar i, .cp-card .cp-done { color: var(--up); }
