@@ -39,7 +39,7 @@ body.v-ai #meta { display: none; }
 .ai-lg { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .ai-lg i { width: 10px; height: 10px; border-radius: 3px; }
 .ai-lg.open i { background: var(--ai-open); } .ai-lg.closed i { background: var(--ai-closed); } .ai-lg.other i { background: var(--ai-other); }
-.ai-mlist, .ai-vlist { display: grid; }
+.ai-mlist { display: grid; }
 .ai-mrow { display: grid; grid-template-columns: 22px minmax(120px, 1.3fr) 64px minmax(60px, 2fr) 52px; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--grid); font-size: 13.5px; }
 .ai-mrow:first-child { border-top: 0; }
 .ai-rk { color: var(--muted); font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -53,24 +53,9 @@ body.v-ai #meta { display: none; }
 .ai-mbar { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
 .ai-mbar i { display: block; height: 100%; border-radius: 5px; }
 .ai-mbar i.open { background: var(--ai-open); } .ai-mbar i.closed { background: var(--ai-closed); } .ai-mbar i.unknown { background: var(--ai-other); }
-.ai-split { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
-@media (max-width: 560px) { .ai-split { grid-template-columns: 1fr; } }
-.ai-kv { background: var(--surface-2); border-radius: 10px; padding: 9px 12px; display: grid; gap: 2px; }
-.ai-kv span { font-size: 12px; font-weight: 600; color: var(--ink-2); }
-.ai-kv b { font-size: 15px; font-variant-numeric: tabular-nums; }
-.ai-kv b.tok { color: var(--ai-tok); } .ai-kv b.cost { color: var(--ai-cost); }
-.ai-kv.muted b { color: var(--muted); }
-.ai-vrow { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(140px, 1.6fr); gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--grid); font-size: 13.5px; }
-.ai-pair { display: grid; gap: 3px; }
-.ai-pb { display: grid; grid-template-columns: 1fr 52px; gap: 6px; align-items: center; }
-.ai-pb i { display: block; height: 8px; border-radius: 4px; max-width: 100%; }
-.ai-pb.tok i { background: var(--ai-tok); } .ai-pb.cost i { background: var(--ai-cost); }
-.ai-pb em { font-style: normal; font-size: 11.5px; text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
-.ai-pb:has(i[style="width:0%"]) em { color: var(--muted); }
 @media (max-width: 560px) {
   .ai-mrow { grid-template-columns: 20px minmax(0, 1fr) 56px 46px; }
   .ai-mrow .ai-mbar { grid-column: 2 / -1; grid-row: 2; }
-  .ai-vrow { grid-template-columns: 1fr; gap: 4px; }
   .ai-tile .v { font-size: 20px; }
 }
 #viewAi .card h2 { white-space: normal; }
@@ -159,3 +144,17 @@ tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-thr
 .ai-band-lb { font-weight: 700; fill: var(--ink, currentColor); }
 .ai-band-v { font-size: 12px; font-weight: 700; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
 .ai-band-v.open { fill: var(--ai-open); } .ai-band-v.closed { fill: var(--ai-closed); }
+
+/* 오픈웨이트 vs 클로즈드: 핵심 숫자 줄 + 모델 두 목록 나란히 */
+.ai-oc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.ai-ock { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; border-left: 3px solid var(--ai-open); }
+.ai-ock.alt { border-left-color: var(--ai-closed); }
+.ai-ock span { font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.ai-ock b { font-size: 20px; font-weight: 750; color: var(--ai-open); font-variant-numeric: tabular-nums; }
+.ai-ock.alt b { color: var(--ai-closed); font-size: 17px; }
+.ai-ock small { font-size: 11.5px; color: var(--muted); }
+.ai-ock small b { font-size: 11.5px; font-weight: 700; }
+.ai-ock small b.up { color: var(--up); } .ai-ock small b.down { color: var(--down); }
+.ai-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 24px; }
+@media (max-width: 760px) { .ai-two { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .ai-oc { grid-template-columns: 1fr 1fr; } .ai-ock.alt { grid-column: 1 / -1; } .ai-ock b { font-size: 18px; } }
