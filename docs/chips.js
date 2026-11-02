@@ -10,7 +10,7 @@
   const md = (s) => { const [, m, d] = s.split("-"); return `${+m}/${+d}`; };
   const usd = (v) => v >= 1000 ? "$" + Math.round(v).toLocaleString() : v >= 100 ? "$" + v.toFixed(1) : "$" + v.toFixed(2);
   const sgn = (v, d = 1) => (v > 0 ? "+" : "") + v.toFixed(d);
-  const st = { data: null, loading: null, pick: "dram/DDR5 16Gb (2Gx8) 4800/5600", grp: "dram", off: null, range: 365, ma: true };
+  const st = { data: null, loading: null, pick: "dram/DDR5 16Gb (2Gx8) 4800/5600", grp: "dram", off: null, range: 31, ma: true };
 
   // 품목 이름을 쉬운 말로
   const NAME = {
@@ -54,7 +54,7 @@
   const SC = ["var(--cp-s1)", "var(--cp-s2)", "var(--cp-s3)", "var(--cp-s4)", "var(--cp-s5)", "var(--cp-s6)", "var(--cp-s7)"];
   const GTABS = [["dram", "D램 칩"], ["wafer", "낸드 웨이퍼"], ["module", "메모리 모듈"], ["gddr", "그래픽 D램"], ["flash", "구형 낸드 칩"]];
   const HIDE0 = /eTT|4Gb 512Mx8|SLC/;   // 처음엔 숨기는 품목(저가 등급, 구형)
-  const RANGES = [["6M", 183], ["1Y", 365], ["2Y", 730], ["전체", 1e5]];
+  const RANGES = [["1개월", 31], ["3개월", 92], ["전체", 1e5]];
   function memChart(series, w) {
     const mobile = w < 520, H = Math.round(Math.max(260, Math.min(400, w * 0.48))), P = { l: 10, r: mobile ? 66 : 78, t: 12, b: 40 };
     const on = series.filter((s) => s.on && s.rows.length);
