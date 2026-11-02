@@ -390,7 +390,7 @@
     }
     const tops = (lt.top_models || []).slice(0, 10);
     const tmax = Math.max(1, ...tops.map((m) => m.pct));
-    const topRows = tops.map((m, i) => `<div class="ai-mrow"><span class="ai-rk">${i + 1}</span><span class="ai-mn"><b>${esc(m.name)}</b><small>${esc(an(m.author))}</small></span><span class="ai-tag ${m.cls}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[m.cls]}</span><span class="ai-mbar"><i class="${m.cls}" style="width:${m.pct / tmax * 100}%"></i></span><span class="num">${pct(m.pct)}</span></div>`).join("");
+    const topRows = tops.map((m, i) => `<div class="ai-mrow"><span class="ai-rk">${i + 1}</span><span class="ai-mn"><button type="button" class="lnk ai-mlnk" data-aim="or" data-k="${esc(m.slug)}">${esc(m.name)}</button><small>${esc(an(m.author))}</small></span><span class="ai-tag ${m.cls}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[m.cls]}</span><span class="ai-mbar"><i class="${m.cls}" style="width:${m.pct / tmax * 100}%"></i></span><span class="num">${pct(m.pct)}</span></div>`).join("");
 
     // 지출 상위 모델(Vercel 하루): 돈을 많이 가져간 모델. 같은 날 토큰 비중을 이름 옆에 작게 붙여 '토큰당 값' 차이가 보이게 한다.
     let costRows = "";
@@ -398,7 +398,7 @@
       const wk = vc.week && vc.week.models && vc.week.models.length ? vc.week : null;   // 최근 7일 평균(없으면 하루)
       const cm = (wk ? wk.models : vc.models).filter((m) => m.cost).sort((x, y) => y.cost - x.cost).slice(0, 10);
       const cmax = Math.max(1, ...cm.map((m) => m.cost));
-      costRows = cm.map((m, i) => `<div class="ai-mrow"><span class="ai-rk">${i + 1}</span><span class="ai-mn"><b>${esc(m.name)}</b><small>토큰 비중 ${m.tokens ? pct(m.tokens) : "10위 밖"}</small></span><span class="ai-tag ${m.cls}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[m.cls]}</span><span class="ai-mbar"><i class="${m.cls}" style="width:${m.cost / cmax * 100}%"></i></span><span class="num">${pct(m.cost)}</span></div>`).join("");
+      costRows = cm.map((m, i) => `<div class="ai-mrow"><span class="ai-rk">${i + 1}</span><span class="ai-mn"><button type="button" class="lnk ai-mlnk" data-aim="vc" data-k="${esc(m.name)}">${esc(m.name)}</button><small>토큰 비중 ${m.tokens ? pct(m.tokens) : "10위 밖"}</small></span><span class="ai-tag ${m.cls}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[m.cls]}</span><span class="ai-mbar"><i class="${m.cls}" style="width:${m.cost / cmax * 100}%"></i></span><span class="num">${pct(m.cost)}</span></div>`).join("");
     }
 
     // 순위 변화 카드
@@ -478,7 +478,111 @@
     if ($("#aiFile")) $("#aiFile").innerHTML = filingChart(fa, width($("#aiFile")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
+    if (!box._aim) { box._aim = true; box.addEventListener("click", (e) => { const b = e.target.closest("[data-aim]"); if (b && st.data) modelPop(b.dataset.aim, b.dataset.k); }); }
   }
+
+  // ---------- 모델 팝업: 누른 모델의 토큰 비중(OpenRouter 주간)·토큰/지출 비중(Vercel 매일) 추이 (2026-11-02 사용자 요청)
+  const norm = (x) => String(x || "").toLowerCase().replace(/\(.*?\)/g, " ").replace(/[^a-z0-9.]+/g, " ").trim();
+  function vcName(vc, name) {           // OpenRouter 이름 → Vercel 이름(같거나, Vercel 이름이 앞부분인 것 중 가장 긴 것)
+    const n = norm(name), ks = Object.keys((vc && vc.model_hist) || {});
+    return ks.find((k) => norm(k) === n) || ks.filter((k) => n.startsWith(norm(k) + " ")).sort((a, b) => b.length - a.length)[0] || null;
+  }
+  function orSlug(or, name) {           // Vercel 이름 → OpenRouter 모델(이름이 같으면 그것, 아니면 그 이름으로 시작하는 것 중 최근 비중이 큰 것)
+    const n = norm(name), info = or.model_info || {}, H = or.model_hist || {};
+    const ks = Object.keys(info).filter((k) => !k.endsWith(":free") && H[k]);
+    const last = (k) => { const v = Object.entries(H[k]).sort().at(-1); return v ? [v[0], v[1]] : ["", 0]; };
+    const pick = (arr) => arr.sort((a, b) => { const x = last(a), y = last(b); return x[0] !== y[0] ? (y[0] > x[0] ? 1 : -1) : y[1] - x[1]; })[0];
+    return pick(ks.filter((k) => norm(info[k].name) === n)) || pick(ks.filter((k) => norm(info[k].name).startsWith(n + " "))) || null;
+  }
+  function trendChart(xs, series, W, H, xl) {
+    const all = series.flatMap((sr) => sr.vals).filter((v) => v != null);
+    if (!all.length) return `<p class="none">이 기간에 자료가 없어요.</p>`;
+    const top = Math.max(5, Math.ceil(Math.max(...all) / 5) * 5), n = xs.length;
+    const P = { l: 34, r: 12, t: 10, b: 24 }, X = (i) => P.l + (n === 1 ? 0.5 : i / (n - 1)) * (W - P.l - P.r), Y = (v) => P.t + (1 - v / top) * (H - P.t - P.b);
+    let g = "", sv = "", hit = "";
+    for (const v of [0, top / 2, top]) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="ai-grid"/><text x="${P.l - 5}" y="${Y(v) + 4}" text-anchor="end" class="ai-tk">${+v.toFixed(1)}%</text>`;
+    const step = Math.max(1, Math.ceil(n / Math.max(2, Math.floor((W - P.l - P.r) / 62))));
+    xs.forEach((x, i) => { if ((i % step === 0 && X(n - 1) - X(i) > 40) || i === n - 1) g += `<text x="${X(i)}" y="${H - 7}" text-anchor="${i === n - 1 ? "end" : "middle"}" class="ai-tk">${xl(x)}</text>`; });
+    for (const sr of series) {
+      let seg = [];
+      const flush = () => { if (seg.length > 1) sv += `<polyline fill="none" stroke="${sr.color}" stroke-width="2.2" stroke-linejoin="round" points="${seg.join(" ")}"/>`; seg = []; };
+      sr.vals.forEach((v, i) => { if (v == null) { flush(); return; } seg.push(`${X(i).toFixed(1)},${Y(v).toFixed(1)}`); });
+      flush();
+      sr.vals.forEach((v, i) => { if (v != null && (n <= 60 || sr.vals[i - 1] == null || sr.vals[i + 1] == null)) sv += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${n <= 60 ? 2.6 : 2}" fill="${sr.color}"/>`; });
+      const li = sr.vals.map((v, i) => (v == null ? -1 : i)).filter((i) => i >= 0).at(-1);
+      if (li != null) sv += `<text x="${X(li) - 4}" y="${Y(sr.vals[li]) - 7}" text-anchor="end" class="ai-mv" style="fill:${sr.color}">${sr.vals[li].toFixed(1)}%</text>`;
+    }
+    const bw = (W - P.l - P.r) / Math.max(1, n - 1);
+    xs.forEach((x, i) => {
+      const t = `${x} · ` + series.map((sr) => `${sr.label} ${sr.vals[i] == null ? sr.miss : pct(sr.vals[i])}`).join(" · ");
+      hit += `<rect x="${(X(i) - bw / 2).toFixed(1)}" y="${P.t}" width="${bw.toFixed(1)}" height="${H - P.t - P.b}" fill="transparent" ${tipAttr(t)}/>`;
+    });
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img">${g}${sv}${hit}</svg>`;
+  }
+  let pop;
+  function modelPop(src, key) {
+    const d = st.data, or = d.openrouter || {}, vc = d.vercel || null;
+    const info = or.model_info || {};
+    let slug, vname, name, author, cls;
+    if (src === "or") {
+      slug = key; const it = info[key] || (or.latest.top_models || []).find((m) => m.slug === key) || {};
+      name = it.name || key; author = it.author || key.split("/")[0]; cls = it.cls; vname = vcName(vc, name);
+    } else {
+      vname = key; slug = orSlug(or, key);
+      const vm = ((vc && vc.week && vc.week.models) || []).find((m) => m.name === key) || (vc.models || []).find((m) => m.name === key) || {};
+      name = key; cls = vm.cls; author = slug ? slug.split("/")[0] : null;
+    }
+    if (!pop) {
+      pop = document.createElement("div"); pop.className = "sk ai-pop"; pop.hidden = true;
+      pop.innerHTML = `<div class="sk-backdrop" data-close></div><article class="sk-panel" role="dialog" aria-modal="true" aria-labelledby="aiPopT">
+        <header class="sk-head"><div class="sk-ht"><h3 id="aiPopT"></h3><p class="meta" id="aiPopS"></p></div>
+        <button class="icon-btn" data-close aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></header>
+        <div class="sk-body" id="aiPopB"></div></article>`;
+      document.body.appendChild(pop);
+      pop.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closePop(); });
+      addEventListener("keydown", (e) => { if (e.key === "Escape" && !pop.hidden) { e.stopImmediatePropagation(); closePop(); } }, true);
+      bindTip(pop);
+    }
+    pop.hidden = false; pop._ov = document.body.style.overflow; document.body.style.overflow = "hidden";
+    $(".sk-panel", pop).scrollTop = 0;
+    const tag = cls ? `<span class="ai-tag ${cls}">${{ open: "오픈웨이트", closed: "클로즈드", unknown: "미분류" }[cls] || "미분류"}</span>` : "";
+    $("#aiPopT", pop).textContent = name;
+    $("#aiPopS", pop).innerHTML = [author ? esc(an(author)) : "", tag].filter(Boolean).join(" · ");
+    const body = $("#aiPopB", pop), W = Math.max(260, Math.min(600, innerWidth) - 40);
+
+    // OpenRouter 주간
+    // 앞쪽의 빈 기간은 잘라 낸다(새 모델이 오른쪽 끝에 몰려 보이지 않게). 최소 min개는 남긴다.
+    const trim = (xs, has, min) => { const f = xs.findIndex(has); return f < 0 ? xs : xs.slice(Math.max(0, Math.min(f - 1, xs.length - min))); };
+    const oh = (slug && (or.model_hist || {})[slug]) || {};
+    const weeks = trim((or.open_est || []).filter((e) => !e.partial).map((e) => e.week), (w) => oh[w] != null, 8);
+    const ov = weeks.map((w) => (oh[w] != null ? oh[w] : null));
+    const oHas = ov.filter((v) => v != null);
+    const oLast = weeks.map((w, i) => [w, ov[i]]).filter((x) => x[1] != null).at(-1);
+    const oMax = oHas.length ? weeks.map((w, i) => [w, ov[i]]).filter((x) => x[1] != null).sort((a, b) => b[1] - a[1])[0] : null;
+    // Vercel 매일
+    const vh = (vname && vc && vc.model_hist && vc.model_hist[vname]) || {};
+    const days = trim([...new Set(Object.values((vc && vc.model_hist) || {}).flatMap((o) => Object.keys(o)))].sort(), (x) => vh[x], 14);
+    const vt = days.map((x) => (vh[x] ? vh[x][0] : null)), vco = days.map((x) => (vh[x] ? vh[x][1] : null));
+    const vw = vname && vc && vc.week ? (vc.week.models || []).find((m) => m.name === vname) : null;
+
+    const stat = (k, v, h) => `<div><div class="k">${k}</div><div class="v">${v}</div>${h ? `<div class="h">${h}</div>` : ""}</div>`;
+    let html = `<div class="sk-stats">
+      ${stat("토큰 비중 · OpenRouter", oLast ? pct(oLast[1]) : "–", oLast ? `${md(oLast[0])} 주` : "상위권 기록 없음")}
+      ${stat("최고 토큰 비중 · OpenRouter", oMax ? pct(oMax[1]) : "–", oMax ? `${md(oMax[0])} 주` : "")}
+      ${stat("토큰 비중 · Vercel", vw ? pct(vw.tokens) : "–", vw ? `${md(vc.week.from)}~${md(vc.week.to)} 평균` : "상위 10위 기록 없음")}
+      ${stat("지출 비중 · Vercel", vw ? pct(vw.cost) : "–", vw ? `${md(vc.week.from)}~${md(vc.week.to)} 평균` : "상위 10위 기록 없음")}
+    </div>`;
+    html += `<h4>토큰 비중 추이 <span class="sub">OpenRouter · 주간 · 전체 토큰 중 비중</span></h4>`;
+    html += slug && oHas.length ? `<div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span></div>${trendChart(weeks, [{ vals: ov, color: "var(--ai-tok)", label: "토큰 비중", miss: "상위권 밖(공개 안 됨)" }], W, 170, md)}`
+      : `<p class="none">OpenRouter 상위권에 오른 기록이 없거나 같은 모델을 찾지 못했어요.</p>`;
+    html += `<h4>토큰·지출 비중 추이 <span class="sub">Vercel · 매일 · 전체 중 비중</span></h4>`;
+    html += vname && (vt.some((v) => v != null) || vco.some((v) => v != null))
+      ? `<div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span><span><i style="background:var(--ink);height:3px"></i>지출 비중</span></div>${trendChart(days, [{ vals: vt, color: "var(--ai-tok)", label: "토큰 비중", miss: "10위 밖" }, { vals: vco, color: "var(--ink)", label: "지출 비중", miss: "10위 밖" }], W, 190, md)}`
+      : `<p class="none">Vercel 상위 10위에 오른 기록이 없거나 같은 모델을 찾지 못했어요.</p>`;
+    html += `<p class="foot-note">OpenRouter는 주마다 상위 9개 모델만 1년치를 공개해서, 그 밖으로 밀린 주는 선이 끊겨요(이번 주부터는 상위 40개까지 쌓여요). Vercel은 매일 토큰·지출 각각 상위 10개만 공개해서 10위 밖인 날은 비어 있어요. 두 곳은 같은 모델도 이름이 조금 달라 이름으로 맞췄어요${src === "or" && vname && norm(vname) !== norm(name) ? `(Vercel ‘${esc(vname)}’)` : src === "vc" && slug && info[slug] && norm(info[slug].name) !== norm(name) ? `(OpenRouter ‘${esc(info[slug].name)}’)` : ""}.</p>`;
+    body.innerHTML = html;
+  }
+  function closePop() { pop.hidden = true; document.body.style.overflow = pop._ov || ""; $("#tip") && ($("#tip").hidden = true); }
 
   let rz, lastW = innerWidth;
   addEventListener("resize", () => { if (innerWidth === lastW) return; lastW = innerWidth; clearTimeout(rz); rz = setTimeout(() => { if (st.data && !$("#viewAi").hidden) render(); }, 200); });

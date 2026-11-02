@@ -162,3 +162,6 @@ tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-thr
 .ai-mbar-tok.partial { opacity: .35; }
 .ai-mv { font-size: 11px; font-weight: 700; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
 .ai-mv.tok { fill: var(--ai-open); } .ai-mv.cost { fill: var(--ink); }
+.ai-mlnk { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.ai-pop .sk-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ai-pop .chart-legend { margin-bottom: 4px; }

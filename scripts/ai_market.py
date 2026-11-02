@@ -347,7 +347,31 @@ def openrouter(prev):
     weeks = [{"week": w["x"], "total": sum(w["ys"].values()), "authors": w["ys"], "partial": partial(w["x"])} for w in ms]
     return {"weeks": weeks, "latest": latest, "author_open_ratio": {a: round(r, 3) for a, r in ratio.items()},
             "open_history": sorted(hist_actual.values(), key=lambda h: h["week"]), "open_est": est,
-            "rank_chart": rank_chart(base, nice, cls, partial)}
+            "rank_chart": rank_chart(base, nice, cls, partial),
+            **model_history(prev, base, nice, cls, partial, week, by_model, T)}
+
+
+def model_history(prev, base, nice, cls, partial, week, by_model, T, keep_top=40):
+    """모델별 주간 토큰 비중 기록(2026-11-02 사용자 요청: 모델을 누르면 추이 팝업).
+    OpenRouter 'Top Models' 차트(1년치, 주마다 상위 9개)로 채우고, 이번 주 전체 모델 목록(상위 40개)을 덧붙여 쌓는다.
+    진행 중인 주는 넣지 않는다. 같은 주·모델은 차트 값이 이긴다."""
+    hist = {s: dict(v) for s, v in (prev.get("model_hist") or {}).items()}
+    info = dict(prev.get("model_info") or {})
+    if week and T and not partial(week):
+        for s_, t in sorted(by_model.items(), key=lambda kv: -kv[1])[:keep_top]:
+            hist.setdefault(s_, {})[week] = round(t / T * 100, 3)
+    for w in getj(base + "model-rankings-chart")["data"]["data"]:
+        if partial(w["x"]):
+            continue
+        tot = sum(w["ys"].values())
+        for s_, t in w["ys"].items():
+            if s_ != "Others" and tot:
+                hist.setdefault(s_, {})[w["x"]] = round(t / tot * 100, 3)
+    for s_ in hist:
+        b = s_.split(":")[0]
+        info[s_] = {"name": nice(b) + (" (무료)" if s_.endswith(":free") else ""), "author": s_.split("/", 1)[0],
+                    "cls": cls(b) or (info.get(s_) or {}).get("cls") or "unknown"}
+    return {"model_hist": {s_: dict(sorted(v.items())[-160:]) for s_, v in hist.items()}, "model_info": info}
 
 
 def rank_chart(base, nice, cls, partial, keep=13, back=4):
@@ -382,7 +406,7 @@ def rank_chart(base, nice, cls, partial, keep=13, back=4):
 
 
 # ---------- 토큰 vs 지출: Vercel AI Gateway
-def vercel(open_names, prev_history=None):
+def vercel(open_names, prev_history=None, prev_models=None):
     s = get("https://vercel.com/ai-gateway/leaderboards").decode("utf-8", "ignore").replace('\\"', '"')
     days = {}
     for m in re.finditer(r'\{"day":"(\d{4}-\d\d-\d\d)T[^"]*","metric":"(tokens|cost)","chef_values":(\[\[.*?\]\])\}', s):
@@ -422,6 +446,16 @@ def vercel(open_names, prev_history=None):
                    "closed_tokens": sd["tokens"]["closed"], "closed_cost": sd["cost"]["closed"],
                    "top10_tokens": sd["tokens"]["top10"], "top10_cost": sd["cost"]["top10"]}
     hist = [hist[d] for d in sorted(hist)][-1100:]
+    # 모델별 매일 [토큰 비중, 지출 비중] 기록(그날 10위 밖이면 null). 팝업 추이 그래프용, 지난 기록에 덮어 쌓는다.
+    mh = {n: dict(v) for n, v in (prev_models or {}).items()}
+    for d in both:
+        cur = {}
+        for i, metric in enumerate(("tokens", "cost")):
+            for name, p in days[d][metric]:
+                cur.setdefault(name, [None, None])[i] = round(p, 2)
+        for name, v in cur.items():
+            mh.setdefault(name, {})[d] = v
+    mh = {n: dict(sorted(v.items())[-400:]) for n, v in mh.items()}
     # 모델별 최근 7일 평균(2026-11-02 사용자 요청: 하루 튐으로 순위가 뒤집히지 않게). 그날 10위 밖이면 0으로 센다.
     wk = both[-7:]
     acc = {}
@@ -436,7 +470,7 @@ def vercel(open_names, prev_history=None):
     week_models.sort(key=lambda r: -r["cost"])
     return {"day": last, "models": sorted(rows.values(), key=lambda r: -((r["tokens"] or 0) + (r["cost"] or 0))),
             "share": s_, "history": hist,
-            "week": {"from": wk[0], "to": wk[-1], "n": len(wk), "models": week_models}}
+            "week": {"from": wk[0], "to": wk[-1], "n": len(wk), "models": week_models}, "model_hist": mh}
 
 
 def open_name_table():
@@ -465,7 +499,8 @@ def main():
             data[key] = prev.get(key)
             data["sources"][key] = {**(prev.get("sources", {}).get(key) or {}), "ok": False, "error": f"{type(e).__name__}"}
     try:
-        data["vercel"] = vercel(open_name_table(), (prev.get("vercel") or {}).get("history"))
+        pv = prev.get("vercel") or {}
+        data["vercel"] = vercel(open_name_table(), pv.get("history"), pv.get("model_hist"))
         data["sources"]["vercel"] = {"ok": True, "fetched_at": data["updated_at"]}
     except Exception as e:  # noqa: BLE001
         print(f"vercel: 실패 {type(e).__name__}: {e}")
