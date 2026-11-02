@@ -56,7 +56,11 @@ def _upd(s):
 
 
 def dram_snapshot():
-    raw = get("https://www.dramexchange.com/", UA_BROWSER).decode("utf-8", "ignore")
+    return parse_dx(get("https://www.dramexchange.com/", UA_BROWSER).decode("utf-8", "ignore"))
+
+
+def parse_dx(raw):
+    """DRAMeXchange 첫 화면 HTML → {표 제목: {date, time, rows}} (인터넷 기록보관소 옛 화면에도 같이 씀)"""
     t = re.sub(r"<script.*?</script>|<style.*?</style>", "", raw, flags=re.S)
     t = re.sub(r"<[^>]+>", "|", t)
     t = html.unescape(re.sub(r"\s+", " ", t))
