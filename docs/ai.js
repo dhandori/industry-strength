@@ -341,9 +341,10 @@
     // 지출 상위 모델(Vercel 하루): 돈을 많이 가져간 모델. 같은 날 토큰 비중을 이름 옆에 작게 붙여 '토큰당 값' 차이가 보이게 한다.
     let costRows = "";
     if (vc) {
-      const cm = vc.models.filter((m) => m.cost != null).sort((x, y) => y.cost - x.cost).slice(0, 10);
+      const wk = vc.week && vc.week.models && vc.week.models.length ? vc.week : null;   // 최근 7일 평균(없으면 하루)
+      const cm = (wk ? wk.models : vc.models).filter((m) => m.cost).sort((x, y) => y.cost - x.cost).slice(0, 10);
       const cmax = Math.max(1, ...cm.map((m) => m.cost));
-      costRows = cm.map((m, i) => `<div class="ai-mrow"><span class="ai-rk">${i + 1}</span><span class="ai-mn"><b>${esc(m.name)}</b><small>토큰 비중 ${m.tokens == null ? "10위 밖" : pct(m.tokens)}</small></span><span class="ai-tag ${m.cls}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[m.cls]}</span><span class="ai-mbar"><i class="${m.cls}" style="width:${m.cost / cmax * 100}%"></i></span><span class="num">${pct(m.cost)}</span></div>`).join("");
+      costRows = cm.map((m, i) => `<div class="ai-mrow"><span class="ai-rk">${i + 1}</span><span class="ai-mn"><b>${esc(m.name)}</b><small>토큰 비중 ${m.tokens ? pct(m.tokens) : "10위 밖"}</small></span><span class="ai-tag ${m.cls}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[m.cls]}</span><span class="ai-mbar"><i class="${m.cls}" style="width:${m.cost / cmax * 100}%"></i></span><span class="num">${pct(m.cost)}</span></div>`).join("");
     }
 
     // 순위 변화 카드
@@ -393,12 +394,12 @@
         <div class="ai-two">
           <div><h3 class="ai-h3">토큰 비중 상위 모델 <span class="sub">OpenRouter · ${lt.week ? md(lt.week) + " 주" : ""}</span></h3>
             <div class="ai-mlist">${topRows}</div></div>
-          ${costRows ? `<div><h3 class="ai-h3">지출 비중 상위 모델 <span class="sub">Vercel · ${md(vc.day)} 하루</span></h3>
+          ${costRows ? `<div><h3 class="ai-h3">지출 비중 상위 모델 <span class="sub">Vercel · ${vc.week && vc.week.models ? `${md(vc.week.from)}~${md(vc.week.to)} ${vc.week.n}일 평균` : md(vc.day) + " 하루"}</span></h3>
             <div class="ai-mlist">${costRows}</div></div>` : ""}
         </div>
         ${lw ? `<h3 class="ai-h3">회사별 토큰 점유율 <span class="sub">${md(lw.week)} 주 · 전체 ${(lw.total / 1e12).toFixed(0)}조 토큰</span></h3>
         <div class="ai-bar">${bar}</div><div class="ai-legend">${legend}</div>` : ""}
-        <p class="foot-note"><b>읽는 법</b>: 오픈웨이트 모델은 값이 싸서 토큰 비중은 높아도 지출 비중은 낮아요. 클로즈드 모델은 그 반대예요. 오른쪽 목록 이름 옆의 ‘토큰 비중’은 같은 날 Vercel 기준이에요. 회사별 막대는 그 회사 토큰의 절반 이상이 오픈웨이트면 청록, 아니면 남색, 기타·미분류는 회색이에요. 막대에 손가락이나 마우스를 대면 그 회사의 오픈웨이트 비율이 보여요.</p>
+        <p class="foot-note"><b>읽는 법</b>: 오픈웨이트 모델은 값이 싸서 토큰 비중은 높아도 지출 비중은 낮아요. 클로즈드 모델은 그 반대예요. 오른쪽 목록은 하루 튐에 순위가 뒤집히지 않게 최근 7일 평균으로 줄 세웠고(그날 10위 밖이면 0으로 셈), 이름 옆의 ‘토큰 비중’도 같은 7일 Vercel 평균이에요. 회사별 막대는 그 회사 토큰의 절반 이상이 오픈웨이트면 청록, 아니면 남색, 기타·미분류는 회색이에요. 막대에 손가락이나 마우스를 대면 그 회사의 오픈웨이트 비율이 보여요.</p>
         <p class="foot-note">자료: 토큰 비중은 <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter Rankings</a>(모든 모델, 주간), 지출 비중은 <a href="https://vercel.com/ai-gateway/leaderboards" target="_blank" rel="noopener">Vercel AI Gateway</a>예요. 지출 비중을 공개하는 곳은 Vercel뿐이고, 매일 상위 10개 모델만 공개해서 한 주 평균을 썼어요. 분류된 몫이 30%가 안 되는 날은 뺐어요. 두 곳 모두 API로 쓰인 양이라 시장 전체가 아니라 <b>개발자들이 어떤 모델을 고르는지</b>를 보여 줘요. 오픈웨이트 여부는 Hugging Face에 가중치가 공개돼 있는지로 판단했어요(OpenRouter 미분류 ${pct(lt.pct && lt.pct.unknown)}).</p>
       </section>
       <section class="card ai-src">

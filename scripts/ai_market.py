@@ -422,8 +422,21 @@ def vercel(open_names, prev_history=None):
                    "closed_tokens": sd["tokens"]["closed"], "closed_cost": sd["cost"]["closed"],
                    "top10_tokens": sd["tokens"]["top10"], "top10_cost": sd["cost"]["top10"]}
     hist = [hist[d] for d in sorted(hist)][-1100:]
+    # 모델별 최근 7일 평균(2026-11-02 사용자 요청: 하루 튐으로 순위가 뒤집히지 않게). 그날 10위 밖이면 0으로 센다.
+    wk = both[-7:]
+    acc = {}
+    for d in wk:
+        for metric in ("tokens", "cost"):
+            for name, p in days[d][metric]:
+                r = acc.setdefault(name, {"name": name, "tokens": 0.0, "cost": 0.0, "cls": cls(name), "days": set()})
+                r[metric] += p
+                r["days"].add(d)
+    week_models = [{"name": r["name"], "cls": r["cls"], "tokens": round(r["tokens"] / len(wk), 2),
+                    "cost": round(r["cost"] / len(wk), 2), "days": len(r["days"])} for r in acc.values()]
+    week_models.sort(key=lambda r: -r["cost"])
     return {"day": last, "models": sorted(rows.values(), key=lambda r: -((r["tokens"] or 0) + (r["cost"] or 0))),
-            "share": s_, "history": hist}
+            "share": s_, "history": hist,
+            "week": {"from": wk[0], "to": wk[-1], "n": len(wk), "models": week_models}}
 
 
 def open_name_table():
