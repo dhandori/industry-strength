@@ -199,6 +199,50 @@
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="월별 오픈웨이트 비중: 토큰 막대, 지출 선">${g}${s}${lab}${hit}</svg>`;
   }
 
+  function weekChart(or, vc, W) {   // 최근 16주 작은 그래프(2026-11-02 사용자: 월별 아래 주간 남기기)
+    const est = (or.open_est || []).filter((e) => e.open_pct != null).slice(-16);
+    if (est.length < 2) return "";
+    const act = Object.fromEntries((or.open_history || []).map((h) => [h.week, h]));
+    const cost = costWeeks(vc, est.map((e) => e.week));
+    const n = est.length, P = { l: 36, r: 14, t: 8, b: 24 }, band = 58, gap = 22, H = P.t + band * 2 + gap + P.b;
+    const X = (i) => P.l + (i / (n - 1)) * (W - P.l - P.r);
+    const tokOf = (e) => (act[e.week] ? act[e.week].open_pct : e.open_pct);
+    const bands = [
+      { label: "토큰 비중 (OpenRouter)", pts: est.map((e, i) => (e.partial ? null : [i, tokOf(e)])) },
+      { label: "지출 비중 (Vercel, 주 평균)", pts: cost.map((c, i) => (c ? [i, c.v] : null)) },
+    ];
+    let g = "", s = "";
+    bands.forEach((bd, r) => {
+      const top = P.t + r * (band + gap), Y = (v) => top + (1 - v / 100) * band;
+      for (const v of [0, 100]) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="ai-grid${v === 50 ? " mid" : ""}"/><text x="${P.l - 6}" y="${Y(v) + 4}" text-anchor="end" class="ai-tk">${v}%</text>`;
+      const pts = bd.pts.filter(Boolean);
+      g += `<text x="${P.l + 4}" y="${top + 13}" class="ai-tk ai-band-lb">${bd.label}</text>`;
+      if (pts.length < 2) { g += `<text x="${(P.l + W - P.r) / 2}" y="${top + band / 2}" text-anchor="middle" class="ai-tk">자료 없음</text>`; return; }
+      const line = pts.map(([i, v]) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
+      const x0 = X(pts[0][0]), x1 = X(pts.at(-1)[0]);
+      s += `<polygon points="${x0},${Y(100)} ${line} ${x1},${Y(100)}" class="ai-area-closed"/>`;
+      s += `<polygon points="${x0},${Y(0)} ${line} ${x1},${Y(0)}" class="ai-area-open"/>`;
+      s += `<polyline fill="none" stroke="var(--ai-open)" stroke-width="2.2" points="${line}"/>`;
+      const last = pts.at(-1)[1];
+      s += `<text x="${x1 - 4}" y="${Y(last) + 15}" text-anchor="end" class="ai-band-v open">${Math.round(last)}%</text>`;
+      s += `<text x="${x1 - 4}" y="${Y(last) - 6}" text-anchor="end" class="ai-band-v closed">${Math.round(100 - last)}%</text>`;
+      if (r === 0) est.forEach((e, i) => {   // 모델 단위 실측 주는 찬 점, 진행 중인 주는 점선 동그라미
+        if (act[e.week]) s += `<circle cx="${X(i)}" cy="${Y(act[e.week].open_pct)}" r="4" fill="var(--ai-open)" stroke="var(--surface)" stroke-width="1.5"/>`;
+        else if (e.partial) s += `<circle cx="${X(i)}" cy="${Y(e.open_pct)}" r="4" fill="var(--surface)" stroke="var(--ai-open)" stroke-dasharray="2 2" stroke-width="1.5"/>`;
+      });
+    });
+    est.forEach((e, i) => { if ((i % 4 === 0 && X(n - 1) - X(i) >= 44) || i === n - 1) g += `<text x="${X(i)}" y="${H - 7}" text-anchor="${i === n - 1 ? "end" : i === 0 ? "start" : "middle"}" class="ai-tk">${md(e.week)}</text>`; });
+    const bw = (W - P.l - P.r) / Math.max(1, n - 1);
+    est.forEach((e, i) => {
+      const a = act[e.week], c = cost[i], t = tokOf(e);
+      const tt = `${md(e.week)} 주${e.partial ? "(진행 중)" : ""} · 오픈웨이트 대 클로즈드 · 토큰 비중 ${pct(t)} 대 ${pct(100 - t)}${a ? "(모델별 실측)" : "(회사별 추정)"}`
+        + ` · 지출 비중 ${c ? `${pct(c.v)} 대 ${pct(100 - c.v)}(Vercel ${c.n}일 평균)` : "자료 없음"}`;
+      s += `<rect x="${(X(i) - bw / 2).toFixed(1)}" y="${P.t}" width="${bw.toFixed(1)}" height="${band * 2 + gap}" fill="transparent" ${tipAttr(tt)}/>`;
+    });
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="최근 16주 오픈웨이트 대 클로즈드: 토큰 비중과 지출 비중">${g}${s}</svg>`;
+  }
+
+
   // ---------- 3) 상위 모델 순위 변화(범프 차트): 최근 13주, 1~9위 + '9위 밖'
   const RISE_COL = ["#e4572e", "#0f9488", "#7048c4", "#d99a00", "#2a78d6", "#c2185b"];
   // 최근 back주 안에 상위 9개였는데 지금은 빠진 모델(가장 최근 순위)
@@ -402,6 +446,10 @@
         <div class="chart-legend"><span><i style="background:var(--ai-open)"></i>토큰 비중(막대, OpenRouter)</span><span><i style="background:var(--ink);height:3px"></i>지출 비중(선, Vercel)</span></div>
         <div id="aiOpen"></div>
         <p class="foot-note">두 값 모두 오픈웨이트와 클로즈드 모델의 몫만 더해 100%로 놓고, 그중 오픈웨이트가 차지한 비율이에요(미분류는 뺌). 막대는 그달 OpenRouter 주간 값의 평균, 선은 그달 Vercel 하루 값의 평균이에요. 흐린 막대와 속 빈 점은 아직 끝나지 않은 이번 달이에요. Vercel 자료는 2026년 9월 중순부터 쌓여서 선은 그때부터 그려져요. 그래프에 손가락이나 마우스를 대면 그달 두 값이 함께 보여요.</p>
+        <h3 class="ai-h3">최근 16주 <span class="sub">주간 · 매주 월요일 마감</span></h3>
+        <div class="chart-legend"><span class="ai-lg open"><i></i>오픈웨이트</span><span class="ai-lg closed"><i></i>클로즈드</span></div>
+        <div id="aiWeek"></div>
+        <p class="foot-note">주마다 오픈웨이트(아래 청록)와 클로즈드(위 남색)가 나눠 가진 비중이에요. 위 줄은 토큰(OpenRouter), 아래 줄은 지출(Vercel 그 주 평균)이에요. 찬 점은 모델별 실측값, 점선 동그라미는 아직 끝나지 않은 이번 주예요.</p>
         <div class="ai-two">
           <div><h3 class="ai-h3">토큰 비중 상위 모델 <span class="sub">OpenRouter · ${lt.week ? md(lt.week) + " 주" : ""}</span></h3>
             <div class="ai-mlist">${topRows}</div></div>
@@ -426,6 +474,7 @@
       </section>`;
     $("#aiRev").innerHTML = revenueChart(rv, width($("#aiRev")));
     $("#aiOpen").innerHTML = openChart(or, vc, width($("#aiOpen")));
+    $("#aiWeek").innerHTML = weekChart(or, vc, width($("#aiWeek")));
     if ($("#aiFile")) $("#aiFile").innerHTML = filingChart(fa, width($("#aiFile")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
