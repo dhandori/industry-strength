@@ -10,7 +10,7 @@
   const md = (s) => { const [, m, d] = s.split("-"); return `${+m}/${+d}`; };
   const usd = (v) => v >= 1000 ? "$" + Math.round(v).toLocaleString() : v >= 100 ? "$" + v.toFixed(1) : "$" + v.toFixed(2);
   const sgn = (v, d = 1) => (v > 0 ? "+" : "") + v.toFixed(d);
-  const st = { data: null, loading: null, pick: "dram/DDR5 16Gb (2Gx8) 4800/5600" };
+  const st = { data: null, loading: null, pick: "dram/DDR5 16Gb (2Gx8) 4800/5600", grp: "dram", off: null, range: 365, ma: true };
 
   // 품목 이름을 쉬운 말로
   const NAME = {
@@ -50,56 +50,73 @@
   const W = (el) => Math.max(280, Math.floor(el.clientWidth || 600));
   function niceStep(span, n) { const raw = span / n, p = 10 ** Math.floor(Math.log10(raw)); return [1, 2, 2.5, 5, 10].map((k) => k * p).find((k) => raw <= k) || 10 * p; }
 
-  // ---------- 메모리 현물가 선 그래프 (평균가 선 + 그날 최고·최저 띠 + 20일 이동평균)
-  function todayRange(rows, w) {
-    const r = rows.at(-1), lo = r.lo, hi = r.hi, pad = (hi - lo) * 0.15 || hi * 0.1;
-    const a = Math.max(0, lo - pad), b = hi + pad, L = 16, Rr = 16, X = (v) => L + (v - a) / (b - a) * (w - L - Rr), y = 46;
-    const g = `<line x1="${L}" x2="${w - Rr}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="2"/>
-      <rect x="${X(lo)}" y="${y - 9}" width="${Math.max(4, X(hi) - X(lo))}" height="18" rx="9" fill="color-mix(in srgb, var(--cp-mem) 22%, transparent)"/>
-      <line x1="${X(r.avg)}" x2="${X(r.avg)}" y1="${y - 16}" y2="${y + 16}" stroke="var(--cp-mem)" stroke-width="3"/>
-      <text x="${X(r.avg)}" y="${y - 22}" font-size="14" font-weight="800" fill="var(--cp-mem)" text-anchor="middle">평균 ${usd(r.avg)}</text>
-      <text x="${X(lo)}" y="${y + 32}" font-size="12" fill="var(--ink-2)" text-anchor="middle">최저 ${usd(lo)}</text>
-      <text x="${X(hi)}" y="${y + 32}" font-size="12" fill="var(--ink-2)" text-anchor="middle">최고 ${usd(hi)}</text>`;
-    return `<svg class="ai-svg" viewBox="0 0 ${w} 92" width="${w}" height="92" role="img" aria-label="오늘 거래 범위">${g}</svg>`;
-  }
-
-  function priceChart(rows, w) {
-    if (rows.length && rows.length < 5) return todayRange(rows, w);
-    const H = Math.round(Math.max(220, Math.min(300, w * 0.42))), P = { l: 54, r: 16, t: 14, b: 28 };
-    if (!rows.length) return "<p class='none'>아직 기록이 없어요.</p>";
-    const ts = rows.map((r) => Date.parse(r.d));
-    let t0 = Math.min(...ts), t1 = Math.max(...ts);
-    if (t1 - t0 < 14 * 864e5) { t0 -= 7 * 864e5; t1 += 7 * 864e5; }   // 기록이 짧으면 앞뒤로 여유
-    const lo = Math.min(...rows.map((r) => r.lo)), hi = Math.max(...rows.map((r) => r.hi));
-    const step = niceStep((hi - lo) || hi * 0.2 || 1, 4);
-    const y0 = Math.max(0, Math.floor((lo - step * 0.3) / step) * step), y1 = Math.ceil((hi + step * 0.3) / step) * step;
-    const X = (t) => P.l + (t - t0) / (t1 - t0) * (w - P.l - P.r), Y = (v) => P.t + (1 - (v - y0) / (y1 - y0)) * (H - P.t - P.b);
+  // ---------- 메모리 현물가: 블룸버그식 여러 품목 계단선 + 오른쪽 축 + 끝값 꼬리표
+  const SC = ["var(--cp-s1)", "var(--cp-s2)", "var(--cp-s3)", "var(--cp-s4)", "var(--cp-s5)", "var(--cp-s6)", "var(--cp-s7)"];
+  const GTABS = [["dram", "D램 칩"], ["wafer", "낸드 웨이퍼"], ["module", "메모리 모듈"], ["gddr", "그래픽 D램"], ["flash", "구형 낸드 칩"]];
+  const HIDE0 = /eTT|4Gb 512Mx8|SLC/;   // 처음엔 숨기는 품목(저가 등급, 구형)
+  const RANGES = [["6M", 183], ["1Y", 365], ["2Y", 730], ["전체", 1e5]];
+  function memChart(series, w) {
+    const mobile = w < 520, H = Math.round(Math.max(260, Math.min(400, w * 0.48))), P = { l: 10, r: mobile ? 66 : 78, t: 12, b: 40 };
+    const on = series.filter((s) => s.on && s.rows.length);
+    if (!on.length) return "<p class='none'>보여 줄 품목을 하나 이상 골라 주세요.</p>";
+    const tEnd = Math.max(...on.map((s) => Date.parse(s.rows.at(-1).d))), tMin = Math.min(...on.map((s) => Date.parse(s.rows[0].d)));
+    let t0 = Math.max(tMin, tEnd - st.range * 864e5), t1 = tEnd + Math.max(3, (tEnd - t0) / 864e5 * 0.02) * 864e5;
+    if (t1 - t0 < 20 * 864e5) t0 = t1 - 20 * 864e5;
+    const vis = on.map((s) => ({ ...s, pts: s.rows.filter((r) => Date.parse(r.d) >= t0) })).map((s) => s.pts.length ? s : { ...s, pts: [s.rows.at(-1)] });
+    const vals = vis.flatMap((s) => s.pts.map((r) => r.avg));
+    let lo = Math.min(...vals), hi = Math.max(...vals);
+    const log = hi / Math.max(lo, 1e-9) > 6;
+    const f = log ? Math.log10 : (v) => v;
+    let a, b, ticks = [];
+    if (log) { a = Math.floor(f(lo) * 4) / 4 - 0.05; b = Math.ceil(f(hi) * 4) / 4 + 0.05; for (let e = Math.floor(a); e <= b; e++) [1, 2, 5].forEach((m) => { const v = m * 10 ** e; if (f(v) >= a && f(v) <= b) ticks.push(v); }); }
+    else { const stp = niceStep((hi - lo) || hi * 0.2 || 1, 5); a = Math.max(0, Math.floor((lo - stp * 0.2) / stp) * stp); b = Math.ceil((hi + stp * 0.2) / stp) * stp; for (let v = a; v <= b + 1e-9; v += stp) ticks.push(v); a = f(a); b = f(b); }
+    const X = (t) => P.l + (t - t0) / (t1 - t0) * (w - P.l - P.r), Y = (v) => P.t + (1 - (f(v) - a) / (b - a)) * (H - P.t - P.b);
     let g = "";
-    for (let v = y0; v <= y1 + 1e-9; v += step) g += `<line class="ai-grid" x1="${P.l}" x2="${w - P.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ai-tk" x="${P.l - 6}" y="${Y(v) + 3.5}" text-anchor="end">${usd(v)}</text>`;
-    // 가로축: 월 단위(기록이 짧으면 주 단위)
-    const days = (t1 - t0) / 864e5, ticks = [];
-    const d = new Date(t0); d.setHours(0, 0, 0, 0);
-    if (days > 90) { d.setDate(1); d.setMonth(d.getMonth() + 1); while (+d <= t1) { ticks.push(+d); d.setMonth(d.getMonth() + (days > 400 ? 3 : 1)); } }
-    else { const gap = days > 40 ? 14 : 7; d.setDate(d.getDate() + 1); while (+d <= t1) { ticks.push(+d); d.setDate(d.getDate() + gap); } }
-    ticks.forEach((t) => { const dt = new Date(t); g += `<line class="ai-grid mid" x1="${X(t)}" x2="${X(t)}" y1="${P.t}" y2="${H - P.b}"/><text class="ai-tk" x="${X(t)}" y="${H - 8}" text-anchor="middle">${days > 90 ? `${String(dt.getFullYear()).slice(2)}.${dt.getMonth() + 1}` : `${dt.getMonth() + 1}/${dt.getDate()}`}</text>`; });
-    g += `<line class="cp-axis" x1="${P.l}" x2="${w - P.r}" y1="${H - P.b}" y2="${H - P.b}"/><line class="cp-axis" x1="${P.l}" x2="${P.l}" y1="${P.t}" y2="${H - P.b}"/>`;
-    const pts = rows.map((r) => [X(Date.parse(r.d)), r]);
-    if (rows.length > 1) {
-      const band = pts.map(([x, r]) => `${x},${Y(r.hi)}`).join(" ") + " " + pts.slice().reverse().map(([x, r]) => `${x},${Y(r.lo)}`).join(" ");
-      g += `<polygon class="cp-band" points="${band}"/>`;
-      g += `<polyline class="cp-line" points="${pts.map(([x, r]) => `${x},${Y(r.avg)}`).join(" ")}"/>`;
-    } else {
-      const [x, r] = pts[0];
-      g += `<line class="cp-range" x1="${x}" x2="${x}" y1="${Y(r.hi)}" y2="${Y(r.lo)}"/>`;
+    ticks.forEach((v) => { g += `<line class="ai-grid" x1="${P.l}" x2="${w - P.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ai-tk" x="${w - P.r + 6}" y="${Y(v) + 3.5}">${usd(v)}</text>`; });
+    // 가로축: 월 눈금 + 1월에 연도
+    const days = (t1 - t0) / 864e5, stepM = days > 600 ? 3 : days > 300 ? (mobile ? 2 : 1) : 1;
+    const d = new Date(t0); d.setDate(1); d.setMonth(d.getMonth() + 1); d.setHours(0, 0, 0, 0);
+    while (+d <= t1) {
+      const x = X(+d), m = d.getMonth();
+      if (m % stepM === 0) {
+        g += `<line class="ai-grid mid" x1="${x}" x2="${x}" y1="${P.t}" y2="${H - P.b}"/><text class="ai-tk" x="${x}" y="${H - P.b + 14}" text-anchor="middle">${m + 1}월</text>`;
+        if (m === 0) g += `<line x1="${x}" x2="${x}" y1="${H - P.b}" y2="${H - 6}" stroke="var(--ink-2)" opacity=".5"/><text x="${x + 4}" y="${H - 6}" font-size="11" font-weight="700" fill="var(--ink-2)">${d.getFullYear()}</text>`;
+      }
+      d.setMonth(d.getMonth() + 1);
     }
-    // 20일 이동평균(기록 20개 이상일 때)
-    if (rows.length >= 20) {
-      const ma = rows.map((r, i) => i < 19 ? null : rows.slice(i - 19, i + 1).reduce((s, x) => s + x.avg, 0) / 20);
-      g += `<polyline class="cp-ma" points="${pts.map(([x], i) => ma[i] == null ? null : `${x},${Y(ma[i])}`).filter(Boolean).join(" ")}"/>`;
-    }
-    g += pts.map(([x, r]) => `<circle class="cp-dot" cx="${x}" cy="${Y(r.avg)}" r="${rows.length > 60 ? 0 : 3.2}"/><rect x="${x - 6}" y="${P.t}" width="12" height="${H - P.t - P.b}" fill="transparent" ${tipAttr(`${ymd(r.d)} · 평균 ${usd(r.avg)} (그날 최고 ${usd(r.hi)}, 최저 ${usd(r.lo)}) · 전일 대비 ${sgn(r.chg, 2)}%`)}/>`).join("");
-    const [lx, lr] = pts.at(-1);
-    g += `<text x="${Math.min(lx, w - P.r - 4)}" y="${Y(lr.avg) - 9}" font-size="12.5" font-weight="800" fill="var(--cp-mem)" text-anchor="end">${usd(lr.avg)}</text>`;
+    if (days <= 60) { const dd = new Date(t0); dd.setHours(0, 0, 0, 0); dd.setDate(dd.getDate() + 1); while (+dd <= t1) { if (dd.getDay() === 1) g += `<text class="ai-tk" x="${X(+dd)}" y="${H - P.b + 28}" text-anchor="middle">${dd.getMonth() + 1}/${dd.getDate()}</text>`; dd.setDate(dd.getDate() + 1); } }
+    g += `<line class="cp-axis" x1="${P.l}" x2="${w - P.r}" y1="${H - P.b}" y2="${H - P.b}"/><line class="cp-axis" x1="${w - P.r}" x2="${w - P.r}" y1="${P.t}" y2="${H - P.b}"/>`;
+    // 계단선(값이 바뀐 날 수직으로 꺾임) + 이동평균
+    vis.forEach((s) => {
+      const pts = s.pts;
+      if (pts.length > 1) {
+        let dd = `M${X(Date.parse(pts[0].d))},${Y(pts[0].avg)}`;
+        for (let k = 1; k < pts.length; k++) dd += `H${X(Date.parse(pts[k].d))}V${Y(pts[k].avg)}`;
+        g += `<path d="${dd}" fill="none" stroke="${s.c}" stroke-width="2.2" stroke-linejoin="round"/>`;
+      } else g += `<circle cx="${X(Date.parse(pts[0].d))}" cy="${Y(pts[0].avg)}" r="4" fill="${s.c}"/>`;
+      if (st.ma && s.rows.length >= 20) {
+        const all = s.rows, ma = [];
+        for (let k = 19; k < all.length; k++) if (Date.parse(all[k].d) >= t0) ma.push(`${X(Date.parse(all[k].d))},${Y(all.slice(k - 19, k + 1).reduce((q, x) => q + x.avg, 0) / 20)}`);
+        if (ma.length > 1) g += `<polyline points="${ma.join(" ")}" fill="none" stroke="${s.c}" stroke-width="1.3" stroke-dasharray="4 3" opacity=".75"/>`;
+      }
+    });
+    // 오른쪽 끝값 꼬리표(겹치면 위아래로 밀어냄)
+    const tags = vis.map((s) => ({ s, y: Y(s.pts.at(-1).avg), v: s.pts.at(-1).avg })).sort((p, q) => p.y - q.y);
+    for (let k = 1; k < tags.length; k++) if (tags[k].y - tags[k - 1].y < 17) tags[k].y = tags[k - 1].y + 17;
+    const over = tags.length ? tags.at(-1).y - (H - P.b - 8) : 0;
+    if (over > 0) tags.forEach((t) => (t.y -= over));
+    tags.forEach(({ s, y, v }) => {
+      const x = w - P.r + 1, tw = P.r - 4;
+      g += `<path d="M${x},${y} l6,-8 h${tw - 6} v16 h-${tw - 6} z" fill="${s.c}"/><text x="${x + 8}" y="${y + 4}" font-size="11.5" font-weight="700" fill="#fff">${usd(v)}</text>`;
+    });
+    // 마우스 올리면 그날 값 전부
+    const allD = [...new Set(vis.flatMap((s) => s.pts.map((r) => r.d)))].sort();
+    allD.forEach((dt, k) => {
+      const x = X(Date.parse(dt)), xn = k + 1 < allD.length ? X(Date.parse(allD[k + 1])) : w - P.r, xp = k ? X(Date.parse(allD[k - 1])) : P.l;
+      const txt = `${ymd(dt)} · ` + vis.map((s) => { const r = [...s.pts].reverse().find((q) => q.d <= dt); return r ? `${s.name} ${usd(r.avg)}` : null; }).filter(Boolean).join(", ");
+      g += `<rect class="cp-hov" x="${(xp + x) / 2}" y="${P.t}" width="${Math.max(1, (x + xn) / 2 - (xp + x) / 2)}" height="${H - P.t - P.b}" ${tipAttr(txt)}/>`;
+    });
+    if (log) g += `<text class="ai-tk" x="${P.l + 4}" y="${P.t + 10}">로그 눈금</text>`;
     return `<svg class="ai-svg" viewBox="0 0 ${w} ${H}" width="${w}" height="${H}" role="img" aria-label="메모리 현물가 추이">${g}</svg>`;
   }
 
@@ -183,6 +200,15 @@
       const r = hist[k].at(-1), n = NAME[k];
       return `<tr class="${k === st.pick ? "on" : ""}" data-pick="${esc(k)}"><td>${i === 0 ? `<b>${GROUP[g]}</b>` : ""}</td><td>${esc(nm(k, items[k]))}${n && n[1] ? `<small> ${esc(n[1])}</small>` : ""}</td><td class="num"><b>${usd(r.avg)}</b></td><td class="num ${r.chg > 0 ? "up" : r.chg < 0 ? "down" : ""}">${sgn(r.chg, 2)}%</td><td class="num muted">${usd(r.lo)} ~ ${usd(r.hi)}</td><td class="tnum muted">${md(r.d)}</td><td class="num muted">${hist[k].length}일</td></tr>`;
     }).join("")).join("");
+    if (!st.off) st.off = new Set(Object.keys(hist).filter((k) => HIDE0.test(k)));
+    const gKeys = Object.keys(hist).filter((k) => k.startsWith(st.grp + "/"));
+    const series = gKeys.map((k, i) => ({ k, name: nm(k, items[k]), c: SC[i % SC.length], rows: hist[k], on: !st.off.has(k) }));
+    const ago = (rows, n) => { const t = Date.parse(rows.at(-1).d) - n * 864e5; const r = [...rows].reverse().find((q) => Date.parse(q.d) <= t); return r ? (rows.at(-1).avg / r.avg - 1) * 100 : null; };
+    const lg = series.map((x) => { const r = x.rows.at(-1), y1 = ago(x.rows, 365), m1 = ago(x.rows, 30);
+      return `<button class="cp-lgb${x.on ? "" : " off"}" data-ser="${esc(x.k)}" style="--c:${x.c}"><i></i><span>${esc(x.name)}</span><b>${usd(r.avg)}</b>${m1 != null ? `<em class="${m1 >= 0 ? "up" : "down"}">1개월 ${sgn(m1)}%</em>` : ""}${y1 != null ? `<em class="${y1 >= 0 ? "up" : "down"}">1년 ${sgn(y1)}%</em>` : ""}</button>`; }).join("");
+    const gtabs = GTABS.filter(([g]) => Object.keys(hist).some((k) => k.startsWith(g + "/"))).map(([g, t]) => `<button class="toggle" aria-pressed="${g === st.grp}" data-grp="${g}">${t}</button>`).join("");
+    const rtabs = RANGES.map(([t, n]) => `<button class="toggle" aria-pressed="${n === st.range}" data-rng="${n}">${t}</button>`).join("");
+    const maxLen = Math.max(0, ...series.map((x) => x.rows.length));
     const pr = hist[st.pick] || [], firstDay = Object.keys(hist).filter((k) => k.startsWith("dram/")).flatMap((k) => hist[k]).map((r) => r.d).sort()[0];
 
     // 계약가 전망
@@ -203,10 +229,10 @@
 
       <h3 class="ai-h3">메모리 현물가 <span class="sub">DRAMeXchange 공개 시세 · 칩·모듈 한 개 값(달러)</span></h3>
       <div class="tiles ai-tiles">${tiles}</div>
-      <div class="cp-chart-head"><b>${esc(nm(st.pick, items[st.pick]))}</b><span class="muted">${esc((NAME[st.pick] || ["", ""])[1])}</span></div>
-      ${pr.length < 5 ? `<p class="cp-sub">가장 최근 거래일(${pr.length ? ymd(pr.at(-1).d) : "–"})의 거래 범위예요. 기록이 5일 쌓이면 날짜별 선 그래프로 바뀌어요.</p>` : `<div class="chart-legend"><span><i style="background:var(--cp-mem);height:3px"></i>평균가</span><span><i class="cp-lg-band"></i>그날 최고~최저 범위</span><span><i style="height:0;border-top:2px dashed var(--ink-2)"></i>20일 이동평균 (기록 20일부터)</span></div>`}
+      <div class="cp-ctl"><div class="cp-tabs">${gtabs}</div><div class="cp-tabs">${rtabs}<button class="toggle" aria-pressed="${st.ma}" data-ma="1">20일 이동평균</button></div></div>
+      <div class="cp-lgs">${lg}</div>
       <div id="cpPrice"></div>
-      ${pr.length < 20 ? `<p class="ai-warn">현물가 과거 이력은 DRAMeXchange 회원만 볼 수 있어서, ${firstDay ? ymd(firstDay) : "오늘"}부터 매일 한 줄씩 쌓고 있어요. 5일이 쌓이면 선 그래프로, 20일이 쌓이면 이동평균선까지 나타나요. 위 카드나 아래 표의 품목을 누르면 그래프가 바뀌어요.</p>` : ""}
+      <p class="cp-sub">품목 이름표를 누르면 선을 켜고 끌 수 있어요. 오른쪽 꼬리표는 마지막 값이에요. 선이 계단 모양인 것은 시세가 바뀐 날에만 값이 바뀌기 때문이에요.${maxLen < 20 ? " 이동평균은 기록이 20일 이상인 품목부터 보여요." : ""}</p>
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>분류</th><th>품목</th><th class="num">평균가</th><th class="num">전일 대비</th><th class="num">그날 범위</th><th>기준일</th><th class="num">기록</th></tr></thead><tbody>${tbl}</tbody></table></div>
       <p class="foot-note">현물가는 대리점·중개상 사이 즉석 거래 값이라 대형 고객이 분기마다 정하는 계약가보다 먼저 움직여요. DRAMeXchange는 표마다 갱신 주기가 달라서 D램 칩은 매일, 모듈과 낸드는 대개 주 1회 바뀌어요.</p>
 
@@ -221,9 +247,13 @@
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>날짜</th><th>회사</th><th>구분</th><th class="num">인상률</th><th>상태</th><th>내용</th><th>출처</th></tr></thead><tbody>${cpuRows}</tbody></table></div>
       <p class="foot-note">자동 판독 기준: 기사 제목에 회사, 'price·hike', 인상률(%)이 함께 있고, 같은 숫자를 두 곳 이상 또는 주요 매체 한 곳이 쓴 것만 채택해요. 제목에 숫자가 없던 큰 사건은 출처를 확인해 직접 넣었어요. 자료: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange</a>, <a href="https://www.trendforce.com/news/" target="_blank" rel="noopener">TrendForce</a>, 구글 뉴스.</p>
     </section>`;
-    $("#cpPrice").innerHTML = priceChart(pr, W($("#cpPrice")));
+    $("#cpPrice").innerHTML = memChart(series, W($("#cpPrice")));
     $("#cpCpu").innerHTML = cpuChart(cpu, W($("#cpCpu")));
-    box.querySelectorAll("[data-pick]").forEach((el) => el.addEventListener("click", () => { st.pick = el.dataset.pick; render(); }));
+    box.querySelectorAll("[data-pick]").forEach((el) => el.addEventListener("click", () => { st.pick = el.dataset.pick; st.grp = st.pick.split("/")[0]; st.off.delete(st.pick); render(); }));
+    box.querySelectorAll("[data-grp]").forEach((el) => el.addEventListener("click", () => { st.grp = el.dataset.grp; render(); }));
+    box.querySelectorAll("[data-rng]").forEach((el) => el.addEventListener("click", () => { st.range = +el.dataset.rng; render(); }));
+    box.querySelectorAll("[data-ma]").forEach((el) => el.addEventListener("click", () => { st.ma = !st.ma; render(); }));
+    box.querySelectorAll("[data-ser]").forEach((el) => el.addEventListener("click", () => { const k = el.dataset.ser; st.off.has(k) ? st.off.delete(k) : st.off.add(k); render(); }));
   }
 
   async function load(force) {
