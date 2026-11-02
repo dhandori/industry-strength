@@ -158,3 +158,7 @@ tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-thr
 .ai-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 24px; }
 @media (max-width: 760px) { .ai-two { grid-template-columns: 1fr; } }
 @media (max-width: 560px) { .ai-oc { grid-template-columns: 1fr 1fr; } .ai-ock.alt { grid-column: 1 / -1; } .ai-ock b { font-size: 18px; } }
+.ai-mbar-tok { fill: var(--ai-open); opacity: .82; }
+.ai-mbar-tok.partial { opacity: .35; }
+.ai-mv { font-size: 11px; font-weight: 700; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
+.ai-mv.tok { fill: var(--ai-open); } .ai-mv.cost { fill: var(--ink); }
