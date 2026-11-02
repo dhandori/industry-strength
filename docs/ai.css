@@ -165,3 +165,13 @@ tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-thr
 .ai-mlnk { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
 .ai-pop .sk-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .ai-pop .chart-legend { margin-bottom: 4px; }
+.ai-ptabs { display: flex; gap: 6px; padding: 12px 16px 0; }
+.ai-ptabs:empty { display: none; }
+.ai-ptabs button { border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 6px 14px; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; }
+.ai-ptabs button.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.ai-plg { flex-wrap: wrap; gap: 4px 12px; }
+.ai-cot td small { color: var(--muted); font-size: 11px; }
+.ai-cot td .ai-tag { margin-left: 4px; }
+.ai-seg[data-aco], .ai-co { cursor: pointer; }
+.ai-seg[data-aco]:hover { filter: brightness(1.08); }
+.ai-co:hover { color: var(--accent); }

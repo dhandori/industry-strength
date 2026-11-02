@@ -384,8 +384,9 @@
         const p = t / lw.total * 100, r = ratio[a];
         const kind = a === "others" ? "other" : r == null ? "other" : r >= 0.5 ? "open" : "closed";
         const tt = `${an(a)} · ${pct(p)}${r != null && a !== "others" ? ` · 이 회사 토큰 중 오픈웨이트 ${Math.round(r * 100)}%` : ""}`;
-        bar += `<i class="ai-seg ${kind}" style="flex:${p}" ${tipAttr(tt)}>${p >= 6 ? `<span>${esc(an(a))}</span>` : ""}</i>`;
-        legend += `<span class="ai-lg ${kind}" ${tipAttr(tt)}><i></i>${esc(an(a))} <b>${pct(p, 1)}</b></span>`;
+        const co = a === "others" ? "" : ` data-aco="${esc(a)}" role="button" tabindex="0"`;
+        bar += `<i class="ai-seg ${kind}" style="flex:${p}"${co} ${tipAttr(tt + (co ? " · 누르면 회사 화면" : ""))}>${p >= 6 ? `<span>${esc(an(a))}</span>` : ""}</i>`;
+        legend += `<span class="ai-lg ${kind}${co ? " ai-co" : ""}"${co} ${tipAttr(tt)}><i></i>${esc(an(a))} <b>${pct(p, 1)}</b></span>`;
       });
     }
     const tops = (lt.top_models || []).slice(0, 10);
@@ -478,7 +479,11 @@
     if ($("#aiFile")) $("#aiFile").innerHTML = filingChart(fa, width($("#aiFile")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
-    if (!box._aim) { box._aim = true; box.addEventListener("click", (e) => { const b = e.target.closest("[data-aim]"); if (b && st.data) modelPop(b.dataset.aim, b.dataset.k); }); }
+    if (!box._aim) { box._aim = true; box.addEventListener("click", (e) => {
+      if (!st.data) return;
+      const b = e.target.closest("[data-aim]"); if (b) return modelPop(b.dataset.aim, b.dataset.k);
+      const c = e.target.closest("[data-aco]"); if (c) companyPop(c.dataset.aco);
+    }); }
   }
 
   // ---------- 모델 팝업: 누른 모델의 토큰 비중(OpenRouter 주간)·토큰/지출 비중(Vercel 매일) 추이 (2026-11-02 사용자 요청)
@@ -505,21 +510,66 @@
     xs.forEach((x, i) => { if ((i % step === 0 && X(n - 1) - X(i) > 40) || i === n - 1) g += `<text x="${X(i)}" y="${H - 7}" text-anchor="${i === n - 1 ? "end" : "middle"}" class="ai-tk">${xl(x)}</text>`; });
     for (const sr of series) {
       let seg = [];
-      const flush = () => { if (seg.length > 1) sv += `<polyline fill="none" stroke="${sr.color}" stroke-width="2.2" stroke-linejoin="round" points="${seg.join(" ")}"/>`; seg = []; };
+      const flush = () => { if (seg.length > 1) sv += `<polyline fill="none" stroke="${sr.color}" stroke-width="${sr.w || 2.2}" stroke-linejoin="round" points="${seg.join(" ")}"/>`; seg = []; };
       sr.vals.forEach((v, i) => { if (v == null) { flush(); return; } seg.push(`${X(i).toFixed(1)},${Y(v).toFixed(1)}`); });
       flush();
-      sr.vals.forEach((v, i) => { if (v != null && (n <= 60 || sr.vals[i - 1] == null || sr.vals[i + 1] == null)) sv += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${n <= 60 ? 2.6 : 2}" fill="${sr.color}"/>`; });
+      sr.vals.forEach((v, i) => { if (v != null && (n <= (sr.w > 2.2 ? 30 : 60) || sr.vals[i - 1] == null || sr.vals[i + 1] == null)) sv += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="${(n <= 60 ? 2.6 : 2) * (sr.w ? sr.w / 2.2 : 1)}" fill="${sr.color}"/>`; });
       const li = sr.vals.map((v, i) => (v == null ? -1 : i)).filter((i) => i >= 0).at(-1);
-      if (li != null) sv += `<text x="${X(li) - 4}" y="${Y(sr.vals[li]) - 7}" text-anchor="end" class="ai-mv" style="fill:${sr.color}">${sr.vals[li].toFixed(1)}%</text>`;
+      if (li != null && sr.lab !== false) sv += `<text x="${X(li) - 4}" y="${Y(sr.vals[li]) - 7}" text-anchor="end" class="ai-mv" style="fill:${sr.color}">${sr.vals[li].toFixed(1)}%</text>`;
     }
     const bw = (W - P.l - P.r) / Math.max(1, n - 1);
     xs.forEach((x, i) => {
-      const t = `${x} · ` + series.map((sr) => `${sr.label} ${sr.vals[i] == null ? sr.miss : pct(sr.vals[i])}`).join(" · ");
+      const t = `${x} · ` + series.filter((sr) => sr.vals[i] != null || sr.miss).map((sr) => `${sr.label} ${sr.vals[i] == null ? sr.miss : pct(sr.vals[i])}`).join(" · ");
       hit += `<rect x="${(X(i) - bw / 2).toFixed(1)}" y="${P.t}" width="${bw.toFixed(1)}" height="${H - P.t - P.b}" fill="transparent" ${tipAttr(t)}/>`;
     });
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img">${g}${sv}${hit}</svg>`;
   }
+  // Vercel 모델 이름 → 회사(OpenRouter에서 같은 모델을 찾으면 그 회사, 없으면 이름 앞부분으로)
+  const VC_CO = [[/^claude/i, "anthropic"], [/^(gpt|o\d|chatgpt|codex)/i, "openai"], [/^grok/i, "x-ai"], [/^glm/i, "z-ai"], [/^deepseek/i, "deepseek"],
+    [/^kimi/i, "moonshotai"], [/^(gemini|gemma)/i, "google"], [/^qwen/i, "qwen"], [/^minimax/i, "minimax"], [/^hy\d/i, "tencent"], [/^step/i, "stepfun"],
+    [/^mimo/i, "xiaomi"], [/^llama/i, "meta-llama"], [/^(mistral|devstral|codestral)/i, "mistralai"], [/^nemotron/i, "nvidia"]];
+  function vcAuthor(or, name) {
+    const sl = orSlug(or, name);
+    if (sl) return sl.split("/")[0];
+    const hit = VC_CO.find(([re]) => re.test(name));
+    return hit ? hit[1] : null;
+  }
+  const trim = (xs, has, min) => { const f = xs.findIndex(has); return f < 0 ? xs : xs.slice(Math.max(0, Math.min(f - 1, xs.length - min))); };
+  const LINE = ["#0f9488", "#4f5fd1", "#d2691e", "#7048c4", "#c2185b", "#2e7d32", "#8d6e63", "#0288d1"];
+  const stat = (k, v, h) => `<div><div class="k">${k}</div><div class="v">${v}</div>${h ? `<div class="h">${h}</div>` : ""}</div>`;
+  const tagOf = (cls) => cls ? `<span class="ai-tag ${cls}">${{ open: "오픈웨이트", closed: "클로즈드", unknown: "미분류" }[cls] || "미분류"}</span>` : "";
+
   let pop;
+  function openPop() {
+    if (!pop) {
+      pop = document.createElement("div"); pop.className = "sk ai-pop"; pop.hidden = true;
+      pop.innerHTML = `<div class="sk-backdrop" data-close></div><article class="sk-panel" role="dialog" aria-modal="true" aria-labelledby="aiPopT">
+        <header class="sk-head"><div class="sk-ht"><h3 id="aiPopT"></h3><p class="meta" id="aiPopS"></p></div>
+        <button class="icon-btn" data-close aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></header>
+        <div class="ai-ptabs" id="aiPopTabs"></div>
+        <div class="sk-body" id="aiPopB"></div></article>`;
+      document.body.appendChild(pop);
+      pop.addEventListener("click", (e) => {
+        if (e.target.closest("[data-close]")) return closePop();
+        const t = e.target.closest("[data-ptab]"); if (t) return pop._tabs[t.dataset.ptab]();
+        const b = e.target.closest("[data-aim]"); if (b) return modelPop(b.dataset.aim, b.dataset.k);
+      });
+      addEventListener("keydown", (e) => { if (e.key === "Escape" && !pop.hidden) { e.stopImmediatePropagation(); closePop(); } }, true);
+      bindTip(pop);
+    }
+    if (pop.hidden) { pop._ov = document.body.style.overflow; document.body.style.overflow = "hidden"; }
+    pop.hidden = false;
+    $(".sk-panel", pop).scrollTop = 0;
+  }
+  // 탭: 이 모델 / 회사 전체
+  function setTabs(model, author, on) {
+    const t = [];
+    if (model) t.push(`<button type="button" data-ptab="m" class="${on === "m" ? "on" : ""}">이 모델</button>`);
+    if (author) t.push(`<button type="button" data-ptab="c" class="${on === "c" ? "on" : ""}">${esc(an(author))} 전체</button>`);
+    $("#aiPopTabs", pop).innerHTML = t.length > 1 ? t.join("") : "";
+  }
+  const popW = () => Math.max(260, Math.min(600, innerWidth) - 40);
+
   function modelPop(src, key) {
     const d = st.data, or = d.openrouter || {}, vc = d.vercel || null;
     const info = or.model_info || {};
@@ -530,57 +580,121 @@
     } else {
       vname = key; slug = orSlug(or, key);
       const vm = ((vc && vc.week && vc.week.models) || []).find((m) => m.name === key) || (vc.models || []).find((m) => m.name === key) || {};
-      name = key; cls = vm.cls; author = slug ? slug.split("/")[0] : null;
+      name = key; cls = vm.cls || (slug && info[slug] ? info[slug].cls : null); author = vcAuthor(or, key);
     }
-    if (!pop) {
-      pop = document.createElement("div"); pop.className = "sk ai-pop"; pop.hidden = true;
-      pop.innerHTML = `<div class="sk-backdrop" data-close></div><article class="sk-panel" role="dialog" aria-modal="true" aria-labelledby="aiPopT">
-        <header class="sk-head"><div class="sk-ht"><h3 id="aiPopT"></h3><p class="meta" id="aiPopS"></p></div>
-        <button class="icon-btn" data-close aria-label="닫기"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button></header>
-        <div class="sk-body" id="aiPopB"></div></article>`;
-      document.body.appendChild(pop);
-      pop.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closePop(); });
-      addEventListener("keydown", (e) => { if (e.key === "Escape" && !pop.hidden) { e.stopImmediatePropagation(); closePop(); } }, true);
-      bindTip(pop);
-    }
-    pop.hidden = false; pop._ov = document.body.style.overflow; document.body.style.overflow = "hidden";
-    $(".sk-panel", pop).scrollTop = 0;
-    const tag = cls ? `<span class="ai-tag ${cls}">${{ open: "오픈웨이트", closed: "클로즈드", unknown: "미분류" }[cls] || "미분류"}</span>` : "";
+    openPop();
+    pop._tabs = { m: () => modelPop(src, key), c: () => companyPop(author, { src, key }) };
+    setTabs(true, author, "m");
     $("#aiPopT", pop).textContent = name;
-    $("#aiPopS", pop).innerHTML = [author ? esc(an(author)) : "", tag].filter(Boolean).join(" · ");
-    const body = $("#aiPopB", pop), W = Math.max(260, Math.min(600, innerWidth) - 40);
+    $("#aiPopS", pop).innerHTML = [author ? esc(an(author)) : "", tagOf(cls)].filter(Boolean).join(" · ");
+    const W = popW();
 
-    // OpenRouter 주간
-    // 앞쪽의 빈 기간은 잘라 낸다(새 모델이 오른쪽 끝에 몰려 보이지 않게). 최소 min개는 남긴다.
-    const trim = (xs, has, min) => { const f = xs.findIndex(has); return f < 0 ? xs : xs.slice(Math.max(0, Math.min(f - 1, xs.length - min))); };
     const oh = (slug && (or.model_hist || {})[slug]) || {};
     const weeks = trim((or.open_est || []).filter((e) => !e.partial).map((e) => e.week), (w) => oh[w] != null, 8);
     const ov = weeks.map((w) => (oh[w] != null ? oh[w] : null));
-    const oHas = ov.filter((v) => v != null);
-    const oLast = weeks.map((w, i) => [w, ov[i]]).filter((x) => x[1] != null).at(-1);
-    const oMax = oHas.length ? weeks.map((w, i) => [w, ov[i]]).filter((x) => x[1] != null).sort((a, b) => b[1] - a[1])[0] : null;
-    // Vercel 매일
+    const oPts = weeks.map((w, i) => [w, ov[i]]).filter((x) => x[1] != null);
+    const oLast = oPts.at(-1), oMax = oPts.length ? [...oPts].sort((a, b) => b[1] - a[1])[0] : null;
     const vh = (vname && vc && vc.model_hist && vc.model_hist[vname]) || {};
     const days = trim([...new Set(Object.values((vc && vc.model_hist) || {}).flatMap((o) => Object.keys(o)))].sort(), (x) => vh[x], 14);
     const vt = days.map((x) => (vh[x] ? vh[x][0] : null)), vco = days.map((x) => (vh[x] ? vh[x][1] : null));
     const vw = vname && vc && vc.week ? (vc.week.models || []).find((m) => m.name === vname) : null;
+    const vr = vc && vc.week ? `${md(vc.week.from)}~${md(vc.week.to)} 평균` : "";
 
-    const stat = (k, v, h) => `<div><div class="k">${k}</div><div class="v">${v}</div>${h ? `<div class="h">${h}</div>` : ""}</div>`;
     let html = `<div class="sk-stats">
       ${stat("토큰 비중 · OpenRouter", oLast ? pct(oLast[1]) : "–", oLast ? `${md(oLast[0])} 주` : "상위권 기록 없음")}
       ${stat("최고 토큰 비중 · OpenRouter", oMax ? pct(oMax[1]) : "–", oMax ? `${md(oMax[0])} 주` : "")}
-      ${stat("토큰 비중 · Vercel", vw ? pct(vw.tokens) : "–", vw ? `${md(vc.week.from)}~${md(vc.week.to)} 평균` : "상위 10위 기록 없음")}
-      ${stat("지출 비중 · Vercel", vw ? pct(vw.cost) : "–", vw ? `${md(vc.week.from)}~${md(vc.week.to)} 평균` : "상위 10위 기록 없음")}
+      ${stat("토큰 비중 · Vercel", vw ? pct(vw.tokens) : "–", vw ? vr : "상위 10위 기록 없음")}
+      ${stat("지출 비중 · Vercel", vw ? pct(vw.cost) : "–", vw ? vr : "상위 10위 기록 없음")}
     </div>`;
     html += `<h4>토큰 비중 추이 <span class="sub">OpenRouter · 주간 · 전체 토큰 중 비중</span></h4>`;
-    html += slug && oHas.length ? `<div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span></div>${trendChart(weeks, [{ vals: ov, color: "var(--ai-tok)", label: "토큰 비중", miss: "상위권 밖(공개 안 됨)" }], W, 170, md)}`
+    html += slug && oPts.length ? `<div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span></div>${trendChart(weeks, [{ vals: ov, color: "var(--ai-tok)", label: "토큰 비중", miss: "상위권 밖(공개 안 됨)" }], W, 170, md)}`
       : `<p class="none">OpenRouter 상위권에 오른 기록이 없거나 같은 모델을 찾지 못했어요.</p>`;
     html += `<h4>토큰·지출 비중 추이 <span class="sub">Vercel · 매일 · 전체 중 비중</span></h4>`;
     html += vname && (vt.some((v) => v != null) || vco.some((v) => v != null))
       ? `<div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>토큰 비중</span><span><i style="background:var(--ink);height:3px"></i>지출 비중</span></div>${trendChart(days, [{ vals: vt, color: "var(--ai-tok)", label: "토큰 비중", miss: "10위 밖" }, { vals: vco, color: "var(--ink)", label: "지출 비중", miss: "10위 밖" }], W, 190, md)}`
       : `<p class="none">Vercel 상위 10위에 오른 기록이 없거나 같은 모델을 찾지 못했어요.</p>`;
-    html += `<p class="foot-note">OpenRouter는 주마다 상위 9개 모델만 1년치를 공개해서, 그 밖으로 밀린 주는 선이 끊겨요(이번 주부터는 상위 40개까지 쌓여요). Vercel은 매일 토큰·지출 각각 상위 10개만 공개해서 10위 밖인 날은 비어 있어요. 두 곳은 같은 모델도 이름이 조금 달라 이름으로 맞췄어요${src === "or" && vname && norm(vname) !== norm(name) ? `(Vercel ‘${esc(vname)}’)` : src === "vc" && slug && info[slug] && norm(info[slug].name) !== norm(name) ? `(OpenRouter ‘${esc(info[slug].name)}’)` : ""}.</p>`;
-    body.innerHTML = html;
+    html += `<p class="foot-note">OpenRouter는 주마다 상위 9개 모델만 1년치를 공개해서, 그 밖으로 밀린 주는 선이 끊겨요(이번 주부터는 상위 40개까지 쌓여요). Vercel은 매일 토큰·지출 각각 상위 10개만 공개해서 10위 밖인 날은 비어 있어요. 두 곳은 같은 모델도 이름이 조금 달라 이름으로 맞췄어요${src === "or" && vname && norm(vname) !== norm(name) ? `(Vercel ‘${esc(vname)}’)` : src === "vc" && slug && info[slug] && norm(info[slug].name) !== norm(name) ? `(OpenRouter ‘${esc(info[slug].name)}’)` : ""}.${author ? ` 위의 ‘${esc(an(author))} 전체’를 누르면 이 회사 모델을 모두 합친 추이와 모델별 추이가 보여요.` : ""}</p>`;
+    $("#aiPopB", pop).innerHTML = html;
+  }
+
+  // 회사 화면: 회사 합계(굵은 선) + 모델별(가는 선)
+  function companyPop(author, back) {
+    if (!author) return;
+    const d = st.data, or = d.openrouter || {}, vc = d.vercel || null, info = or.model_info || {}, H = or.model_hist || {};
+    openPop();
+    pop._tabs = back ? { m: () => modelPop(back.src, back.key), c: () => companyPop(author, back) } : { c: () => companyPop(author) };
+    setTabs(!!back, author, "c");
+    $("#aiPopT", pop).textContent = `${an(author)} 전체`;
+    const W = popW();
+
+    // OpenRouter: 회사 합계는 회사별 주간 합계(모든 모델)로 정확히, 모델별은 공개된 상위권 기록으로
+    const fw = (or.weeks || []).filter((w) => !w.partial);
+    const weeks = fw.map((w) => w.week);
+    const coTok = fw.map((w) => (w.total && w.authors[author] != null ? w.authors[author] / w.total * 100 : null));
+    const recent = new Set(weeks.slice(-13));
+    const inYear = new Set(weeks);
+    const slugs = Object.keys(info).filter((k) => info[k].author === author && !k.endsWith(":free") && H[k] && Object.keys(H[k]).some((w) => inYear.has(w)));
+    const peak = (k) => Math.max(...Object.entries(H[k]).filter(([w]) => inYear.has(w)).map(([, v]) => v));
+    slugs.sort((a, b) => peak(b) - peak(a));
+    const showS = slugs.slice(0, LINE.length);
+    const cPts = weeks.map((w, i) => [w, coTok[i]]).filter((x) => x[1] != null);
+    const cLast = cPts.at(-1), cPrev = cPts.at(-2);
+    const cls = { open: 0, closed: 0 };
+    for (const k of slugs) if (info[k].cls in cls) cls[info[k].cls]++;
+    $("#aiPopS", pop).innerHTML = [`최근 1년 OpenRouter 상위권에 든 모델 ${slugs.length}개`, or.author_open_ratio && or.author_open_ratio[author] != null ? `이 회사 토큰 중 오픈웨이트 ${Math.round(or.author_open_ratio[author] * 100)}%` : ""].filter(Boolean).join(" · ");
+
+    // Vercel: 회사 모델(상위 10위 안)의 매일 합계 + 모델별
+    const vnames = Object.keys((vc && vc.model_hist) || {}).filter((nm) => vcAuthor(or, nm) === author);
+    const allDays = [...new Set(Object.values((vc && vc.model_hist) || {}).flatMap((o) => Object.keys(o)))].sort();
+    const days = trim(allDays, (x) => vnames.some((nm) => vc.model_hist[nm][x]), 14);
+    const sumOf = (i) => days.map((x) => { let t = 0, any = false; for (const nm of vnames) { const v = vc.model_hist[nm][x]; if (v && v[i] != null) { t += v[i]; any = true; } } return any ? t : null; });
+    const vTok = sumOf(0), vCost = sumOf(1);
+    const wk = (vc && vc.week && vc.week.models) || [];
+    const vwk = wk.filter((m) => vnames.includes(m.name));
+    const vSum = (k) => vwk.reduce((t, m) => t + (m[k] || 0), 0);
+    const vr = vc && vc.week ? `${md(vc.week.from)}~${md(vc.week.to)} 평균` : "";
+    const vOrder = [...vnames].sort((a, b) => ((wk.find((m) => m.name === b) || {}).cost || 0) - ((wk.find((m) => m.name === a) || {}).cost || 0)).slice(0, LINE.length);
+
+    let html = `<div class="sk-stats">
+      ${stat("토큰 비중 · OpenRouter", cLast ? pct(cLast[1]) : "–", cLast ? `${md(cLast[0])} 주${cPrev ? ` · 전주 ${pct(cPrev[1])}` : ""}` : "기록 없음")}
+      ${stat("1년 전 토큰 비중 · OpenRouter", cPts.length ? pct(cPts[0][1]) : "–", cPts.length ? `${md(cPts[0][0])} 주` : "")}
+      ${stat("토큰 비중 · Vercel", vwk.length ? pct(vSum("tokens")) : "–", vwk.length ? `${vr} · 상위 10위 안 모델 합` : "상위 10위 기록 없음")}
+      ${stat("지출 비중 · Vercel", vwk.length ? pct(vSum("cost")) : "–", vwk.length ? `${vr} · 상위 10위 안 모델 합` : "상위 10위 기록 없음")}
+    </div>`;
+    const leg = (arr) => `<div class="chart-legend ai-plg">${arr.map(([c, t, w]) => `<span><i style="background:${c};height:${w || 3}px"></i>${esc(t)}</span>`).join("")}</div>`;
+    html += `<h4>토큰 비중 추이 <span class="sub">OpenRouter · 주간 · 전체 토큰 중 비중</span></h4>`;
+    html += cPts.length ? leg([["var(--ink)", "회사 합계(모든 모델)", 4], ...showS.map((k, i) => [LINE[i], info[k].name])])
+      + trendChart(weeks, [{ vals: coTok, color: "var(--ink)", label: "회사 합계", w: 3.2, miss: "" },
+          ...showS.map((k, i) => ({ vals: weeks.map((w) => (H[k][w] != null ? H[k][w] : null)), color: LINE[i], label: info[k].name, w: 1.6, lab: false }))], W, 220, md)
+      : `<p class="none">OpenRouter 회사별 기록에 이 회사가 없어요.</p>`;
+    html += `<h4>지출 비중 추이 <span class="sub">Vercel · 매일 · 전체 지출 중 비중</span></h4>`;
+    html += vnames.length ? leg([["var(--ink)", "회사 합계(상위 10위 안 모델)", 4], ...vOrder.map((nm, i) => [LINE[i], nm])])
+      + trendChart(days, [{ vals: vCost, color: "var(--ink)", label: "회사 합계", w: 3.2, miss: "" },
+          ...vOrder.map((nm, i) => ({ vals: days.map((x) => (vc.model_hist[nm][x] ? vc.model_hist[nm][x][1] : null)), color: LINE[i], label: nm, w: 1.6, lab: false }))], W, 200, md)
+      : `<p class="none">Vercel 상위 10위에 오른 이 회사 모델이 없어요.</p>`;
+    html += `<h4>토큰 비중 추이 <span class="sub">Vercel · 매일 · 전체 토큰 중 비중</span></h4>`;
+    html += vnames.length ? trendChart(days, [{ vals: vTok, color: "var(--ink)", label: "회사 합계", w: 3.2, miss: "" },
+          ...vOrder.map((nm, i) => ({ vals: days.map((x) => (vc.model_hist[nm][x] ? vc.model_hist[nm][x][0] : null)), color: LINE[i], label: nm, w: 1.6, lab: false }))], W, 180, md)
+      : `<p class="none">Vercel 상위 10위에 오른 이 회사 모델이 없어요.</p>`;
+
+    // 모델별 표: OpenRouter 모델 + 짝 없는 Vercel 모델
+    const used = new Set();
+    const rows = slugs.map((k) => {
+      const vn = vcName(vc, info[k].name); if (vn) used.add(vn);
+      const vm = vn ? wk.find((m) => m.name === vn) : null;
+      const lw = Object.entries(H[k]).sort().at(-1);
+      return { name: info[k].name, cls: info[k].cls, aim: "or", key: k, or: lw && recent.has(lw[0]) ? lw[1] : null, orw: lw ? lw[0] : null, vt: vm ? vm.tokens : null, vc: vm ? vm.cost : null };
+    }).concat(vnames.filter((nm) => !used.has(nm)).map((nm) => {
+      const vm = wk.find((m) => m.name === nm);
+      return { name: nm, cls: vm ? vm.cls : null, aim: "vc", key: nm, or: null, vt: vm ? vm.tokens : null, vc: vm ? vm.cost : null };
+    }));
+    rows.sort((a, b) => (b.vc || 0) + (b.or || 0) - ((a.vc || 0) + (a.or || 0)));
+    html += `<h4>모델별 <span class="sub">이름을 누르면 그 모델 화면</span></h4>
+      <div class="ai-tw"><table class="mem-table ai-cot"><thead><tr><th>모델</th><th class="num">토큰 · OpenRouter</th><th class="num">토큰 · Vercel</th><th class="num">지출 · Vercel</th></tr></thead><tbody>
+      ${rows.map((r) => `<tr><td><button type="button" class="lnk ai-mlnk" data-aim="${r.aim}" data-k="${esc(r.key)}">${esc(r.name)}</button> ${tagOf(r.cls)}</td><td class="num">${r.or != null ? `${pct(r.or)}<small> ${md(r.orw)}</small>` : "–"}</td><td class="num">${r.vt ? pct(r.vt) : "10위 밖"}</td><td class="num">${r.vc ? pct(r.vc) : "10위 밖"}</td></tr>`).join("")}
+      </tbody></table></div>`;
+    html += `<p class="foot-note">OpenRouter 회사 합계는 그 회사 모든 모델의 토큰을 더한 값이라 빠짐이 없어요. 모델별 선은 상위권(1년치는 상위 9개, 이번 주부터 상위 40개)에 든 주만 그려져서 합이 회사 합계보다 작아요. Vercel은 매일 상위 10개 모델만 공개해서 회사 합계도 그 안에 든 모델만 더한 값이에요. 표의 Vercel 숫자는 ${esc(vr)}, OpenRouter 숫자는 옆에 적은 주의 값이에요(최근 13주 안에 상위권이 아니면 –). Vercel ‘10위 밖’은 그 7일 동안 상위 10위에 든 날이 없다는 뜻이에요..</p>`;
+    $("#aiPopB", pop).innerHTML = html;
   }
   function closePop() { pop.hidden = true; document.body.style.overflow = pop._ov || ""; $("#tip") && ($("#tip").hidden = true); }
 
