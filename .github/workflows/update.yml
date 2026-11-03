@@ -40,54 +40,70 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 예약 실행이 휴장일에 헛돌지 않게: 그 시장의 오늘이 휴장일이면 아래 단계를 모두 건너뛴다(scripts/holiday_gate.py).
+      - name: 휴장일 확인
+        id: gate
+        continue-on-error: true   # 확인이 실패하면 평소처럼 돈다
+        run: python3 scripts/holiday_gate.py
+
       - uses: actions/setup-python@v5
+        if: steps.gate.outputs.go != 'false'
         with:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.txt
 
       - name: 패키지 설치
+        if: steps.gate.outputs.go != 'false'
         run: pip install -r requirements.txt
 
       - name: 마감 대기
-        if: github.event.schedule == '20,35 6 * * 1-5' || github.event.schedule == '35,50 19,20 * * 1-5'
+        if: steps.gate.outputs.go != 'false' && (github.event.schedule == '20,35 6 * * 1-5' || github.event.schedule == '35,50 19,20 * * 1-5')
         timeout-minutes: 65
         run: python scripts/wait_close.py
 
       - name: 가격 수집·계산
+        if: steps.gate.outputs.go != 'false'
         run: python scripts/update.py
         env:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RUN_TRIGGER: ${{ github.event_name }}
 
+      # 화면의 휴장 표시·기대 기준일 계산용 한국·미국 휴장일 목록(docs/data/calendar.json).
+      - name: 휴장일 목록
+        if: always() && steps.gate.outputs.go != 'false'
+        continue-on-error: true
+        timeout-minutes: 3
+        run: python scripts/market_calendar.py
+
       - name: 페어 상대강도 계산
-        if: always()
+        if: always() && steps.gate.outputs.go != 'false'
         continue-on-error: true
         timeout-minutes: 5
         run: python scripts/pairs.py
 
       - name: 네이버 업종 수집
-        if: always()
+        if: always() && steps.gate.outputs.go != 'false'
         continue-on-error: true
         timeout-minutes: 8
         run: python scripts/naver_upjong.py
 
       # 섹터 워치 차트 카드(한국 업종 ETF 당일~200일 흐름). 같은 기준일 자료가 있으면 바로 끝난다.
       - name: 섹터 흐름 수집
-        if: always()
+        if: always() && steps.gate.outputs.go != 'false'
         continue-on-error: true
         timeout-minutes: 6
         run: python scripts/sector_flow.py
 
       # 외국인·기관·개인 순매수. 새 거래일 자료가 없으면 한 종목만 확인하고 바로 끝난다.
       - name: 한국 수급 수집
-        if: always()
+        if: always() && steps.gate.outputs.go != 'false'
         continue-on-error: true
         timeout-minutes: 12
         run: python scripts/supply_kr.py
 
       - name: 결과 저장 (실패해도 상태 기록)
-        if: always()
+        if: always() && steps.gate.outputs.go != 'false'
         run: |
           git config user.name "industry-strength-bot"
           git config user.email "actions@users.noreply.github.com"
