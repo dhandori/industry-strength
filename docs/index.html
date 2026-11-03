@@ -7,7 +7,7 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261030-mv3">
+<link rel="stylesheet" href="style.css?v=20261103-s1">
 <link rel="stylesheet" href="macro.css?v=20261031-l1">
 <link rel="stylesheet" href="ai.css?v=20261102-c9">
 <link rel="stylesheet" href="pairs.css?v=20261026-p3">
@@ -136,19 +136,19 @@
       <table class="rank-table" id="rankTable">
         <thead>
           <tr>
-            <th class="c-rank">순위</th>
-            <th class="c-name">산업</th>
-            <th class="c-score">종합 강도</th>
-            <th class="c-rs" title="숫자 = RS 지수(1~99, 오닐식: 최근 3개월 40%·6·9·12개월 각 20% 가중 수익률의 산업 간 백분위, 80 이상 강함). RS선 = 산업 지수 ÷ 시장 지수. 'RS 신고가'는 1년 최고, '시장보다 강함'은 RS선이 50일 평균 위, '시장보다 약함'은 아래. 아래 숫자는 RS선의 1년 최고치 대비 위치">RS 지수</th>
-            <th class="c-sup" title="최근 20거래일 외국인+기관 순매수 ÷ 시가총액(구성 종목 평균). 아래 작은 글씨는 그 기간 외국인+기관이 순매수한 종목 비율. 🔥동행 상승 ⚠️수급 이탈 👀매집 의심 ❄️동반 약세 (한국만)">수급<br><small>20일</small></th>
-            <th class="num">당일</th>
-            <th class="num">5일</th>
-            <th class="num">20일</th>
-            <th class="num">60일</th>
-            <th class="num">200일</th>
-            <th title="가격>50일선 · 50>150일선 · 150>200일선 · 200일선 상승 · 고점 대비 -15% 이내">추세 점검</th>
-            <th class="num">고점<br>대비</th>
-            <th>추세 상태</th>
+            <th class="c-rank" data-sk="rank">순위</th>
+            <th class="c-name" data-sk="name">산업</th>
+            <th class="c-score" data-sk="rank">종합 강도</th>
+            <th class="c-rs" data-sk="rs_rating" title="숫자 = RS 지수(1~99, 오닐식: 최근 3개월 40%·6·9·12개월 각 20% 가중 수익률의 산업 간 백분위, 80 이상 강함). RS선 = 산업 지수 ÷ 시장 지수. 'RS 신고가'는 1년 최고, '시장보다 강함'은 RS선이 50일 평균 위, '시장보다 약함'은 아래. 아래 숫자는 RS선의 1년 최고치 대비 위치">RS 지수</th>
+            <th class="c-sup" data-sk="sup20" title="최근 20거래일 외국인+기관 순매수 ÷ 시가총액(구성 종목 평균). 아래 작은 글씨는 그 기간 외국인+기관이 순매수한 종목 비율. 🔥동행 상승 ⚠️수급 이탈 👀매집 의심 ❄️동반 약세 (한국만)">수급<br><small>20일</small></th>
+            <th class="num" data-sk="rank1">당일</th>
+            <th class="num" data-sk="rank5">5일</th>
+            <th class="num" data-sk="rank20">20일</th>
+            <th class="num" data-sk="rank60">60일</th>
+            <th class="num" data-sk="rank200">200일</th>
+            <th data-sk="checks" title="가격>50일선 · 50>150일선 · 150>200일선 · 200일선 상승 · 고점 대비 -15% 이내">추세 점검</th>
+            <th class="num" data-sk="dist_high">고점<br>대비</th>
+            <th data-sk="stage">추세 상태</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -180,17 +180,17 @@
         <thead>
           <tr>
             <th class="c-rank">순위</th>
-            <th class="c-name">종목</th>
-            <th>소속 산업</th>
-            <th class="c-rs" title="RS 지수(1~99, 오닐식: 최근 3개월 40%·6·9·12개월 각 20% 가중 수익률을 시장 안 전체 종목끼리 비교한 백분위, 80 이상 강함)">RS 지수</th>
-            <th class="c-sup" title="최근 20거래일 외국인+기관 순매수 ÷ 시가총액. 아래는 외국인(외)·기관(기) 연속 매수·매도 일수 (한국만)">수급<br><small>20일</small></th>
-            <th class="num">당일</th>
-            <th class="num">5일</th>
-            <th class="num">20일</th>
-            <th class="num">60일</th>
-            <th class="num">200일</th>
-            <th class="num">고점<br>대비</th>
-            <th>추세 상태</th>
+            <th class="c-name" data-sk="name">종목</th>
+            <th data-sk="ind">소속 산업</th>
+            <th class="c-rs" data-sk="rs_rating" title="RS 지수(1~99, 오닐식: 최근 3개월 40%·6·9·12개월 각 20% 가중 수익률을 시장 안 전체 종목끼리 비교한 백분위, 80 이상 강함)">RS 지수</th>
+            <th class="c-sup" data-sk="sup" title="최근 20거래일 외국인+기관 순매수 ÷ 시가총액. 아래는 외국인(외)·기관(기) 연속 매수·매도 일수 (한국만)">수급<br><small>20일</small></th>
+            <th class="num" data-sk="chg1">당일</th>
+            <th class="num" data-sk="ret5">5일</th>
+            <th class="num" data-sk="ret20">20일</th>
+            <th class="num" data-sk="ret60">60일</th>
+            <th class="num" data-sk="ret200">200일</th>
+            <th class="num" data-sk="dist_high">고점<br>대비</th>
+            <th data-sk="stage">추세 상태</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -411,7 +411,7 @@
     <div class="drawer-body">
       <div class="d-stats" id="dStats"></div>
       <div class="d-tags" id="dTags"></div>
-      <h4>구성 종목 <span class="sub">20일 수익률 순 · 같은 비중</span></h4>
+      <h4>구성 종목 <span class="sub">같은 비중 · 열 제목을 누르면 정렬</span></h4>
       <div class="mem-wrap" id="dMembers"></div>
       <section id="dSupply" class="d-supply" hidden>
         <h4>투자자별 수급 <span class="sub">외국인, 기관, 개인 순매수 · 한국만</span></h4>
@@ -460,7 +460,7 @@
 <script src="flow.js?v=20261030-mv3"></script>
 <script src="stock.js?v=20261028-r2"></script>
 <script src="supply.js?v=20261026-s1"></script>
-<script src="app.js?v=20261028-l1"></script>
+<script src="app.js?v=20261103-s3"></script>
 <script src="sectorflow.js?v=20261026-sf2"></script>
 <script src="highs.js?v=20261028-l1"></script>
 <script src="econ.js?v=20261031-l1"></script>

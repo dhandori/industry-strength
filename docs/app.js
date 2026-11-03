@@ -2,7 +2,7 @@
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-  const state = { market: "KR", sort: "rank", group: "전체", data: {}, series: {}, charts: [], openId: null };
+  const state = { market: "KR", sort: "rank", memSort: "ret20", memDir: 1, group: "전체", data: {}, series: {}, charts: [], openId: null };
   window.__isMarket = () => state.market;
   const HEAT_DAYS = 40;
   const WEAK = ["상승 둔화", "하락 추세", "바닥 다지기"];
@@ -78,11 +78,28 @@
     renderSectors(d); renderTable();
     document.getElementById("rank-h").closest("section").scrollIntoView({ behavior: "smooth", block: "start" });
   };
-  $$("#sortSeg button").forEach((b) => b.addEventListener("click", () => {
-    state.sort = b.dataset.sort;
-    $$("#sortSeg button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-    renderTable();
-  }));
+  // ---------- 표 정렬 공통 (2026-11-03): 정렬 단추나 열 제목을 누르면 그 기준, 같은 걸 한 번 더 누르면 방향이 뒤집힌다.
+  // 값 함수는 '클수록 좋은' 숫자를 돌려준다(순위는 −순위). 빈 값은 방향과 상관없이 늘 맨 아래. 이름은 가나다순.
+  const STAGE_ORD = { "상승 추세": 5, "상승 전환 시도": 4, "바닥 다지기": 3, "상승 둔화": 2, "하락 추세": 1 };
+  function sortBy(rows, val, dir, tie) {
+    return rows.slice().sort((a, b) => {
+      const av = val(a), bv = val(b);
+      if (av == null && bv == null) return tie(a, b);
+      if (av == null) return 1; if (bv == null) return -1;
+      const c = typeof av === "string" ? av.localeCompare(bv, "ko") : bv - av;
+      return c * dir || tie(a, b);
+    });
+  }
+  // 정렬 단추·열 제목 표시: 고른 기준은 진하게, 거꾸로(나쁜 순·가나다 역순)일 땐 ▲
+  function markSort(seg, attr, table, key, dir) {
+    if (seg) $$("button", seg).forEach((x) => { const on = x.dataset[attr] === key; x.setAttribute("aria-pressed", on); x.dataset.rev = on && dir < 0 ? "1" : ""; });
+    if (table) $$("th[data-sk]", table).forEach((th) => { const on = th.dataset.sk === key; th.classList.toggle("on", on); th.dataset.dir = on ? (dir < 0 ? "up" : "down") : ""; th.setAttribute("aria-sort", on ? (dir < 0 ? "ascending" : "descending") : "none"); });
+  }
+  const pick = (cur, dir, key) => (cur === key ? [key, -dir] : [key, 1]);
+  state.sortDir = 1;
+  const setRankSort = (key) => { [state.sort, state.sortDir] = pick(state.sort, state.sortDir, key); renderTable(); };
+  $$("#sortSeg button").forEach((b) => b.addEventListener("click", () => setRankSort(b.dataset.sort)));
+  $$("#rankTable th[data-sk]").forEach((th) => { th.tabIndex = 0; th.addEventListener("click", () => setRankSort(th.dataset.sk)); th.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setRankSort(th.dataset.sk); } }); });
   // 순위 흐름 줄 순서: 지금 순위 / 화면 기간 동안 순위가 많이 오른 순(강세가 막 시작된 산업이 위로)
   state.heatSort = "rank";
   $$("#heatSort button").forEach((b) => b.addEventListener("click", () => {
@@ -94,12 +111,10 @@
   $("#groupSel").addEventListener("change", (e) => { state.group = e.target.value; renderTable(); });
   $("#secFilter").addEventListener("click", () => { state.sector = null; renderSectors(state.data[state.market]); renderTable(); });
   // RS 강한 종목 박스
-  Object.assign(state, { rsstSort: "rs_rating", rsstUp: false, rsstGroup: "전체", rsstAll: false });
-  $$("#rsstSort button").forEach((b) => b.addEventListener("click", () => {
-    state.rsstSort = b.dataset.k;
-    $$("#rsstSort button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-    renderRsStocks(state.data[state.market]);
-  }));
+  Object.assign(state, { rsstSort: "rs_rating", rsstDir: 1, rsstUp: false, rsstGroup: "전체", rsstAll: false });
+  const setRsstSort = (key) => { [state.rsstSort, state.rsstDir] = pick(state.rsstSort, state.rsstDir, key); renderRsStocks(state.data[state.market]); };
+  $$("#rsstSort button").forEach((b) => b.addEventListener("click", () => setRsstSort(b.dataset.k)));
+  $$("#rsstTable th[data-sk]").forEach((th) => { th.tabIndex = 0; th.addEventListener("click", () => setRsstSort(th.dataset.sk)); th.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setRsstSort(th.dataset.sk); } }); });
   $("#rsstUp").addEventListener("click", (e) => {
     state.rsstUp = !state.rsstUp;
     e.currentTarget.setAttribute("aria-pressed", state.rsstUp);
@@ -426,12 +441,11 @@
       && (!state.trendOnly || i.stage === "상승 추세" || i.stage === "상승 전환 시도")
       && (!state.rsOnly || i.rs_above_ma50 === true));
     const k = state.sort;
-    rows = rows.slice().sort((a, b) => {
-      const av = a[k], bv = b[k];
-      if (av == null && bv == null) return (a.rank ?? 999) - (b.rank ?? 999);
-      if (av == null) return 1; if (bv == null) return -1;
-      return k === "rank_chg5" || k === "rs_rating" || k === "sup20" ? bv - av || a.rank - b.rank : av - bv;
-    });
+    const RV = { name: (i) => i.name, checks: (i) => i.checks ? i.checks.filter(Boolean).length : null, stage: (i) => STAGE_ORD[i.stage] ?? null,
+      rank_chg5: (i) => i.rank_chg5, rs_rating: (i) => i.rs_rating, sup20: (i) => i.sup20, dist_high: (i) => i.dist_high };
+    const val = RV[k] || ((i) => i[k] == null ? null : -i[k]);   // rank·rank1·rank5… : 순위는 작을수록 좋다
+    rows = sortBy(rows, val, state.sortDir, (a, b) => (a.rank ?? 999) - (b.rank ?? 999));
+    markSort($("#sortSeg"), "sort", $("#rankTable"), k, state.sortDir);
     // 2026-10-28: 처음엔 위쪽만(PC 25개·휴대폰 12개) 보여 주고 '전체 보기'로 펼친다 — 70줄이 한 번에 나와 화면이 너무 길었다
     const allRows = rows, RLIM = innerWidth < 640 ? 12 : 25;
     if (!state.rankAll && rows.length > RLIM + 3) rows = rows.slice(0, RLIM);
@@ -511,12 +525,10 @@
       && (!state.rsstUp || m.rs_up === true));
     const k = state.rsstSort;
     const hasRs = rows.some(({ m }) => m.rs_rating != null), has200 = rows.some(({ m }) => m.ret200 != null);
-    rows.sort((a, b) => {
-      const av = a.m[k], bv = b.m[k];
-      if (av == null && bv == null) return (b.m.ret20 ?? -1e9) - (a.m.ret20 ?? -1e9);
-      if (av == null) return 1; if (bv == null) return -1;
-      return bv - av || (b.m.ret20 ?? -1e9) - (a.m.ret20 ?? -1e9);
-    });
+    const SV = { name: (r) => r.m.name, ind: (r) => r.inds[0] && r.inds[0].name, stage: (r) => STAGE_ORD[r.m.stage] ?? null, sup: (r) => r.m.sup ? r.m.sup.pct20 ?? null : null };
+    const sval = SV[k] || ((r) => r.m[k] ?? null);
+    rows = sortBy(rows, sval, state.rsstDir, (a, b) => (b.m.rs_rating ?? -1) - (a.m.rs_rating ?? -1) || (b.m.ret20 ?? -1e9) - (a.m.ret20 ?? -1e9));
+    markSort($("#rsstSort"), "k", $("#rsstTable"), k, state.rsstDir);
     const total = rows.length, LIMIT = innerWidth < 640 ? 15 : 30;
     const shown = state.rsstAll ? rows : rows.slice(0, LIMIT);
     const stageCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
@@ -742,9 +754,14 @@
       return `<span class="mem-links">${naver}<a href="${tv}" target="_blank" rel="noopener noreferrer">TradingView</a></span>`;
     };
     const sup = d._sup && window.__supply;
-    const rows = (it.members || []).map((m) => m.missing ? `<tr><td>${esc(m.name)}</td><td colspan="${sup ? 8 : 6}" class="rsub">가격 없음</td></tr>` : `
+    // 열 제목을 누르면 정렬(처음엔 20일 수익률 높은 순). 같은 열을 다시 누르면 방향이 뒤집힌다
+    const MK = state.memSort, MV = { name: (m) => m.name, above50: (m) => m.above50 == null ? null : +m.above50, stage: (m) => STAGE_ORD[m.stage] ?? null };
+    const mlist = MK ? sortBy((it.members || []).map((m, n) => ({ ...m, _n: n })), (m) => m.missing ? null : (MV[MK] || ((x) => x[MK] ?? null))(m), state.memDir, (a, b) => a._n - b._n) : (it.members || []);
+    const rsCell = (m) => m.rs_rating == null ? "–" : `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}" title="RS 지수 ${m.rs_rating} (1~99, 시장 안 전체 종목끼리 비교한 백분위)">${m.rs_rating}</b>`;
+    const rows = mlist.map((m) => m.missing ? `<tr><td>${esc(m.name)}</td><td colspan="${sup ? 9 : 7}" class="rsub">가격 없음</td></tr>` : `
       <tr title="${esc(m.path || "")}">
         <td><b>${skBtn(m, state.market)}</b>${m.stale ? '<span class="stale">지연</span>' : ""}${sup ? sup.blockMark(m) : ""}<span class="rsub">${esc(m.code)} · ${fmtP(m.close)}${link(m)}</span></td>
+        <td class="num">${rsCell(m)}</td>
         <td class="num"><span class="ret ${cls(m.ret20)}">${fmtPct(m.ret20)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret5)}">${fmtPct(m.ret5)}</span></td>
         <td class="num"><span class="ret ${cls(m.ret60)}">${fmtPct(m.ret60)}</span></td>
@@ -753,7 +770,14 @@
         <td><span class="stage ${stCls[m.stage] || ""}">${m.stage}</span></td>
         ${sup ? sup.memberCols(m) : ""}
       </tr>`).join("");
-    $("#dMembers").innerHTML = `<table class="mem-table"><thead><tr><th>종목</th><th class="num">20일</th><th class="num">5일</th><th class="num">60일</th><th class="num">고점 대비</th><th>50일선</th><th>추세 상태</th>${sup ? sup.memberHead() : ""}</tr></thead><tbody>${rows}</tbody></table>`;
+    const mth = (k, t, num) => `<th${num ? ' class="num"' : ""} data-sk="${k}" tabindex="0">${t}</th>`;
+    $("#dMembers").innerHTML = `<table class="mem-table mem-sort"><thead><tr>${mth("name", "종목")}${mth("rs_rating", "RS", 1)}${mth("ret20", "20일", 1)}${mth("ret5", "5일", 1)}${mth("ret60", "60일", 1)}${mth("dist_high", "고점 대비", 1)}${mth("above50", "50일선")}${mth("stage", "추세 상태")}${sup ? sup.memberHead() : ""}</tr></thead><tbody>${rows}</tbody></table>`;
+    const mt = $("#dMembers table");
+    markSort(null, "", mt, MK, state.memDir);
+    $$("th[data-sk]", mt).forEach((th) => {
+      const go = () => { [state.memSort, state.memDir] = pick(state.memSort, state.memDir, th.dataset.sk); renderMembers(it, d); };
+      th.addEventListener("click", go); th.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    });
   }
 
   function drawDetail(it) {

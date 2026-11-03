@@ -747,3 +747,10 @@ main { gap: 16px; padding-top: 14px; }
 .rank-table td.name .name-tags { display: inline; margin-left: 4px; }
 .rank-table td.name .name-tags .tag-mini { margin: 0 3px 0 0; vertical-align: 1px; font-size: 10.5px; }
 .sk-stats .sk-warn { color: #e07b00; } /* 8% 한도가 1.5 ATR 미만: 변동성 경고(주황) */
+/* 2026-11-03 표 정렬 정비: 열 제목을 눌러 정렬(같은 열 다시 누르면 반대로). ▼ = 좋은 순(큰 값·높은 순위 먼저), ▲ = 반대 */
+th[data-sk] { cursor: pointer; user-select: none; white-space: nowrap; }
+th[data-sk]:hover, th[data-sk].on { color: var(--accent); }
+th[data-sk]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+th[data-sk][data-dir="down"]::after { content: " ▼"; font-size: .8em; }
+th[data-sk][data-dir="up"]::after { content: " ▲"; font-size: .8em; }
+.seg button[data-rev="1"]::after { content: " ▲"; font-size: .8em; }
