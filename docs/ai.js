@@ -95,6 +95,52 @@
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="OpenAI·Anthropic 런레이트 추이">${g}${lines}${dots}${labels}</svg>`;
   }
 
+  // ---------- 1-1) 두 회사 합산 (2026-11-04): 보도 날짜가 서로 달라서, 각 회사 값을 보도 사이에서 로그 보간(꾸준한 비율 성장 가정)해
+  // 같은 날짜로 맞춘 뒤 더한다. 아래 칠 = Anthropic, 그 위 = OpenAI, 위 테두리 = 합계.
+  // 한 회사의 마지막 보도 뒤로는 그 회사 값을 마지막 보도값 그대로 두고 그 구간은 점선으로 표시한다.
+  function sumChart(rv, W) {
+    const P = { l: 46, r: 108, t: 14, b: 26 }, H = Math.round(Math.max(200, Math.min(280, W * 0.4)));
+    const S = Object.fromEntries(Object.keys(CO).map((c) => [c, (rv.companies[c] || []).filter((x) => x.usd > 0).map((x) => [Date.parse(x.date), x.usd]).sort((a, b) => a[0] - b[0])]));
+    const cs = Object.keys(CO);
+    if (cs.some((c) => S[c].length < 2)) return "";
+    const val = (c, t) => { const a = S[c]; if (t <= a[0][0]) return t < a[0][0] ? null : a[0][1]; if (t >= a.at(-1)[0]) return a.at(-1)[1];
+      let i = a.findIndex((p) => p[0] >= t); const [t0, v0] = a[i - 1], [t1, v1] = a[i]; return Math.exp(Math.log(v0) + (Math.log(v1) - Math.log(v0)) * (t - t0) / (t1 - t0)); };
+    const start = Math.max(Date.parse("2024-01-01"), ...cs.map((c) => S[c][0][0]));
+    const lastReal = Math.min(...cs.map((c) => S[c].at(-1)[0])), end = Math.max(...cs.map((c) => S[c].at(-1)[0]));
+    // 보도 날짜 + 2주 간격 점을 섞어 곡선이 매끄럽게
+    const ts = new Set(cs.flatMap((c) => S[c].map((p) => p[0])).filter((t) => t >= start && t <= end));
+    for (let t = start; t <= end; t += 14 * 864e5) ts.add(t);
+    ts.add(end);
+    const T = [...ts].sort((a, b) => a - b).map((t) => ({ t, a: val("Anthropic", t), o: val("OpenAI", t) })).filter((p) => p.a != null && p.o != null);
+    if (T.length < 2) return "";
+    const ymax = Math.ceil(Math.max(...T.map((p) => p.a + p.o)) / 1e9 / 10) * 10;
+    const t0 = T[0].t, t1 = end + 20 * 864e5;
+    const X = (t) => P.l + (t - t0) / (t1 - t0) * (W - P.l - P.r), Y = (v) => P.t + (1 - v / 1e9 / ymax) * (H - P.t - P.b);
+    let g = "";
+    const step = ymax <= 40 ? 10 : ymax <= 100 ? 20 : 50;
+    for (let v = 0; v <= ymax; v += step) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v * 1e9)}" y2="${Y(v * 1e9)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(v * 1e9) + 4}" text-anchor="end" class="ai-tk">${v ? v * 10 + "억" : "0"}</text>`;
+    for (const y of [2024, 2025, 2026, 2027]) { const x = X(Date.parse(`${y}-01-01`)); if (x >= P.l && x <= W - P.r) g += `<text x="${x}" y="${H - 8}" class="ai-tk" text-anchor="middle">${y}</text><line x1="${x}" x2="${x}" y1="${P.t}" y2="${H - P.b}" class="ai-grid"/>`; }
+    const pt = (p, v) => `${X(p.t).toFixed(1)},${Y(v).toFixed(1)}`;
+    const base = `${X(T.at(-1).t).toFixed(1)},${Y(0)} ${X(T[0].t).toFixed(1)},${Y(0)}`;
+    const areaA = `<polygon points="${T.map((p) => pt(p, p.a)).join(" ")} ${base}" fill="var(--ai-a)" opacity=".55"/>`;
+    const areaO = `<polygon points="${T.map((p) => pt(p, p.a + p.o)).join(" ")} ${[...T].reverse().map((p) => pt(p, p.a)).join(" ")}" fill="var(--ai-o)" opacity=".5"/>`;
+    const real = T.filter((p) => p.t <= lastReal), tail = T.filter((p) => p.t >= lastReal);
+    let top = `<polyline fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round" points="${real.map((p) => pt(p, p.a + p.o)).join(" ")}"/>`;
+    if (tail.length > 1) top += `<polyline fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 4" points="${tail.map((p) => pt(p, p.a + p.o)).join(" ")}"/>`;
+    // 보도가 있던 날짜에만 손가락·마우스용 점
+    const rep = new Set(cs.flatMap((c) => S[c].map((p) => p[0])));
+    const dots = T.filter((p) => rep.has(p.t)).map((p) => { const d = new Date(p.t).toISOString().slice(0, 10);
+      return `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.a + p.o).toFixed(1)}" r="3.5" fill="var(--ink)" stroke="var(--surface)" stroke-width="1.5" ${tipAttr(`${d} 합계 약 ${won(p.a + p.o)} = Anthropic ${won(p.a)} + OpenAI ${won(p.o)}${p.t > lastReal ? " (한쪽은 마지막 보도값)" : ""}`)}/>`; }).join("");
+    const L = T.at(-1), lx = X(L.t) + 8, ly = Y(L.a + L.o);
+    const stale = cs.find((c) => S[c].at(-1)[0] < end);
+    const labels = `<text x="${lx}" y="${ly + 1}" class="ai-end" fill="var(--ink)">합계 ${esc(won(L.a + L.o))}</text><text x="${lx}" y="${ly + 15}" class="ai-tk">${md(new Date(end).toISOString().slice(0, 10))} 기준</text>`
+      + `<text x="${lx}" y="${Math.min(H - P.b - 4, Y(L.a / 2)) + 4}" class="ai-tk" fill="var(--ai-a)">Anthropic ${Math.round(L.a / (L.a + L.o) * 100)}%</text>`
+      + `<text x="${lx}" y="${Math.max(ly + 32, Y(L.a + L.o / 2)) + 4}" class="ai-tk" fill="var(--ai-o)">OpenAI ${Math.round(L.o / (L.a + L.o) * 100)}%</text>`;
+    const note = stale ? `<p class="foot-note">${esc(stale)}의 마지막 보도(${ymd(new Date(S[stale].at(-1)[0]).toISOString().slice(0, 10))}) 뒤로는 그 값을 그대로 더해서 <b>점선</b>으로 그렸어요.</p>` : "";
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="Anthropic·OpenAI 런레이트 합산 추이">${g}${areaA}${areaO}${top}${dots}${labels}</svg>
+      <div class="chart-legend"><span><i style="background:var(--ink)"></i>두 회사 합계</span><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span></div>${note}`;
+  }
+
   // ---------- 1-2) S-1 실제 분기 매출 막대 + 최근 4분기 합계 선
   function filingChart(f, W) {
     const qs = f.quarters || [];
@@ -425,6 +471,8 @@
       <section class="card">
         <div class="card-head wrap"><h2>AI 연구소 매출 런레이트 <span class="sub">연환산 매출 · 보도 시점 기준 점</span></h2></div>
         <div id="aiRev"></div>
+        <h3 class="ai-h3">두 회사 합산 (Anthropic + OpenAI) <span class="sub">보도 날짜가 달라 사이 값은 보간 · 위 테두리 = 합계</span></h3>
+        <div id="aiSum"></div>
         <div class="ai-warn"><b>두 회사 숫자를 그냥 비교·합산하면 안 돼요.</b> Anthropic은 아마존 같은 클라우드 파트너를 통한 판매의 <b>총액</b>을, OpenAI는 <b>자기 몫</b>만 매출로 잡아요. 그래서 같은 장사를 해도 Anthropic 쪽 숫자가 크게 나와요. ${sumNote}</div>
         <h3 class="ai-h3">최근 보도</h3>
         <div class="ai-tw"><table class="mem-table ai-rep"><thead><tr><th>기준일</th><th>회사</th><th class="num">연환산 매출</th><th>종류</th><th>신뢰도</th><th>출처</th></tr></thead><tbody>${repRows}</tbody></table></div>
@@ -474,6 +522,7 @@
         <p class="foot-note">투자 판단의 참고 자료예요. 보도 수치는 회사마다 기준이 달라 직접 비교에 주의하세요.</p>
       </section>`;
     $("#aiRev").innerHTML = revenueChart(rv, width($("#aiRev")));
+    $("#aiSum").innerHTML = sumChart(rv, width($("#aiSum")));
     $("#aiOpen").innerHTML = openChart(or, vc, width($("#aiOpen")));
     $("#aiWeek").innerHTML = weekChart(or, vc, width($("#aiWeek")));
     if ($("#aiFile")) $("#aiFile").innerHTML = filingChart(fa, width($("#aiFile")));
