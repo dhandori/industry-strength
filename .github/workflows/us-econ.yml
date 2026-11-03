@@ -15,6 +15,7 @@ on:
       - "scripts/us_econ.py"
       - "scripts/tv_symbols.py"
       - "scripts/macro_long.py"
+      - "scripts/putcall.py"
       - ".github/workflows/us-econ.yml"
 
 permissions:
@@ -38,6 +39,9 @@ jobs:
       - name: 매크로 시장 지표 장기 자료(FRED·Yahoo, 매주 값)
         continue-on-error: true
         run: python scripts/macro_long.py
+      - name: Cboe 풋콜레이시오(최근 3주 다시 받아 붙이기)
+        continue-on-error: true
+        run: python scripts/putcall.py
       - name: TradingView 거래소 표(새 미국 종목만 확인)
         continue-on-error: true
         run: python scripts/tv_symbols.py
@@ -45,7 +49,7 @@ jobs:
         run: |
           git config user.name "industry-strength-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add docs/data/us_econ.json docs/data/kr_credit.json docs/data/tv_ex.json docs/data/macro_long.json
+          git add docs/data/us_econ.json docs/data/kr_credit.json docs/data/tv_ex.json docs/data/macro_long.json docs/data/putcall.json
           if git diff --cached --quiet; then
             echo "변경 없음"
           else

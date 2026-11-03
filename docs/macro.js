@@ -315,7 +315,7 @@
         if (!sr.length) return;
         const sw = worstOf(sr);
         const label = mk === "KR" && s === "신용·금리·유동성" ? "신용·금리" : s;
-        h += `<div class="mx-group-h"><h3>${label}</h3><span class="sub">${sr.length}개 지표${sw <= 5 ? ` · 가장 위험한 지표: ${LV[sw][0]} ${LV[sw][1]}` : ""}</span></div><div class="mx-grid">${sr.map(card).join("")}</div>`;
+        h += `<div class="mx-group-h"><h3>${label}</h3><span class="sub">${sr.length}개 지표${sw <= 5 ? ` · 가장 위험한 지표: ${LV[sw][0]} ${LV[sw][1]}` : ""}</span></div><div class="mx-grid">${sr.map(card).join("")}${mk === "US" && s === "투자 심리" && window.__pc ? window.__pc.card() : ""}</div>`;   // 풋콜레이시오(putcall.js)
         if (mk === "US" && s === "투자 심리") h += duo(d);
       });
       h += `</section>`;
