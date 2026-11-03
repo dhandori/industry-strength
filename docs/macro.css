@@ -183,3 +183,20 @@ body.v-macro #meta { display: none; }
 .ec-tr.mxf:not(.open) > .mxf-x { position: static; margin: 8px 0 -4px auto; }
 /* 2026-10-31: 그래프 기간 단추가 7개까지 늘어 휴대폰에선 제목을 누르지 않게 단추 줄을 따로(오른쪽 정렬) */
 @media (max-width: 640px) { .mx-mini { float: none; display: flex; width: fit-content; max-width: 100%; margin: 0 0 6px auto; overflow-x: auto; } }
+/* 2026-11-04 풋콜레이시오 카드(putcall.js): 자료·기간 단추, 한 줄 해석, 초보자 설명 */
+.pc-btns { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px; margin-bottom: 6px; }
+.pc-btns .mx-mini { float: none; margin: 0; }
+@media (max-width: 640px) { .pc-btns .mx-mini { width: auto; margin: 0; } }
+.pc-say { margin: 6px 0 10px; font-size: 13.5px; line-height: 1.6; color: var(--ink); background: var(--surface-2); border-left: 3px solid var(--c); border-radius: 0 8px 8px 0; padding: 8px 10px; }
+.pc-say .muted { font-size: 12px; }
+.pc-edu { margin-top: 10px; font-size: 13px; line-height: 1.65; color: var(--ink-2); }
+.pc-edu h4 { margin: 14px 0 4px; font-size: 13.5px; color: var(--ink); }
+.pc-edu h4:first-child { margin-top: 4px; }
+.pc-edu ol, .pc-edu ul { margin: 0; padding-left: 20px; }
+.pc-edu li { margin: 3px 0; }
+.pc-edu p { margin: 0; }
+.pc-edu b { color: var(--ink); }
+.pc-tbl td, .pc-tbl th { white-space: nowrap; }
+.pc-tbl td:last-child { white-space: normal; }
+.pc-sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+.mem-table.pc-tbl { min-width: 0; width: 100%; }
