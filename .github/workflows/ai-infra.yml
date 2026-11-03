@@ -1,0 +1,48 @@
+name: AI 인프라 수요 자료 갱신
+
+on:
+  # 원자료 주기: OpenRouter 토큰(주간, 월요일 09:00 KST 마감) · SEC 설비투자(실적 공시 때) · GPU 임대료(매일 한 줄씩 쌓음)
+  # → 매일 09:40 KST에 읽고 12:40 KST에 한 번 더 보충한다. 월요일 09:40 실행에서 지난주 토큰 합계와 지출 추정이 확정된다.
+  # 시각을 바꾸면 docs/infra.js 안내 문구도 같이 바꾼다.
+  schedule:
+    - cron: "40 0 * * *"    # 09:40 KST
+    - cron: "40 3 * * *"    # 12:40 KST 재시도·보충
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/ai_infra.py"
+      - ".github/workflows/ai-infra.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ai-infra
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: OpenRouter·SEC·GPU 임대료 수집
+        env:
+          SEC_CONTACT: ${{ secrets.SEC_CONTACT }}   # SEC는 요청마다 연락처를 요구한다(공개 코드에 안 남게 비밀값으로)
+        run: python scripts/ai_infra.py
+      - name: 결과 저장
+        if: always()
+        run: |
+          git config user.name "industry-strength-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/data/ai_infra.json
+          if git diff --cached --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "AI 인프라 수요 자료 갱신 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+            for i in 1 2 3; do git pull --rebase origin main && git push && break; sleep 5; done
+          fi
