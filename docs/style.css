@@ -754,3 +754,19 @@ th[data-sk]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2
 th[data-sk][data-dir="down"]::after { content: " ▼"; font-size: .8em; }
 th[data-sk][data-dir="up"]::after { content: " ▲"; font-size: .8em; }
 .seg button[data-rev="1"]::after { content: " ▲"; font-size: .8em; }
+/* 2026-11-03 신고가가 자주 나온 업종: 업종 줄을 누르면 종목 펼치기 */
+.hx-table tr.hx-ind { cursor: pointer; }
+@media (hover: hover) { .hx-table tr.hx-ind:hover td { background: var(--accent-soft); } }
+.hx-table tr.hx-ind:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.hx-car { display: inline-block; width: 0; height: 0; margin-right: 6px; vertical-align: middle; border-left: 5px solid var(--accent); border-top: 4px solid transparent; border-bottom: 4px solid transparent; transition: transform .15s; }
+.hx-ind.open .hx-car { transform: rotate(90deg); }
+.hx-table tr.hx-sub > td { padding: 0 0 10px; background: var(--surface-2); white-space: normal; }
+.hx-subw { overflow-x: auto; padding: 6px 10px 0; }
+.hx-subt { width: 100%; border-collapse: collapse; font-size: 13px; }
+.hx-subt th { text-align: left; font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.hx-subt td { padding: 7px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: middle; }
+.hx-subt th.num, .hx-subt td.num { text-align: right; }
+.hx-subt .rsub { display: block; font-size: 11.5px; color: var(--muted); }
+.hx-subt td:first-child { white-space: normal; min-width: 130px; max-width: 220px; }
+.hx-subt a { color: var(--accent); text-decoration: none; }
+.hx-subt a:hover { text-decoration: underline; }

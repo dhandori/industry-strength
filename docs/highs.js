@@ -13,7 +13,7 @@
   const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const RECENT = 5;
 
-  const st = { raw: null, market: "KR", day: null, listMode: "group", sortT: { k: "mcap", d: -1 }, sortF: { k: "days", d: -1 }, sortS: { k: "rec", d: -1 }, heatAll: false, freqAll: false, q: "", chart: null };
+  const st = { raw: null, market: "KR", day: null, listMode: "group", sortT: { k: "mcap", d: -1 }, sortF: { k: "days", d: -1 }, sortS: { k: "rec", d: -1 }, openInd: new Set(), heatAll: false, freqAll: false, q: "", chart: null };
 
   async function loadRaw() {
     if (st.raw) return st.raw;
@@ -150,7 +150,14 @@
   function strongRows(D) {
     const rec = D.days.slice(-RECENT), old = D.days.slice(-RECENT * 2, -RECENT);
     const agg = {};
-    const add = (r, key) => { const a = agg[r.ind] ||= { ind: r.ind, big: r.big, rec: 0, old: 0, uniq: new Set(), names: [] }; a[key]++; if (key === "rec") { a.uniq.add(r.code); if (!a.names.includes(r.name)) a.names.push(r.name); } };
+    // stocks: 종목별 최근 5일·그 전 5일 신고가 횟수와 마지막 신고가 날의 값(업종을 누르면 펼쳐 보여 준다)
+    const add = (r, key) => {
+      const a = agg[r.ind] ||= { ind: r.ind, big: r.big, rec: 0, old: 0, uniq: new Set(), names: [], stocks: {} };
+      a[key]++;
+      if (key === "rec") { a.uniq.add(r.code); if (!a.names.includes(r.name)) a.names.push(r.name); }
+      const sk = a.stocks[r.code] ||= { rec: 0, old: 0, last: r };
+      sk[key]++; if (r.d >= sk.last.d) sk.last = r;
+    };
     rec.forEach((d) => D.byDay[d].forEach((r) => add(r, "rec")));
     old.forEach((d) => D.byDay[d].forEach((r) => add(r, "old")));
     return Object.values(agg).map((a) => {
@@ -166,14 +173,36 @@
     const mx = Math.max(1, ...show.map((r) => Math.abs(r.chg)));
     const th = (key, label, numc) => `<th class="${numc ? "num " : ""}sortable${k === key ? " on" : ""}" data-k="${key}">${label}${k === key ? (d < 0 ? " ▼" : " ▲") : ""}</th>`;
     $("#hxStrong").innerHTML = `<table class="hx-table"><thead><tr><th>업종</th>${th("rec", `최근 ${RECENT}일 횟수`, 1)}${th("old", `그 전 ${RECENT}일 횟수`, 1)}${th("chg", "증감", 0)}${th("ratio", "업종 내 비율", 1)}<th>최근 신고가 종목</th></tr></thead><tbody>
-      ${show.map((r) => `<tr>
-        <td class="hx-name"><b>${esc(r.ind)}</b><span>${esc(r.big)}</span></td>
+      ${show.map((r) => `<tr class="hx-ind${st.openInd.has(r.ind) ? " open" : ""}" data-ind="${esc(r.ind)}" tabindex="0" aria-expanded="${st.openInd.has(r.ind)}" title="누르면 이 업종의 신고가 종목">
+        <td class="hx-name"><b><i class="hx-car" aria-hidden="true"></i>${esc(r.ind)}</b><span>${esc(r.big)} · 종목 ${Object.keys(r.stocks).length}개 ${st.openInd.has(r.ind) ? "접기" : "보기"}</span></td>
         <td class="num"><b>${r.rec}</b></td><td class="num muted">${r.old}</td>
         <td><span class="dbar"><i class="${r.chg >= 0 ? "pos" : "neg"}" style="width:${Math.abs(r.chg) / mx * 50}%"></i></span><span class="dval ${r.chg > 0 ? "up-t" : r.chg < 0 ? "down-t" : "muted"}">${r.chg > 0 ? "▲" + r.chg : r.chg < 0 ? "▼" + -r.chg : "–"}</span></td>
         <td class="num">${r.ratio == null ? '<span class="muted">–</span>' : `${r.nu}/${r.uni} <span class="muted">(${r.ratio.toFixed(0)}%)</span>`}</td>
-        <td class="hx-names">${r.names.slice(0, 4).map(esc).join(" · ")}${r.names.length > 4 ? ` <span class="muted">외 ${r.names.length - 4}</span>` : ""}</td></tr>`).join("")}
+        <td class="hx-names">${r.names.slice(0, 4).map(esc).join(" · ")}${r.names.length > 4 ? ` <span class="muted">외 ${r.names.length - 4}</span>` : ""}</td></tr>${st.openInd.has(r.ind) ? indStocks(r) : ""}`).join("")}
       </tbody></table>`;
     $$("#hxStrong th.sortable").forEach((t) => t.addEventListener("click", () => { st.sortS = { k: t.dataset.k, d: st.sortS.k === t.dataset.k ? -st.sortS.d : -1 }; renderStrong(D); }));
+    // 업종 줄을 누르면 그 아래에 신고가 종목을 펼친다(다시 누르면 접기). 종목 이름은 종목 상세, '강도판'은 산업 상세
+    const tog = (tr) => { const k = tr.dataset.ind; st.openInd.has(k) ? st.openInd.delete(k) : st.openInd.add(k); renderStrong(D); };
+    $$("#hxStrong tr.hx-ind").forEach((tr) => {
+      tr.addEventListener("click", (e) => { if (!e.target.closest("button, a")) tog(tr); });
+      tr.addEventListener("keydown", (e) => { if (e.target === tr && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); tog(tr); } });
+    });
+    $$("#hxStrong [data-bid]").forEach((x) => x.addEventListener("click", (e) => { e.stopPropagation(); const b = window.__isBoard && window.__isBoard(); b && b.open(x.dataset.bid); }));
+  }
+  // 펼친 업종의 종목 표: 최근 5일 횟수 많은 순 → 시가총액 순
+  function indStocks(r) {
+    const list = Object.values(r.stocks).sort((a, b) => b.rec - a.rec || b.old - a.old || b.last.mcap - a.last.mcap);
+    const one = ({ rec, old, last: x }) => {
+      const mm = memberOf(x.code), b = basketOf(x.code);
+      return `<tr><td>${nameBtn(x)}<span class="rsub">${esc(x.code)} · <a href="${tvUrl(x.code)}" target="_blank" rel="noopener noreferrer">차트</a>${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판</button>` : ""}</span></td>
+        <td class="num"><b>${rec}</b></td><td class="num muted">${old}</td>
+        <td class="num">${md(x.d)}${x.run >= 2 ? ` <span class="tagc run">🔁${x.run}</span>` : ""}</td>
+        <td class="num"><span class="ret ${cls(x.chg)}">${pct(x.chg, 1)}</span></td>
+        <td class="num">${cap(x.mcap)}</td>
+        <td class="num">${mm && mm.ret20 != null ? `<span class="ret ${cls(mm.ret20)}">${pct(mm.ret20, 1)}</span>` : '<span class="muted">–</span>'}</td>
+        <td class="num">${mm && mm.rs_rating != null ? `<b class="rs-num ${mm.rs_rating >= 80 ? "hi" : mm.rs_rating < 40 ? "lo" : ""}">${mm.rs_rating}</b>` : '<span class="muted">–</span>'}</td></tr>`;
+    };
+    return `<tr class="hx-sub"><td colspan="6"><div class="hx-subw"><table class="hx-subt"><thead><tr><th>종목</th><th class="num">최근 ${RECENT}일</th><th class="num">그 전</th><th class="num">마지막 신고가</th><th class="num">그날 등락</th><th class="num">시가총액</th><th class="num">20일</th><th class="num">RS</th></tr></thead><tbody>${list.map(one).join("")}</tbody></table></div></td></tr>`;
   }
 
   // ---------- 업종 × 날짜
