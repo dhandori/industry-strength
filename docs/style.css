@@ -770,3 +770,12 @@ th[data-sk][data-dir="up"]::after { content: " ▲"; font-size: .8em; }
 .hx-subt td:first-child { white-space: normal; min-width: 130px; max-width: 220px; }
 .hx-subt a { color: var(--accent); text-decoration: none; }
 .hx-subt a:hover { text-decoration: underline; }
+/* 2026-11-03 업종별 신고가 달력: 업종 이름·칸을 누르면 그 아래에 종목 펼치기 */
+.hx-heat .hx-hn { cursor: pointer; }
+.hx-heat .hx-hn:hover, .hx-heat .hx-hn.on, .hx-heat .hx-hn[aria-expanded="true"] { color: var(--accent); }
+.hx-hn[aria-expanded="true"] .hx-car { transform: rotate(90deg); }
+.hc.pick { cursor: pointer; }
+.hc.on { outline: 2px solid var(--accent); outline-offset: -2px; }
+.hx-hn:focus-visible, .hc.pick:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.hx-hdet { grid-column: 1 / -1; background: var(--surface-2); border-radius: 10px; margin: 4px 0 8px; padding: 8px 0 6px; position: sticky; left: 0; max-width: min(100%, calc(100vw - 48px)); }
+.hx-hdet-t { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 0 10px; font-size: 13px; }

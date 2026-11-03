@@ -13,7 +13,7 @@
   const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
   const RECENT = 5;
 
-  const st = { raw: null, market: "KR", day: null, listMode: "group", sortT: { k: "mcap", d: -1 }, sortF: { k: "days", d: -1 }, sortS: { k: "rec", d: -1 }, openInd: new Set(), heatAll: false, freqAll: false, q: "", chart: null };
+  const st = { raw: null, market: "KR", day: null, listMode: "group", sortT: { k: "mcap", d: -1 }, sortF: { k: "days", d: -1 }, sortS: { k: "rec", d: -1 }, openInd: new Set(), heatOpen: null, heatAll: false, freqAll: false, q: "", chart: null };
 
   async function loadRaw() {
     if (st.raw) return st.raw;
@@ -218,10 +218,14 @@
     el.style.gridTemplateColumns = `minmax(110px, 160px) repeat(${ds.length}, minmax(22px, 1fr)) 36px`;
     const last = ds.length - 1;
     let h = `<div></div>` + ds.map((d, k) => `<div class="hd c">${k === last || (last - k) % 5 === 0 ? md(d) : ""}</div>`).join("") + `<div class="hd c">합계</div>`;
+    // 업종 이름을 누르면 그 기간의 신고가 종목, 칸을 누르면 그날 종목을 바로 아래 줄에 펼친다(같은 걸 다시 누르면 접기)
+    const O = st.heatOpen && names.includes(st.heatOpen.ind) ? st.heatOpen : null;
     for (const n of names) {
-      h += `<div class="hn" title="${esc(n)}">${esc(n)}</div>`;
-      h += ds.map((d, k) => { const v = (cnt[n] || {})[d] || 0; return `<div class="hc hx${k === last ? " today" : ""}${v >= 4 ? " dark" : ""}" style="background:${heatBg(v)}" data-t="${esc(n)} · ${mdw(d)} · ${v}개">${v || ""}</div>`; }).join("");
+      const on = O && O.ind === n;
+      h += `<div class="hn hx-hn${on && !O.day ? " on" : ""}" title="${esc(n)} · 누르면 신고가 종목" data-hind="${esc(n)}" role="button" tabindex="0" aria-expanded="${!!on}"><i class="hx-car" aria-hidden="true"></i>${esc(n)}</div>`;
+      h += ds.map((d, k) => { const v = (cnt[n] || {})[d] || 0; return `<div class="hc hx${k === last ? " today" : ""}${v >= 4 ? " dark" : ""}${v ? " pick" : ""}${on && O.day === d ? " on" : ""}" style="background:${heatBg(v)}" data-t="${esc(n)} · ${mdw(d)} · ${v}개${v ? " · 누르면 그날 종목" : ""}"${v ? ` data-hind="${esc(n)}" data-hday="${d}" role="button" tabindex="0"` : ""}>${v || ""}</div>`; }).join("");
       h += `<div class="ht">${tot[n]}</div>`;
+      if (on) h += heatStocks(D, n, O.day ? [O.day] : ds);
     }
     h += `<div class="hn tot">전체</div>` + ds.map((d) => `<div class="ht">${D.byDay[d].length}</div>`).join("") + `<div class="ht">${ds.reduce((s, d) => s + D.byDay[d].length, 0)}</div>`;
     el.innerHTML = h;
@@ -229,8 +233,38 @@
     btn.hidden = all.length <= 12;
     btn.textContent = st.heatAll ? "상위 12개 업종만 보기" : `업종 ${all.length}개 모두 보기`;
     $("#hxHeatSub").textContent = `최근 ${ds.length}거래일 · ${st.heatAll ? "전체 업종" : "신고가가 많은 상위 12개 업종"}`;
-    const wrap = el.parentElement; wrap.scrollLeft = wrap.scrollWidth;
+    const wrap = el.parentElement; if (!O) wrap.scrollLeft = wrap.scrollWidth;
     tips(el, ".hc");
+    const go = (x) => {
+      const ind = x.dataset.hind, day = x.dataset.hday || null, o = st.heatOpen;
+      st.heatOpen = o && o.ind === ind && o.day === day ? null : { ind, day };
+      const sl = wrap.scrollLeft; renderHeat(D); wrap.scrollLeft = sl;
+    };
+    $$("[data-hind]", el).forEach((x) => {
+      x.addEventListener("click", (e) => { if (!e.target.closest(".hx-hdet")) go(x); });
+      x.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(x); } });
+    });
+    $$(".hx-hdet [data-bid]", el).forEach((x) => x.addEventListener("click", (e) => { e.stopPropagation(); const b = window.__isBoard && window.__isBoard(); b && b.open(x.dataset.bid); }));
+  }
+  // 달력 아래 펼침: 고른 업종의 신고가 종목(기간 전체면 횟수 많은 순, 하루면 시가총액 순)
+  function heatStocks(D, ind, days) {
+    const agg = {};
+    days.forEach((d) => D.byDay[d].forEach((r) => { if (r.ind !== ind) return; const a = agg[r.code] ||= { n: 0, last: r }; a.n++; if (r.d >= a.last.d) a.last = r; }));
+    const list = Object.values(agg).sort((a, b) => b.n - a.n || b.last.mcap - a.last.mcap);
+    const one1 = days.length === 1;
+    const row = ({ n, last: x }) => {
+      const mm = memberOf(x.code), b = basketOf(x.code);
+      return `<tr><td>${nameBtn(x)}<span class="rsub">${esc(x.code)} · <a href="${tvUrl(x.code)}" target="_blank" rel="noopener noreferrer">차트</a>${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판</button>` : ""}</span></td>
+        ${one1 ? "" : `<td class="num"><b>${n}</b></td><td class="num">${md(x.d)}</td>`}
+        <td class="num">${x.run >= 2 ? `<span class="tagc run">🔁${x.run}일째</span>` : x.isNew ? "🆕" : "1일"}</td>
+        <td class="num"><span class="ret ${cls(x.chg)}">${pct(x.chg, 1)}</span></td>
+        <td class="num">${cap(x.mcap)}</td>
+        <td class="num">${mm && mm.ret20 != null ? `<span class="ret ${cls(mm.ret20)}">${pct(mm.ret20, 1)}</span>` : '<span class="muted">–</span>'}</td>
+        <td class="num">${mm && mm.rs_rating != null ? `<b class="rs-num ${mm.rs_rating >= 80 ? "hi" : mm.rs_rating < 40 ? "lo" : ""}">${mm.rs_rating}</b>` : '<span class="muted">–</span>'}</td></tr>`;
+    };
+    const title = one1 ? `${esc(ind)} · ${mdw(days[0])} 신고가 ${list.length}종목` : `${esc(ind)} · 최근 ${days.length}거래일 신고가 ${list.length}종목`;
+    return `<div class="hx-hdet"><div class="hx-hdet-t"><b>${title}</b><span class="muted">${one1 ? "업종 이름을 누르면 기간 전체" : "칸을 누르면 그날 종목만"} · 다시 누르면 접기</span></div>
+      <div class="hx-subw"><table class="hx-subt"><thead><tr><th>종목</th>${one1 ? "" : `<th class="num">기간 내 횟수</th><th class="num">마지막 신고가</th>`}<th class="num">연속</th><th class="num">그날 등락</th><th class="num">시가총액</th><th class="num">20일</th><th class="num">RS</th></tr></thead><tbody>${list.map(row).join("")}</tbody></table></div></div>`;
   }
 
   // ---------- 자주 나온 종목
