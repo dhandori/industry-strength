@@ -293,6 +293,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .rb-badge.ok { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); }
 .rb-badge.warn { background: var(--warn-bg); color: var(--warn-ink); }
 .rb-badge.bad { background: color-mix(in srgb, var(--up) 14%, transparent); color: var(--up); }
+.rb-badge.holiday { margin-left: 0; background: var(--accent-soft); color: var(--accent); }
 .rb-live { font-weight: 650; }
 .rb-live a { color: inherit; }
 .rb-live.busy { color: var(--accent); } .rb-live.ok { color: var(--good); } .rb-live.bad { color: var(--up); }

@@ -18,6 +18,8 @@
   const $ = (s) => document.querySelector(s);
   const box = $("#runbar");
   let status = null, etag = null, runs = null, pollT = null, onDone = () => {};
+  // 휴장일(scripts/market_calendar.py → data/calendar.json). 없으면(옛 자료·받기 실패) 평일 = 거래일로 본다.
+  let cal = null;
   let pending = null;
   try { const p = JSON.parse(localStorage.getItem(KEY) || "null"); if (p && Date.now() - p.at < MAX_WAIT) pending = p; } catch (e) {}
   const save = (p) => { pending = p; try { p ? localStorage.setItem(KEY, JSON.stringify(p)) : localStorage.removeItem(KEY); } catch (e) {} };
@@ -26,16 +28,22 @@
   const pad = (n) => String(n).padStart(2, "0");
   const ymd = (d) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
   const weekday = (d) => d.getUTCDay() >= 1 && d.getUTCDay() <= 5;
-  function prevWeekday(d) { const x = new Date(d); do { x.setUTCDate(x.getUTCDate() - 1); } while (!weekday(x)); return x; }
-  // 가장 최근에 장이 끝난 거래일(휴장일은 모름 → "휴장일이면 정상" 문구로 안내).
+  const closedOn = (market, day) => (cal?.markets?.[market]?.closed || []).find((x) => x.date === day) || null;
+  const isOpen = (market, d) => weekday(d) && !closedOn(market, ymd(d));
+  function prevOpen(market, d) { const x = new Date(d); do { x.setUTCDate(x.getUTCDate() - 1); } while (!isOpen(market, x)); return x; }
+  const nyNow = () => new Date(Date.now() + nyOffset() * 3600e3);
+  const localToday = (market) => ymd(market === "KR" ? kstNow() : nyNow());
+  const WD = ["일", "월", "화", "수", "목", "금", "토"];
+  const shortDay = (iso) => { const [y, m, d] = String(iso || "").split("-").map(Number); return y ? `${m}/${d}(${WD[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]})` : "–"; };
+  // 가장 최근에 장이 끝난 거래일. 휴장일 목록이 있으면 휴장일을 건너뛴다.
   function expected(market) {
     if (market === "KR") {
-      const k = kstNow(); const after = weekday(k) && (k.getUTCHours() * 60 + k.getUTCMinutes()) >= 15 * 60 + 52;
-      return ymd(after ? k : prevWeekday(k));
+      const k = kstNow(); const after = isOpen("KR", k) && (k.getUTCHours() * 60 + k.getUTCMinutes()) >= 15 * 60 + 52;
+      return ymd(after ? k : prevOpen("KR", k));
     }
-    const ny = new Date(Date.now() + nyOffset() * 3600e3);
-    const after = weekday(ny) && (ny.getUTCHours() * 60 + ny.getUTCMinutes()) >= 16 * 60 + 12;
-    return ymd(after ? ny : prevWeekday(ny));
+    const ny = nyNow();
+    const after = isOpen("US", ny) && (ny.getUTCHours() * 60 + ny.getUTCMinutes()) >= 16 * 60 + 12;
+    return ymd(after ? ny : prevOpen("US", ny));
   }
   function nyOffset() { // 미국 동부 서머타임: 3월 둘째 일요일 ~ 11월 첫째 일요일
     const now = new Date(), y = now.getUTCFullYear();
@@ -48,6 +56,9 @@
       const d = new Date(Date.UTC(k.getUTCFullYear(), k.getUTCMonth(), k.getUTCDate() + add));
       if (!weekday(d)) continue;
       for (const [h, m, who] of SLOTS) {
+        // 휴장일 수집은 건너뛴다. 한국은 그날, 미국(한국 아침)은 뉴욕 전날 장이 열렸는지 본다.
+        const trade = new Date(d); if (who === "미국") trade.setUTCDate(trade.getUTCDate() - 1);
+        if (!isOpen(who === "미국" ? "US" : "KR", trade)) continue;
         const t = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), h, m);
         if (t > k.getTime()) return { label: `${add === 0 ? "오늘" : add === 1 ? "내일" : `${d.getUTCMonth() + 1}/${d.getUTCDate()}`} ${pad(h)}:${pad(m)}`, who };
       }
@@ -55,6 +66,9 @@
     return null;
   }
 
+  async function readCalendar() {
+    try { const r = await fetch("data/calendar.json?v=" + ymd(kstNow()), { cache: "no-store" }); if (r.ok) { cal = await r.json(); paint(); } } catch (e) {}
+  }
   async function readStatus() {
     try {
       const r = await fetch("data/status.json?v=" + Date.now(), { cache: "no-store" });
@@ -103,9 +117,12 @@
     const stale = basis && basis < exp;
     const next = nextSlot();
     const live = flashMsg || run;
+    const off = closedOn(mk, localToday(mk));
+    const offText = off ? `${off.name === "주말" ? "주말 휴장" : `오늘 휴장 · ${off.name}`}${off.nextOpen ? ` · 다음 개장 ${shortDay(off.nextOpen)}` : ""}` : "";
     box.innerHTML = `
       <span class="rb-item"><b>${mk === "KR" ? "한국" : "미국"} 기준일</b> ${basis || "–"}
         <span class="rb-badge ${!st ? "" : st.ok === false ? "bad" : stale ? "warn" : "ok"}">${!st ? "확인 중" : st.ok === false ? "지난 수집 실패" : stale ? `${exp} 장 데이터 없음` : "최신"}</span></span>
+      ${off ? `<span class="rb-item"><span class="rb-badge holiday">${offText}</span></span>` : ""}
       <span class="rb-item"><b>마지막 갱신</b> ${status?.updated_at?.replace(" KST", "") || "–"}</span>
       ${next ? `<span class="rb-item"><b>다음 자동</b> ${next.label} (${next.who})</span>` : ""}
       ${live ? `<span class="rb-live ${live.cls}">${live.url ? `<a href="${live.url}" target="_blank" rel="noopener noreferrer">${live.text}</a>` : live.text}</span>` : ""}
@@ -113,7 +130,7 @@
         <button type="button" class="toggle rb-run${stale && !pending ? " primary" : ""}" id="runNow"${pending ? " disabled" : ""}>${pending ? "갱신 확인 중…" : "지금 갱신"}</button>
         <a class="rb-log" href="${WF_URL}" target="_blank" rel="noopener noreferrer">실행 기록</a>
       </span>
-      ${stale && !live ? `<span class="rb-hint">휴장일이면 정상이에요. 아니면 ‘지금 갱신’을 눌러 주세요.</span>` : ""}`;
+      ${stale && !live ? `<span class="rb-hint">${cal ? "휴장일을 빼고도 자료가 늦어요. ‘지금 갱신’을 눌러 주세요." : "휴장일이면 정상이에요. 아니면 ‘지금 갱신’을 눌러 주세요."}</span>` : ""}`;
     const btn = $("#runNow");
     if (btn) btn.onclick = () => {
       window.open(WF_URL, "_blank", "noopener");
@@ -123,7 +140,7 @@
   }
 
   window.__isRefresh = {
-    init(done) { onDone = done; readStatus().then(follow); setInterval(() => { if (document.visibilityState === "visible") readStatus(); }, 5 * 60000); },
+    init(done) { onDone = done; readCalendar(); readStatus().then(follow); setInterval(() => { if (document.visibilityState === "visible") readStatus(); }, 5 * 60000); },
     repaint: () => paint(),
   };
 })();
