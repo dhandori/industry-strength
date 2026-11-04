@@ -310,6 +310,8 @@
       const w = worstOf(rows);
       h += `<section class="mx-market mx-${mk.toLowerCase()}${i ? " mx-after" : ""}" aria-label="${title} 시장 지표">
         <div class="mx-market-h"><h2>${flag} ${title} 시장 지표</h2><span class="sub">지표 ${rows.length}개${w <= 5 ? ` · 가장 위험한 지표: ${LV[w][0]} ${LV[w][1]}` : ""}</span></div>`;
+      // 한국 공포탐욕지수(krfng.js): 한국 지표 맨 위 따로 묶음 — 바로가기 칩에 이름이 뜬다 (2026-11-04)
+      if (mk === "KR" && window.__krfng) { const kf = window.__krfng.card(); if (kf) h += `<div class="mx-group-h"><h3>한국 공포탐욕지수</h3><span class="sub">CNN 방식 한국판 · 재료 8가지 · 매일 장 마감 뒤</span></div>${kf}`; }
       SUBS.forEach((s) => {
         const sr = rows.filter((r) => sub(r) === s);
         if (!sr.length) return;

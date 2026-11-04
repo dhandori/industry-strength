@@ -17,6 +17,7 @@ on:
       - "scripts/macro_long.py"
       - "scripts/putcall.py"
       - "scripts/putcall_occ.py"
+      - "scripts/kr_fng.py"
       - ".github/workflows/us-econ.yml"
 
 permissions:
@@ -46,6 +47,9 @@ jobs:
       - name: 미국 전체 거래소 풋콜레이시오(OCC, 최근 2주)
         continue-on-error: true
         run: python scripts/putcall_occ.py
+      - name: 한국 공포탐욕지수(코스피 전 종목·ETF·VKOSPI·회사채·빚투)
+        continue-on-error: true
+        run: python scripts/kr_fng.py
       - name: TradingView 거래소 표(새 미국 종목만 확인)
         continue-on-error: true
         run: python scripts/tv_symbols.py
@@ -53,7 +57,7 @@ jobs:
         run: |
           git config user.name "industry-strength-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add docs/data/us_econ.json docs/data/kr_credit.json docs/data/tv_ex.json docs/data/macro_long.json docs/data/putcall.json docs/data/putcall_occ.json
+          git add docs/data/us_econ.json docs/data/kr_credit.json docs/data/tv_ex.json docs/data/macro_long.json docs/data/putcall.json docs/data/putcall_occ.json docs/data/kr_fng.json
           if git diff --cached --quiet; then
             echo "변경 없음"
           else
