@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="macro.css?v=20261104-kf3">
 <link rel="stylesheet" href="ai.css?v=20261102-c9">
 <link rel="stylesheet" href="pairs.css?v=20261026-p3">
-<link rel="stylesheet" href="supply.css?v=20261026-s1">
+<link rel="stylesheet" href="supply.css?v=20261106-s4">
 <link rel="stylesheet" href="sectorflow.css?v=20261026-sf2">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>window.LightweightCharts || document.write('<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
@@ -88,6 +88,16 @@
       <span class="hint">산업 이름을 누르면 상세가 열려요 · 신호마다 5개까지 먼저 보여 줘요</span>
     </div>
     <div id="signals" class="signals"></div>
+  </section>
+
+  <section class="card fr-card" id="frgnCard" aria-labelledby="fr-h" hidden>
+    <div class="card-head wrap">
+      <h2 id="fr-h">외국인·기관 보유 변화 <span class="sub" id="frSub"></span></h2>
+    </div>
+    <div class="fr-ctrl" id="frCtrl"></div>
+    <div id="frSum" class="fr-sum"></div>
+    <div id="frBody" class="fr-body"></div>
+    <p class="foot-note" id="frNote"></p>
   </section>
 
   <section class="card" aria-labelledby="ex-h">
@@ -462,8 +472,8 @@
 <script src="refresh.js?v=20261027-t1"></script>
 <script src="flow.js?v=20261030-mv3"></script>
 <script src="stock.js?v=20261028-r2"></script>
-<script src="supply.js?v=20261026-s1"></script>
-<script src="app.js?v=20261103-s3"></script>
+<script src="supply.js?v=20261106-s3"></script>
+<script src="app.js?v=20261106-s4"></script>
 <script src="sectorflow.js?v=20261026-sf2"></script>
 <script src="highs.js?v=20261103-h3"></script>
 <script src="econ.js?v=20261031-l1"></script>

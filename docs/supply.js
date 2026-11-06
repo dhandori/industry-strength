@@ -217,8 +217,59 @@
 
   const tableNote = (d) => d && d._sup ? ` <b>수급</b> 칸의 큰 숫자는 최근 20거래일 외국인+기관 순매수가 시가총액의 몇 %인지(구성 종목 평균), 작은 글씨는 그 기간에 외국인+기관이 순매수한 종목 비율이에요. 🔥⚠️👀❄️ 판정은 '읽는 법'의 수급 설명을 보세요. 수급 기준일 ${esc(d._sup.basis_date)}.` : "";
 
+  // ---------- 외국인·기관 보유 변화 상위 (2026-11-06 사용자: 금액보다 시총 대비·보유비중)
+  // 둘 다 시총 대비 순매수(%)로 줄 세우고, 외국인은 보유비중과 그 변화를 옆에 둔다(장외 이동이면 둘이 어긋나 ⚑ 표시).
+  const fr = { who: "foreign", mkt: "KOSPI", n: "1" };
+  const PERIOD = { "1": "하루", "5": "5일", "20": "20일" };
+  const sgn2 = (v, d = 2) => v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(d);
+  function renderForeign(d) {
+    const card = document.getElementById("frgnCard");
+    if (!card) return;
+    const R = d && d.market === "KR" && d._sup && d._sup.rank;
+    card.hidden = !(R && R.markets);
+    if (card.hidden) return;
+    const blk = (R.markets[fr.mkt] || {})[fr.n];
+    const btns = (key, opts) => `<div class="seg" role="group">${opts.map(([v, t]) => `<button type="button" data-fr="${key}" data-v="${v}" aria-pressed="${fr[key] === v}">${t}</button>`).join("")}</div>`;
+    document.getElementById("frCtrl").innerHTML =
+      btns("who", [["foreign", "외국인"], ["inst", "기관"]]) + btns("mkt", [["KOSPI", "코스피"], ["KOSDAQ", "코스닥"]]) + btns("n", [["1", "하루"], ["5", "5일"], ["20", "20일"]]);
+    const F = fr.who === "foreign";
+    document.getElementById("frSub").textContent = blk ? `${md(blk.from)} 종가 → ${md(R.asof)} 종가 · 시총 대비 순매수 순` : "";
+    if (!blk) { document.getElementById("frSum").innerHTML = ""; document.getElementById("frBody").innerHTML = `<p class="rsub">이 기간 자료가 아직 쌓이지 않았어요.</p>`; return; }
+    const sm = blk.summary, who = F ? "외국인" : "기관";
+    const tot = F ? sm.f : sm.i, nb = F ? sm.fBuy : sm.iBuy, ns = F ? sm.fSell : sm.iSell;
+    document.getElementById("frSum").innerHTML = `<div class="fr-total"><em>${who} ${fr.mkt === "KOSPI" ? "코스피" : "코스닥"} ${PERIOD[fr.n]} 순매수</em><b class="ret ${cls(tot)}">${won(tot)}</b></div>
+      <div class="fr-counts">대상 ${sm.n}종목 중 <b class="ret up">순매수 ${nb}</b> · <b class="ret down">순매도 ${ns}</b><br><small>순위는 시총 ${R.minCap.toLocaleString("ko-KR")}억 원 이상 ${sm.ranked}종목만</small></div>`;
+    const lists = F ? blk.foreign : blk.inst;
+    const key = (r) => F ? r.fp : r.ip;
+    const max = Math.max(1e-9, ...[...lists.buy, ...lists.sell].map((r) => Math.abs(key(r) ?? 0)));
+    const one = (r, k, side) => {
+      const v = key(r), w = Math.min(100, Math.abs(v ?? 0) / max * 100);
+      const nm = `<button class="lnk sk-name" type="button" data-stock="${esc(r.code)}" data-sname="${esc(r.name)}" data-smarket="KR" title="${esc(r.name)} 종목 상세">${esc(r.name)}</button>`;
+      const sub = [r.ind, r.mcap ? (r.mcap >= 10000 ? `시총 ${(r.mcap / 10000).toFixed(1)}조` : `시총 ${Math.round(r.mcap).toLocaleString("ko-KR")}억`) : ""].filter(Boolean).join(" · ");
+      const holdTxt = F && r.hold != null ? `<span class="fr-hold">보유 <b>${r.hold.toFixed(1)}%</b><small class="ret ${cls(r.dh)}">${sgn2(r.dh)}%p${r.off ? ` <span class="fr-off" title="보유비중 변화가 거래소 순매수와 어긋나요. 블록딜·지분 매각 같은 장외 이동이 있었을 수 있어요.">⚑장외</span>` : ""}</small></span>` : `<span class="fr-hold"></span>`;
+      return `<li class="fr-row"><span class="fr-rk">${k + 1}</span>
+        <span class="fr-nm">${nm}${r.blk ? ` <span class="fr-blk" title="이 기간에 기타법인과 큰 덩어리를 주고받은 날(블록딜·지분 이동)이 있어요. 순매수 금액에 그 거래가 섞여 있을 수 있어요.">⚑블록</span>` : ""}<small>${esc(sub)}</small></span>
+        <span class="fr-bar ${side}"><i style="width:${w.toFixed(1)}%"></i></span>
+        <b class="fr-v ret ${cls(v)}">${sgn2(v)}%</b>
+        ${holdTxt}
+        <span class="fr-amt"><b class="ret ${cls(F ? r.f : r.i)}">${won(F ? r.f : r.i)}</b><small class="ret ${cls(r.chg)}">${pct(r.chg, 1)}</small></span></li>`;
+    };
+    const col = (title, arr, side) => `<div class="fr-col"><h3 class="fr-h ${side}">${title}</h3><ol class="fr-list">${arr.map((r, k) => one(r, k, side)).join("") || `<li class="rsub">없음</li>`}</ol></div>`;
+    document.getElementById("frBody").innerHTML = col(`${who}가 시총 대비 많이 산 10`, lists.buy, "up") + col(`${who}가 시총 대비 많이 판 10`, lists.sell, "down");
+    document.getElementById("frNote").innerHTML = F
+      ? `큰 % = 기간 순매수 ÷ 시가총액(시총 대비 순매수)이라 대형주가 금액만으로 1등이 되지 않아요. 외국인이 산 주식 수 ÷ 전체 주식 수가 곧 보유비중이 늘어난 몫이라 원래 보유비중 변화(옆 칸 %p)와 같아야 하는데, 블록딜·지분 매각 같은 장외 이동은 보유비중에만 잡혀 어긋나면 ⚑장외로 표시했어요. 보유비중은 네이버 외국인 보유율이에요. 금액은 순매수 수량 × 그날 종가로 계산한 추정치(억 원), 그 아래 작은 %는 같은 기간 주가 등락률이에요. 대상: 코스피 전체와 코스닥 시총 상위 300종목(보통주). 이름을 누르면 종목 상세가 열려요.`
+      : `기관은 보유비중이 공개되지 않아 순매수 금액 ÷ 시가총액(%)으로 줄 세웠어요. 금액은 순매수 수량 × 그날 종가로 계산한 추정치(억 원), 그 아래 작은 %는 같은 기간 주가 등락률이에요. 대상: 코스피 전체와 코스닥 시총 상위 300종목(보통주).`;
+  }
+  document.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-fr]");
+    if (!b) return;
+    fr[b.dataset.fr] = b.dataset.v;
+    renderForeign(window.__supplyLast);
+  });
+
   window.__supply = {
     attach, judge, cell, card, stockCell, memberHead, memberCols, blockMark, signalRow, drawer, chart, tableNote,
+    renderForeign(d) { window.__supplyLast = d; renderForeign(d); },
     reload() { st.data = null; st.stamp = Date.now(); },
   };
 })();

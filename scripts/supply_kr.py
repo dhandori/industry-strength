@@ -33,6 +33,12 @@ KEEP_SESSIONS = 130          # 저장해 두는 거래일 수(약 6개월)
 CHART_SESSIONS = 120         # 상세 창 누적 그래프 길이
 WINDOWS = (1, 5, 20, 60)
 PROBE = "005930"
+# 외국인 보유비중 순위용 대상(2026-11-06 사용자): 코스피 전체 + 코스닥 시가총액 상위 300(보통주, 거래 중).
+# 산업 바구니 종목은 그대로 두고 여기에 더한다. 목록은 매일 네이버 시가총액 순위에서 받고, 못 받으면 지난 목록을 쓴다.
+UNIVERSE = ROOT / "data/supply/KR_universe.json"
+KOSDAQ_TOP = 300
+RANK_MIN_CAP = 3000          # 억 원. 이보다 작으면 몇 주만 사도 비중이 크게 튀어 순위에서 뺀다
+RANK_N = 10
 FIELDS = ["date", "code", "close", "f", "i", "p", "hold"]
 
 
@@ -95,6 +101,51 @@ def save_store(rows: dict):
             w.writerow([r["date"], r["code"]] + ["" if r[k] is None else (f"{r[k]:g}") for k in FIELDS[2:]])
 
 
+def market_universe() -> dict[str, dict]:
+    """{코드: {code, name, market, mcap_eok}} — 코스피 전체, 코스닥 시총 상위 KOSDAQ_TOP."""
+    import requests
+
+    out = {}
+    try:
+        for market, limit in (("KOSPI", None), ("KOSDAQ", KOSDAQ_TOP)):
+            n = 0
+            for page in range(1, 40):
+                r = requests.get(f"https://m.stock.naver.com/api/stocks/marketValue/{market}",
+                                 params={"page": page, "pageSize": 100}, headers=UA, timeout=15)
+                stocks = (r.json() or {}).get("stocks") if r.status_code == 200 else None
+                if not stocks:
+                    break
+                for x in stocks:
+                    code, name = str(x.get("itemCode") or ""), str(x.get("stockName") or "").strip()
+                    halted = str(((x.get("tradeStopType") or {}).get("name")) or "TRADING") != "TRADING"
+                    if halted or str(x.get("stockEndType") or "stock") != "stock" or not re.fullmatch(r"\d{5}[0-9A-Z]", code):
+                        continue
+                    if not code.endswith("0"):      # 우선주(끝자리 5·7·9·K 등)는 뺀다
+                        continue
+                    try:
+                        cap = int(x.get("marketValueRaw")) / 1e8
+                    except (TypeError, ValueError):
+                        continue
+                    out[code] = {"code": code, "name": name, "market": market, "mcap_eok": round(cap)}
+                    n += 1
+                    if limit and n >= limit:
+                        break
+                if limit and n >= limit:
+                    break
+                time.sleep(0.3)
+        if len(out) >= 500:
+            UNIVERSE.parent.mkdir(parents=True, exist_ok=True)
+            UNIVERSE.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+            return out
+        log(f"시가총액 목록이 너무 적음({len(out)}) · 지난 목록 사용")
+    except Exception as e:  # noqa: BLE001
+        log("시가총액 목록 실패 · 지난 목록 사용:", str(e)[:120])
+    try:
+        return json.loads(UNIVERSE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
 def members() -> tuple[list[dict], dict[str, dict]]:
     cfg = json.loads((ROOT / "config/baskets.json").read_text(encoding="utf-8"))["markets"]["KR"]
     stocks = {}
@@ -120,9 +171,13 @@ def collect(stocks: dict, rows: dict) -> tuple[int, str]:
     # 이력이 충분하면 최근 10거래일만, 처음이면 60거래일을 받는다.
     size = 60 if len(have) < 20 or "--full" in sys.argv else 10
 
+    count = {}
+    for d, c in rows:
+        count[c] = count.get(c, 0) + 1
+
     def one(code):
         time.sleep(random.uniform(0.15, 0.45))   # 동시에 2개씩, 사이사이 쉬면서
-        return code, fetch(code, size)
+        return code, fetch(code, 60 if count.get(code, 0) < 20 else size)   # 새로 넣은 종목은 60거래일
 
     got = 0
     with ThreadPoolExecutor(max_workers=2) as ex:
@@ -136,7 +191,7 @@ def collect(stocks: dict, rows: dict) -> tuple[int, str]:
     return got, f"{got}/{len(stocks)}종목 받음(최근 {size}거래일)"
 
 
-def build(items: list[dict], stocks: dict, rows: dict, msg: str, got: int) -> dict:
+def build(items: list[dict], stocks: dict, rows: dict, msg: str, got: int, basket: set | None = None) -> dict:
     dates = sorted({d for d, _ in rows})
     by_code: dict[str, dict[str, dict]] = {}
     for (d, c), r in rows.items():
@@ -237,16 +292,90 @@ def build(items: list[dict], stocks: dict, rows: dict, msg: str, got: int) -> di
         for k in ("f", "i", "p"):
             vals = [s[f"{k}{n}"] for s in S.values() if s.get(f"{k}{n}") is not None]
             tot[f"{k}{n}"] = round(sum(vals), 1) if vals else None
+    rank = foreign_rank(stocks, S, by_code, dates, items)
+    basket = basket if basket is not None else set(S)
     now = datetime.now(KST)
     return {"source": "네이버 증권 투자자별 매매동향(순매수 수량 × 종가 추정)",
             "updated_at": now.strftime("%Y-%m-%d %H:%M KST"),
             "basis_date": dates[-1] if dates else None, "sessions": len(dates),
             "n_stocks": len(S), "n_target": len(stocks), "last_fetch": msg, "last_fetch_count": got,
-            "dates": chart_dates, "total": tot, "industries": I, "stocks": S}
+            "dates": chart_dates, "total": tot, "industries": I,
+            "stocks": {c: v for c, v in S.items() if c in basket}, "rank": rank}
+
+
+def foreign_rank(stocks: dict, S: dict, by_code: dict, dates: list[str], items: list[dict]) -> dict:
+    """외국인 보유비중 변화 순위(2026-11-06 사용자: 금액보다 시총 대비·보유비중이 중요).
+
+    외국인이 산 주식 수 ÷ 전체 주식 수 = 보유비중이 늘어난 몫이라, '시총 대비 순매수'와 '보유비중 변화'는 원래 같은 숫자다.
+    다만 장외 이동(블록딜·지분 매각 등)은 거래소 순매수에 안 잡히고 보유율에만 잡혀 둘이 어긋날 때가 있다(제일기획 5일:
+    순매도인데 보유율 +2.2%p). 그래서 순위는 거래소 순매수 기준인 '시총 대비 순매수(%)'로 매기고, 보유비중과 그 변화를 옆에 보여 주며,
+    방향이 반대이거나 크게 벌어지면 'off'(장외 이동 가능)로 표시한다.
+    시장(코스피·코스닥)·기간(1·5·20거래일)마다 늘린 상위 10, 줄인 상위 10. 시총 RANK_MIN_CAP 억 원 미만은 순위에서 뺀다."""
+    if not dates:
+        return {}
+    last = dates[-1]
+    ind_of = {}
+    for it in items:
+        for m in it["members"]:
+            ind_of.setdefault(m["code"], it["name"])
+    out = {"asof": last, "minCap": RANK_MIN_CAP, "markets": {}}
+    for market in ("KOSPI", "KOSDAQ"):
+        codes = [c for c, m in stocks.items() if m.get("market") == market and c in S and S[c]["asof"] == last]
+        blk_mkt = {}
+        for n in (1, 5, 20):
+            if len(dates) <= n:
+                continue
+            ago = dates[-1 - n]
+            rows = []
+            for c in codes:
+                h, s = by_code.get(c) or {}, S[c]
+                now, before = h.get(last), h.get(ago)
+                if not now or not before:
+                    continue
+                f, i = s.get(f"f{n}"), s.get(f"i{n}")
+                hold, hold0 = now.get("hold"), before.get("hold")
+                mcap = s.get("mcap")
+                chg = (now["close"] / before["close"] - 1) * 100 if before.get("close") else None
+                rows.append({"code": c, "name": stocks[c].get("name"), "ind": ind_of.get(c), "mcap": mcap,
+                             "hold": hold, "hold0": hold0,
+                             "dh": round(hold - hold0, 2) if hold is not None and hold0 is not None else None,
+                             "f": f, "i": i,
+                             "fp": round(f / mcap * 100, 3) if f is not None and mcap else None,
+                             "ip": round(i / mcap * 100, 3) if i is not None and mcap else None,
+                             "chg": round(chg, 2) if chg is not None else None, "blk": bool(s.get("blk") and any(d > ago for d in s["blk"]))})
+                r = rows[-1]
+                # 추정 금액(수량×종가)과 보유율은 원래 조금씩 다르다. 방향이 반대이거나 크게(0.5%p와 절반 이상) 벌어질 때만 표시.
+                r["off"] = bool(r["dh"] is not None and r["fp"] is not None
+                                and ((abs(r["dh"]) > 0.2 and r["dh"] * r["fp"] < 0)
+                                     or abs(r["dh"] - r["fp"]) > max(0.5, 0.5 * max(abs(r["dh"]), abs(r["fp"])))))
+            ok = [r for r in rows if (r["mcap"] or 0) >= RANK_MIN_CAP]
+            fr = [r for r in ok if r["fp"] is not None]
+            ir = [r for r in ok if r["ip"] is not None]
+            fsum = [r["f"] for r in rows if r["f"] is not None]
+            isum = [r["i"] for r in rows if r["i"] is not None]
+            blk_mkt[str(n)] = {
+                "from": ago,
+                "summary": {"n": len(rows), "f": round(sum(fsum), 1), "i": round(sum(isum), 1),
+                            "fBuy": sum(1 for v in fsum if v > 0), "fSell": sum(1 for v in fsum if v < 0),
+                            "iBuy": sum(1 for v in isum if v > 0), "iSell": sum(1 for v in isum if v < 0),
+                            "ranked": len(ok)},
+                "foreign": {"buy": sorted(fr, key=lambda r: -r["fp"])[:RANK_N],
+                            "sell": sorted(fr, key=lambda r: r["fp"])[:RANK_N]},
+                "inst": {"buy": sorted(ir, key=lambda r: -r["ip"])[:RANK_N],
+                         "sell": sorted(ir, key=lambda r: r["ip"])[:RANK_N]},
+            }
+        out["markets"][market] = blk_mkt
+    return out
 
 
 def main():
     items, stocks = members()
+    basket = set(stocks)
+    for code, u in market_universe().items():   # 보유비중 순위 대상(바구니 종목은 그대로, 나머지를 더함)
+        if code in stocks:
+            stocks[code].setdefault("market", u["market"])
+        else:
+            stocks[code] = u
     rows = load_store()
     try:
         got, msg = collect(stocks, rows)
@@ -259,7 +388,7 @@ def main():
         log("저장된 수급 자료가 없어 결과를 만들지 않음")
         return
     if got or not OUT.exists() or "--build" in sys.argv:
-        out = build(items, stocks, rows, msg, got)
+        out = build(items, stocks, rows, msg, got, basket)
         OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         log("완료", out["basis_date"], "종목", out["n_stocks"], "산업", len(out["industries"]), "거래일", out["sessions"])
 

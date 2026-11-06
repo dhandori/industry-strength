@@ -83,7 +83,7 @@ jobs:
       - name: 한국 수급 수집
         if: always()
         continue-on-error: true
-        timeout-minutes: 12
+        timeout-minutes: 25   # 2026-11-06 코스피 전체+코스닥 시총 상위 300으로 넓혀 약 1,200종목
         run: python scripts/supply_kr.py
 
       - name: 결과 저장 (실패해도 상태 기록)

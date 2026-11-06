@@ -173,7 +173,7 @@
     $("#groupSel").innerHTML = groups.map((g) => `<option${g === state.group ? " selected" : ""}>${esc(g)}</option>`).join("");
     if (!groups.includes(state.rsstGroup)) state.rsstGroup = "전체";
     $("#rsstGroup").innerHTML = groups.map((g) => `<option${g === state.rsstGroup ? " selected" : ""}>${esc(g)}</option>`).join("");
-    renderTiles(d); renderSectors(d); window.__flow && window.__flow.render(d); renderSignals(d); renderExplore(d); renderTable(); renderRsStocks(d); renderHeat(d); renderGroups(d); renderBreadth(d);
+    renderTiles(d); renderSectors(d); window.__flow && window.__flow.render(d); renderSignals(d); window.__supply && window.__supply.renderForeign(d); renderExplore(d); renderTable(); renderRsStocks(d); renderHeat(d); renderGroups(d); renderBreadth(d);
   }
 
   // ---------- 섹터 워치: 큰 업종 11개 당일 등락. 칸을 누르면 순위표를 그 업종 소속으로 거른다.
