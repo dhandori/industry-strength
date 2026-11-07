@@ -7,9 +7,9 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261103-h3">
+<link rel="stylesheet" href="style.css?v=20261107-o1">
 <link rel="stylesheet" href="macro.css?v=20261104-kf3">
-<link rel="stylesheet" href="ai.css?v=20261102-c9">
+<link rel="stylesheet" href="ai.css?v=20261107-o1">
 <link rel="stylesheet" href="pairs.css?v=20261026-p3">
 <link rel="stylesheet" href="supply.css?v=20261106-s4">
 <link rel="stylesheet" href="sectorflow.css?v=20261026-sf2">
@@ -49,6 +49,14 @@
 
   <section class="tiles" id="tiles" aria-label="시장 상태"></section>
 
+  <section class="card" aria-labelledby="sig-h">
+    <div class="card-head">
+      <h2 id="sig-h">오늘의 신호</h2>
+      <span class="hint">산업 이름을 누르면 상세가 열려요 · 신호마다 5개까지 먼저 보여 줘요</span>
+    </div>
+    <div id="signals" class="signals"></div>
+  </section>
+
   <section class="card sector-card" id="sectorCard" aria-labelledby="sec-h" hidden>
     <div class="card-head wrap">
       <h2 id="sec-h">섹터 워치 <span class="sub" id="secSub"></span></h2>
@@ -80,44 +88,6 @@
     </div>
     <div id="flow" class="flow"></div>
     <p class="foot-note"><b>강도</b>는 한 분류에 속한 세부 산업들의 종합 순위를 0점(꼴찌)~100점(1위)으로 바꿔 평균한 값이에요. 들쭉날쭉함을 줄이려고 고른 기간에 맞춰 이동평균을 냈어요(5일은 그대로, 20일은 5일, 60일은 10일, 200일은 20일 평균). 지도에서 <b>오른쪽 위</b>는 이미 강한데 더 강해지는 분류이고, <b>왼쪽 위</b>는 약했지만 힘이 붙고 있는 분류예요. ‘큰 분류 흐름’의 선은 모든 분류를 고른 기간 전 강도에서 똑같이 출발시켜, 그 뒤로 얼마나 오르내렸는지 비교할 수 있게 그렸어요. 이름 아래 작은 <b>20일·60일·200일</b> 숫자는 고른 기간과 관계없이 늘 함께 보여 주는 다른 기간의 변화예요. 짧은 흐름과 긴 흐름이 같은 방향인지 확인할 때 쓰세요. 순위 이동 그림의 <b>빈 점</b>은 기간 시작 때 자리, <b>찬 점</b>은 지금 자리예요. <b>추세↑</b>는 가격도 오르고 있는 산업, <b>가격↓</b>는 순위만 올랐고 가격 추세는 아직 약한 산업이에요. 분류를 누르면 아래 순위표가 그 분류만 보이도록 걸러지고, 세부 산업을 누르면 상세 화면이 열려요.</p>
-  </section>
-
-  <section class="card" aria-labelledby="sig-h">
-    <div class="card-head">
-      <h2 id="sig-h">오늘의 신호</h2>
-      <span class="hint">산업 이름을 누르면 상세가 열려요 · 신호마다 5개까지 먼저 보여 줘요</span>
-    </div>
-    <div id="signals" class="signals"></div>
-  </section>
-
-  <section class="card fr-card" id="frgnCard" aria-labelledby="fr-h" hidden>
-    <div class="card-head wrap">
-      <h2 id="fr-h">외국인·기관 보유 변화 <span class="sub" id="frSub"></span></h2>
-    </div>
-    <div class="fr-ctrl" id="frCtrl"></div>
-    <div id="frSum" class="fr-sum"></div>
-    <div id="frBody" class="fr-body"></div>
-    <p class="foot-note" id="frNote"></p>
-  </section>
-
-  <section class="card" aria-labelledby="ex-h">
-    <div class="card-head wrap">
-      <h2 id="ex-h">업종 탐색 <span class="sub" id="exSub"></span></h2>
-      <div class="filters">
-      <div class="seg small" id="exSrc" aria-label="분류 기준">
-        <button data-src="board" aria-pressed="true">강도판 분류</button>
-        <button data-src="naver" aria-pressed="false">네이버 업종</button>
-      </div>
-      <div class="seg small" id="exSeg" aria-label="기간">
-        <button data-k="chg1" aria-pressed="true">1일</button>
-        <button data-k="ret5" aria-pressed="false">5일</button>
-        <button data-k="ret20" aria-pressed="false">20일</button>
-        <button data-k="ret60" aria-pressed="false">60일</button>
-      </div>
-      </div>
-    </div>
-    <div id="explore" class="explore"></div>
-    <p class="foot-note" id="exNote"></p>
   </section>
 
   <section class="card" aria-labelledby="rank-h">
@@ -168,6 +138,26 @@
     <p class="foot-note" id="tableNote"></p>
   </section>
 
+  <section class="card" aria-labelledby="heat-h">
+    <div class="card-head wrap">
+      <h2 id="heat-h">순위 흐름 <span class="sub">최근 40거래일 종합 순위 · 처음에는 상위 25%만 보여 줘요</span></h2>
+      <div class="seg small" id="heatSort" aria-label="줄 순서">
+        <button data-hs="rank" aria-pressed="true">지금 순위 순</button>
+        <button data-hs="rise" aria-pressed="false">최근 상승 순</button>
+      </div>
+      <div class="heat-legend">
+        <span><i style="background:var(--h1)"></i>상위 10%</span>
+        <span><i style="background:var(--h2)"></i>상위 25%</span>
+        <span><i style="background:var(--h3)"></i>상위 절반</span>
+        <span><i style="background:var(--h4);outline:1px solid var(--line)"></i>하위 절반</span>
+        <span><i style="background:var(--h5)"></i>하위 25%</span>
+      </div>
+    </div>
+    <div class="heat-wrap"><div id="heat" class="heat"></div></div>
+    <button class="toggle" id="heatMore" style="margin-top:10px" hidden></button>
+    <p class="foot-note">빨간 칸이 길게 이어질수록 강세가 꾸준한 산업이에요. 회색·파랑에서 빨강으로 바뀌는 지점이 강세가 <b>시작된 날</b>이에요. ‘최근 상승 순’은 표시된 기간의 첫날보다 순위가 많이 오른 산업부터 보여 줘요(이름 앞 ▲숫자가 오른 계단 수). ‘지금 순위 순’에서는 점선 위쪽이 현재 상위 25%예요. 맨 오른쪽 테두리 칸이 가장 최근 거래일이에요.</p>
+  </section>
+
   <section class="card" aria-labelledby="rsst-h">
     <div class="card-head wrap">
       <h2 id="rsst-h">RS 강한 종목 <span class="sub" id="rsstSub"></span></h2>
@@ -210,24 +200,34 @@
     <p class="foot-note" id="rsstNote"></p>
   </section>
 
-  <section class="card" aria-labelledby="heat-h">
+  <section class="card" aria-labelledby="ex-h">
     <div class="card-head wrap">
-      <h2 id="heat-h">순위 흐름 <span class="sub">최근 40거래일 종합 순위 · 처음에는 상위 25%만 보여 줘요</span></h2>
-      <div class="seg small" id="heatSort" aria-label="줄 순서">
-        <button data-hs="rank" aria-pressed="true">지금 순위 순</button>
-        <button data-hs="rise" aria-pressed="false">최근 상승 순</button>
+      <h2 id="ex-h">업종 탐색 <span class="sub" id="exSub"></span></h2>
+      <div class="filters">
+      <div class="seg small" id="exSrc" aria-label="분류 기준">
+        <button data-src="board" aria-pressed="true">강도판 분류</button>
+        <button data-src="naver" aria-pressed="false">네이버 업종</button>
       </div>
-      <div class="heat-legend">
-        <span><i style="background:var(--h1)"></i>상위 10%</span>
-        <span><i style="background:var(--h2)"></i>상위 25%</span>
-        <span><i style="background:var(--h3)"></i>상위 절반</span>
-        <span><i style="background:var(--h4);outline:1px solid var(--line)"></i>하위 절반</span>
-        <span><i style="background:var(--h5)"></i>하위 25%</span>
+      <div class="seg small" id="exSeg" aria-label="기간">
+        <button data-k="chg1" aria-pressed="true">1일</button>
+        <button data-k="ret5" aria-pressed="false">5일</button>
+        <button data-k="ret20" aria-pressed="false">20일</button>
+        <button data-k="ret60" aria-pressed="false">60일</button>
+      </div>
       </div>
     </div>
-    <div class="heat-wrap"><div id="heat" class="heat"></div></div>
-    <button class="toggle" id="heatMore" style="margin-top:10px" hidden></button>
-    <p class="foot-note">빨간 칸이 길게 이어질수록 강세가 꾸준한 산업이에요. 회색·파랑에서 빨강으로 바뀌는 지점이 강세가 <b>시작된 날</b>이에요. ‘최근 상승 순’은 표시된 기간의 첫날보다 순위가 많이 오른 산업부터 보여 줘요(이름 앞 ▲숫자가 오른 계단 수). ‘지금 순위 순’에서는 점선 위쪽이 현재 상위 25%예요. 맨 오른쪽 테두리 칸이 가장 최근 거래일이에요.</p>
+    <div id="explore" class="explore"></div>
+    <p class="foot-note" id="exNote"></p>
+  </section>
+
+  <section class="card fr-card" id="frgnCard" aria-labelledby="fr-h" hidden>
+    <div class="card-head wrap">
+      <h2 id="fr-h">외국인·기관 보유 변화 <span class="sub" id="frSub"></span></h2>
+    </div>
+    <div class="fr-ctrl" id="frCtrl"></div>
+    <div id="frSum" class="fr-sum"></div>
+    <div id="frBody" class="fr-body"></div>
+    <p class="foot-note" id="frNote"></p>
   </section>
 
   <div class="two-col">
@@ -309,6 +309,23 @@
     <p class="foot-note">막대가 5일 평균선보다 높으면 신고가가 늘어나는 중이고, 낮으면 줄어드는 중이에요.</p>
   </section>
 
+  <section class="card" aria-labelledby="hxd-h">
+    <div class="card-head wrap">
+      <h2 id="hxd-h">날짜별 신고가 종목</h2>
+      <div class="filters">
+        <div class="seg small" id="hxMode" aria-label="보기 방식">
+          <button data-mode="group" aria-pressed="true">업종별 묶음</button>
+          <button data-mode="table" aria-pressed="false">표로 보기</button>
+        </div>
+        <input id="hxSearch" class="hx-search" type="search" placeholder="종목·업종 찾기" aria-label="종목·업종 찾기">
+      </div>
+    </div>
+    <div class="dchips" id="hxDays"></div>
+    <p class="hx-daysum" id="hxDaySum"></p>
+    <div id="hxList"></div>
+    <p class="foot-note">🔁 N일째는 N일 연속 신고가라는 뜻이고, 🆕는 기록 기간 안에서 처음 신고가를 낸 종목이에요. 종목 이름을 누르면 TradingView 차트가 열려요. ‘강도판: ○○’을 누르면 산업 강도 탭에서 그 산업의 상세 화면이 열려요.</p>
+  </section>
+
   <section class="card" aria-labelledby="hxs-h">
     <div class="card-head wrap">
       <h2 id="hxs-h">최근 신고가가 자주 나온 업종 <span class="sub">업종별 52주 신고가 횟수 · 최근 5거래일과 그 전 5거래일 비교 · 열 제목을 누르면 정렬돼요</span></h2>
@@ -338,23 +355,6 @@
     </div>
     <div class="hx-wrap" id="hxFreq"></div>
     <button class="toggle" id="hxFreqMore" style="margin-top:10px" hidden></button>
-  </section>
-
-  <section class="card" aria-labelledby="hxd-h">
-    <div class="card-head wrap">
-      <h2 id="hxd-h">날짜별 신고가 종목</h2>
-      <div class="filters">
-        <div class="seg small" id="hxMode" aria-label="보기 방식">
-          <button data-mode="group" aria-pressed="true">업종별 묶음</button>
-          <button data-mode="table" aria-pressed="false">표로 보기</button>
-        </div>
-        <input id="hxSearch" class="hx-search" type="search" placeholder="종목·업종 찾기" aria-label="종목·업종 찾기">
-      </div>
-    </div>
-    <div class="dchips" id="hxDays"></div>
-    <p class="hx-daysum" id="hxDaySum"></p>
-    <div id="hxList"></div>
-    <p class="foot-note">🔁 N일째는 N일 연속 신고가라는 뜻이고, 🆕는 기록 기간 안에서 처음 신고가를 낸 종목이에요. 종목 이름을 누르면 TradingView 차트가 열려요. ‘강도판: ○○’을 누르면 산업 강도 탭에서 그 산업의 상세 화면이 열려요.</p>
   </section>
 
   <section class="card guide" aria-labelledby="hxg-h">
@@ -404,7 +404,7 @@
 
 <main id="viewAi" hidden>
   <p class="ai-meta" id="aiMeta">불러오는 중…</p>
-  <div id="aiBody" style="display:grid;gap:14px"></div>
+  <div id="aiBody"></div>
   <div id="infraBody" style="display:grid;gap:14px;margin-top:14px"></div>
   <div id="chipBody" style="display:grid;gap:14px;margin-top:14px"></div>
 </main>
@@ -480,7 +480,7 @@
 <script src="putcall.js?v=20261104-pc4"></script>
 <script src="krfng.js?v=20261104-kf1"></script>
 <script src="macro.js?v=20261104-kf1"></script>
-<script src="ai.js?v=20261104-sum1"></script>
+<script src="ai.js?v=20261107-o1"></script>
 <script src="infra.js?v=20261103-in1"></script>
 <script src="chips.js?v=20261102-c4"></script>
 <script src="pairs.js?v=20261026-p2"></script>

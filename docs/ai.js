@@ -407,7 +407,7 @@
       const hist = (fa.history || []).map((h) => `${h.form} ${ymd(h.filed)}`).join(" → ");
       const pend = (fa.pending || []).map((p) => `<li><b>${esc(p.what)}</b> ${esc(p.note)}</li>`).join("");
       const srcs = (fa.sources || []).map((x) => `<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.t)}</a>`).join(", ");
-      fHtml = `<section class="card">
+      fHtml = `<section class="card ai-o-file">
         <div class="card-head wrap"><h2>Anthropic 실제 분기 매출 <span class="sub">${esc(fa.doc)} · 감사받은 공시 숫자</span></h2></div>
         <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>분기 매출(공시)</span><span><i class="ai-hatch"></i>추정(*)</span><span><i style="background:var(--ink-2);height:3px"></i>최근 4분기 합계</span></div>
         ${runBox}
@@ -456,7 +456,7 @@
       const rs = (rc.risers || []).slice(0, RISE_COL.length), drops = droppedOut(rc);
       const tag = (c) => `<span class="ai-tag ${c}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[c] || "미분류"}</span>`;
       const chips = rs.map((r, i) => `<div class="ai-riser" style="--rc:${RISE_COL[i]}"><b>${esc(r.name)}</b>${tag(r.cls)}<span class="ai-rmove">${r.was ? r.was + "위" : "9위 밖"} → <b>${r.now}위</b></span><span class="ai-rpct">${r.pct_was != null ? pct(r.pct_was) + " → " : ""}${pct(r.pct)}</span></div>`).join("");
-      rcHtml = `<section class="card">
+      rcHtml = `<section class="card ai-o-rank">
         <div class="card-head wrap"><h2>누가 치고 올라오나 <span class="sub">OpenRouter 상위 모델 순위 · 최근 ${Math.min(RANK_WEEKS, fw.length)}주</span></h2></div>
         <div id="aiRank"></div>
         <h3 class="ai-h3">${md(baseW.week)} 주 → ${md(lastW.week)} 주(${rc.back}주 사이) 순위가 오른 모델</h3>
@@ -468,7 +468,7 @@
 
     box.innerHTML = `
       <section class="tiles ai-tiles">${tiles}</section>
-      <section class="card">
+      <section class="card ai-o-rev">
         <div class="card-head wrap"><h2>AI 연구소 매출 런레이트 <span class="sub">연환산 매출 · 보도 시점 기준 점</span></h2></div>
         <div id="aiRev"></div>
         <h3 class="ai-h3">두 회사 합산 (Anthropic + OpenAI) <span class="sub">보도 날짜가 달라 사이 값은 보간 · 위 테두리 = 합계</span></h3>
@@ -484,7 +484,7 @@
       </section>
       ${fHtml}
       ${rcHtml}
-      <section class="card">
+      <section class="card ai-o-oc">
         <div class="card-head wrap"><h2>오픈웨이트 vs 클로즈드 <span class="sub">토큰 비중은 OpenRouter, 지출 비중은 Vercel 기준</span></h2></div>
         <div class="ai-oc">
           <div class="ai-ock"><span>오픈웨이트 토큰 비중</span><b>${pct(openNow)}</b><small>OpenRouter · ${lt.week ? md(lt.week) + " 주" : ""}${dOpen != null ? " · 전주보다 " + chg(dOpen) : ""}</small></div>
