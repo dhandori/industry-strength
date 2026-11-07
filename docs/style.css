@@ -779,3 +779,9 @@ th[data-sk][data-dir="up"]::after { content: " ▲"; font-size: .8em; }
 .hx-hn:focus-visible, .hc.pick:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .hx-hdet { grid-column: 1 / -1; background: var(--surface-2); border-radius: 10px; margin: 4px 0 8px; padding: 8px 0 6px; position: sticky; left: 0; max-width: min(100%, calc(100vw - 48px)); }
 .hx-hdet-t { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 0 10px; font-size: 13px; }
+/* 2026-11-07 카드 접기·펼치기(ui.js) */
+.cf-btn { margin-left: auto; flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--accent); border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; align-self: flex-start; }
+@media (hover: hover) { .cf-btn:hover { background: var(--accent-soft); } }
+section.card.cf-shut > :not(.card-head) { display: none !important; }
+section.card.cf-shut > .card-head { margin-bottom: 0; }
+section.card.cf-shut > .card-head .filters, section.card.cf-shut > .card-head .seg { display: none !important; }

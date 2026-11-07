@@ -92,9 +92,31 @@
   addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(onScroll); } }, { passive: true });
   addEventListener("resize", () => { setHeaderVar(); top.classList.remove("folded"); });
 
+  // ---------- 카드 접기·펼치기 (2026-11-07): 제목 줄이 있는 카드마다 오른쪽 위에 단추. 처음 상태는 data-fold="closed"면 접힘,
+  // 그 외엔 펼침. 사용자가 바꾼 건 기억한다(제목 글자로 구분). 매크로 탭 지표 카드는 mxfold.js가 따로 맡는다.
+  let fmem = {};
+  try { fmem = JSON.parse(localStorage.getItem("cfold") || "{}") || {}; } catch (e) {}
+  const fkey = (sec) => { const h = sec.querySelector(":scope > .card-head h2, :scope > .card-head summary h2"); return h ? label(h) : ""; };
+  function folds() {
+    document.querySelectorAll("main section.card").forEach((sec) => {
+      const head = sec.querySelector(":scope > .card-head");
+      if (!head || sec.classList.contains("guide") || !fkey(sec)) return;
+      let b = head.querySelector(":scope > .cf-btn");
+      if (!b) { b = document.createElement("button"); b.type = "button"; b.className = "cf-btn"; head.appendChild(b); b.addEventListener("click", () => { const k = fkey(sec); fmem[k] = !sec.classList.contains("cf-shut"); try { localStorage.setItem("cfold", JSON.stringify(fmem)); } catch (e) {} paint(sec); later(); }); }
+      paint(sec);
+    });
+  }
+  function paint(sec) {
+    const k = fkey(sec), shut = k in fmem ? fmem[k] : sec.dataset.fold === "closed";
+    sec.classList.toggle("cf-shut", shut);
+    const b = sec.querySelector(":scope > .card-head > .cf-btn");
+    const t = shut ? "펼치기 ▾" : "접기 ▴";
+    if (b && b.textContent !== t) { b.textContent = t; b.setAttribute("aria-expanded", !shut); }
+  }
+
   // 탭을 바꾸거나 내용이 새로 그려지면 다시 만든다
   let t;
-  const later = () => { clearTimeout(t); t = setTimeout(build, 250); };
+  const later = () => { clearTimeout(t); t = setTimeout(() => { folds(); build(); }, 250); };
   const mo = new MutationObserver((recs) => { if (recs.some((r) => r.type === "attributes" || [...r.addedNodes].some((n) => n.nodeType === 1 && (n.matches?.(SEL) || n.querySelector?.(SEL))))) later(); });
   document.querySelectorAll("main").forEach((m) => mo.observe(m, { attributes: true, attributeFilter: ["hidden"], childList: true, subtree: true }));
   addEventListener("load", later);
