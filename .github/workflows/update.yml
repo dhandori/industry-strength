@@ -28,6 +28,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # 마지막 단계에서 밀린 다른 예약 작업(AI 시장 등)을 깨운다
 
 concurrency:
   group: update-data
@@ -99,3 +100,18 @@ jobs:
             git pull --rebase origin main
             git push
           fi
+
+      # GitHub 예약이 이 저장소에서 5~7시간씩 늦는다(2026-11-10). 이 작업은 마감 갱신 예약이 제때 걸어 주므로,
+      # 오늘 돌았어야 하는데 자료가 안 바뀐 작업(AI 시장·AI 인프라·반도체 가격·미국 물가)을 여기서 바로 깨운다.
+      - name: 밀린 예약 작업 깨우기
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for wf in $(python scripts/wake_stale.py); do
+            last=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$wf/runs?per_page=1" --jq '.workflow_runs[0] | select(.status != "completed") | .created_at' || true)
+            if [[ -n "$last" ]]; then echo "$wf 이미 도는 중 · 건너뜀"; continue; fi
+            gh workflow run "$wf" --ref main && echo "$wf 깨움"
+          done
