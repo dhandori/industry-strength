@@ -356,11 +356,12 @@
       ["공시(DART)", `https://dart.fss.or.kr/dsab007/main.do?option=corp&textCrpNm=${encodeURIComponent(name)}`],
       ["TradingView 차트", L.tvChart(code, "KR")],
     ] : [
+      ["네이버 증권", L.naverUS(tick)],
       ["TradingView 차트", L.tvChart(tick, "US")],
       ["Finviz", L.finviz(tick)],
       ["Yahoo 뉴스", L.yahooNews(tick)],
       ["SEC 공시", L.sec(tick)],
-    ];
+    ].filter(([, u]) => u);
 
     const nav = [["skChartSec", "차트"], m && ["skRet", "수익률"], m && ["skTrend", "추세 점검"], m && ["skStat", "위험 관리"], hx && ["skHigh", "신고가"],
       supHtml && ["skSup", "수급"], inds.length && ["skInd", "산업"], secs.length && ["skSec", "섹터"], prs.length && ["skPair", "페어"], ["skLinks", "링크"]].filter(Boolean);

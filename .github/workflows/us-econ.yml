@@ -14,6 +14,7 @@ on:
     paths:
       - "scripts/us_econ.py"
       - "scripts/tv_symbols.py"
+      - "scripts/naver_us.py"
       - "scripts/macro_long.py"
       - "scripts/putcall.py"
       - "scripts/putcall_occ.py"
@@ -53,11 +54,14 @@ jobs:
       - name: TradingView 거래소 표(새 미국 종목만 확인)
         continue-on-error: true
         run: python scripts/tv_symbols.py
+      - name: 네이버 해외주식 주소 표(새 미국 종목만 확인)
+        continue-on-error: true
+        run: python scripts/naver_us.py
       - name: 결과 저장
         run: |
           git config user.name "industry-strength-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add docs/data/us_econ.json docs/data/kr_credit.json docs/data/tv_ex.json docs/data/macro_long.json docs/data/putcall.json docs/data/putcall_occ.json docs/data/kr_fng.json
+          git add docs/data/us_econ.json docs/data/kr_credit.json docs/data/tv_ex.json docs/data/naver_us.json docs/data/macro_long.json docs/data/putcall.json docs/data/putcall_occ.json docs/data/kr_fng.json
           if git diff --cached --quiet; then
             echo "변경 없음"
           else

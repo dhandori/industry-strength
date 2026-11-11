@@ -66,6 +66,8 @@
   const nameBtn = (r) => `<button class="lnk sk-name" type="button" data-stock="${esc(r.code)}" data-sname="${esc(r.name)}" data-smarket="${st.market}" title="${esc(r.name)} 종목 상세">${esc(r.name)}</button>`;
   const STG = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
   const tvUrl = (code) => window.__links.tvPage(code, st.market);
+  // 네이버 증권(한국 국내·미국 해외주식) 링크. 네이버에 없는 미국 종목은 빈칸
+  const nvA = (code) => { const u = window.__links.naverAny(code, st.market); return u ? ` · <a href="${esc(u)}" target="_blank" rel="noopener noreferrer">네이버</a>` : ""; };
 
   // ---------- 그리기
   async function render(market) {
@@ -194,7 +196,7 @@
     const list = Object.values(r.stocks).sort((a, b) => b.rec - a.rec || b.old - a.old || b.last.mcap - a.last.mcap);
     const one = ({ rec, old, last: x }) => {
       const mm = memberOf(x.code), b = basketOf(x.code);
-      return `<tr><td>${nameBtn(x)}<span class="rsub">${esc(x.code)} · <a href="${tvUrl(x.code)}" target="_blank" rel="noopener noreferrer">차트</a>${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판</button>` : ""}</span></td>
+      return `<tr><td>${nameBtn(x)}<span class="rsub">${esc(x.code)} · <a href="${tvUrl(x.code)}" target="_blank" rel="noopener noreferrer">차트</a>${nvA(x.code)}${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판</button>` : ""}</span></td>
         <td class="num"><b>${rec}</b></td><td class="num muted">${old}</td>
         <td class="num">${md(x.d)}${x.run >= 2 ? ` <span class="tagc run">🔁${x.run}</span>` : ""}</td>
         <td class="num"><span class="ret ${cls(x.chg)}">${pct(x.chg, 1)}</span></td>
@@ -254,7 +256,7 @@
     const one1 = days.length === 1;
     const row = ({ n, last: x }) => {
       const mm = memberOf(x.code), b = basketOf(x.code);
-      return `<tr><td>${nameBtn(x)}<span class="rsub">${esc(x.code)} · <a href="${tvUrl(x.code)}" target="_blank" rel="noopener noreferrer">차트</a>${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판</button>` : ""}</span></td>
+      return `<tr><td>${nameBtn(x)}<span class="rsub">${esc(x.code)} · <a href="${tvUrl(x.code)}" target="_blank" rel="noopener noreferrer">차트</a>${nvA(x.code)}${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판</button>` : ""}</span></td>
         ${one1 ? "" : `<td class="num"><b>${n}</b></td><td class="num">${md(x.d)}</td>`}
         <td class="num">${x.run >= 2 ? `<span class="tagc run">🔁${x.run}일째</span>` : x.isNew ? "🆕" : "1일"}</td>
         <td class="num"><span class="ret ${cls(x.chg)}">${pct(x.chg, 1)}</span></td>
@@ -295,7 +297,7 @@
   const cap = (v) => st.market === "KR" ? (v >= 10000 ? `${Math.floor(v / 10000)}조 ${(v % 10000).toLocaleString("ko-KR")}억` : `${v.toLocaleString("ko-KR")}억`) : `${v.toLocaleString("en-US")}억$`;
   function stockCell(r) {
     const b = basketOf(r.code);
-    return `<b>${nameBtn(r)}</b><span>${esc(r.code)} · <a href="${tvUrl(r.code)}" target="_blank" rel="noopener noreferrer">차트</a>${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판: ${esc(b.name)}</button>` : ""}</span>`;
+    return `<b>${nameBtn(r)}</b><span>${esc(r.code)} · <a href="${tvUrl(r.code)}" target="_blank" rel="noopener noreferrer">차트</a>${nvA(r.code)}${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판: ${esc(b.name)}</button>` : ""}</span>`;
   }
   function bindStock(el) {
     $$("[data-bid]", el).forEach((x) => x.addEventListener("click", (e) => { e.stopPropagation(); const b = window.__isBoard && window.__isBoard(); b && b.open(x.dataset.bid); }));
