@@ -26,10 +26,12 @@ TREASURY_FROM = "2014-01-01"   # 국채 금리(매일)는 파일이 너무 커�
 
 
 def fred(series_id):
-    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+    # 2026-11-11: GitHub 서버 쪽 캐시가 10월 CPI 발표(11/10) 뒤 15시간 넘게 9월 파일을 돌려줬다.
+    # 주소에 매번 다른 값(_=시각)을 붙이고 no-cache를 요청해 늘 원본을 받는다(FRED는 모르는 값은 무시한다).
+    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}&_={int(time.time())}"
     for i in range(3):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={**UA, "Cache-Control": "no-cache", "Pragma": "no-cache"}), timeout=60) as r:
                 rows = list(csv.reader(io.StringIO(r.read().decode("utf-8"))))
             break
         except Exception:  # noqa: BLE001
@@ -45,14 +47,31 @@ def fred(series_id):
     return out
 
 
+EST = set()   # 1년 전 값을 앞뒤 달로 메워 계산한(추정) 날짜
+
+
+def _month(d, k):
+    y, mo = int(d[:4]), int(d[5:7]) + k
+    y, mo = y + (mo - 1) // 12, (mo - 1) % 12 + 1
+    return f"{y:04d}-{mo:02d}-01"
+
+
 def yoy(s):
-    """월별 지수 → 전년 같은 달 대비 %."""
+    """월별 지수 → 전년 같은 달 대비 %.
+    1년 전 같은 달 값이 없으면(2025년 10월 CPI는 미국 정부 셧다운으로 발표되지 않았다) 앞뒤 달의 기하평균으로 메워 계산하고
+    그 날짜를 EST 에 적는다(화면에 '추정'). 2026-11-11: 이 빈칸 때문에 2026년 10월 CPI가 통째로 빠져 있었다."""
     m = dict(s)
     out = []
     for d, v in s:
         y = f"{int(d[:4]) - 1}{d[4:]}"
-        if y in m and m[y]:
-            out.append((d, round((v / m[y] - 1) * 100, 2)))
+        base = m.get(y)
+        if not base and d[8:] == "01":
+            a, b = m.get(_month(y, -1)), m.get(_month(y, 1))
+            if a and b:
+                base = (a * b) ** 0.5
+                EST.add(d)
+        if base:
+            out.append((d, round((v / base - 1) * 100, 2)))
     return out
 
 
@@ -78,7 +97,7 @@ def pack(key, s, **kw):
     ago = (d.replace(year=d.year - 1)).strftime("%Y-%m-%d")
     year_ago = next((v for dd, v in reversed(s) if dd <= ago), None)
     return {"key": key, "date": last[0], "value": last[1], "prev": prev[1], "prev_date": prev[0], "year_ago": year_ago,
-            "series": [[dd, v] for dd, v in s if dd >= keep], **kw}
+            "series": [[dd, v] for dd, v in s if dd >= keep], **({"est": True} if kw.pop("yoy_est", False) and last[0] in EST else {}), **kw}
 
 
 def finra_margin():
@@ -257,15 +276,15 @@ def main():
         "updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"),
         "source": "FRED (St. Louis Fed)",
         "misery": {**pack("misery", misery, keep_from="1948-01-01"),
-                   "cpi": cpi[-1][1], "unrate": un[misery[-1][0]],
+                   "cpi": cpi[-1][1], "unrate": un[misery[-1][0]], **({"est": True} if misery[-1][0] in EST else {}),
                    "pct_rank": pct_rank, "avg": round(sum(mv) / len(mv), 2),
                    "peak": peak, "five_lo": min(five), "five_hi": max(five)},
         "treasury": treasury,
         "margin": margin,
         "indicators": [
-            pack("cpi", cpi, extra=ann3(raw["CPIAUCSL"])[-1][1]),
-            pack("core_cpi", yoy(raw["CPILFESL"]), extra=ann3(raw["CPILFESL"])[-1][1]),
-            pack("core_pce", yoy(raw["PCEPILFE"]), extra=ann3(raw["PCEPILFE"])[-1][1]),
+            pack("cpi", cpi, yoy_est=True, extra=ann3(raw["CPIAUCSL"])[-1][1]),
+            pack("core_cpi", yoy(raw["CPILFESL"]), yoy_est=True, extra=ann3(raw["CPILFESL"])[-1][1]),
+            pack("core_pce", yoy(raw["PCEPILFE"]), yoy_est=True, extra=ann3(raw["PCEPILFE"])[-1][1]),
             pack("breakeven", raw["T10YIE"], keep_from="2016-01-01"),
             pack("unrate", raw["UNRATE"]),
             pack("sahm", raw["SAHMREALTIME"]),

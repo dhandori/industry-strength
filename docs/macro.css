@@ -207,3 +207,5 @@ body.v-macro #meta { display: none; }
 .kf-c p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--ink-2); }
 .kf-bt td, .kf-bt th { white-space: nowrap; }
 .mem-table.kf-bt { min-width: 0; }
+/* 2026-11-11: 1년 전 값이 없어 메워 계산한 전년 대비 값(2026년 10월 CPI 등) */
+.ec-est { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--warn-ink); background: var(--warn-bg); cursor: help; vertical-align: middle; }

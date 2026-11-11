@@ -148,7 +148,7 @@
       : D.ref.length ? `<div class="chart-legend"><span><i style="background:var(--mx2)"></i>기준선 ${D.ref.map((r) => i.key === "sahm" ? r + "%p(침체 신호)" : i.key === "vu" ? r + "배" : r + "%(연준 목표)").join(", ")}</span></div>` : "";
     return `<article class="card mx-card ec-card" style="--c:${lv ? col(lv[0]) : "var(--line)"}">
       <div class="mx-head"><div><div class="mx-name">${esc(D.n)}</div></div>${lv ? `<span class="mx-chip" style="--c:${col(lv[0])}">${esc(lv[1])}</span>` : ""}</div>
-      <div class="mx-val"><b>${D.f(i.value)}</b><span class="ec-date">${dateTxt}</span></div>
+      <div class="mx-val"><b>${D.f(i.value)}</b><span class="ec-date">${dateTxt}</span>${i.est ? `<span class="ec-est" title="2025년 10월 물가 자료가 미국 정부 셧다운으로 조사되지 않아 BLS도 이번 달 전년 대비 상승률을 발표하지 않았어요. 앞뒤 달(2025년 9월·11월) 지수의 평균으로 1년 전 값을 메워 직접 계산한 추정치예요.">추정</span>` : ""}</div>
       <div class="ec-chs">${ch}${ex}${ya}</div>
       <div class="mx-chart">${pick(i.key, D.daily)}${svg}${legend}</div>
       <div class="mx-why"><b>무엇인가요?</b> ${esc(D.why)}</div></article>`;
@@ -171,7 +171,7 @@
     // 2026-10-30: 맨 위 따로 튀던 큰 카드 → 경기 묶음 첫 카드(다른 지표 카드와 같은 모양, 접으면 값·구성만)
     return `<article class="card mx-card ec-hero" style="--c:${col(lv[0])}">
       <div class="mx-head"><div><div class="mx-name">미국 고통지수 (Misery Index)</div><div class="mx-dir">물가상승률 + 실업률 · 높을수록 체감 경기 나쁨</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
-      <div class="mx-val"><b>${m.value.toFixed(1)}</b><span class="ec-date">${ymK(m.date)}</span><span class="ec-formula">= 물가 <b>${m.cpi.toFixed(1)}%</b> + 실업 <b>${m.unrate.toFixed(1)}%</b></span></div>
+      <div class="mx-val"><b>${m.value.toFixed(1)}</b><span class="ec-date">${ymK(m.date)}</span>${m.est ? `<span class="ec-est" title="2025년 10월 물가 자료가 미국 정부 셧다운으로 조사되지 않아 BLS도 이번 달 전년 대비 상승률을 발표하지 않았어요. 앞뒤 달(2025년 9월·11월) 지수의 평균으로 1년 전 값을 메워 직접 계산한 추정치예요.">추정</span>` : ""}<span class="ec-formula">= 물가 <b>${m.cpi.toFixed(1)}%</b> + 실업 <b>${m.unrate.toFixed(1)}%</b></span></div>
       <div class="ec-hero-b">
         <div class="ec-hero-l"><p>${dir}. 1948년 이후 지금보다 낮았던 달이 <b>${m.pct_rank}%</b>예요. 역대 평균 ${m.avg.toFixed(1)}, 최근 5년 ${m.five_lo.toFixed(1)}~${m.five_hi.toFixed(1)}, 가장 높았던 때는 ${ymK(m.peak[0])} ${m.peak[1].toFixed(1)}이에요.</p>
           <p class="ec-why"><b>무엇인가요?</b> 물가가 오르는 고통과 일자리를 잃는 고통을 더한 숫자예요. 높을수록 사람들이 체감하는 경기가 나쁘고, 소비·선거·정책에 압력이 커져요. 10을 넘으면 높은 편, 7 아래면 편한 편으로 봐요.</p></div>
