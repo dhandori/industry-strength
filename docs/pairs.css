@@ -115,3 +115,27 @@ body.v-pairs #meta { display: none; }
   .pr-help-grid { grid-template-columns: 1fr; }
   .pr-detail { padding: 12px; }
 }
+
+/* 두 종목 설명 · 100일 ROC 자세히 (2026-11-11) */
+.pr-ex { margin: 12px 0 0; padding: 12px 14px; border-radius: 10px; background: var(--surface-2); font-size: 13px; line-height: 1.6; color: var(--ink-2); }
+.pr-ex-t { display: block; font-size: 14px; color: var(--ink); margin-bottom: 4px; }
+.pr-ex h4 { margin: 12px 0 2px; font-size: 13px; color: var(--ink); }
+.pr-ex p { margin: 4px 0; }
+.pr-ex-n { color: var(--muted); }
+.pr-ab { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+.pr-ab h4 { margin-top: 6px; }
+.pr-calc { padding: 6px 10px; border-radius: 8px; background: var(--surface); font-variant-numeric: tabular-nums; }
+.pr-sig { margin: 4px 0; padding-left: 18px; }
+.pr-sig li { margin: 4px 0; }
+.pr-sig li b { margin-right: 6px; color: var(--ink); }
+.pr-sig li.on { background: color-mix(in srgb, var(--accent) 12%, transparent); border-radius: 6px; padding: 2px 6px; }
+.pr-sig li.on b::after { content: " · 지금 켜짐"; color: var(--accent); font-weight: 600; }
+.pr-ept-wrap { overflow-x: auto; }
+.pr-ept { border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; margin: 4px 0; min-width: 100%; }
+.pr-ept th, .pr-ept td { padding: 4px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.pr-ept th:first-child, .pr-ept td:first-child { text-align: left; }
+.pr-ept th { color: var(--muted); font-weight: 600; }
+.pr-ept td.up, .pr-ex b.up { color: var(--up); } .pr-ept td.down, .pr-ex b.down { color: var(--down); }
+@media (max-width: 700px) { .pr-ab { grid-template-columns: 1fr; } }
+.pr-ex .pr-warn { color: var(--warn-ink); background: var(--warn-bg); border-radius: 8px; padding: 7px 10px; }
+.pr-detail, .pr-ex { min-width: 0; } .pr-ept-wrap { max-width: 100%; }

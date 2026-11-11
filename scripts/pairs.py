@@ -6,6 +6,9 @@ config/pairs.json 의 각 페어(a ÷ b) 종가 비율로 상대강도 지표를
 - 100일 ROC(비율의 100거래일 변화율)와 그 값이 받아 둔 기간(최대 10년) 안에서 몇 % 위치인지.
   하위 5% 이하면 '100일 ROC 바닥권', 최근 10거래일 안에 바닥권이었다가 벗어나면 '바닥권 벗어남',
   상위 5% 이상이면 '천장권'. 바닥선은 페어마다 다르다(출렁임이 큰 페어는 -10%가 흔하다). 2026-11-11 추가.
+- 과거 사례: 받아 둔 기간에 ROC가 바닥권·천장권에 새로 들어간 날(직전 20거래일은 밖)마다
+  그 뒤 20·60거래일 비율 변화. 바닥선·천장선은 전체 기간으로 정하므로 '그때 알 수 있었던 값'은 아니다.
+- config 의 tickers(종목·지수 설명)는 결과의 tickers 로 그대로 넘긴다.
 - 캔들이 아니라 종가끼리의 비율만 쓴다(두 종목 고가·저가는 같은 시각이 아니라 비율 캔들은 실제가 아님).
 - 장중에 돌면 오늘 칸은 아직 종가가 아니므로 버린다. 한 페어가 실패하면 그 페어만 지난 값을 남긴다.
 
@@ -113,6 +116,27 @@ def rsi(x, n=14):
     return (100 - 100 / (1 + rs)).where(dn.ne(0), 100.0)
 
 
+def episodes(ratio, roc, cond, gap=20, keep=8):
+    """cond 가 새로 켜진 날(직전 gap 거래일은 꺼짐)마다 그 뒤 20·60거래일 비율 변화. 최근 keep 개."""
+    on = cond.fillna(False).astype(bool)
+    before = on.shift(1, fill_value=False).astype(int).rolling(gap, min_periods=1).max().astype(bool)
+    idx = [i for i, (a, b) in enumerate(zip(on, before)) if a and not b]
+    out = []
+    for i in idx[-keep:]:
+        after = lambda w: r((ratio.iloc[i + w] / ratio.iloc[i] - 1) * 100, 2) if i + w < len(ratio) else None
+        out.append({"date": ratio.index[i].strftime("%Y-%m-%d"), "roc": r(roc.iloc[i], 2), "after20": after(20), "after60": after(60)})
+    return out
+
+
+def ep_stats(eps, up):
+    """60거래일 뒤 결과가 나온 사례 수, 그중 '되돌림'(바닥권이면 비율 상승, 천장권이면 하락) 비율, 평균 변화."""
+    v = [e["after60"] for e in eps if e["after60"] is not None]
+    if not v:
+        return None
+    hit = sum((x > 0) if up else (x < 0) for x in v)
+    return {"n": len(v), "hit": hit, "avg60": r(sum(v) / len(v), 2)}
+
+
 def compute(p, close, now_utc):
     a, b = close[p["a"]].dropna(), close[p["b"]].dropna()
     a, b = drop_unclosed(a, p["market"], now_utc), drop_unclosed(b, p["market"], now_utc)
@@ -147,9 +171,12 @@ def compute(p, close, now_utc):
     hist = roc.dropna()
     roc_v = roc.iloc[-1]
     roc_pct = roc_lo = roc_hi = None
+    ep_lo = ep_hi = []
     if len(hist) >= ROC_MIN_HIST and not pd.isna(roc_v):
         roc_pct = float((hist < roc_v).mean() * 100)
         roc_lo, roc_hi = float(hist.quantile(ROC_BAND / 100)), float(hist.quantile(1 - ROC_BAND / 100))
+        ep_lo = episodes(ratio, roc, roc <= roc_lo)
+        ep_hi = episodes(ratio, roc, roc >= roc_hi)
         if roc_v <= roc_lo:
             flags.append(["100일 ROC 바닥권", "down"])
         elif (roc.iloc[-11:-1] <= roc_lo).any():
@@ -185,6 +212,9 @@ def compute(p, close, now_utc):
         "chg5": chg(5), "chg20": chg(20), "chg60": chg(60),
         "roc100": r(roc_v, 2), "roc_pct": r(roc_pct, 1), "roc_lo": r(roc_lo, 2), "roc_hi": r(roc_hi, 2),
         "roc_years": r(len(hist) / 252, 1),
+        "roc_back": r(ratio.iloc[-1 - ROC_N], 6) if len(ratio) > ROC_N else None,
+        "roc_back_date": ratio.index[-1 - ROC_N].strftime("%Y-%m-%d") if len(ratio) > ROC_N else None,
+        "roc_ep": {"low": ep_lo, "high": ep_hi, "low_stat": ep_stats(ep_lo, True), "high_stat": ep_stats(ep_hi, False)},
         "a_ret20": leg(df["a"], 20), "b_ret20": leg(df["b"], 20),
         "above200": None if pd.isna(m200) else bool(c > m200),
         "trend": trend, "flags": flags, "ok": True,
@@ -229,7 +259,7 @@ def main():
                 out.append(dict(old, ok=False, desc=p.get("desc", ""), up=p.get("up", ""), down=p.get("down", "")) if old else {"id": p["id"], "a": p["a"], "b": p["b"], "a_name": p["a_name"],
                                                          "b_name": p["b_name"], "market": p["market"], "desc": p.get("desc", ""), "up": p.get("up", ""), "down": p.get("down", ""), "ok": False})
         groups.append({"id": g["id"], "name": g["name"], "pairs": out})
-    result = {"updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"), "groups": groups, "errors": errors}
+    result = {"updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"), "tickers": cfg.get("tickers", {}), "groups": groups, "errors": errors}
     for g in groups:
         for p in g["pairs"]:
             print(f"[pairs] {p['a']}/{p['b']} {p.get('basis_date', '—')} RSI {p.get('rsi')} Z {p.get('z')} ROC100 {p.get('roc100')}(역사 위치 {p.get('roc_pct')}%) {[f[0] for f in p.get('flags', [])]}")
