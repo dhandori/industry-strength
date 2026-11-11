@@ -35,6 +35,8 @@
     if (p.rsi != null && p.rsi <= 30) ext.push(`${p.a_name} 쪽이 단기로 너무 빨리 밀림`);
     else if (p.rsi != null && p.rsi >= 70) ext.push(`${p.a_name} 쪽이 단기로 너무 빨리 앞서감`);
     if (p.z != null && Math.abs(p.z) >= 2) ext.push("평소 범위를 벗어남");
+    if (p.roc_pct != null && p.roc_pct <= 5) ext.push("5개월 상대 낙폭이 과거 바닥권");
+    else if (p.roc_pct != null && p.roc_pct >= 95) ext.push("5개월 상대 상승이 과거 천장권");
     return { head, ext: ext.join(" · "), tone: t || "flat" };
   }
   function readings(p) {
@@ -48,6 +50,13 @@
       : `<b>RSI ${p.rsi}</b> 30~70 사이 · 단기 과열이나 침체는 아니에요.`);
     if (p.z != null) out.push(Math.abs(p.z) >= 2 ? `<b>Z점수 ${sgn(p.z, 2, "")}</b> 최근 60일 평균에서 표준편차 ${Math.abs(p.z).toFixed(1)}개만큼 ${p.z < 0 ? "아래" : "위"} · 평소 범위를 벗어난 드문 자리라 평균 쪽으로 되돌아올지 지켜볼 만해요.`
       : `<b>Z점수 ${sgn(p.z, 2, "")}</b> 평소 범위(±2) 안이에요.`);
+    if (p.roc100 != null) {
+      const yrs = p.roc_years ? `지난 ${p.roc_years}년` : "받아 둔 기간";
+      out.push(p.roc_pct == null ? `<b>100일 ROC ${sgn(p.roc100)}</b> 약 5개월 전보다 비율이 이만큼 달라졌어요. 과거 자료가 2년이 안 돼 바닥권·천장권은 아직 따지지 않아요.`
+        : p.roc_pct <= 5 ? `<b>100일 ROC ${sgn(p.roc100)}</b> 약 5개월 동안 ${esc(p.a_name)} 쪽이 이만큼 뒤처졌어요. ${yrs} 중 하위 <b>${Math.max(0.1, p.roc_pct).toFixed(1)}%</b> 자리라 과거 바닥선(${sgn(p.roc_lo)}) 아래예요. 예전엔 이런 자리에서 상대 약세가 끝나 가는 경우가 많았지만, 바로 반등한다는 뜻은 아니에요. ROC가 다시 바닥선 위로 올라오는지 확인하세요.`
+        : p.roc_pct >= 95 ? `<b>100일 ROC ${sgn(p.roc100)}</b> 약 5개월 동안 ${esc(p.a_name)} 쪽이 이만큼 앞서갔어요. ${yrs} 중 상위 <b>${(100 - p.roc_pct).toFixed(1)}%</b> 자리라 과거 천장선(${sgn(p.roc_hi)}) 위예요. 쏠림이 강해 쉬어 갈 수 있는 자리예요.`
+        : `<b>100일 ROC ${sgn(p.roc100)}</b> ${yrs} 중 ${Math.round(p.roc_pct)}% 위치 · 과거 바닥선(${sgn(p.roc_lo)})과 천장선(${sgn(p.roc_hi)}) 사이라 중기로 쏠린 자리는 아니에요.`);
+    }
     if (p.pos52 != null) out.push(`<b>1년 범위</b> 최저 0% ~ 최고 100% 중 <b>${Math.round(p.pos52)}%</b> 위치 · 1년 최고 비율보다 ${Math.abs(p.dist_hi ?? 0).toFixed(1)}% 아래.`);
     return out;
   }
@@ -83,8 +92,9 @@
   function bigChart(p) {
     const s = p.series, n = s.dates.length, k0 = Math.max(0, n - st.days);
     const sl = (a) => a.slice(k0), D = sl(s.dates), R = sl(s.ratio), M20 = sl(s.ma20), M50 = sl(s.ma50), M200 = sl(s.ma200), RSI = sl(s.rsi);
-    const narrow = innerWidth < 700, W = narrow ? 360 : 760, top = narrow ? 230 : 300, gap = 26, rsiH = narrow ? 80 : 96;
-    const H = top + gap + rsiH + 22, L = 6, Rp = narrow ? 52 : 62, pw = W - L - Rp;
+    const ROC = s.roc100 ? sl(s.roc100) : null;   // 2026-11-11 전 자료엔 없다
+    const narrow = innerWidth < 700, W = narrow ? 360 : 760, top = narrow ? 230 : 300, gap = 26, rsiH = narrow ? 80 : 96, rocH = ROC ? (narrow ? 80 : 96) : 0;
+    const H = top + gap + rsiH + (ROC ? gap + rocH : 0) + 22, L = 6, Rp = narrow ? 52 : 62, pw = W - L - Rp;
     const vals = [...R, ...M20, ...M50, ...M200, s.hi52, s.lo52].filter((v) => v != null);
     let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * 0.06 || hi * 0.01; lo -= pad; hi += pad;
     const x = (k) => L + k / Math.max(1, D.length - 1) * pw, y = (v) => 8 + (1 - (v - lo) / (hi - lo)) * (top - 16);
@@ -108,19 +118,33 @@
     for (const v of [30, 50, 70]) { add(el, "line", { x1: L, x2: L + pw, y1: ry(v), y2: ry(v), class: v === 50 ? "pr-gl" : "pr-rsi-lv" }); add(el, "text", { x: W - Rp + 6, y: ry(v) + 4, class: "pr-axis" }, v); }
     add(el, "text", { x: L + 2, y: ry0 - 7, class: "pr-axis strong" }, `비율 RSI(14) ${RSI.at(-1) ?? "–"} · 70 위 과열 / 30 아래 침체`);
     add(el, "polyline", { points: pts(RSI, x, ry), class: "pr-rsi" });
+    // 100일 ROC: 0선, 과거 바닥선(하위 5%)·천장선(상위 5%)
+    let oy = null, bottom = ry(0);
+    if (ROC) {
+      const oy0 = ry(0) + gap, lv = [p.roc_lo, p.roc_hi].filter((v) => v != null);
+      const ov = [...ROC, ...lv, 0].filter((v) => v != null);
+      let olo = Math.min(...ov), ohi = Math.max(...ov); const op = (ohi - olo) * 0.08 || 1; olo -= op; ohi += op;
+      oy = (v) => oy0 + (1 - (v - olo) / (ohi - olo)) * rocH; bottom = oy0 + rocH;
+      if (p.roc_lo != null) add(el, "rect", { x: L, y: oy(p.roc_lo), width: pw, height: Math.max(0, oy(olo) - oy(p.roc_lo)), class: "pr-rsi-cold" });
+      if (p.roc_hi != null) add(el, "rect", { x: L, y: oy(ohi), width: pw, height: Math.max(0, oy(p.roc_hi) - oy(ohi)), class: "pr-rsi-hot" });
+      add(el, "line", { x1: L, x2: L + pw, y1: oy(0), y2: oy(0), class: "pr-gl" }); add(el, "text", { x: W - Rp + 6, y: oy(0) + 4, class: "pr-axis" }, "0%");
+      for (const v of lv) { add(el, "line", { x1: L, x2: L + pw, y1: oy(v), y2: oy(v), class: "pr-rsi-lv" }); add(el, "text", { x: W - Rp + 6, y: oy(v) + 4, class: "pr-axis" }, sgn(v, 0)); }
+      add(el, "text", { x: L + 2, y: oy0 - 7, class: "pr-axis strong" }, `100일 ROC ${sgn(ROC.at(-1))} · 색 구간 = 과거 하위·상위 5%`);
+      add(el, "polyline", { points: pts(ROC, x, oy), class: "pr-rsi" });
+    }
     // 날짜 축
     const ticks = narrow ? 3 : 6;
     for (let i = 0; i < ticks; i++) { const k = Math.round(i * (D.length - 1) / (ticks - 1)); add(el, "text", { x: x(k), y: H - 4, class: "pr-axis", "text-anchor": i === 0 ? "start" : i === ticks - 1 ? "end" : "middle" }, md(D[k])); }
     // 마우스 읽기
-    const cross = add(el, "line", { y1: 4, y2: ry(0), class: "pr-cross", visibility: "hidden" });
-    const hit = add(el, "rect", { x: L, y: 0, width: pw, height: ry(0), fill: "transparent" });
+    const cross = add(el, "line", { y1: 4, y2: bottom, class: "pr-cross", visibility: "hidden" });
+    const hit = add(el, "rect", { x: L, y: 0, width: pw, height: bottom, fill: "transparent" });
     const wrap = document.createElement("div"); wrap.className = "pr-chart";
     const tip = document.createElement("div"); tip.className = "pr-tip"; tip.hidden = true;
     const show = (e) => {
       const b = el.getBoundingClientRect(), px = (e.clientX - b.left) / b.width * W;
       const k = Math.max(0, Math.min(D.length - 1, Math.round((px - L) / pw * (D.length - 1))));
       cross.setAttribute("x1", x(k)); cross.setAttribute("x2", x(k)); cross.setAttribute("visibility", "visible");
-      tip.innerHTML = `<b>${D[k]}</b><span>비율 ${fmtR(R[k])}</span><span>20일선 ${fmtR(M20[k])}</span><span>50일선 ${fmtR(M50[k])}</span><span>200일선 ${fmtR(M200[k])}</span><span>RSI ${RSI[k] ?? "–"}</span>`;
+      tip.innerHTML = `<b>${D[k]}</b><span>비율 ${fmtR(R[k])}</span><span>20일선 ${fmtR(M20[k])}</span><span>50일선 ${fmtR(M50[k])}</span><span>200일선 ${fmtR(M200[k])}</span><span>RSI ${RSI[k] ?? "–"}</span>${ROC ? `<span>100일 ROC ${sgn(ROC[k])}</span>` : ""}`;
       tip.hidden = false;
       const left = x(k) / W * b.width; tip.style.left = `${left > b.width * 0.6 ? left - tip.offsetWidth - 10 : left + 10}px`;
     };
@@ -140,7 +164,8 @@
     const zTone = p.z == null ? "" : p.z <= -2 ? "down" : p.z >= 2 ? "up" : "";
     const gauges = gauge("RSI", p.rsi ?? "–", p.rsi, 0, 100, [[0, 30, "lo"], [70, 100, "hi"]], rsiTone)
       + gauge("Z점수", p.z == null ? "–" : sgn(p.z, 2, ""), p.z == null ? null : Math.max(-3, Math.min(3, p.z)), -3, 3, [[-3, -2, "lo"], [2, 3, "hi"]], zTone)
-      + gauge("1년 범위 위치", p.pos52 == null ? "–" : Math.round(p.pos52) + "%", p.pos52, 0, 100, [[0, 10, "lo"], [90, 100, "hi"]], "");
+      + gauge("1년 범위 위치", p.pos52 == null ? "–" : Math.round(p.pos52) + "%", p.pos52, 0, 100, [[0, 10, "lo"], [90, 100, "hi"]], "")
+      + gauge("100일 ROC", sgn(p.roc100), p.roc_pct, 0, 100, [[0, 5, "lo"], [95, 100, "hi"]], p.roc_pct == null ? "" : p.roc_pct <= 5 ? "down" : p.roc_pct >= 95 ? "up" : "");
     return `<button class="pr-card t-${v.tone}${st.open === p.id ? " open" : ""}" type="button" data-id="${p.id}" aria-expanded="${st.open === p.id}">
       <div class="pr-h"><b>${name}</b><span class="pr-names">${esc(p.a_name)} ÷ ${esc(p.b_name)}</span>${p.ok ? "" : '<span class="pr-chip flat">지난 값</span>'}
         <span class="pr-big20"><em>20일</em><b class="${cls(p.chg20)}">${sgn(p.chg20)}</b></span></div>
@@ -161,7 +186,7 @@
       <div class="pr-read"><b>지금 읽기</b><ul>${readings(p).map((t) => `<li>${t}</li>`).join("")}</ul></div>
       <div class="pr-legend"><span><i class="k-ratio"></i>비율</span><span><i class="k-m20"></i>20일선</span><span><i class="k-m50"></i>50일선</span><span><i class="k-m200"></i>200일선</span><span><i class="k-hl"></i>52주 고·저</span></div>`;
     d.append(bigChart(p));
-    d.insertAdjacentHTML("beforeend", `<p class="pr-chg">비율 변화: 5일 <b class="ret ${cls(p.chg5)}">${sgn(p.chg5)}</b> · 20일 <b class="ret ${cls(p.chg20)}">${sgn(p.chg20)}</b> · 60일 <b class="ret ${cls(p.chg60)}">${sgn(p.chg60)}</b></p>`);
+    d.insertAdjacentHTML("beforeend", `<p class="pr-chg">비율 변화: 5일 <b class="ret ${cls(p.chg5)}">${sgn(p.chg5)}</b> · 20일 <b class="ret ${cls(p.chg20)}">${sgn(p.chg20)}</b> · 60일 <b class="ret ${cls(p.chg60)}">${sgn(p.chg60)}</b> · 100일 <b class="ret ${cls(p.roc100)}">${sgn(p.roc100)}</b></p>`);
     $$(".pr-days button", d).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); st.days = +b.dataset.d; render(); }));
     return d;
   }
@@ -178,12 +203,13 @@
     const sum = `<section class="card pr-today"><div class="card-head"><h2>오늘 눈여겨볼 페어 <span class="sub">신호가 켜진 ${hot.length}개 · 누르면 큰 차트</span></h2></div>
       ${hot.length ? `<div class="pr-hot">${hot.map((p) => `<button class="pr-hotrow t-${verdict(p).tone}" type="button" data-id="${p.id}"><b>${esc(tk(p.a))} / ${esc(tk(p.b))}</b><span class="pr-hotv">${esc(verdict(p).head)}</span><span class="pr-hotc">${p.flags.map(chip).join("")}</span></button>`).join("")}</div>`
         : `<p class="pr-none">오늘은 추세 전환·과열·침체 신호가 켜진 페어가 없어요.</p>`}</section>`;
-    box.innerHTML = sum + `<details class="card pr-help"><summary>이 탭 보는 법 <span class="sub">비율 · 추세 · RSI · Z점수 · 활용 예</span></summary>
+    box.innerHTML = sum + `<details class="card pr-help"><summary>이 탭 보는 법 <span class="sub">비율 · 추세 · RSI · Z점수 · 100일 ROC · 활용 예</span></summary>
       <div class="pr-help-grid">
         <div><h3>비율 읽기</h3><p><b>비율 = A ÷ B</b>예요. 두 종목이 같이 떨어져도 A가 덜 떨어지면 비율은 올라요. 그래서 <b>시장 방향과 상관없이 누가 더 센지</b>만 보여 줘요. 차트 왼쪽 위·아래의 ↑·↓ 표시가 각각 어느 쪽 강세인지 알려 줘요.</p></div>
         <div><h3>추세 (가장 먼저 볼 것)</h3><p>비율이 <b>50일선·200일선 위</b>에 차례로 있으면 A 우위가 굳은 상태, <b>아래</b>면 B 우위예요. 비율이 <b>200일선을 뚫거나 깨는 순간</b>이 상대 흐름이 바뀌는 첫 신호로 많이 쓰여요.</p></div>
         <div><h3>RSI (단기 과열·침체)</h3><p>최근 14거래일 동안 비율이 얼마나 한쪽으로 쏠렸는지예요. <b>70 위</b>는 A가 너무 빨리 앞서간 것, <b>30 아래</b>는 너무 빨리 밀린 것이에요. 되돌림이 자주 나오지만, 강한 추세 중엔 극단이 오래가기도 해요.</p></div>
         <div><h3>Z점수 (평소 범위)</h3><p>비율이 최근 60일 평균에서 표준편차 몇 개만큼 떨어졌는지예요. 보통 <b>±2 안</b>에서 움직이고, 넘으면 드문 자리라 평균으로 돌아올지 살펴볼 만해요. 페어 트레이딩에서 진입·청산 기준으로 많이 써요.</p></div>
+        <div><h3>100일 ROC (중기 바닥·천장)</h3><p>비율이 <b>100거래일(약 5개월) 전보다 몇 % 달라졌는지</b>예요. 카드 게이지의 점은 그 값이 지난 최대 10년 중 어디쯤인지 보여 줘요. <b>하위 5%</b>면 "바닥권", 다시 그 위로 올라오면 "바닥권 벗어남", <b>상위 5%</b>면 "천장권"이에요. 기술주/시장(XLK/SPY)은 이 바닥권에서 상대 약세가 끝난 적이 많았어요. 다만 바닥권에 처음 닿은 날이 정확한 바닥은 아니어서, "벗어남"을 함께 보는 게 안전해요.</p></div>
         <div><h3>활용 예</h3><p>SMH/IGV가 200일선 아래로 내려가고 RSI가 30 아래면 → "소프트웨어 쪽으로 돈이 옮겨 가는 중인데, 단기로는 반도체가 너무 많이 밀렸다". 추세를 따를지, 되돌림을 노릴지는 <b>추세(50·200일선)를 먼저</b> 보고 정해요.</p></div>
         <div><h3>주의</h3><p class="pr-warn">상대강도를 보는 화면이지 매매 신호가 아니에요. 실제 페어 트레이딩에는 헤지 비율(얼마씩 사고팔지)과 두 가격이 다시 붙는 경향인지도 확인해야 해요. 종가끼리 나눈 선이라 캔들은 그리지 않아요.</p></div>
       </div></details>`;

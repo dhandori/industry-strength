@@ -3,6 +3,9 @@
 config/pairs.json 의 각 페어(a ÷ b) 종가 비율로 상대강도 지표를 만든다.
 - 비율선과 20·50·200일 평균, 비율의 RSI(14, 와일더), 60일 Z점수, 52주 고저 위치, 5·20·60일 비율 변화
 - 신호: 200일선 돌파·이탈(최근 5거래일), RSI 30 이하·70 이상, Z점수 ±2 넘음, 비율 52주 신고·신저
+- 100일 ROC(비율의 100거래일 변화율)와 그 값이 받아 둔 기간(최대 10년) 안에서 몇 % 위치인지.
+  하위 5% 이하면 '100일 ROC 바닥권', 최근 10거래일 안에 바닥권이었다가 벗어나면 '바닥권 벗어남',
+  상위 5% 이상이면 '천장권'. 바닥선은 페어마다 다르다(출렁임이 큰 페어는 -10%가 흔하다). 2026-11-11 추가.
 - 캔들이 아니라 종가끼리의 비율만 쓴다(두 종목 고가·저가는 같은 시각이 아니라 비율 캔들은 실제가 아님).
 - 장중에 돌면 오늘 칸은 아직 종가가 아니므로 버린다. 한 페어가 실패하면 그 페어만 지난 값을 남긴다.
 
@@ -24,6 +27,9 @@ CFG = ROOT / "config" / "pairs.json"
 OUT = ROOT / "docs" / "data" / "pairs.json"
 KST = timezone(timedelta(hours=9))
 KEEP = 260                      # 화면에 보낼 거래일 수(약 1년)
+ROC_N = 100                     # 100일 ROC 기간(거래일)
+ROC_BAND = 5                    # ROC 역사 위치 하위·상위 몇 %를 바닥권·천장권으로 볼지
+ROC_MIN_HIST = 500              # 역사 위치를 매기려면 ROC 값이 이만큼(약 2년) 있어야 한다
 # 장 마감 + 여유. 이 시각 전에 돌면 그날 칸은 아직 종가가 아니다.
 CLOSE = {"KR": ("Asia/Seoul", 15, 50), "US": ("America/New_York", 16, 10)}
 LATE_CLOSE = {"KR": {"2026-11-19": (16, 50)}}   # 수능날 16:30 마감
@@ -44,7 +50,7 @@ def fetch(tickers):
     last = None
     for _ in range(2):
         try:
-            raw = yf.download(sorted(tickers), period="2y", interval="1d", auto_adjust=False,
+            raw = yf.download(sorted(tickers), period="10y", interval="1d", auto_adjust=False,
                               progress=False, threads=True)
             close = raw["Close"] if isinstance(raw.columns, pd.MultiIndex) else raw[["Close"]].rename(columns={"Close": next(iter(tickers))})
             close.index = pd.to_datetime(close.index).tz_localize(None).normalize()
@@ -61,7 +67,7 @@ NAVER_INDEX = {"^KS11": "KOSPI", "^KQ11": "KOSDAQ"}
 def naver_index(symbol):
     import re
     import urllib.request
-    url = f"https://fchart.stock.naver.com/sise.nhn?symbol={symbol}&timeframe=day&count=520&requestType=0"
+    url = f"https://fchart.stock.naver.com/sise.nhn?symbol={symbol}&timeframe=day&count=2600&requestType=0"
     req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
     text = urllib.request.urlopen(req, timeout=20).read().decode("euc-kr", errors="ignore")
     rows = {}
@@ -136,6 +142,20 @@ def compute(p, close, now_utc):
         flags.append(["비율 52주 신고", "up"])
     if not pd.isna(lo.iloc[-1]) and c <= lo.iloc[-1] * 1.001:
         flags.append(["비율 52주 신저", "down"])
+    # 100일 ROC: 비율이 100거래일 전보다 몇 % 달라졌나. 역사 위치는 받아 둔 기간 전체의 ROC 값과 비교한다.
+    roc = (ratio / ratio.shift(ROC_N) - 1) * 100
+    hist = roc.dropna()
+    roc_v = roc.iloc[-1]
+    roc_pct = roc_lo = roc_hi = None
+    if len(hist) >= ROC_MIN_HIST and not pd.isna(roc_v):
+        roc_pct = float((hist < roc_v).mean() * 100)
+        roc_lo, roc_hi = float(hist.quantile(ROC_BAND / 100)), float(hist.quantile(1 - ROC_BAND / 100))
+        if roc_v <= roc_lo:
+            flags.append(["100일 ROC 바닥권", "down"])
+        elif (roc.iloc[-11:-1] <= roc_lo).any():
+            flags.append(["ROC 바닥권 벗어남", "up"])
+        elif roc_v >= roc_hi:
+            flags.append(["100일 ROC 천장권", "up"])
     rv, zv = rs14.iloc[-1], z.iloc[-1]
     if rv <= 30:
         flags.append(["RSI 과매도", "down"])
@@ -163,6 +183,8 @@ def compute(p, close, now_utc):
         "pos52": r((c - lo.iloc[-1]) / (hi.iloc[-1] - lo.iloc[-1]) * 100, 1) if hi.iloc[-1] > lo.iloc[-1] else None,
         "dist_hi": r((c / hi.iloc[-1] - 1) * 100, 2),
         "chg5": chg(5), "chg20": chg(20), "chg60": chg(60),
+        "roc100": r(roc_v, 2), "roc_pct": r(roc_pct, 1), "roc_lo": r(roc_lo, 2), "roc_hi": r(roc_hi, 2),
+        "roc_years": r(len(hist) / 252, 1),
         "a_ret20": leg(df["a"], 20), "b_ret20": leg(df["b"], 20),
         "above200": None if pd.isna(m200) else bool(c > m200),
         "trend": trend, "flags": flags, "ok": True,
@@ -173,6 +195,7 @@ def compute(p, close, now_utc):
             "ma50": [r(v, 6) for v in ma[50].iloc[tail]],
             "ma200": [r(v, 6) for v in ma[200].iloc[tail]],
             "rsi": [r(v, 1) for v in rs14.iloc[tail]],
+            "roc100": [r(v, 2) for v in roc.iloc[tail]],
             "hi52": r(hi.iloc[-1], 6), "lo52": r(lo.iloc[-1], 6),
         },
     }
@@ -209,7 +232,7 @@ def main():
     result = {"updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"), "groups": groups, "errors": errors}
     for g in groups:
         for p in g["pairs"]:
-            print(f"[pairs] {p['a']}/{p['b']} {p.get('basis_date', '—')} RSI {p.get('rsi')} Z {p.get('z')} {[f[0] for f in p.get('flags', [])]}")
+            print(f"[pairs] {p['a']}/{p['b']} {p.get('basis_date', '—')} RSI {p.get('rsi')} Z {p.get('z')} ROC100 {p.get('roc100')}(역사 위치 {p.get('roc_pct')}%) {[f[0] for f in p.get('flags', [])]}")
     if errors:
         print("[pairs] 오류:", errors)
     if not dry:
