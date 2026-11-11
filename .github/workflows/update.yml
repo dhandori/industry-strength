@@ -87,6 +87,13 @@ jobs:
         timeout-minutes: 25   # 2026-11-06 코스피 전체+코스닥 시총 상위 300으로 넓혀 약 1,200종목
         run: python scripts/supply_kr.py
 
+      # 종목 상세 창 차트 자료(종목별 2년 종가·거래량, 한국 수급 일별). 위 두 단계가 남긴 파일만 읽는다.
+      - name: 종목 차트 자료
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 3
+        run: python scripts/stock_charts.py
+
       - name: 결과 저장 (실패해도 상태 기록)
         if: always()
         run: |

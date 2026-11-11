@@ -67,7 +67,7 @@
     scrollTo({ top: 0 });
   }
   $$(".view-tabs button").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
-  window.__isBoard = () => ({ data: state.data, open: openDetail });
+  window.__isBoard = () => ({ data: state.data, series: state.series, open: openDetail });
   // 섹터 차트 카드에서 '세부 산업 순위 보기'를 누르면 섹터 칸을 누른 것과 같게 거른다.
   window.__isSectorPick = (ticker, name, items) => {
     const d = state.data[state.market];

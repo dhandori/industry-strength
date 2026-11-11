@@ -224,7 +224,7 @@
     const stocks = s.stocks || [];
     $("#sfmStocks").innerHTML = stocks.length ? `<h4>소속 종목 시가총액 상위 5 <span class="sub">정규장 종가 기준</span></h4>
       <table class="sf-tbl"><thead><tr><th>종목</th>${PERIODS.map(([k, n]) => `<th${k === period ? ' class="on"' : ""}>${n}</th>`).join("")}</tr></thead>
-      <tbody>${stocks.map((x) => `<tr><td>${esc(x.name)}</td>${PERIODS.map(([k]) => { const v = x.ret ? x.ret[k] : null; return `<td class="${cls(v)}-t${k === period ? " on" : ""}">${fmt(v, 1)}</td>`; }).join("")}</tr>`).join("")}</tbody></table>` : "";
+      <tbody>${stocks.map((x) => `<tr><td><button class="lnk sk-name" type="button" data-stock="${esc(x.code)}" data-sname="${esc(x.name)}" data-smarket="${market}" title="${esc(x.name)} 종목 상세">${esc(x.name)}</button></td>${PERIODS.map(([k]) => { const v = x.ret ? x.ret[k] : null; return `<td class="${cls(v)}-t${k === period ? " on" : ""}">${fmt(v, 1)}</td>`; }).join("")}</tr>`).join("")}</tbody></table>` : "";
     const go = $("#sfmGo");
     go.hidden = !s.ticker;
     go.textContent = `${s.name} 세부 산업 순위 보기 →`;

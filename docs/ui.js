@@ -93,7 +93,7 @@
   addEventListener("resize", () => { setHeaderVar(); top.classList.remove("folded"); });
 
   // ---------- 카드 접기·펼치기 (2026-11-07): 제목 줄이 있는 카드마다 오른쪽 위에 단추. 처음 상태는 data-fold="closed"면 접힘,
-  // 그 외엔 펼침. 사용자가 바꾼 건 기억한다(제목 글자로 구분). 매크로 탭 지표 카드는 mxfold.js가 따로 맡는다.
+  // 그 외엔 펼침. 사용자가 바꾼 건 기억한다(제목 글자로 구분). 매크로 탭 지표 카드는 접지 않는다(2026-11-11 사용자: 모두 펼쳐 보이게).
   let fmem = {};
   try { fmem = JSON.parse(localStorage.getItem("cfold") || "{}") || {}; } catch (e) {}
   const fkey = (sec) => { const h = sec.querySelector(":scope > .card-head h2, :scope > .card-head summary h2"); return h ? label(h) : ""; };
