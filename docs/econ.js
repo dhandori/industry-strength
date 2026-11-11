@@ -383,7 +383,7 @@
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>${d.cpi_core ? coreCard(d.cpi_core) : ""}
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
       <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
-      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레·국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 밤 9시 50분부터 새벽 2시 50분까지 매시간, 그리고 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
+      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레·국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 밤 11시 50분과 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
     </section>${d.margin ? `<section class="mx-market mx-us ec-sec ec-b" aria-label="미국 빚투">
       <div class="mx-market-h"><h2>🇺🇸 빚투 (신용융자)</h2><span class="sub">빚내서 산 주식이 너무 많은지 · 고점 신호 · 매월 · FINRA 신용거래 통계</span></div>
       ${spanBar("빚투")}
