@@ -148,7 +148,8 @@
       : D.ref.length ? `<div class="chart-legend"><span><i style="background:var(--mx2)"></i>기준선 ${D.ref.map((r) => i.key === "sahm" ? r + "%p(침체 신호)" : i.key === "vu" ? r + "배" : r + "%(연준 목표)").join(", ")}</span></div>` : "";
     return `<article class="card mx-card ec-card" style="--c:${lv ? col(lv[0]) : "var(--line)"}">
       <div class="mx-head"><div><div class="mx-name">${esc(D.n)}</div></div>${lv ? `<span class="mx-chip" style="--c:${col(lv[0])}">${esc(lv[1])}</span>` : ""}</div>
-      <div class="mx-val"><b>${D.f(i.value)}</b><span class="ec-date">${dateTxt}</span></div>
+      <div class="mx-val"><b>${D.f(i.value)}</b><span class="ec-date">${dateTxt}</span>${i.est ? `<span class="ec-est" title="2025년 10월 물가 자료가 미국 정부 셧다운으로 조사되지 않아 BLS도 이번 달 전년 대비 상승률을 발표하지 않았어요. 앞뒤 달(2025년 9월·11월) 지수의 평균으로 1년 전 값을 메워 직접 계산한 추정치예요.">추정</span>` : ""}</div>
+      ${i.mom != null ? `<div class="ec-mom">전월 대비 <b class="${i.mom > 0 ? "up" : i.mom < 0 ? "down" : ""}">${i.mom > 0 ? "+" : ""}${i.mom.toFixed(1)}%</b><span class="ec-off">BLS 공식</span><small>${ymK(i.mom_date)} · 계절조정</small></div>` : ""}
       <div class="ec-chs">${ch}${ex}${ya}</div>
       <div class="mx-chart">${pick(i.key, D.daily)}${svg}${legend}</div>
       <div class="mx-why"><b>무엇인가요?</b> ${esc(D.why)}</div></article>`;
@@ -171,7 +172,7 @@
     // 2026-10-30: 맨 위 따로 튀던 큰 카드 → 경기 묶음 첫 카드(다른 지표 카드와 같은 모양, 접으면 값·구성만)
     return `<article class="card mx-card ec-hero" style="--c:${col(lv[0])}">
       <div class="mx-head"><div><div class="mx-name">미국 고통지수 (Misery Index)</div><div class="mx-dir">물가상승률 + 실업률 · 높을수록 체감 경기 나쁨</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
-      <div class="mx-val"><b>${m.value.toFixed(1)}</b><span class="ec-date">${ymK(m.date)}</span><span class="ec-formula">= 물가 <b>${m.cpi.toFixed(1)}%</b> + 실업 <b>${m.unrate.toFixed(1)}%</b></span></div>
+      <div class="mx-val"><b>${m.value.toFixed(1)}</b><span class="ec-date">${ymK(m.date)}</span>${m.est ? `<span class="ec-est" title="2025년 10월 물가 자료가 미국 정부 셧다운으로 조사되지 않아 BLS도 이번 달 전년 대비 상승률을 발표하지 않았어요. 앞뒤 달(2025년 9월·11월) 지수의 평균으로 1년 전 값을 메워 직접 계산한 추정치예요.">추정</span>` : ""}<span class="ec-formula">= 물가 <b>${m.cpi.toFixed(1)}%</b> + 실업 <b>${m.unrate.toFixed(1)}%</b></span></div>
       <div class="ec-hero-b">
         <div class="ec-hero-l"><p>${dir}. 1948년 이후 지금보다 낮았던 달이 <b>${m.pct_rank}%</b>예요. 역대 평균 ${m.avg.toFixed(1)}, 최근 5년 ${m.five_lo.toFixed(1)}~${m.five_hi.toFixed(1)}, 가장 높았던 때는 ${ymK(m.peak[0])} ${m.peak[1].toFixed(1)}이에요.</p>
           <p class="ec-why"><b>무엇인가요?</b> 물가가 오르는 고통과 일자리를 잃는 고통을 더한 숫자예요. 높을수록 사람들이 체감하는 경기가 나쁘고, 소비·선거·정책에 압력이 커져요. 10을 넘으면 높은 편, 7 아래면 편한 편으로 봐요.</p></div>
@@ -318,6 +319,46 @@
     </section>`;
   }
 
+  // ---------- 근원 CPI 해부 (2026-11-11 사용자: CPI가 나오면 근원 위주로 어디가 문제였고 지속될지 점검) — scripts/cpi_core.py
+  function coreCard(c) {
+    const o = c.official, LV = { hi: 1, mid: 3, lo: 5 }[c.level] || 0;
+    const sg = (v, d = 1) => v == null ? "–" : `${v > 0 ? "+" : ""}${v.toFixed(d)}%`;
+    const cl = (v) => v == null ? "" : v > 0 ? "up" : v < 0 ? "down" : "";
+    const tile = (k, v, sub) => `<div class="cc-tile"><em>${k}</em><b class="${cl(v)}">${sg(v)}</b><small>${sub}</small></div>`;
+    const drv = new Set(c.drivers), eas = new Set(c.easing);
+    const mx = Math.max(0.5, ...c.rows.filter((r) => !r.missing && !r.volatile).flatMap((r) => r.mom.filter((v) => v != null).map(Math.abs)));   // 항공료처럼 튀는 품목은 빼고 높이를 맞춘다(넘치면 잘림)
+    const bars = (r) => `<span class="cc-bars">${r.mom.map((v, k) => `<i class="${v == null ? "na" : v >= 0 ? "pos" : "neg"}" style="height:${v == null ? 2 : Math.min(24, Math.max(2, Math.abs(v) / mx * 22))}px" title="${esc(ymK(c.months[k]))} ${v == null ? "자료 없음" : sg(v, 2)}"></i>`).join("")}</span>`;
+    const GN = { core: "", svc: "서비스", goods: "상품" };
+    let g0 = null;
+    const rows = c.rows.map((r) => {
+      const head = r.group !== g0 && GN[r.group] ? `<tr class="cc-g"><td colspan="6">${GN[r.group]}</td></tr>` : "";
+      g0 = r.group;
+      if (r.missing) return head + `<tr><td>${esc(r.name)}</td><td colspan="5" class="muted">이번 달 자료 없음</td></tr>`;
+      const tag = drv.has(r.key) ? `<span class="cc-tag up">많이 오름</span>` : eas.has(r.key) ? `<span class="cc-tag down">덜 오름</span>` : "";
+      return head + `<tr class="${drv.has(r.key) ? "cc-hot" : eas.has(r.key) ? "cc-cool" : ""}${r.key === "core" ? " cc-core" : ""}">
+        <td>${esc(r.name)}${r.volatile ? ' <small class="muted" title="달마다 크게 튀는 품목">변동 큼</small>' : ""}${tag}</td>
+        <td>${bars(r)}</td><td class="num"><b class="${cl(r.now)}">${sg(r.now, 2)}</b></td><td class="num muted">${sg(r.norm, 2)}</td>
+        <td class="num">${sg(r.ann3)}</td><td class="num">${sg(r.ann6)}</td></tr>`;
+    }).join("");
+    const fed = (c.fed || []).filter((f) => !f.missing).map((f) => `<tr><td>${esc(f.name)}</td><td class="num">${sg(f.m1)}</td><td class="num"><b>${sg(f.m3)}</b></td><td class="num">${sg(f.yoy)}</td></tr>`).join("");
+    return `<article class="card mx-card ec-card cc-card" style="--c:${col(LV)}">
+      <div class="mx-head"><div><div class="mx-name">🔎 근원 CPI 해부 — ${ymK(c.date)}</div><div class="mx-dir">어디가 올랐고, 오래갈 물가인지</div></div><span class="mx-chip" style="--c:${col(LV)}">${esc(c.verdict)} ${c.score}/${c.checks.length}</span></div>
+      <div class="cc-tiles">${tile("헤드라인 전월 대비", o.headline_mom, `직전 달 ${sg(o.headline_prev)} · BLS 공식`)}${tile("근원 전월 대비", o.core_mom, `직전 달 ${sg(o.core_prev)} · ${c.streak}개월 연속 0.3% 이상`)}${tile("근원 3개월 연율", o.core_ann3, "최근 석 달 속도를 1년으로")}${tile("근원 6개월 연율", o.core_ann6, "반년 속도를 1년으로")}</div>
+      <div class="cc-say">${c.lines.map((l) => `<p>${esc(l)}</p>`).join("")}</div>
+      <h4 class="cc-h">항목별 전월 대비 <span class="sub">계절조정 · 막대는 최근 6개월 · 평소 = 직전 12개월 중앙값 · 빨간 줄은 평소보다 많이 오른 항목</span></h4>
+      <div class="table-wrap"><table class="mem-table cc-tbl"><thead><tr><th>항목</th><th>6개월</th><th class="num">이번 달</th><th class="num">평소</th><th class="num">3개월 연율</th><th class="num">6개월 연율</th></tr></thead><tbody>${rows}</tbody></table></div>
+      <h4 class="cc-h">지속될까? <span class="sub">✔ = '오래가는 물가' 쪽 신호 · 5개 이상이면 지속될 위험 큼, 3~4개는 지켜봐야 함</span></h4>
+      <ul class="cc-checks">${c.checks.map((k) => `<li class="${k.on ? "on" : ""}"><i>${k.on ? "✔" : "·"}</i><div><b>${esc(k.t)}</b> <span class="muted">${esc(k.v)}</span><small>${esc(k.why)}</small></div></li>`).join("")}</ul>
+      ${fed ? `<h4 class="cc-h">연준이 보는 끈질긴 물가 <span class="sub">연율 % · 일부 품목이 튄 것과 전체 흐름을 가려 보는 지표</span></h4>
+      <div class="table-wrap"><table class="mem-table cc-tbl cc-fed"><thead><tr><th>지표</th><th class="num">이번 달</th><th class="num">최근 3개월 평균</th><th class="num">전년 대비</th></tr></thead><tbody>${fed}</tbody></table></div>` : ""}
+      <div class="mx-why"><b>어떻게 봤나요?</b> 전월 대비는 BLS가 매달 공식 발표하는 계절조정 수치와 같은 방식으로 FRED 지수에서 계산했어요(반올림 차이 ±0.1%p). 이번 달 오름폭을 그 항목의 지난 12개월 보통 오름폭과 비교해 ‘어디가 문제였는지’를 골랐고, 연속성·가속·주거 뺀 서비스·경직 물가·중위 물가·확산·변동성 품목 쏠림 7가지로 ‘지속될지’를 판단했어요. 경직 물가는 애틀랜타 연준, 중위·절사평균 CPI는 클리블랜드 연준 자료예요.</div></article>`;
+  }
+  function warnBox(w) {
+    if (!w || !w.length) return "";
+    const gap = w.filter((x) => x.kind === "gap");
+    return `<div class="ec-warn ${gap.length ? "gap" : ""}"><b>${gap.length ? "⚠️ 반영이 빠진 지표가 있어요" : "⏳ 늦어지는 지표가 있어요"}</b><ul>${w.map((x) => `<li>${esc(x.msg)}</li>`).join("")}</ul></div>`;
+  }
+
   function render(market) {
     const box = $("#mxEcon"), top = $("#mxTop");
     if (!box) return;
@@ -336,9 +377,10 @@
     const spanBar = (lab) => `<div class="mx-span"><span>그래프 기간</span><div class="seg small" role="group" aria-label="${lab} 그래프 기간">${SPANS.map(([n, t]) => `<button type="button" data-ecspan="${n}" aria-pressed="${st.span === n}">${t}</button>`).join("")}</div><span class="sub">모든 그래프에 같이 적용 · 그래프마다 붙은 버튼은 그 그래프만(매일 자료 20·60·200일은 거래일)</span></div>`;
     box.innerHTML = `<section class="mx-market mx-us ec-sec ec-a" aria-label="미국 경기">
       <div class="mx-market-h"><h2>🇺🇸 경기 (물가·고용·금리)</h2><span class="sub">고통지수를 이루는 물가·실업과 국채 금리 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
+      ${warnBox(d.warnings)}
       ${spanBar("경기")}
       <div class="mx-group-h"><h3>고통지수</h3><span class="sub">물가와 실업을 한 숫자로 · 매월</span></div>${hero(d.misery)}
-      <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>
+      <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>${d.cpi_core ? coreCard(d.cpi_core) : ""}
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
       <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
       <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레·국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 매일 밤 11시 20분·아침 7시 20분에 반영해요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>

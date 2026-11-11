@@ -26,18 +26,27 @@ TREASURY_FROM = "2014-01-01"   # 국채 금리(매일)는 파일이 너무 커�
 
 
 def fred(series_id):
-    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}"
+    # 2026-11-11: GitHub 서버 쪽 캐시가 10월 CPI 발표(11/10) 뒤 15시간 넘게 9월 파일을 돌려줬다.
+    # 주소에 매번 다른 값(_=시각)을 붙이고 no-cache를 요청해 늘 원본을 받는다(FRED는 모르는 값은 무시한다).
+    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}&_={int(time.time())}"
     for i in range(3):
         try:
-            with urllib.request.urlopen(urllib.request.Request(url, headers=UA), timeout=60) as r:
+            with urllib.request.urlopen(urllib.request.Request(url, headers={**UA, "Cache-Control": "no-cache", "Pragma": "no-cache"}), timeout=60) as r:
                 rows = list(csv.reader(io.StringIO(r.read().decode("utf-8"))))
+            # 연속 요청이 많으면 FRED가 CSV 대신 차단 화면(HTML)을 준다 → 실패로 보고 다시 받는다
+            if not rows or not rows[0] or rows[0][0] != "observation_date":
+                raise ValueError(f"{series_id}: CSV가 아님")
+            time.sleep(0.4)
             break
         except Exception:  # noqa: BLE001
             if i == 2:
                 raise
             time.sleep(5 * (i + 1))
     out = []
-    for d, v in rows[1:]:
+    for row in rows[1:]:
+        if len(row) != 2:
+            continue
+        d, v = row
         try:
             out.append((d, float(v)))
         except ValueError:   # 빈 값('.')은 건너뜀
@@ -45,14 +54,31 @@ def fred(series_id):
     return out
 
 
+EST = set()   # 1년 전 값을 앞뒤 달로 메워 계산한(추정) 날짜
+
+
+def _month(d, k):
+    y, mo = int(d[:4]), int(d[5:7]) + k
+    y, mo = y + (mo - 1) // 12, (mo - 1) % 12 + 1
+    return f"{y:04d}-{mo:02d}-01"
+
+
 def yoy(s):
-    """월별 지수 → 전년 같은 달 대비 %."""
+    """월별 지수 → 전년 같은 달 대비 %.
+    1년 전 같은 달 값이 없으면(2025년 10월 CPI는 미국 정부 셧다운으로 발표되지 않았다) 앞뒤 달의 기하평균으로 메워 계산하고
+    그 날짜를 EST 에 적는다(화면에 '추정'). 2026-11-11: 이 빈칸 때문에 2026년 10월 CPI가 통째로 빠져 있었다."""
     m = dict(s)
     out = []
     for d, v in s:
         y = f"{int(d[:4]) - 1}{d[4:]}"
-        if y in m and m[y]:
-            out.append((d, round((v / m[y] - 1) * 100, 2)))
+        base = m.get(y)
+        if not base and d[8:] == "01":
+            a, b = m.get(_month(y, -1)), m.get(_month(y, 1))
+            if a and b:
+                base = (a * b) ** 0.5
+                EST.add(d)
+        if base:
+            out.append((d, round((v / base - 1) * 100, 2)))
     return out
 
 
@@ -69,6 +95,50 @@ def avg(s, n):
     return [(s[i][0], round(sum(v for _, v in s[i - n + 1:i + 1]) / n, 2)) for i in range(n - 1, len(s))]
 
 
+def mom_of(s):
+    """BLS가 매달 공식 발표하는 전월 대비(계절조정, 소수 한 자리)와 그 달. 1년 전 자료가 없어도 늘 나온다."""
+    m = dict(s)
+    d, v = s[-1]
+    y, mo = int(d[:4]), int(d[5:7]) - 1
+    pd = f"{y - (mo == 0):04d}-{(mo - 1) % 12 + 1:02d}-01"
+    return {"mom": round((v / m[pd] - 1) * 100, 1), "mom_date": d} if m.get(pd) else {}
+
+
+# 화면 지표 → 원자료(FRED). 원자료에 새 값이 있는데 지표가 따라가지 못하면 '누락'(2026-11-11 사용자: 지표가 나왔는데 빠지는 일 없게)
+SOURCE = {"cpi": ["CPIAUCSL"], "core_cpi": ["CPILFESL"], "core_pce": ["PCEPILFE"], "breakeven": ["T10YIE"],
+          "unrate": ["UNRATE"], "sahm": ["SAHMREALTIME"], "payrolls": ["PAYEMS"], "claims": ["ICSA"],
+          "cont_claims": ["CCSA"], "vu": ["JTSJOL", "UNEMPLOY"]}
+# 관측일이 이보다 오래되면 '늦음 의심'(발표가 늦거나 수집이 멈춘 것). 월별 지표는 관측 달 1일 기준이라 넉넉히 잡는다.
+MAX_AGE = {"cpi": 50, "core_cpi": 50, "core_pce": 95, "breakeven": 7, "unrate": 75, "sahm": 75, "payrolls": 75,
+           "claims": 14, "cont_claims": 21, "vu": 100}
+
+
+def guard(raw, data, today):
+    """지표가 원자료보다 뒤처지거나(누락) 너무 오래됐으면(늦음) 경고 목록을 만든다. 누락이 있으면 실행을 실패로 끝낸다."""
+    warn, gaps = [], []
+    for i in data["indicators"]:
+        src = SOURCE.get(i["key"], [])
+        newest = min((raw[k][-1][0] for k in src if raw.get(k)), default=None)
+        if newest and i["date"] < newest:
+            gaps.append(i["key"])
+            warn.append({"kind": "gap", "key": i["key"], "msg": f"{i['key']}: 원자료에는 {newest} 값이 있는데 화면 지표는 {i['date']}에 멈춰 있음(계산에서 빠짐)"})
+        age = (today - datetime.strptime(i["date"], "%Y-%m-%d").date()).days
+        if age > MAX_AGE.get(i["key"], 120):
+            warn.append({"kind": "stale", "key": i["key"], "msg": f"{i['key']}: 마지막 값이 {i['date']}({age}일 전) — 발표가 늦거나 수집이 멈췄는지 확인"})
+    m = data["misery"]
+    if m["date"] < min(raw["CPIAUCSL"][-1][0], raw["UNRATE"][-1][0]):
+        gaps.append("misery")
+        warn.append({"kind": "gap", "key": "misery", "msg": f"고통지수: 원자료는 {min(raw['CPIAUCSL'][-1][0], raw['UNRATE'][-1][0])}까지 있는데 {m['date']}에 멈춰 있음"})
+    cc = data.get("cpi_core")
+    if not cc:
+        warn.append({"kind": "gap", "key": "cpi_core", "msg": "근원 CPI 분석을 만들지 못함"})
+        gaps.append("cpi_core")
+    elif cc["date"] < raw["CPILFESL"][-1][0]:
+        warn.append({"kind": "gap", "key": "cpi_core", "msg": f"근원 CPI 분석이 {cc['date']}에 멈춰 있음(원자료 {raw['CPILFESL'][-1][0]})"})
+        gaps.append("cpi_core")
+    return warn, gaps
+
+
 def pack(key, s, **kw):
     """지표 하나: 최신 값, 직전 값, 1년 전 값, 그래프용 자료."""
     s = [p for p in s if p[1] is not None]
@@ -78,7 +148,7 @@ def pack(key, s, **kw):
     ago = (d.replace(year=d.year - 1)).strftime("%Y-%m-%d")
     year_ago = next((v for dd, v in reversed(s) if dd <= ago), None)
     return {"key": key, "date": last[0], "value": last[1], "prev": prev[1], "prev_date": prev[0], "year_ago": year_ago,
-            "series": [[dd, v] for dd, v in s if dd >= keep], **kw}
+            "series": [[dd, v] for dd, v in s if dd >= keep], **({"est": True} if kw.pop("yoy_est", False) and last[0] in EST else {}), **kw}
 
 
 def finra_margin():
@@ -257,15 +327,15 @@ def main():
         "updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"),
         "source": "FRED (St. Louis Fed)",
         "misery": {**pack("misery", misery, keep_from="1948-01-01"),
-                   "cpi": cpi[-1][1], "unrate": un[misery[-1][0]],
+                   "cpi": cpi[-1][1], "unrate": un[misery[-1][0]], **({"est": True} if misery[-1][0] in EST else {}),
                    "pct_rank": pct_rank, "avg": round(sum(mv) / len(mv), 2),
                    "peak": peak, "five_lo": min(five), "five_hi": max(five)},
         "treasury": treasury,
         "margin": margin,
         "indicators": [
-            pack("cpi", cpi, extra=ann3(raw["CPIAUCSL"])[-1][1]),
-            pack("core_cpi", yoy(raw["CPILFESL"]), extra=ann3(raw["CPILFESL"])[-1][1]),
-            pack("core_pce", yoy(raw["PCEPILFE"]), extra=ann3(raw["PCEPILFE"])[-1][1]),
+            pack("cpi", cpi, yoy_est=True, extra=ann3(raw["CPIAUCSL"])[-1][1], **mom_of(raw["CPIAUCSL"])),
+            pack("core_cpi", yoy(raw["CPILFESL"]), yoy_est=True, extra=ann3(raw["CPILFESL"])[-1][1], **mom_of(raw["CPILFESL"])),
+            pack("core_pce", yoy(raw["PCEPILFE"]), yoy_est=True, extra=ann3(raw["PCEPILFE"])[-1][1]),
             pack("breakeven", raw["T10YIE"], keep_from="2016-01-01"),
             pack("unrate", raw["UNRATE"]),
             pack("sahm", raw["SAHMREALTIME"]),
@@ -275,10 +345,20 @@ def main():
             pack("vu", vu),
         ],
     }
+    try:
+        from cpi_core import analyze
+        data["cpi_core"] = analyze(fred)
+        cc = data["cpi_core"]
+        print(f"근원 CPI 분석 {cc['date']}: 근원 {cc['official']['core_mom']:+.1f}% · 헤드라인 {cc['official']['headline_mom']:+.1f}% · {cc['verdict']}({cc['score']}/{len(cc['checks'])}) · 주도 {', '.join(cc['drivers'])}")
+    except Exception as e:  # noqa: BLE001
+        print(f"근원 CPI 분석 실패: {type(e).__name__}: {e}")
+    data["warnings"], gaps = guard(raw, data, datetime.now(KST).date())
+    for w in data["warnings"]:
+        print(("::error::" if w["kind"] == "gap" else "::warning::") + w["msg"])
     print(f"국채 {tr[-1][0]}: 2년 {tr[-1][1]} · 10년 {tr[-1][2]} · 30년 {tr[-1][3]} ({len(tr)}일)")
     print(f"고통지수 {misery[-1][0]}: {last} (CPI {cpi[-1][1]} + 실업률 {un[misery[-1][0]]}) · 역사 백분위 {pct_rank}%")
     for i in data["indicators"]:
-        print(f"  {i['key']:12} {i['date']} {i['value']} (직전 {i['prev']}, 1년 전 {i['year_ago']}) {len(i['series'])}점")
+        print(f"  {i['key']:12} {i['date']} {i['value']}{' (추정)' if i.get('est') else ''}{f' · 전월 대비 {i["mom"]:+.1f}%' if i.get('mom') is not None else ''} (직전 {i['prev']}, 1년 전 {i['year_ago']}) {len(i['series'])}점")
     try:
         kr = kr_credit()
         kr["updated_at"] = data["updated_at"]
@@ -291,6 +371,8 @@ def main():
         return
     OUT.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
     print(f"저장: {OUT} ({OUT.stat().st_size // 1024}KB)")
+    if gaps:   # 빠진 지표가 있으면 실행을 실패로 끝내 알림이 가게 한다(파일은 위에서 이미 저장)
+        sys.exit(f"누락된 지표: {', '.join(gaps)}")
 
 
 if __name__ == "__main__":

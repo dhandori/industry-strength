@@ -39,7 +39,8 @@ def get(url, headers):
 
 
 def fred(sid):
-    rows = list(csv.reader(io.StringIO(get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}", BOT))))
+    # 캐시가 옛 파일을 주지 않게 매번 다른 주소로(us_econ.py 와 같은 이유, 2026-11-11)
+    rows = list(csv.reader(io.StringIO(get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}&_={int(time.time())}", {**BOT, "Cache-Control": "no-cache"}))))
     out = {}
     for d, v in rows[1:]:
         try:

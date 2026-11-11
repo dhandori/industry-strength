@@ -207,3 +207,43 @@ body.v-macro #meta { display: none; }
 .kf-c p { margin: 0; font-size: 12px; line-height: 1.5; color: var(--ink-2); }
 .kf-bt td, .kf-bt th { white-space: nowrap; }
 .mem-table.kf-bt { min-width: 0; }
+/* 2026-11-11: 1년 전 값이 없어 메워 계산한 전년 대비 값(2026년 10월 CPI 등) */
+.ec-est { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 11px; font-weight: 700; color: var(--warn-ink); background: var(--warn-bg); cursor: help; vertical-align: middle; }
+
+/* 2026-11-11: CPI 공식 전월 대비 · 근원 CPI 해부 카드 · 누락 경고 */
+.ec-mom { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin: 2px 0 6px; font-size: 13.5px; }
+.ec-mom b { font-size: 18px; } .ec-mom b.up { color: var(--up); } .ec-mom b.down { color: var(--down); }
+.ec-off { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); }
+.ec-mom small { color: var(--muted); font-size: 11.5px; }
+.ec-warn { margin: 0 0 10px; padding: 10px 14px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-ink); font-size: 13px; }
+.ec-warn.gap { background: color-mix(in srgb, var(--mx1) 12%, var(--surface)); color: var(--mx1); }
+.ec-warn ul { margin: 4px 0 0; padding-left: 18px; }
+.cc-card { margin-top: 12px; }
+.cc-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 6px 0 10px; }
+.cc-tile { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; display: grid; gap: 2px; }
+.cc-tile em { font-style: normal; font-size: 11.5px; color: var(--muted); font-weight: 600; }
+.cc-tile b { font-size: 20px; font-variant-numeric: tabular-nums; } .cc-tile b.up { color: var(--up); } .cc-tile b.down { color: var(--down); }
+.cc-tile small { font-size: 11px; color: var(--ink-2); }
+.cc-say { background: color-mix(in srgb, var(--c) 8%, var(--surface)); border-left: 3px solid var(--c); border-radius: 0 8px 8px 0; padding: 8px 12px; font-size: 13.5px; line-height: 1.6; }
+.cc-say p { margin: 2px 0; }
+.cc-h { margin: 14px 0 6px; font-size: 14px; } .cc-h .sub { font-weight: 500; font-size: 12px; color: var(--muted); }
+.mem-table.cc-tbl { min-width: 560px; width: 100%; }
+.cc-tbl td, .cc-tbl th { white-space: nowrap; }
+.cc-tbl tr.cc-g td { font-size: 11.5px; font-weight: 700; color: var(--muted); background: var(--surface-2); }
+.cc-tbl tr.cc-core td { font-weight: 700; }
+.cc-tbl tr.cc-hot td:first-child { box-shadow: inset 3px 0 0 var(--up); }
+.cc-tbl tr.cc-cool td:first-child { box-shadow: inset 3px 0 0 var(--down); }
+.cc-tag { margin-left: 6px; font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px; }
+.cc-tag.up { color: var(--up); background: color-mix(in srgb, var(--up) 12%, transparent); }
+.cc-tag.down { color: var(--down); background: color-mix(in srgb, var(--down) 12%, transparent); }
+.cc-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 24px; }
+.cc-bars i { width: 7px; border-radius: 2px; background: var(--line); }
+.cc-bars i.pos { background: var(--up); opacity: .75; } .cc-bars i.neg { background: var(--down); opacity: .75; }
+.cc-bars i:last-child { opacity: 1; }
+.cc-checks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; }
+.cc-checks li { display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 6px; padding: 6px 0; border-top: 1px solid var(--grid); font-size: 13px; }
+.cc-checks li i { font-style: normal; font-weight: 800; color: var(--muted); }
+.cc-checks li.on i, .cc-checks li.on b { color: var(--mx1); }
+.cc-checks small { display: block; font-size: 11.5px; color: var(--ink-2); margin-top: 2px; line-height: 1.45; }
+.mem-table.cc-fed { min-width: 0; }
+@media (max-width: 720px) { .cc-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .cc-checks { grid-template-columns: minmax(0, 1fr); } }
