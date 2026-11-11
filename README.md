@@ -12,7 +12,7 @@
 - **🚀 52주 신고가** 탭(`docs/highs.js`, `docs/data/highs.json`): 한국·미국 52주 신고가 종목의 흐름(신고가 수 추이, 강해지는 업종, 업종×날짜, 자주 나온 종목, 날짜별 명단). 데이터는 이 저장소의 Actions가 아니라 dhandori/global-high-radar 의 '52주 신고가 기록' 예약 작업이 한국장 17시·미국장 08시 기록 뒤 `docs/data/highs.json` 한 파일만 올린다. 두 탭은 시장 선택(한국/미국)과 산업 상세 서랍만 공유한다.
 - **종목 상세 창**(`docs/stock.js`): 어느 탭에서든 종목 이름을 누르면 열린다(산업 강도·RS 강한 종목·업종 탐색·52주 신고가·외국인·기관 보유 변화·섹터 워치). 주가 차트(종가·20·50·150·200일선·52주 최고 종가선·거래량, 신고가 기록일 ▼, 3개월~2년), 산업·시장과 비교 차트와 RS선, 기간 수익률 비교표, 추세 점검 8가지, 위험 관리(ATR·손절·비중), 52주 신고가 기록, 수급(표·누적 순매수·외국인 보유율·보유 변화 순위), 속한 산업·같은 바구니 종목, 섹터 워치 ETF, 페어를 한 화면에 모은다. 차트 자료는 `scripts/stock_charts.py`가 저장된 가격으로 만든 `docs/data/<시장>_stocks.json`(최근 2년, 갱신 워크플로 마지막 단계). 바구니 밖 종목은 한국은 네이버 차트 그림, 미국은 TradingView 차트로 대신한다.
 - **🌐 매크로 지수** 탭: 모든 카드를 펼쳐 그래프·설명까지 다 보인다(2026-11-11 접기 없앰).
-- **🤖 AI 시장** 탭(`docs/ai.js`, `docs/data/ai_market.json`): OpenAI·Anthropic 매출 런레이트(Epoch AI), 오픈웨이트 vs 클로즈드 토큰 비중(OpenRouter, 주간), 토큰 비중 vs 지출 비중(Vercel AI Gateway, 매일). `scripts/ai_market.py`를 `.github/workflows/ai-market.yml`이 매일 09:20·12:20 KST에 돌린다. 텔레그램 알림(새 매출 보도·월요일 주간 요약)은 dhandori/wamo_claude_bot 의 `scripts/ai_market_alert.py`가 이 JSON을 읽어 보낸다.
+- **🤖 AI 시장** 탭(`docs/ai.js`, `docs/data/ai_market.json`): OpenAI·Anthropic 매출 런레이트(Epoch AI), 오픈웨이트 vs 클로즈드 토큰 비중(OpenRouter, 주간), 토큰 비중 vs 지출 비중(Vercel AI Gateway, 매일). `scripts/ai_market.py`를 `.github/workflows/ai-market.yml`이 매시 20분에 돌린다. 분기 실적표(두 회사 분기 매출·전분기 대비·합계·핵심 보도, 확인된 보도는 `config/ai_revenue_manual.json` 의 quarters)도 같이 만든다. 텔레그램 알림(새 분기 실적·새 매출 보도·월요일 주간 요약)은 dhandori/wamo_claude_bot 의 `scripts/ai_market_alert.py`가 이 JSON을 읽어 보낸다.
 
 ## 계산 방법
 
