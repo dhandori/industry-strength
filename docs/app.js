@@ -67,7 +67,7 @@
     scrollTo({ top: 0 });
   }
   $$(".view-tabs button").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
-  window.__isBoard = () => ({ data: state.data, open: openDetail });
+  window.__isBoard = () => ({ data: state.data, series: state.series, open: openDetail });
   // 섹터 차트 카드에서 '세부 산업 순위 보기'를 누르면 섹터 칸을 누른 것과 같게 거른다.
   window.__isSectorPick = (ticker, name, items) => {
     const d = state.data[state.market];
@@ -306,7 +306,8 @@
       return `<span class="xl"><a href="${L.naver(code)}" target="_blank" rel="noopener" title="네이버 증권에서 보기">네이버</a><a href="${L.tvChart(code, "KR")}" target="_blank" rel="noopener" title="TradingView 차트">TV</a></span>`;
     }
     const t = m.ticker || code;
-    return `<span class="xl"><a href="${L.tvChart(t, "US")}" target="_blank" rel="noopener" title="TradingView 차트">TV</a><a href="${L.finviz(t)}" target="_blank" rel="noopener" title="Finviz에서 보기">Finviz</a></span>`;
+    const nu = L.naverUS(t);
+    return `<span class="xl">${nu ? `<a href="${nu}" target="_blank" rel="noopener" title="네이버 증권에서 보기">네이버</a>` : ""}<a href="${L.tvChart(t, "US")}" target="_blank" rel="noopener" title="TradingView 차트">TV</a><a href="${L.finviz(t)}" target="_blank" rel="noopener" title="Finviz에서 보기">Finviz</a></span>`;
   }
 
 
@@ -750,7 +751,8 @@
       const code = String(m.code || "").trim();
       if (!/^[A-Za-z0-9.\-]{1,12}$/.test(code)) return "";
       const tv = window.__links.tvPage(state.market === "KR" ? code : (m.ticker || code), state.market);
-      const naver = state.market === "KR" ? `<a href="${window.__links.naver(code)}" target="_blank" rel="noopener noreferrer">네이버</a>` : "";
+      const nu = window.__links.naverAny(state.market === "KR" ? code : (m.ticker || code), state.market);
+      const naver = nu ? `<a href="${nu}" target="_blank" rel="noopener noreferrer">네이버</a>` : "";
       return `<span class="mem-links">${naver}<a href="${tv}" target="_blank" rel="noopener noreferrer">TradingView</a></span>`;
     };
     const sup = d._sup && window.__supply;

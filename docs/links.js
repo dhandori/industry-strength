@@ -5,7 +5,9 @@
      TradingView에 미국 상장으로 아예 없는 종목(표의 none, 예: ACA)은 엉뚱한 회사 대신 Finviz 차트로 보낸다.
    - 미국 점 티커: TradingView·SEC는 BRK.B, Finviz·Yahoo는 BRK-B. */
 (() => {
-  let EX = {}, NONE = new Set();
+  let EX = {}, NONE = new Set(), NV = {}, NVNONE = new Set();
+  // 네이버 해외주식 주소는 거래소마다 꼬리가 달라(AAPL.O · JPM · BFAM.K · BRKb) scripts/naver_us.py 가 확인한 표를 쓴다(2026-11-11)
+  fetch("data/naver_us.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : null).then((d) => { if (d && d.map) { NV = d.map; NVNONE = new Set(d.none || []); } }).catch(() => {});
   fetch("data/tv_ex.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : null).then((d) => { if (d && d.map) { EX = d.map; NONE = new Set(d.none || []); } }).catch(() => {});
   const isKR = (m) => m === "KR";
   const krCode = (c) => String(c || "").trim().replace(/\.(KS|KQ)$/i, "").toUpperCase();
@@ -30,6 +32,15 @@
       return `https://www.tradingview.com/symbols/${enc(s ? s.replace(":", "-") : usTick(code))}/`;
     },
     naver(code, sub) { return `https://m.stock.naver.com/domestic/stock/${enc(krCode(code))}/${sub || "total"}`; },
+    // 미국 종목 네이버 증권 주소. 네이버에 없는 종목은 null(링크를 그리지 않는다). 표가 아직 없으면 나스닥은 .O, 나머지는 티커 그대로로 추정.
+    naverUS(code) {
+      const t = usTick(code);
+      if (NVNONE.has(t)) return null;
+      if (NV[t]) return "https://m.stock.naver.com" + NV[t];
+      return `https://m.stock.naver.com/worldstock/stock/${enc(t.replace(".", "") + (EX[t] === "NASDAQ" ? ".O" : ""))}/total`;
+    },
+    // 시장 구분 없이: 한국은 국내 종목 화면, 미국은 해외주식 화면
+    naverAny(code, market) { return isKR(market) ? window.__links.naver(code) : window.__links.naverUS(code); },
     finviz(code) { return `https://finviz.com/quote.ashx?t=${enc(usTick(code).replace(".", "-"))}`; },
     yahooNews(code) { return `https://finance.yahoo.com/quote/${enc(usTick(code).replace(".", "-"))}/news`; },
     sec(code) { return `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&ticker=${enc(usTick(code).replace(".", "-"))}&type=&dateb=&owner=include&count=40`; },

@@ -785,3 +785,58 @@ th[data-sk][data-dir="up"]::after { content: " ▲"; font-size: .8em; }
 section.card.cf-shut > :not(.card-head) { display: none !important; }
 section.card.cf-shut > .card-head { margin-bottom: 0; }
 section.card.cf-shut > .card-head .filters, section.card.cf-shut > .card-head .seg { display: none !important; }
+
+/* ===== 종목 상세 창 다시 구성 (2026-11-11) — 차트·추세 점검·바로가기·섹터·페어 ===== */
+.sk-panel { width: min(760px, 100%); }
+.sk-head { flex-wrap: wrap; padding-bottom: 8px; }
+.sk-head .sk-ht { flex: 1 1 0; min-width: 0; }
+.sk-nav { flex: 1 0 100%; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 2px -2px 0; padding: 2px; }
+.sk-nav::-webkit-scrollbar { display: none; }
+.sk-nav:empty { display: none; }
+.sk-nav button { flex: none; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); border-radius: 999px; padding: 4px 11px; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.sk-nav button:hover { border-color: var(--accent); color: var(--accent); }
+.sk-sec { scroll-margin-top: 110px; }
+.sk-sec + .sk-sec, .sk-sum + .sk-sec, .sk-path + .sk-sec { border-top: 1px solid var(--line); margin-top: 18px; }
+.sk-bds { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.sk-bd { display: inline-flex; align-items: baseline; gap: 4px; font-size: 12.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); }
+.sk-bd.hi, .sk-bd.ok { background: color-mix(in srgb, var(--good) 14%, transparent); color: var(--good); }
+.sk-bd.hot { background: color-mix(in srgb, var(--up) 13%, transparent); color: var(--up); }
+.sk-bd.lo, .sk-bd.no { background: color-mix(in srgb, var(--down) 13%, transparent); color: var(--down); }
+.sk-bd small { font-weight: 500; opacity: .85; }
+.sk-ch-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 20px 0 6px; }
+.sk-ch-head h4 { margin: 0 !important; }
+.sk-h5 { font-size: 13.5px !important; margin: 18px 0 4px !important; }
+.sk-lg { min-height: 36px; }
+.sk-lg .sk-lgd, .chart-legend .sk-lgd { font-weight: 700; color: var(--ink); }
+.chart-legend em { font-style: normal; font-weight: 600; }
+.chart-legend em.up { color: var(--up); } .chart-legend em.down { color: var(--down); }
+.chart.sk-price { height: 360px; }
+.chart.xs { height: 140px; }
+.sk-load { margin: 0; padding: 40px 0; text-align: center; color: var(--muted); font-size: 13px; }
+.sk-cap { margin: 4px 0 6px; font-size: 12.5px; color: var(--ink-2); line-height: 1.55; }
+.sk-cap-note { font-size: 11.5px; color: var(--muted); }
+.sk-img { height: auto !important; }
+.sk-img img { display: block; width: 100%; max-width: 700px; height: auto; margin: 6px auto 0; border-radius: 8px; background: #fff; }
+.sk-imgseg { margin-bottom: 4px; }
+.sk-tv { display: block; width: 100%; height: 400px; border: 0; border-radius: 8px; }
+.sk-cmp { min-width: 0; width: 100%; margin-top: 8px; }
+.sk-cmp td, .sk-cmp th { white-space: nowrap; }
+.sk-cmp tr.me td { background: var(--accent-soft); }
+.sk-score { margin: 0 0 6px; font-size: 13.5px; }
+.sk-score b { font-size: 18px; margin-right: 2px; }
+.sk-score .ok { color: var(--good); } .sk-score .no { color: var(--down); }
+.sk-checks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 14px; }
+.sk-checks li { display: grid; grid-template-columns: 20px minmax(0, 1fr); column-gap: 6px; align-items: baseline; font-size: 13px; padding: 4px 0; border-bottom: 1px solid var(--grid); }
+.sk-checks li i { font-style: normal; font-weight: 800; text-align: center; }
+.sk-checks li.ok i { color: var(--good); } .sk-checks li.no i { color: var(--up); } .sk-checks li.na { color: var(--muted); }
+.sk-checks li em { grid-column: 2; font-style: normal; font-size: 11.5px; color: var(--muted); }
+.sk-checks li em:empty { display: none; }
+.sk-rk { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }
+.sk-note-top { margin-top: 0; }
+.sk-pair { cursor: default; }
+.sk-pair:hover { border-color: var(--line) !important; background: var(--surface) !important; }
+@media (max-width: 560px) {
+  .sk-checks { grid-template-columns: minmax(0, 1fr); }
+  .chart.sk-price { height: 300px; }
+  .sk-tv { height: 320px; }
+}
