@@ -75,7 +75,8 @@ def epoch():
 
 
 # ---------- 뉴스: 구글 뉴스 검색에서 매출 숫자 자동 판독
-NEWS_Q = ['{c} "run rate"', '{c} "annualized revenue"', '{c} ARR revenue billion', '{c} quarterly revenue billion']
+NEWS_Q = ['{c} "run rate"', '{c} "annualized revenue"', '{c} ARR revenue billion', '{c} quarterly revenue billion',
+          '{c} quarter revenue', '{c} Q1 OR Q2 OR Q3 OR Q4 revenue']
 TRUST = ("Reuters", "Bloomberg", "CNBC", "Financial Times", "FT", "The Wall Street Journal", "WSJ", "The Information",
          "TechCrunch", "Axios", "The New York Times", "Yahoo Finance", "Fortune", "The Verge", "Business Insider")
 SKIP = re.compile(r"valu(e|ation|ed|es)|less than|more than previously|below|above|behind|gap|lead|ahead of|loss|lost|burn|spend|"
@@ -85,6 +86,33 @@ OTHER_CO = ("microsoft", "amazon", "google", "alphabet", "nvidia", "oracle", "sp
 PROJ = re.compile(r"\b(to top|to hit|to reach|to exceed|expect|project|forecast|target|goal|aim|could|will|may|pitch|"
                   r"set to|on track|on pace|by (year-end|end of)|20(2[7-9]|3\d))", re.I)
 AMT = re.compile(r"(?:US)?\$\s?(\d+(?:\.\d+)?)\s?(billion|bn|b)\b", re.I)
+# 분기 실적 기사는 손실·마진·경쟁사 비교가 같은 제목에 자주 붙는다(2026-11-11: 'OpenAI Q2 Revenue Grew 18% QoQ to $6.7B as
+# Operating Margin Sank, Trailing Anthropic' 이 SKIP 에 걸려 빠졌다). 분기 매출은 가치평가·투자·전망만 거르고, 매출 단어 뒤 금액을 읽는다.
+SKIP_Q = re.compile(r"valu(e|ation|ed|es)|raise|funding|round|invest|stock|\bbuy|deal|contract|compute|estimate|forecast|projection|guidance|\bcut\b|slash|"
+                    r"segment|division|unit\b|codex|claude code|chatgpt plus|ad business|\bads?\b|advertis", re.I)
+REV = re.compile(r"revenue|sales|\btop[- ]line", re.I)
+NOT_REV = re.compile(r"(loss|losses|lost|burn|deficit|commitment|valu\w*|funding|raise|spend\w*|cost|capex)\W+(?:\w+\W+){0,3}$", re.I)
+
+NOT_REV_AFTER = re.compile(r"^\W*(?:\w+\W+){0,3}?(loss\w*|burn\w*|deficit\w*|commitment\w*|obligation\w*|valuation\w*|funding|round|investment\w*)\b", re.I)
+
+
+def pick_amt(head):
+    """분기 매출 제목에서 매출 금액 하나: '매출' 단어에 가장 가까운 금액. 바로 앞(단어 4개 안)에 손실·약정·가치평가 같은 말이
+    붙은 금액은 뺀다. 2026-11-11: 'Second-Quarter Loss Widens to $12.3 Billion'(손실), 'purchase commitments of $895.4 billion'(약정)을
+    매출로 읽던 문제."""
+    rv = REV.search(head)
+    best = None
+    for m in AMT.finditer(head):
+        if NOT_REV.search(head[:m.start()]) or NOT_REV_AFTER.search(head[m.end():]):
+            continue
+        dist = abs(m.start() - rv.start()) if rv else m.start()
+        if best is None or dist < best[0]:
+            best = (dist, m)
+    return best[1] if best else None
+
+
+QN = {"1": "first", "2": "second", "3": "third", "4": "fourth"}
+HEADS = []   # 이번 수집에서 본 모든 제목(분기 실적 핵심 보도를 고를 때 쓴다)
 
 
 def news():
@@ -104,20 +132,24 @@ def news():
                 low = head.lower()
                 # 주어가 이 회사인 제목만(다른 회사 이름이 먼저 나오면 그 회사 기사)
                 pos = {k: low.find(k.lower()) for k in MAIN + OTHER_CO if k.lower() in low}
-                if c not in pos or min(pos, key=pos.get) != c or SKIP.search(head):
-                    continue
-                am = AMT.search(head)
-                if not am:
-                    continue
-                if re.search(r"run[- ]rate|annuali[sz]ed|\barr\b|recurring", low):
-                    metric = "run"
-                elif re.search(r"\bq[1-4]\b|quarter", low):
-                    metric = "quarter"
-                else:
-                    continue
                 pd = re.search(r"<pubDate>(.*?)</pubDate>", it)
                 day = datetime.strptime(pd.group(1)[5:16], "%d %b %Y").strftime("%Y-%m-%d") if pd else None
                 link = re.search(r"<link>(.*?)</link>", it)
+                if c in pos and min(pos, key=pos.get) == c:
+                    HEADS.append({"company": c, "date": day, "title": head.strip(), "outlet": outlet.strip(), "link": link.group(1) if link else ""})
+                if c not in pos or min(pos, key=pos.get) != c:
+                    continue
+                if re.search(r"run[- ]rate|annuali[sz]ed|\barr\b|recurring", low):
+                    metric = "run"
+                elif re.search(r"\bq[1-4]\b|quarter", low) and REV.search(head):
+                    metric = "quarter"
+                else:
+                    continue
+                if (SKIP_Q if metric == "quarter" else SKIP).search(head):
+                    continue
+                am = pick_amt(head) if metric == "quarter" else AMT.search(head)
+                if not am:
+                    continue
                 qn = re.search(r"\bq([1-4])\b", low) or re.search(r"\b(first|second|third|fourth)[- ]quarter", low)
                 if qn and not qn.group(1).isdigit():
                     qn = type("Q", (), {"group": lambda self, i, v=str(["first", "second", "third", "fourth"].index(qn.group(1)) + 1): v})()
@@ -150,8 +182,20 @@ def news():
                     and (datetime.strptime(h["date"], "%Y-%m-%d") - datetime.strptime(g["date"], "%Y-%m-%d")).days <= 30 \
                     and re.search(r"correct|revis|restat", h["title"], re.I) and g["kind"] == h["kind"] == "reported":
                 g["superseded"] = h["date"]
-    # 기사 두 곳 이상이거나 주요 매체 한 곳이면 채택
-    keep = [g for g in groups if len(g["outlets"]) >= 2 or any(t.lower() in g["outlets"][0].lower() for t in TRUST)]
+    # 분기 실적은 금액 없는 제목으로 보도되는 일이 많다('OpenAI's Second-Quarter Sales Show Tepid Growth' - WSJ).
+    # 금액 있는 기사가 한 곳뿐이어도 ±3일 안에 다른 매체 두 곳 이상이 같은 회사의 같은 분기 실적을 다뤘으면 확인된 것으로 본다.
+    for g in groups:
+        if g["metric"] != "quarter" or not g.get("quarter") or not g["date"]:
+            continue
+        qi = g["quarter"][-1]
+        qx = re.compile(rf"\bq{qi}\b|{QN[qi]}[- ]quarter", re.I)
+        d0 = datetime.strptime(g["date"], "%Y-%m-%d")
+        others = {h["outlet"] for h in HEADS if h["company"] == g["company"] and h["date"] and qx.search(h["title"])
+                  and abs((datetime.strptime(h["date"], "%Y-%m-%d") - d0).days) <= 3 and h["outlet"] not in g["outlets"]}
+        if len(others) >= 2:
+            g["corroborated"] = sorted(others)[:6]
+    # 기사 두 곳 이상이거나 주요 매체 한 곳이거나(분기 실적은) 다른 매체 보도로 확인되면 채택
+    keep = [g for g in groups if len(g["outlets"]) >= 2 or any(t.lower() in g["outlets"][0].lower() for t in TRUST) or g.get("corroborated")]
     return sorted(keep, key=lambda g: g["date"], reverse=True)[:40]
 
 
@@ -271,7 +315,145 @@ def manual(rv):
         if not dup:
             sup.append(x)
     rv["supplements"] = sup
+    rv["_manual_q"] = m.get("quarters") or {}
     return rv
+
+
+# ---------- 분기 실적표 (2026-11-11 사용자: OpenAI 3분기 실적을 숫자 하나가 아니라 성장률·내용까지, Anthropic과 합산도)
+FACT = [  # 핵심 보도에서 뽑을 사실: (종류, 정규식) — 제목에 그대로 있는 숫자만 쓴다
+    ("qoq", re.compile(r"(\d+(?:\.\d+)?)\s?%\s*(?:quarter[- ]over[- ]quarter|q/?q|qoq|sequential|from the (?:prior|previous) quarter)", re.I)),
+    ("qoq", re.compile(r"(?:surge|jump|rise|grow|grew|climb|soar|leap)\w*\s+(?:nearly |about |almost |by )?(\d+(?:\.\d+)?)\s?%", re.I)),
+    ("enterprise", re.compile(r"(enterprise|business|corporate)[^.;]*?(doubl\w*|tripl\w*|half|\d+(?:\.\d+)?\s?%)", re.I)),
+    ("loss", re.compile(r"(?:operating )?loss[^.;$]*?(?:US)?\$\s?(\d+(?:\.\d+)?)\s?(?:billion|bn|b)\b", re.I)),
+    ("driver", re.compile(r"\b(coding|codex|claude code|agents?|agentic|api|chatgpt|consumer|subscri\w+|enterprise)\b", re.I)),
+]
+DRIVER_KO = {"coding": "코딩", "codex": "코딩(Codex)", "claude code": "코딩(Claude Code)", "agent": "에이전트", "agents": "에이전트",
+             "agentic": "에이전트", "api": "API", "chatgpt": "ChatGPT", "consumer": "소비자", "enterprise": "기업"}
+
+
+def _qkey(q):
+    return int(q[:4]) * 4 + int(q[-1])
+
+
+def _prev_q(q, n=1):
+    k = _qkey(q) - n
+    return f"{(k - 1) // 4}Q{(k - 1) % 4 + 1}"
+
+
+def highlights(co, q, day):
+    """분기 실적 보도 무렵(보도일 −3일~+10일) 그 회사가 주어인 제목 중 실적 관련 제목을 골라 핵심 보도로. 주요 매체 먼저."""
+    if not day:
+        return {"heads": [], "facts": {}}
+    d0 = datetime.strptime(day, "%Y-%m-%d")
+    pool = list(HEADS)
+    try:   # 실적 기사 전용 검색 한 번 더(매출 숫자가 제목에 없는 해설 기사까지)
+        qq = f'{co} ("{QN[q[-1]]} quarter" OR "Q{q[-1]}") (revenue OR enterprise OR loss OR growth)'
+        url = "https://news.google.com/rss/search?" + urllib.parse.urlencode({"q": qq + " when:30d", "hl": "en-US", "gl": "US", "ceid": "US:en"})
+        xml = get(url, 30).decode("utf-8", "ignore")
+        for it in re.findall(r"<item>(.*?)</item>", xml, re.S):
+            tt = html.unescape(re.search(r"<title>(.*?)</title>", it, re.S).group(1))
+            head, _, outlet = tt.rpartition(" - ")
+            pd = re.search(r"<pubDate>(.*?)</pubDate>", it)
+            lk = re.search(r"<link>(.*?)</link>", it)
+            low = (head or tt).lower()
+            pos = {k: low.find(k.lower()) for k in MAIN + OTHER_CO if k.lower() in low}
+            if co in pos and min(pos, key=pos.get) == co:
+                pool.append({"company": co, "date": datetime.strptime(pd.group(1)[5:16], "%d %b %Y").strftime("%Y-%m-%d") if pd else None,
+                             "title": (head or tt).strip(), "outlet": outlet.strip(), "link": lk.group(1) if lk else ""})
+    except Exception as e:  # noqa: BLE001
+        print(f"핵심 보도 검색 실패 {co} {q}: {type(e).__name__}")
+    rel = re.compile(r"quarter|\bq[1-4]\b|revenue|enterprise|loss|growth|doubl|%", re.I)
+    seen, heads = set(), []
+    for h in pool:
+        if h["company"] != co or not h["date"] or not rel.search(h["title"]) or PROJ.search(h["title"]) and not REV.search(h["title"]):
+            continue
+        dd = (datetime.strptime(h["date"], "%Y-%m-%d") - d0).days
+        key = re.sub(r"\W+", " ", h["title"].lower())[:60]
+        if -3 <= dd <= 10 and key not in seen:
+            seen.add(key)
+            heads.append(h)
+    heads.sort(key=lambda h: (not any(t.lower() in h["outlet"].lower() for t in TRUST), h["date"]))
+    facts = {}
+    for h in heads:
+        for kind, rx in FACT:
+            m = rx.search(h["title"])
+            if not m:
+                continue
+            if kind == "driver":
+                facts.setdefault("drivers", [])
+                w = DRIVER_KO.get(m.group(1).lower(), m.group(1))
+                if w not in facts["drivers"]:
+                    facts["drivers"].append(w)
+            elif kind not in facts:
+                facts[kind] = {"text": m.group(0), "value": m.group(1) if kind != "enterprise" else m.group(2), "outlet": h["outlet"], "title": h["title"]}
+    return {"heads": heads[:6], "facts": facts}
+
+
+def quarterly(rv, prev_q, manual_q):
+    """회사별 분기 매출: S-1 공시 > 확인된 보도(config) > 기사 자동 판독(두 곳 이상·주요 매체) 순으로 하나를 고른다.
+    다른 출처 값도 alt 로 남기고, 전분기·전년 대비와 두 회사 합계(기준이 달라 참고용)를 계산한다."""
+    out, warn = {}, []
+    for co in MAIN:
+        cand = {}
+        f = (rv.get("filings") or {}).get(co) or {}
+        for x in f.get("quarters") or []:
+            cand.setdefault(x["q"], []).append({"usd": x["usd"], "src": "S-1 공시" if x.get("kind") == "reported" else "S-1 계산",
+                                                "rank": 0 if x.get("kind") == "reported" else 2, "where": x.get("where"), "date": None})
+        for x in manual_q.get(co) or []:
+            cand.setdefault(x["q"], []).append({"usd": x["usd"], "src": "확인된 보도", "rank": 1, "where": x.get("note"), "date": x.get("report_date"),
+                                                "link": x.get("source"), "outlets": x.get("outlets")})
+        notes = {x["q"]: x.get("facts") or [] for x in manual_q.get(co) or [] if x.get("facts")}
+        for g in rv.get("news") or []:
+            if g["company"] != co or g["metric"] != "quarter" or g["kind"] != "reported" or not g.get("quarter") or g.get("superseded"):
+                continue
+            cand.setdefault(g["quarter"], []).append({"usd": g["usd"], "src": "기사 자동 판독", "rank": 3 - min(len(g["outlets"]), 9) / 10,
+                                                      "where": g["title"], "date": g["date"], "link": g.get("link"), "outlets": g["outlets"]})
+        rows = []
+        for q in sorted(cand, key=_qkey):
+            # 직전 분기 값의 5배를 넘거나 5분의 1 아래면 판독 오류로 보고 기사 값은 버린다(공시·확인된 보도는 그대로)
+            pv = rows[-1]["usd"] if rows and _qkey(rows[-1]["q"]) == _qkey(q) - 1 else None
+            ok = [c for c in cand[q] if c["rank"] < 2 or not pv or 0.2 <= c["usd"] / pv <= 5]
+            if not ok:
+                warn.append({"kind": "check", "msg": f"{co} {q} 기사 금액이 직전 분기와 너무 달라 뺌: " + ", ".join(f"{c['usd'] / 1e8:,.0f}억" for c in cand[q])})
+                continue
+            cand[q] = ok
+            best = sorted(cand[q], key=lambda c: c["rank"])[0]
+            alt = [{"usd": c["usd"], "src": c["src"]} for c in cand[q] if c is not best and abs(c["usd"] - best["usd"]) > 0.03 * best["usd"]]
+            rows.append({"q": q, **{k: v for k, v in best.items() if k != "rank"}, "alt": alt, **({"facts": notes[q]} if q in notes else {})})
+        by = {r["q"]: r for r in rows}
+        for r in rows:
+            p, y = by.get(_prev_q(r["q"])), by.get(_prev_q(r["q"], 4))
+            r["qoq"] = round((r["usd"] / p["usd"] - 1) * 100, 1) if p else None
+            r["yoy"] = round((r["usd"] / y["usd"] - 1) * 100, 1) if y else None
+            if r["qoq"] is not None and p and p.get("qoq") is not None:
+                r["qoq_prev"] = p["qoq"]
+            # 핵심 보도: 기사로 확인된 분기(최근 4개)만. 지난번에 모은 것이 있으면 그대로 쓴다(매번 다시 찾지 않게)
+            old = ((prev_q or {}).get(co) or {})
+            old = next((o for o in old.get("rows", []) if o["q"] == r["q"] and o.get("hl")), None)
+            if r["src"] != "S-1 공시" and r.get("date") and _qkey(r["q"]) >= _qkey(rows[-1]["q"]) - 1:
+                hl = old["hl"] if old and old["hl"].get("heads") and old.get("date") == r.get("date") else highlights(co, r["q"], r["date"])
+                if hl["heads"]:
+                    r["hl"] = hl
+        out[co] = {"rows": rows, "basis": "총액" if co == "Anthropic" else "순액"}
+        # 누락 감시: 기사로 잡힌 분기 실적이 표에 없거나(분기 미상), 표의 값과 크게 다르면 경고
+        for g in rv.get("news") or []:
+            if g["company"] == co and g["metric"] == "quarter" and g["kind"] == "reported" and not g.get("superseded") \
+                    and (len(g["outlets"]) >= 2 or any(t.lower() in g["outlets"][0].lower() for t in TRUST) or g.get("corroborated")):
+                if not g.get("quarter"):
+                    warn.append({"kind": "gap", "msg": f"{co} 분기 실적 보도({g['date']}, {g['usd'] / 1e8:,.0f}억 달러)가 몇 분기인지 못 읽어 분기 실적표에 빠짐: {g['title']}"})
+                elif g["quarter"] in by and abs(by[g["quarter"]]["usd"] - g["usd"]) > 0.1 * g["usd"] and by[g["quarter"]]["src"] == "기사 자동 판독":
+                    warn.append({"kind": "check", "msg": f"{co} {g['quarter']} 보도 금액이 엇갈림: {g['usd'] / 1e8:,.0f}억 vs 표 {by[g['quarter']]['usd'] / 1e8:,.0f}억"})
+    # 두 회사 합계: 둘 다 있는 분기만(기준이 달라 참고용)
+    a = {r["q"]: r for r in out.get("Anthropic", {}).get("rows", [])}
+    o = {r["q"]: r for r in out.get("OpenAI", {}).get("rows", [])}
+    comb = []
+    for q in sorted(set(a) & set(o), key=_qkey):
+        t = a[q]["usd"] + o[q]["usd"]
+        comb.append({"q": q, "usd": t, "Anthropic": a[q]["usd"], "OpenAI": o[q]["usd"], "a_share": round(a[q]["usd"] / t * 100, 1)})
+    for i, c in enumerate(comb):
+        if i and _qkey(comb[i - 1]["q"]) == _qkey(c["q"]) - 1:
+            c["qoq"] = round((c["usd"] / comb[i - 1]["usd"] - 1) * 100, 1)
+    return {"companies": out, "combined": comb, "warnings": warn}
 
 
 # ---------- 토큰: OpenRouter
@@ -530,6 +712,27 @@ def main():
         data["revenue"] = manual(data.get("revenue"))
     except Exception as e:  # noqa: BLE001
         print(f"보충 자료: 실패 {type(e).__name__}: {e}")
+    gaps = []
+    if data.get("revenue") is not None:
+        mq = data["revenue"].pop("_manual_q", {})
+        try:
+            qt = quarterly(data["revenue"], (prev.get("revenue") or {}).get("quarterly", {}).get("companies"), mq)
+            data["revenue"]["quarterly"] = {"companies": qt["companies"], "combined": qt["combined"]}
+            data["warnings"] = qt["warnings"]
+            gaps = [w for w in qt["warnings"] if w["kind"] == "gap"]
+            for co, v in qt["companies"].items():
+                r = v["rows"][-1] if v["rows"] else None
+                if r:
+                    print(f"{co} 분기: {r['q']} {r['usd'] / 1e8:,.0f}억 달러({r['src']}) 전분기 대비 {r['qoq']}% · 핵심 보도 {len((r.get('hl') or {}).get('heads', []))}개 {(r.get('hl') or {}).get('facts', {}).keys()}")
+            if qt["combined"]:
+                c = qt["combined"][-1]
+                print(f"두 회사 합계 {c['q']}: {c['usd'] / 1e8:,.0f}억 달러 (Anthropic {c['a_share']}%)")
+        except Exception as e:  # noqa: BLE001
+            print(f"분기 실적표 실패: {type(e).__name__}: {e}")
+            data["warnings"] = [{"kind": "gap", "msg": f"분기 실적표를 만들지 못함({type(e).__name__})"}]
+            gaps = data["warnings"]
+        for w in data.get("warnings") or []:
+            print(("::error::" if w["kind"] == "gap" else "::warning::") + w["msg"])
     rv, orr, vc = data.get("revenue") or {}, data.get("openrouter") or {}, data.get("vercel") or {}
     for c in MAIN:
         last = (rv.get("companies", {}).get(c) or [{}])[-1]
@@ -543,6 +746,8 @@ def main():
     print(f"저장: {OUT} ({OUT.stat().st_size // 1024}KB)")
     if not any(v.get("ok") for v in data["sources"].values()):
         sys.exit(1)
+    if gaps:   # 잡힌 실적이 표에서 빠졌으면 실패로 끝내 알림이 가게 한다(파일은 위에서 저장)
+        sys.exit("분기 실적 누락: " + " / ".join(w["msg"] for w in gaps))
 
 
 if __name__ == "__main__":

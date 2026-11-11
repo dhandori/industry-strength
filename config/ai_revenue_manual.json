@@ -6,33 +6,175 @@
       "url": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&company=anthropic&type=S-1",
       "basis": "총액(gross) 인식. 클라우드 마켓플레이스 판매분이 2026년 상반기 매출의 48%",
       "quarters": [
-        {"q": "2024Q4", "end": "2024-12-31", "usd": 197000000, "kind": "reported", "where": "S-1 위험요인"},
-        {"q": "2025Q1", "end": "2025-03-31", "usd": 376000000, "kind": "reported", "where": "S-1 MD&A"},
-        {"q": "2025Q2", "end": "2025-06-30", "usd": 787000000, "kind": "reported", "where": "S-1 MD&A"},
-        {"q": "2025Q3", "end": "2025-09-30", "usd": 1382000000, "kind": "reported", "where": "S-1 MD&A"},
-        {"q": "2025Q4", "end": "2025-12-31", "usd": 2040000000, "kind": "reported", "where": "S-1 MD&A"},
-        {"q": "2026Q1", "end": "2026-03-31", "usd": 4731000000, "kind": "reported", "where": "S-1 MD&A"},
-        {"q": "2026Q2", "end": "2026-06-30", "usd": 11555000000, "kind": "reported", "where": "S-1 MD&A"},
-        {"q": "2026Q3", "end": "2026-09-30", "usd": 16942000000, "kind": "derived", "where": "S-1 사업 항목 '2024년 4분기의 86배' × 1.97억 달러로 계산(FT 보도 168억 달러). 금액 칸은 아직 빈칸"}
+        {
+          "q": "2024Q4",
+          "end": "2024-12-31",
+          "usd": 197000000,
+          "kind": "reported",
+          "where": "S-1 위험요인"
+        },
+        {
+          "q": "2025Q1",
+          "end": "2025-03-31",
+          "usd": 376000000,
+          "kind": "reported",
+          "where": "S-1 MD&A"
+        },
+        {
+          "q": "2025Q2",
+          "end": "2025-06-30",
+          "usd": 787000000,
+          "kind": "reported",
+          "where": "S-1 MD&A"
+        },
+        {
+          "q": "2025Q3",
+          "end": "2025-09-30",
+          "usd": 1382000000,
+          "kind": "reported",
+          "where": "S-1 MD&A"
+        },
+        {
+          "q": "2025Q4",
+          "end": "2025-12-31",
+          "usd": 2040000000,
+          "kind": "reported",
+          "where": "S-1 MD&A"
+        },
+        {
+          "q": "2026Q1",
+          "end": "2026-03-31",
+          "usd": 4731000000,
+          "kind": "reported",
+          "where": "S-1 MD&A"
+        },
+        {
+          "q": "2026Q2",
+          "end": "2026-06-30",
+          "usd": 11555000000,
+          "kind": "reported",
+          "where": "S-1 MD&A"
+        },
+        {
+          "q": "2026Q3",
+          "end": "2026-09-30",
+          "usd": 16942000000,
+          "kind": "derived",
+          "where": "S-1 사업 항목 '2024년 4분기의 86배' × 1.97억 달러로 계산(FT 보도 168억 달러). 금액 칸은 아직 빈칸"
+        }
       ],
       "pending": [
-        {"what": "런레이트(2026-10-31 기준)", "note": "S-1 정의: 최근 28일 사용료 × 13 + 월 구독료 × 12. 첫 S-1에는 금액이 빈칸이라 로드쇼 전 수정 S-1에서 채워질 가능성이 큼"},
-        {"what": "3분기 매출 금액", "note": "위험요인의 금액 칸이 빈칸. 수정 S-1에서 확정"}
+        {
+          "what": "런레이트(2026-10-31 기준)",
+          "note": "S-1 정의: 최근 28일 사용료 × 13 + 월 구독료 × 12. 첫 S-1에는 금액이 빈칸이라 로드쇼 전 수정 S-1에서 채워질 가능성이 큼"
+        },
+        {
+          "what": "3분기 매출 금액",
+          "note": "위험요인의 금액 칸이 빈칸. 수정 S-1에서 확정"
+        }
       ],
       "sources": [
-        {"t": "Kepler: Anthropic S-1 Breakdown", "u": "https://kepler.ai/research/financial/s1-anthropic/"},
-        {"t": "Cape Fear Advisors: Gross Revenue and a Q3 Stated as 86 Times", "u": "https://capefearadvisors.substack.com/p/anthropic-first-read-the-revenue"}
+        {
+          "t": "Kepler: Anthropic S-1 Breakdown",
+          "u": "https://kepler.ai/research/financial/s1-anthropic/"
+        },
+        {
+          "t": "Cape Fear Advisors: Gross Revenue and a Q3 Stated as 86 Times",
+          "u": "https://capefearadvisors.substack.com/p/anthropic-first-read-the-revenue"
+        }
       ]
     }
   },
   "supplements": [
-    {"company": "Anthropic", "date": "2026-12-31", "usd": 110000000000, "kind": "target",
-     "report_date": "2026-10-15", "label": "연말 목표(투자자 설명)",
-     "note": "10/14 상장 전 투자자 모임에서 연말 런레이트 1,100억 달러를 제시(Reuters·The Information 보도, 회사 공식 발표 아님). 총액·순액 기준 미상",
-     "source": "https://tech-insider.org/anthropic-pre-ipo-investor-meeting-110-billion-run-rate-2026/"},
-    {"company": "OpenAI", "date": "2026-12-31", "usd": 70000000000, "kind": "target",
-     "report_date": "2026-10-09", "label": "연말 기대치(투자자 설명)",
-     "note": "투자 유치 과정에서 연말 연환산 매출 700억 달러 이상을 기대한다고 설명(Bloomberg 보도, 9월 말 실적은 약 500억 달러)",
-     "source": "https://www.pymnts.com/?p=4293719"}
-  ]
+    {
+      "company": "Anthropic",
+      "date": "2026-12-31",
+      "usd": 110000000000,
+      "kind": "target",
+      "report_date": "2026-10-15",
+      "label": "연말 목표(투자자 설명)",
+      "note": "10/14 상장 전 투자자 모임에서 연말 런레이트 1,100억 달러를 제시(Reuters·The Information 보도, 회사 공식 발표 아님). 총액·순액 기준 미상",
+      "source": "https://tech-insider.org/anthropic-pre-ipo-investor-meeting-110-billion-run-rate-2026/"
+    },
+    {
+      "company": "OpenAI",
+      "date": "2026-12-31",
+      "usd": 70000000000,
+      "kind": "target",
+      "report_date": "2026-10-09",
+      "label": "연말 기대치(투자자 설명)",
+      "note": "투자 유치 과정에서 연말 연환산 매출 700억 달러 이상을 기대한다고 설명(Bloomberg 보도, 9월 말 실적은 약 500억 달러)",
+      "source": "https://www.pymnts.com/?p=4293719"
+    }
+  ],
+  "_분기_설명": "quarters: 회사별 분기 매출 중 기사 자동 판독이 놓치거나(금액 없는 제목) 공시가 없는 분기를 사람이 확인해 적는다. S-1 공시가 있으면 공시가 이긴다. facts는 실적 카드·텔레그램 알림에 그대로 나오는 확인된 사실(출처 포함).",
+  "quarters": {
+    "OpenAI": [
+      {
+        "q": "2026Q1",
+        "usd": 5700000000,
+        "report_date": "2026-08-18",
+        "source": "https://aiweekly.co/alerts/wsj-openai-q2-revenue-grew-18-qoq-to-67b-as-operating-margin-sank-further",
+        "outlets": [
+          "WSJ(재인용)"
+        ],
+        "note": "WSJ 2분기 보도의 직전 분기 값"
+      },
+      {
+        "q": "2026Q2",
+        "usd": 6700000000,
+        "report_date": "2026-08-18",
+        "source": "https://cryptobriefing.com/openai-revenue-6-7-billion-q2-2026/",
+        "outlets": [
+          "WSJ",
+          "Yahoo Finance",
+          "Investing.com",
+          "Crypto Briefing"
+        ],
+        "note": "WSJ 단독(투자자 자료): 전분기 대비 약 18% 증가",
+        "facts": [
+          "조정 영업손실 101억 달러(WSJ)",
+          "같은 분기 Anthropic 매출 116억 달러로 처음 OpenAI를 앞섬(WSJ)"
+        ]
+      },
+      {
+        "q": "2026Q3",
+        "usd": 10000000000,
+        "report_date": "2026-11-10",
+        "source": "https://www.storyboard18.com/brand-marketing/openai-posts-10b-revenue-in-q3-with-10-9b-operating-loss-ws-l-114468.htm",
+        "outlets": [
+          "WSJ",
+          "CNBC",
+          "Bloomberg"
+        ],
+        "note": "WSJ(투자자 자료)·CNBC(사라 프라이어 CFO): 전분기 대비 약 50% 증가",
+        "facts": [
+          "기업용 매출이 전분기 대비 2배로 늘어 기업·소비자 매출이 50 대 50(CFO 사라 프라이어, CNBC)",
+          "성장 동력은 코딩(Codex)과 업무용 에이전트",
+          "조정 영업손실 109억 달러로 2분기 101억 달러에서 소폭 확대(주식보상비용 26억 달러 제외 기준)",
+          "조정 영업이익률은 2분기 −150%에서 −109%로 개선",
+          "ChatGPT 유료 이용자 약 1억 명(주간 활성 이용자의 8.5%)",
+          "기업 시장에서 Anthropic을 쫓으려고 최신 모델 가격을 내림",
+          "신규 투자 유치는 목표 300억 달러의 절반에 못 미침(WSJ)"
+        ]
+      }
+    ],
+    "Anthropic": [
+      {
+        "q": "2026Q3",
+        "usd": 17000000000,
+        "report_date": "2026-11-02",
+        "source": "https://www.cnbc.com/",
+        "outlets": [
+          "CNBC",
+          "WSJ"
+        ],
+        "note": "수정 S-1 공시 값이 있으면 공시를 쓴다",
+        "facts": [
+          "영업손실 5억 6,700만 달러(주식보상비용 포함 기준이라 OpenAI 조정 손실과 직접 비교는 주의)",
+          "같은 분기 매출·수익성 모두 OpenAI를 앞섬"
+        ]
+      }
+    ]
+  }
 }

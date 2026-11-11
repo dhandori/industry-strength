@@ -181,3 +181,21 @@ tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-thr
 #aiMeta { order: 0; } #aiBody > .ai-tiles { order: 1; } #aiBody > .ai-o-rev { order: 2; } #aiBody > .ai-o-file { order: 3; }
 #infraBody { order: 4; margin-top: 0 !important; } #chipBody { order: 5; margin-top: 0 !important; }
 #aiBody > .ai-o-oc { order: 6; } #aiBody > .ai-o-rank { order: 7; } #aiBody > .ai-src { order: 9; } #aiBody > :not([class*="ai-o-"]):not(.ai-tiles):not(.ai-src) { order: 8; }
+
+/* 2026-11-11 AI 연구소 분기 실적 카드 */
+.aq-sum { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 2px 0 8px; }
+.aq-sum span { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.aq-sum b { font-size: 24px; }
+.aq-sum em { font-style: normal; font-size: 12.5px; color: var(--ink-2); }
+.aq-cos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+@media (max-width: 720px) { .aq-cos { grid-template-columns: minmax(0, 1fr); } }
+.aq-co { border: 1px solid var(--line); border-top: 3px solid var(--c); border-radius: 10px; padding: 10px 12px; }
+.aq-h { font-size: 13.5px; }
+.aq-v { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin: 4px 0; }
+.aq-v > b { font-size: 22px; }
+.aq-v span { font-size: 13px; } .aq-v b.up { color: var(--up); } .aq-v b.down { color: var(--down); }
+.aq-trend { font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.aq-facts { margin: 8px 0 0; padding-left: 18px; font-size: 13px; line-height: 1.55; }
+.aq-heads { margin-top: 6px; font-size: 12.5px; }
+.aq-heads summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+.aq-heads ul { margin: 4px 0 0; padding-left: 18px; line-height: 1.5; }
