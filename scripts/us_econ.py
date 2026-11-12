@@ -2,7 +2,7 @@
 
 자료: 세인트루이스 연준 FRED의 공개 CSV(fredgraph.csv, API 키 필요 없음).
 발표 주기: CPI(매월 중순), 고용보고서·실업률(매월 첫 금요일), PCE(매월 말), 구인건수(JOLTS, 매월 초),
-신규·계속 실업수당 청구(매주 목요일), 10년 기대인플레(매일). 모두 미국 동부 08:30(한국 21:30~22:30) 발표.
+신규·계속 실업수당 청구(매주 목요일). 모두 미국 동부 08:30(한국 21:30~22:30) 발표.
 → .github/workflows/us-econ.yml 이 매일 밤·아침에 돌린다.
 
 python scripts/us_econ.py            # 수집 + 저장
@@ -105,11 +105,11 @@ def mom_of(s):
 
 
 # 화면 지표 → 원자료(FRED). 원자료에 새 값이 있는데 지표가 따라가지 못하면 '누락'(2026-11-11 사용자: 지표가 나왔는데 빠지는 일 없게)
-SOURCE = {"cpi": ["CPIAUCSL"], "core_cpi": ["CPILFESL"], "core_pce": ["PCEPILFE"], "breakeven": ["T10YIE"],
-          "unrate": ["UNRATE"], "sahm": ["SAHMREALTIME"], "payrolls": ["PAYEMS"], "claims": ["ICSA"],
+SOURCE = {"cpi": ["CPIAUCSL"], "core_cpi": ["CPILFESL"], "core_pce": ["PCEPILFE"],
+          "unrate": ["UNRATE"], "payrolls": ["PAYEMS"], "claims": ["ICSA"],
           "cont_claims": ["CCSA"], "vu": ["JTSJOL", "UNEMPLOY"]}
 # 관측일이 이보다 오래되면 '늦음 의심'(발표가 늦거나 수집이 멈춘 것). 월별 지표는 관측 달 1일 기준이라 넉넉히 잡는다.
-MAX_AGE = {"cpi": 50, "core_cpi": 50, "core_pce": 95, "breakeven": 7, "unrate": 75, "sahm": 75, "payrolls": 75,
+MAX_AGE = {"cpi": 50, "core_cpi": 50, "core_pce": 95, "unrate": 75, "payrolls": 75,
            "claims": 14, "cont_claims": 21, "vu": 100}
 
 
@@ -282,10 +282,13 @@ def kr_credit():
             "series": ser}
 
 
+# 2026-11-12 사용자 결정: 10년 기대인플레(T10YIE)·삼의 법칙(SAHMREALTIME)은 중요도가 낮아 뺐다(물가는 CPI·근원 CPI·근원 PCE, 고용은 실업률·실업수당 청구로 본다).
+
+
 def main():
     dry = "--dry-run" in sys.argv
     raw = {k: fred(k) for k in ["CPIAUCSL", "CPILFESL", "PCEPILFE", "UNRATE", "UNEMPLOY", "ICSA", "CCSA",
-                                 "PAYEMS", "SAHMREALTIME", "T10YIE", "JTSJOL", "DGS2", "DGS10", "DGS30"]}
+                                 "PAYEMS", "JTSJOL", "DGS2", "DGS10", "DGS30"]}
     cpi = yoy(raw["CPIAUCSL"])
     un = dict(raw["UNRATE"])
     misery = [(d, round(v + un[d], 2)) for d, v in cpi if d in un]
@@ -336,9 +339,7 @@ def main():
             pack("cpi", cpi, yoy_est=True, extra=ann3(raw["CPIAUCSL"])[-1][1], **mom_of(raw["CPIAUCSL"])),
             pack("core_cpi", yoy(raw["CPILFESL"]), yoy_est=True, extra=ann3(raw["CPILFESL"])[-1][1], **mom_of(raw["CPILFESL"])),
             pack("core_pce", yoy(raw["PCEPILFE"]), yoy_est=True, extra=ann3(raw["PCEPILFE"])[-1][1]),
-            pack("breakeven", raw["T10YIE"], keep_from="2016-01-01"),
             pack("unrate", raw["UNRATE"]),
-            pack("sahm", raw["SAHMREALTIME"]),
             pack("payrolls", nfp, extra=nfp3[-1][1]),
             pack("claims", raw["ICSA"], extra=claims4[-1][1], keep_from="2000-01-01"),
             pack("cont_claims", raw["CCSA"], keep_from="2000-01-01"),

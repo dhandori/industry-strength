@@ -26,15 +26,9 @@
     core_pce: { n: "근원 PCE 물가 (연준 기준 물가)", g: "물가", f: (v) => v.toFixed(1) + "%", ref: [2],
       why: "연준이 2% 목표를 잴 때 공식으로 쓰는 물가예요. CPI보다 한 달쯤 늦게 나와요.",
       lv: (v) => v <= 2.3 ? [5, "목표 근처"] : v <= 3 ? [3, "목표보다 높음"] : v <= 4 ? [2, "높음"] : [1, "매우 높음"], extra: (x) => `최근 3개월 연율 ${x.toFixed(1)}%` },
-    breakeven: { n: "10년 기대인플레이션 (BEI)", g: "물가", f: (v) => v.toFixed(2) + "%", ref: [2], daily: true,
-      why: "채권시장이 앞으로 10년 동안 평균 몇 % 물가 상승을 예상하는지예요. 2~2.5%면 '물가 기대가 묶여 있다'고 봐요.",
-      lv: (v) => v <= 2.5 ? [5, "안정"] : v <= 2.8 ? [3, "조금 높음"] : [2, "높음"] },
     unrate: { n: "실업률", g: "고용", f: (v) => v.toFixed(1) + "%", ref: [],
-      why: "일하고 싶은데 일자리가 없는 사람 비율이에요. 수준보다 '최근 1년 최저에서 얼마나 올랐는지'가 경기침체 신호로 더 중요해요(아래 삼의 법칙).",
+      why: "일하고 싶은데 일자리가 없는 사람 비율이에요. 수준보다 '최근 1년 최저에서 얼마나 올랐는지'가 경기침체 신호로 더 중요해요.",
       lv: () => null },
-    sahm: { n: "삼의 법칙 (경기침체 경보)", g: "고용", f: (v) => v.toFixed(2) + "%p", ref: [0.5],
-      why: "실업률 3개월 평균이 지난 1년 중 가장 낮았던 때보다 몇 %p 올랐는지예요. 0.5 이상이면 과거엔 거의 늘 경기침체가 시작됐어요.",
-      lv: (v) => v < 0.3 ? [5, "안전"] : v < 0.5 ? [3, "경계 근접"] : [1, "침체 신호"] },
     payrolls: { n: "비농업 고용 증감 (한 달 새 늘어난 일자리)", g: "고용", f: (v) => `${v >= 0 ? "+" : ""}${(v / 10).toFixed(1)}만 명`, ref: [0], bars: true,
       why: "한 달 동안 미국 일자리가 몇 개 늘었는지예요(농업 제외). 꾸준히 10만 개 넘게 늘면 탄탄, 0 아래면 일자리가 줄어드는 거예요.",
       lv: (v, i) => { const a = i.extra; return a > 100 ? [5, "탄탄"] : a > 30 ? [4, "둔화"] : a > 0 ? [3, "많이 둔화"] : [1, "감소"]; }, extra: (x) => `최근 3개월 평균 ${x >= 0 ? "+" : ""}${(x / 10).toFixed(1)}만 명` },
@@ -116,7 +110,7 @@
   const MSP = [["m12", "1년"], ["m24", "2년"], ["m60", "5년"], ["m120", "10년"], ["m240", "20년"], ["m0", "전체"]];
   // 장기로 봐야 하는 지표는 처음부터 길게(2026-10-31). 위쪽 '그래프 기간' 버튼을 누르면 모두 그 기간으로 맞춘다
   // (일자리 증감·실업수당 청구는 2020년 코로나 때 값이 수십 배로 튀어 길게 보면 나머지가 납작해지므로 묶음 기본값 그대로)
-  const ECON_DEF = { misery: "m0", treasury: "m0", breakeven: "m0", cpi: "m120", core_cpi: "m120", core_pce: "m120", unrate: "m120", sahm: "m120", vu: "m120", kr_credit: "m0", kr_ratio: "m0" };
+  const ECON_DEF = { misery: "m0", treasury: "m0", cpi: "m120", core_cpi: "m120", core_pce: "m120", unrate: "m120", vu: "m120", kr_credit: "m0", kr_ratio: "m0" };
   st.cs = { ...ECON_DEF };
   const spOf = (key, daily, def) => st.cs[key] ?? def ?? (daily ? (st.span === 24 ? "m24" : st.span === 0 ? "m0" : "m60") : `m${st.span}`);
   const spOpt = (key, daily, def) => { const v = spOf(key, daily, def); return typeof v === "number" ? { days: v } : { months: +v.slice(1) }; };
@@ -139,13 +133,13 @@
     let avg = null;
     if (i.key === "payrolls") { const v = i.series.map((p) => p[1]); avg = v.map((_, k) => k < 2 ? null : (v[k] + v[k - 1] + v[k - 2]) / 3); }
     if (i.key === "claims") { const v = i.series.map((p) => p[1]); avg = v.map((_, k) => k < 3 ? null : (v[k] + v[k - 1] + v[k - 2] + v[k - 3]) / 4); }
-    const ax = i.key === "claims" || i.key === "cont_claims" ? (v) => (v / 1e4).toFixed(0) + "만" : i.key === "payrolls" ? (v) => (v / 10).toFixed(0) + "만" : (v) => v.toFixed(i.key === "vu" || i.key === "sahm" ? 1 : 1);
+    const ax = i.key === "claims" || i.key === "cont_claims" ? (v) => (v / 1e4).toFixed(0) + "만" : i.key === "payrolls" ? (v) => (v / 10).toFixed(0) + "만" : (v) => v.toFixed(1);
     const wk = i.key === "claims" || i.key === "cont_claims";
     const svg = chart(i.series, { ...spOpt(i.key, D.daily), weekly: wk, ref: D.ref, ax, bars: D.bars, avg: D.bars ? avg : null, dot: lv ? col(lv[0]) : null,
       lines: !D.bars && avg ? [{ v: i.series.map((p) => p[1]), c: "var(--muted)", w: 1.2 }, { v: avg, c: "var(--price)", w: 2 }] : D.bars ? [{ v: i.series.map((p) => p[1]) }] : null });
     const legend = i.key === "claims" ? `<div class="chart-legend"><span><i style="background:var(--muted)"></i>매주 값</span><span><i style="background:var(--price)"></i>4주 평균</span>${D.ref.length ? "" : ""}</div>`
       : i.key === "payrolls" ? `<div class="chart-legend"><span><i style="background:var(--up)"></i>늘어난 달</span><span><i style="background:var(--down)"></i>줄어든 달</span><span><i style="background:var(--ink)"></i>3개월 평균</span></div>`
-      : D.ref.length ? `<div class="chart-legend"><span><i style="background:var(--mx2)"></i>기준선 ${D.ref.map((r) => i.key === "sahm" ? r + "%p(침체 신호)" : i.key === "vu" ? r + "배" : r + "%(연준 목표)").join(", ")}</span></div>` : "";
+      : D.ref.length ? `<div class="chart-legend"><span><i style="background:var(--mx2)"></i>기준선 ${D.ref.map((r) => i.key === "vu" ? r + "배" : r + "%(연준 목표)").join(", ")}</span></div>` : "";
     return `<article class="card mx-card ec-card" style="--c:${lv ? col(lv[0]) : "var(--line)"}">
       <div class="mx-head"><div><div class="mx-name">${esc(D.n)}</div></div>${lv ? `<span class="mx-chip" style="--c:${col(lv[0])}">${esc(lv[1])}</span>` : ""}</div>
       <div class="mx-val"><b>${D.f(i.value)}</b><span class="ec-date">${dateTxt}</span>${i.est ? `<span class="ec-est" title="2025년 10월 물가 자료가 미국 정부 셧다운으로 조사되지 않아 BLS도 이번 달 전년 대비 상승률을 발표하지 않았어요. 앞뒤 달(2025년 9월·11월) 지수의 평균으로 1년 전 값을 메워 직접 계산한 추정치예요.">추정</span>` : ""}</div>
@@ -383,7 +377,7 @@
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>${d.cpi_core ? coreCard(d.cpi_core) : ""}
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
       <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
-      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·T10YIE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 기대인플레·국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 밤 11시 50분과 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
+      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·UNRATE·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 밤 11시 50분과 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
     </section>${d.margin ? `<section class="mx-market mx-us ec-sec ec-b" aria-label="미국 빚투">
       <div class="mx-market-h"><h2>🇺🇸 빚투 (신용융자)</h2><span class="sub">빚내서 산 주식이 너무 많은지 · 고점 신호 · 매월 · FINRA 신용거래 통계</span></div>
       ${spanBar("빚투")}
