@@ -1,11 +1,11 @@
 {
- "updated_at": "2026-11-13 00:23 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/43247214531",
+ "updated_at": "2026-11-13 01:11 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/43255811002",
  "trigger": "schedule",
  "markets": {
   "KR": {
    "ok": true,
-   "basis_date": "2026-11-11",
+   "basis_date": "2026-11-12",
    "n": 71,
    "warnings": []
   },
