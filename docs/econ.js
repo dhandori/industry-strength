@@ -27,8 +27,10 @@
       why: "연준이 2% 목표를 잴 때 공식으로 쓰는 물가예요. CPI보다 한 달쯤 늦게 나와요.",
       lv: (v) => v <= 2.3 ? [5, "목표 근처"] : v <= 3 ? [3, "목표보다 높음"] : v <= 4 ? [2, "높음"] : [1, "매우 높음"], extra: (x) => `최근 3개월 연율 ${x.toFixed(1)}%` },
     unrate: { n: "실업률", g: "고용", f: (v) => v.toFixed(1) + "%", ref: [],
-      why: "일하고 싶은데 일자리가 없는 사람 비율이에요. 수준보다 '최근 1년 최저에서 얼마나 올랐는지'가 경기침체 신호로 더 중요해요.",
-      lv: () => null },
+      why: "일하고 싶은데 일자리가 없는 사람 비율이에요. 수준보다 '최근 1년 최저에서 얼마나 올랐는지'가 경기침체 신호로 더 중요해요. 아래 '삼의 법칙'이 그 값이에요(실업률 3개월 평균이 지난 1년 최저보다 몇 %p 올랐는지, 0.5 넘으면 과거엔 거의 늘 침체가 시작됐어요).",
+      // 삼의 법칙(2026-11-12 사용자 결정: 따로 카드 대신 이 카드의 보조 줄). 0.3 이상이면 표시를 붙인다.
+      lv: (v, i) => i.extra == null || i.extra < 0.3 ? null : i.extra < 0.5 ? [3, "삼의 법칙 경계 근접"] : [1, "삼의 법칙 침체 경보"],
+      extra: (x) => `삼의 법칙 ${x.toFixed(2)}%p (0.5 넘으면 침체 경보)` },
     payrolls: { n: "비농업 고용 증감 (한 달 새 늘어난 일자리)", g: "고용", f: (v) => `${v >= 0 ? "+" : ""}${(v / 10).toFixed(1)}만 명`, ref: [0], bars: true,
       why: "한 달 동안 미국 일자리가 몇 개 늘었는지예요(농업 제외). 꾸준히 10만 개 넘게 늘면 탄탄, 0 아래면 일자리가 줄어드는 거예요.",
       lv: (v, i) => { const a = i.extra; return a > 100 ? [5, "탄탄"] : a > 30 ? [4, "둔화"] : a > 0 ? [3, "많이 둔화"] : [1, "감소"]; }, extra: (x) => `최근 3개월 평균 ${x >= 0 ? "+" : ""}${(x / 10).toFixed(1)}만 명` },
@@ -377,7 +379,7 @@
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>${d.cpi_core ? coreCard(d.cpi_core) : ""}
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
       <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
-      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·UNRATE·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 밤 11시 50분과 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
+      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 밤 11시 50분과 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
     </section>${d.margin ? `<section class="mx-market mx-us ec-sec ec-b" aria-label="미국 빚투">
       <div class="mx-market-h"><h2>🇺🇸 빚투 (신용융자)</h2><span class="sub">빚내서 산 주식이 너무 많은지 · 고점 신호 · 매월 · FINRA 신용거래 통계</span></div>
       ${spanBar("빚투")}

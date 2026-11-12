@@ -106,7 +106,7 @@ def mom_of(s):
 
 # 화면 지표 → 원자료(FRED). 원자료에 새 값이 있는데 지표가 따라가지 못하면 '누락'(2026-11-11 사용자: 지표가 나왔는데 빠지는 일 없게)
 SOURCE = {"cpi": ["CPIAUCSL"], "core_cpi": ["CPILFESL"], "core_pce": ["PCEPILFE"],
-          "unrate": ["UNRATE"], "payrolls": ["PAYEMS"], "claims": ["ICSA"],
+          "unrate": ["UNRATE", "SAHMREALTIME"], "payrolls": ["PAYEMS"], "claims": ["ICSA"],
           "cont_claims": ["CCSA"], "vu": ["JTSJOL", "UNEMPLOY"]}
 # 관측일이 이보다 오래되면 '늦음 의심'(발표가 늦거나 수집이 멈춘 것). 월별 지표는 관측 달 1일 기준이라 넉넉히 잡는다.
 MAX_AGE = {"cpi": 50, "core_cpi": 50, "core_pce": 95, "unrate": 75, "payrolls": 75,
@@ -282,13 +282,14 @@ def kr_credit():
             "series": ser}
 
 
-# 2026-11-12 사용자 결정: 10년 기대인플레(T10YIE)·삼의 법칙(SAHMREALTIME)은 중요도가 낮아 뺐다(물가는 CPI·근원 CPI·근원 PCE, 고용은 실업률·실업수당 청구로 본다).
+# 2026-11-12 사용자 결정: 10년 기대인플레(T10YIE)는 중요도가 낮아 뺐다(물가는 CPI·근원 CPI·근원 PCE로 본다).
+# 삼의 법칙(SAHMREALTIME)은 따로 카드를 두지 않고 실업률 카드의 보조 줄(extra)로 넣는다.
 
 
 def main():
     dry = "--dry-run" in sys.argv
     raw = {k: fred(k) for k in ["CPIAUCSL", "CPILFESL", "PCEPILFE", "UNRATE", "UNEMPLOY", "ICSA", "CCSA",
-                                 "PAYEMS", "JTSJOL", "DGS2", "DGS10", "DGS30"]}
+                                 "PAYEMS", "SAHMREALTIME", "JTSJOL", "DGS2", "DGS10", "DGS30"]}
     cpi = yoy(raw["CPIAUCSL"])
     un = dict(raw["UNRATE"])
     misery = [(d, round(v + un[d], 2)) for d, v in cpi if d in un]
@@ -339,7 +340,7 @@ def main():
             pack("cpi", cpi, yoy_est=True, extra=ann3(raw["CPIAUCSL"])[-1][1], **mom_of(raw["CPIAUCSL"])),
             pack("core_cpi", yoy(raw["CPILFESL"]), yoy_est=True, extra=ann3(raw["CPILFESL"])[-1][1], **mom_of(raw["CPILFESL"])),
             pack("core_pce", yoy(raw["PCEPILFE"]), yoy_est=True, extra=ann3(raw["PCEPILFE"])[-1][1]),
-            pack("unrate", raw["UNRATE"]),
+            pack("unrate", raw["UNRATE"], extra=raw["SAHMREALTIME"][-1][1], sahm_date=raw["SAHMREALTIME"][-1][0]),
             pack("payrolls", nfp, extra=nfp3[-1][1]),
             pack("claims", raw["ICSA"], extra=claims4[-1][1], keep_from="2000-01-01"),
             pack("cont_claims", raw["CCSA"], keep_from="2000-01-01"),
