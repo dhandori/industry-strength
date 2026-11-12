@@ -7,10 +7,11 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=20261111-sk1">
+<link rel="stylesheet" href="style.css?v=20261112-po1">
 <link rel="stylesheet" href="macro.css?v=20261111-cc1">
 <link rel="stylesheet" href="ai.css?v=20261111-q1">
 <link rel="stylesheet" href="pairs.css?v=20261026-p3">
+<link rel="stylesheet" href="positioning.css?v=20261112-po1">
 <link rel="stylesheet" href="supply.css?v=20261106-s4">
 <link rel="stylesheet" href="sectorflow.css?v=20261026-sf2">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -40,6 +41,7 @@
     <button role="tab" data-view="macro" aria-selected="false"><span class="vt-ico" aria-hidden="true">🌐</span>매크로 지수</button>
     <button role="tab" data-view="ai" aria-selected="false"><span class="vt-ico" aria-hidden="true">🤖</span>AI 시장</button>
     <button role="tab" data-view="pairs" aria-selected="false"><span class="vt-ico" aria-hidden="true">⚖️</span>페어</button>
+    <button role="tab" data-view="positioning" aria-selected="false" title="매주 수요일 갱신"><span class="vt-ico" aria-hidden="true">💰</span>포지셔닝</button>
   </nav>
 </header>
 
@@ -408,6 +410,8 @@
   <div id="chipBody" style="display:grid;gap:14px;margin-top:14px"></div>
 </main>
 
+<main id="viewPositioning" hidden></main>
+
 <div class="drawer" id="drawer" hidden>
   <div class="drawer-backdrop" data-close></div>
   <article class="drawer-panel" role="dialog" aria-modal="true" aria-labelledby="dTitle">
@@ -483,6 +487,7 @@
 <script src="infra.js?v=20261103-in1"></script>
 <script src="chips.js?v=20261102-c4"></script>
 <script src="pairs.js?v=20261026-p2"></script>
+<script src="positioning.js?v=20261112-po1"></script>
 <script src="ui.js?v=20261111-nf1"></script>
 </body>
 </html>
