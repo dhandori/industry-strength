@@ -36,6 +36,8 @@
   $$(".seg[role=tablist] button").forEach((b) => b.addEventListener("click", () => {
     state.market = b.dataset.market;
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x === b));
+    marketTabs();
+    if (state.market === "KR" && US_ONLY.includes(state.view)) setView("strength");
     state.group = "전체"; state.sector = null; state.exOpen = new Set(); state.exAll = new Set();
     setHash();
     load();
@@ -45,8 +47,23 @@
 
   // ---------- 화면 전환: 산업 강도 / 52주 신고가 (2026-10-21)
   state.view = "strength";
+  // 시장별로 의미 있는 탭만 (2026-11-12 사용자 결정): 한국은 산업 강도·52주 신고가·매크로 3개, 미국은 6개 모두.
+  // AI 시장(세계 공통)·페어(미국 ETF 위주)·포지셔닝(미국 CTA·S&P500·CFTC)은 미국에서만 보인다.
+  // 한국인 채로 이 탭 주소(#KR-ai 등)로 들어오면 시장을 미국으로 바꿔 연다(옛 링크가 깨지지 않게).
+  const US_ONLY = ["ai", "pairs", "positioning"];
+  function marketTabs() {
+    $$(".view-tabs button").forEach((x) => { x.hidden = state.market === "KR" && US_ONLY.includes(x.dataset.view); });
+  }
+  function useMarket(m) {
+    if (state.market === m) return;
+    state.market = m;
+    $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === m));
+    marketTabs();
+    load();
+  }
   function setHash() { try { history.replaceState(null, "", "#" + state.market + (state.view !== "strength" ? "-" + state.view : "")); } catch (e) {} }
   function setView(v) {
+    if (US_ONLY.includes(v) && state.market === "KR") useMarket("US");
     state.view = v;
     $$(".view-tabs button").forEach((x) => x.setAttribute("aria-selected", x.dataset.view === v));
     $("#viewStrength").hidden = v !== "strength";
@@ -894,6 +911,11 @@
     state.market = h;
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === h));
   }
+  if (US_ONLY.includes(hv) && state.market !== "US") {
+    state.market = "US";
+    $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === "US"));
+  }
+  marketTabs();
   load();
   window.__isRefresh && window.__isRefresh.init(() => { reloadData(); window.__highs && window.__highs.reload(); window.__macro && window.__macro.reload(); window.__ai && window.__ai.reload(); window.__pairs && window.__pairs.reload(); });
   if (hv === "highs" || hv === "macro" || hv === "ai" || hv === "pairs" || hv === "positioning") addEventListener("DOMContentLoaded", () => setView(hv), { once: true });

@@ -842,3 +842,6 @@ section.card.cf-shut > .card-head .filters, section.card.cf-shut > .card-head .s
   .chart.sk-price { height: 300px; }
   .sk-tv { height: 320px; }
 }
+
+/* 시장별 탭(2026-11-12): 한국에서는 미국 전용 탭을 숨긴다(app.js marketTabs) */
+.view-tabs button[hidden] { display: none; }
