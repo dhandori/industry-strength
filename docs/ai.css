@@ -15,7 +15,7 @@ body.v-ai #meta { display: none; }
 .ai-svg { display: block; overflow: visible; max-width: 100%; }
 .ai-grid { stroke: var(--grid); stroke-width: 1; }
 .ai-grid.mid { stroke: var(--line); stroke-dasharray: 3 3; }
-.ai-tk { font-size: 10.5px; fill: var(--muted); }
+.ai-tk { font-size: 11px; fill: var(--muted); }
 .ai-end { font-size: 12.5px; font-weight: 750; }
 .ai-area { fill: color-mix(in srgb, var(--ai-open) 12%, transparent); }
 .ai-warn { margin: 10px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-ink); font-size: 13px; line-height: 1.55; }
@@ -74,7 +74,7 @@ body.v-ai #meta { display: none; }
 .ai-drops span { color: var(--muted); font-size: 12px; }
 /* S-1 분기 매출 카드 (2026-10-29) */
 .ai-bv { font-size: 11px; font-weight: 700; fill: var(--ink); }
-.ai-gr { font-size: 10.5px; font-weight: 700; fill: var(--up, #1a9a52); }
+.ai-gr { font-size: 11px; font-weight: 700; fill: var(--up, #1a9a52); }
 .chart-legend i.ai-hatch { background: repeating-linear-gradient(45deg, var(--ai-a) 0 2px, color-mix(in srgb, var(--ai-a) 18%, transparent) 2px 5px) !important; }
 .ai-pend { margin: 6px 0 0; padding-left: 18px; }
 .ai-pend li { margin: 3px 0; }

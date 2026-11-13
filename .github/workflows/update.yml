@@ -61,6 +61,13 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           RUN_TRIGGER: ${{ github.event_name }}
 
+      # 화면의 휴장 표시·기대 기준일 계산용 한국·미국 휴장일 목록(docs/data/calendar.json).
+      - name: 휴장일 목록
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 3
+        run: python scripts/market_calendar.py
+
       - name: 페어 상대강도 계산
         if: always()
         continue-on-error: true

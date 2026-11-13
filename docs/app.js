@@ -253,7 +253,8 @@
         <div class="d">상승 전환 시도 ${s2t}개까지 합치면 ${s2 + s2t}개</div></div>
       <div class="tile"><div class="k">시장 국면</div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span>${reg(x)}</div>
-        <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}</div>`).join("")}</div>
+        <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}</div>`).join("")}
+        <div class="d tile-xref">지수가 50일·200일선 위인지만 본 판정이에요. 분산일·거래량·신고가 수까지 합친 판정은 <a href="https://dhandori.github.io/wamo-choochoo-dashboard/radar.html?market=${state.market}&tab=trend">레이더 ‘시장 날씨’ ↗</a>에 있어서 서로 다를 수 있어요.</div></div>
       <div class="tile"><div class="k">지수 20일 수익률</div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span><span class="ret ${cls(x.ret20)} idx-v">${fmtPct(x.ret20)}</span></div>
         <div class="d">5일 ${fmtPct(x.ret5)} · 60일 ${fmtPct(x.ret60)}</div>`).join("")}</div>

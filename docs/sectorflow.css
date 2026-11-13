@@ -48,7 +48,7 @@
 .sf-ma.m-s { stroke: var(--sf-ma-s); } .sf-ma.m-m { stroke: var(--sf-ma-m); } .sf-ma.m-l { stroke: var(--sf-ma-l); }
 .sf-dot { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; border: 1.5px solid var(--surface); }
 .sf-dot.hi { background: var(--up); } .sf-dot.lo { background: var(--down); }
-.sf-axis { display: flex; justify-content: space-between; gap: 4px; margin-top: 3px; font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sf-axis { display: flex; justify-content: space-between; gap: 4px; margin-top: 3px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .sf-empty { display: grid; place-items: center; min-height: 84px; font-size: 12px; color: var(--muted); }
 
 .sf-stocks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
