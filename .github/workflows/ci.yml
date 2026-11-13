@@ -1,0 +1,53 @@
+name: 화면 검사
+
+# 화면 코드가 바뀔 때만 돈다. 하루에 여러 번 올라오는 자료 커밋(docs/data/**)에는 돌지 않는다.
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths:
+      - "docs/*.html"
+      - "docs/*.js"
+      - "docs/*.css"
+      - "tests/**"
+      - "scripts/version_assets.py"
+      - ".github/workflows/ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: 캐시 버전이 파일 내용과 맞는지
+        run: python scripts/version_assets.py --check
+      - name: 스크립트 문법
+        run: |
+          for f in docs/*.js; do node --check "$f"; done
+          python -m compileall -q scripts tests
+      - name: 버전 스크립트 검사
+        run: python -m unittest discover -s tests -v
+      - run: python -m pip install playwright==1.62.0
+      - run: python -m playwright install --with-deps chromium
+      - name: 탭 9개를 PC·휴대폰 크기로 열어 보기
+        run: python tests/browser_check.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-check
+          path: test-results/
+          if-no-files-found: ignore

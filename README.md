@@ -41,6 +41,14 @@
 
 `scripts/build_baskets.py`의 KR·US 목록을 고친 뒤 `python scripts/build_baskets.py <global-high-radar 경로>`로 `config/baskets.json`을 다시 만들고 push하면 바로 다시 계산된다. 한국 분류는 global-high-radar의 산업 분류표(data/industry_business_registry.json)를 따른다.
 
+## 화면 코드를 고칠 때 (2026-11-13 추가)
+
+- **캐시 버전은 손으로 쓰지 않는다.** `docs/` 의 CSS·스크립트를 고친 뒤 `python scripts/version_assets.py` 를 돌리면 `docs/index.html` 의 `?v=` 가 파일 내용 해시로 바뀐다. 그 `index.html` 을 함께 커밋한다. 잊으면 화면 검사가 막는다.
+- **화면 검사**: `python tests/browser_check.py` 가 탭 9개를 PC·휴대폰 크기로 열어 스크립트 오류, 받지 못한 파일, 가로 넘침, 깨진 값(undefined·NaN), 11px보다 작은 글씨를 본다. 그날 자료(`docs/data`)로 돌기 때문에 종목이나 숫자를 가정하지 않는다. 매크로 자료만 `tests/fixtures/wamo_macro.json` 으로 고정한다. 탭을 새로 만들면 `VIEWS` 에 더한다.
+- GitHub Actions `화면 검사`(`ci.yml`)가 PR과 화면 코드가 바뀐 main 커밋에서 같은 검사를 돌린다. 자료 커밋에는 돌지 않는다.
+- 글씨는 11px 아래로 쓰지 않는다. `small`·`sup` 도 11px 바닥을 둔다(`style.css`).
+- 머리말의 'WAMO 레이더 ↗' 는 짝 화면(dhandori/wamo-choochoo-dashboard 레이더)으로 가는 링크다. 레이더에도 이쪽으로 오는 링크가 있다.
+
 ## 직접 실행
 
 ```

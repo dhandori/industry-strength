@@ -61,7 +61,12 @@ button, select { font: inherit; color: inherit; }
 /* top bar */
 .top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
 .top-inner { max-width: 1180px; margin: 0 auto; padding: 12px 16px; display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+/* 작은 글씨 바닥: small·sup 은 브라우저 기본이 0.83배라 12~13px 글 안에서 11px 아래로 내려간다 */
+small, sup, sub { font-size: max(11px, 0.85em); }
 .brand h1 { font-size: 19px; font-weight: 750; }
+/* 짝 화면(WAMO 레이더)으로 가는 링크 */
+.brand h1 .xlink { margin-left: 8px; font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; vertical-align: 2px; }
+.brand h1 .xlink:hover, .brand h1 .xlink:focus-visible { color: var(--accent); }
 .meta { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
 .top-controls { display: flex; gap: 8px; align-items: center; }
 
@@ -330,7 +335,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 }
 
 .xl { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: 1px; }
-.xl a, .xl-pill { font-size: 10.5px; font-weight: 650; text-decoration: none; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 5px; padding: 0 5px; line-height: 16px; white-space: nowrap; }
+.xl a, .xl-pill { font-size: 11px; font-weight: 650; text-decoration: none; color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); border-radius: 5px; padding: 0 5px; line-height: 16px; white-space: nowrap; }
 .xl-pill { margin-left: 6px; display: inline-block; }
 .xl a:hover, .xl-pill:hover { background: var(--accent-soft); }
 .xl-inline { color: var(--accent); text-decoration: none; margin-left: 4px; }
@@ -421,7 +426,7 @@ body.v-highs #meta { display: none; }
   .gl-row { grid-template-columns: 1fr 90px; gap: 6px 10px; }
   .gl-chips { grid-column: 1 / -1; }
   .hx-search { width: 100%; }
-  .hx-heat .hc.hx { font-size: 10px; }
+  .hx-heat .hc.hx { font-size: 11px; }
 }
 
 /* 산업 흐름 (2026-10-23) */
@@ -482,7 +487,7 @@ body.v-highs #meta { display: none; }
 .mv-row { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; padding: 4px; border-radius: 8px; color: var(--ink); font: inherit; }
 @media (hover: hover) { .mv-row:hover { background: var(--accent-soft); } }
 .mv-name { font-size: 13.5px; font-weight: 600; min-width: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 5px; line-height: 1.25; }
-.mv-x { font-style: normal; font-size: 10.5px; font-weight: 700; padding: 1px 5px; border-radius: 5px; white-space: nowrap; }
+.mv-x { font-style: normal; font-size: 11px; font-weight: 700; padding: 1px 5px; border-radius: 5px; white-space: nowrap; }
 .mv-x.in { color: var(--up); background: color-mix(in srgb, var(--up) 13%, transparent); }
 .mv-x.out { color: var(--down); background: color-mix(in srgb, var(--down) 13%, transparent); }
 .mv-track { position: relative; height: 22px; border-radius: 6px; background: linear-gradient(90deg, color-mix(in srgb, var(--muted) 7%, transparent) 50%, color-mix(in srgb, var(--up) 6%, transparent) 50%); }
@@ -520,13 +525,13 @@ body.v-highs #meta { display: none; }
 
 /* 세부 산업 순위 이동 */
 .fl-scale, .fl-row { display: grid; grid-template-columns: minmax(96px, 1.1fr) minmax(90px, 1.5fr) 72px; gap: 10px; align-items: center; }
-.fl-axis { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); }
+.fl-axis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
 .fl-axis em { font-style: normal; }
 .fl-row { width: 100%; border: 0; border-top: 1px solid var(--grid); background: transparent; padding: 6px 4px; text-align: left; cursor: pointer; }
 .fl-name { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 5px; line-height: 1.25; }
 .fl-name b { font-size: 13.5px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .fl-name small { flex-basis: 100%; font-size: 11px; color: var(--muted); }
-.fl-name em { font-style: normal; font-size: 10.5px; font-weight: 700; padding: 0 5px; border-radius: 5px; white-space: nowrap; }
+.fl-name em { font-style: normal; font-size: 11px; font-weight: 700; padding: 0 5px; border-radius: 5px; white-space: nowrap; }
 .fl-warn { color: var(--warn-ink); background: var(--warn-bg); }
 .fl-ok { color: var(--good); background: color-mix(in srgb, var(--good) 12%, transparent); }
 .fl-track { position: relative; height: 18px; display: block; }
@@ -560,7 +565,7 @@ body.v-highs #meta { display: none; }
 
 /* 분류 흐름: 다른 기간 변화는 색 배지로 (2026-10-23) */
 .fl-g .fl-per { gap: 3px; margin-top: 3px; flex-wrap: nowrap; }
-.fl-g .fl-per i { padding: 1px 4px; border-radius: 5px; font-size: 10px; letter-spacing: -0.2px; }
+.fl-g .fl-per i { padding: 1px 4px; border-radius: 5px; font-size: 11px; letter-spacing: -0.2px; }
 .fl-g .fl-per .up { background: color-mix(in srgb, var(--up) 13%, transparent); }
 .fl-g .fl-per .down { background: color-mix(in srgb, var(--down) 13%, transparent); }
 .fl-g .fl-per .flat { background: var(--surface-2); }
@@ -654,7 +659,7 @@ section[aria-labelledby="rank-h"] { scroll-margin-top: 160px; }
 .sk-hd { display: grid; justify-items: center; gap: 2px; width: 34px; }
 .sk-hd i { width: 100%; height: 16px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); }
 .sk-hd.on i { background: var(--up); border-color: var(--up); }
-.sk-hd em { font-style: normal; font-size: 10px; color: var(--muted); }
+.sk-hd em { font-style: normal; font-size: 11px; color: var(--muted); }
 .sk-ht { margin-top: 8px; }
 .sk-inds { display: grid; gap: 6px; }
 .sk-ind { text-align: left; border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 11px; cursor: pointer; display: grid; gap: 2px; font-size: 12.5px; color: var(--ink-2); }
@@ -747,7 +752,7 @@ main { gap: 16px; padding-top: 14px; }
   .rank-table .checks i { width: 10px; height: 10px; }
 }
 .rank-table td.name .name-tags { display: inline; margin-left: 4px; }
-.rank-table td.name .name-tags .tag-mini { margin: 0 3px 0 0; vertical-align: 1px; font-size: 10.5px; }
+.rank-table td.name .name-tags .tag-mini { margin: 0 3px 0 0; vertical-align: 1px; font-size: 11px; }
 .sk-stats .sk-warn { color: #e07b00; } /* 8% 한도가 1.5 ATR 미만: 변동성 경고(주황) */
 /* 2026-11-03 표 정렬 정비: 열 제목을 눌러 정렬(같은 열 다시 누르면 반대로). ▼ = 좋은 순(큰 값·높은 순위 먼저), ▲ = 반대 */
 th[data-sk] { cursor: pointer; user-select: none; white-space: nowrap; }
