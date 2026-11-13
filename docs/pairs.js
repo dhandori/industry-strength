@@ -162,11 +162,31 @@
       <div class="pr-legend"><span><i class="k-ratio"></i>비율</span><span><i class="k-m20"></i>20일선</span><span><i class="k-m50"></i>50일선</span><span><i class="k-m200"></i>200일선</span><span><i class="k-hl"></i>52주 고·저</span></div>`;
     d.append(bigChart(p));
     d.insertAdjacentHTML("beforeend", `<p class="pr-chg">비율 변화: 5일 <b class="ret ${cls(p.chg5)}">${sgn(p.chg5)}</b> · 20일 <b class="ret ${cls(p.chg20)}">${sgn(p.chg20)}</b> · 60일 <b class="ret ${cls(p.chg60)}">${sgn(p.chg60)}</b></p>`);
-    $$(".pr-days button", d).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); st.days = +b.dataset.d; render(); }));
+    $$(".pr-days button", d).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); st.days = +b.dataset.d; placeDetail(); }));
     return d;
   }
 
-  function openPair(id) { st.open = st.open === id ? null : id; render(); if (st.open) requestAnimationFrame(() => $(".pr-detail")?.scrollIntoView({ behavior: "smooth", block: "nearest" })); }
+  // 카드를 눌러도 탭 전체를 다시 그리지 않는다(2026-11-13: 접어 둔 카드가 풀렸다 접히며 화면이 튀던 것).
+  // 큰 차트는 누른 카드가 있는 줄의 끝 다음에 끼워, 카드 배치가 중간에서 갈라지지 않게 한다.
+  const findPair = (id) => st.data?.groups.flatMap((g) => g.pairs).find((x) => x.id === id);
+  function placeDetail() {
+    $$("#pairsBody .pr-detail").forEach((x) => x.remove());
+    $$("#pairsBody .pr-card[data-id]").forEach((c) => { const on = c.dataset.id === st.open; c.classList.toggle("open", on); c.setAttribute("aria-expanded", on); });
+    const p = st.open && findPair(st.open), card = p && p.series && $(`#pairsBody .pr-card[data-id="${CSS.escape(p.id)}"]`);
+    if (!card) return null;
+    window.__cfold?.open(card.closest("section.card"));
+    const row = $$(".pr-card", card.parentElement).filter((c) => c.offsetTop === card.offsetTop);
+    const d = detail(p); (row.at(-1) || card).after(d);
+    return d;
+  }
+  function openPair(id, jump) {
+    st.open = st.open === id ? null : id;
+    const d = placeDetail();
+    if (d) requestAnimationFrame(() => {
+      if (jump) { const c = $(`#pairsBody .pr-card[data-id="${CSS.escape(id)}"]`); const top = document.querySelector("header.top")?.offsetHeight || 0; scrollTo({ top: scrollY + c.getBoundingClientRect().top - top - 10, behavior: "smooth" }); }
+      else d.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }
 
   function render() {
     const d = st.data; if (!d) return;
@@ -195,13 +215,12 @@
         if (p && p.series) b.querySelector(".pr-spwrap").append(spark(p));
         b.addEventListener("click", () => openPair(p.id));
       });
-      const op = g.pairs.find((x) => x.id === st.open && x.series);
-      if (op) $(`.pr-card[data-id="${op.id}"]`, sec).after(detail(op));
       box.append(sec);
     }
-    $$(".pr-hotrow", box).forEach((b) => b.addEventListener("click", () => { st.open = null; openPair(b.dataset.id); }));
+    placeDetail();
+    $$(".pr-hotrow", box).forEach((b) => b.addEventListener("click", () => { st.open = null; openPair(b.dataset.id, true); }));
   }
 
-  let resizeT; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (st.open && !$("#viewPairs").hidden) render(); }, 200); });
+  let resizeT; addEventListener("resize", () => { clearTimeout(resizeT); resizeT = setTimeout(() => { if (st.open && !$("#viewPairs").hidden) placeDetail(); }, 200); });
   window.__pairs = { show: () => load(false), reload: () => { if (!$("#viewPairs").hidden) load(true); else st.data = null; } };
 })();

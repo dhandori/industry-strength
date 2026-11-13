@@ -38,10 +38,17 @@
       .sort((a, b) => a.el.getBoundingClientRect().top - b.el.getBoundingClientRect().top) : [];
     nav.hidden = items.length < 3;
     if (!nav.hidden) {
-      nav.innerHTML = items.map((x, i) => `<button type="button" data-i="${i}">${esc(x.t)}</button>`).join("");
-      nav.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+      // 끝에 '모두 펼치기/모두 접기': 지금 탭의 접을 수 있는 카드를 한 번에(2026-11-13)
+      const foldable = [...m.querySelectorAll("section.card")].filter((s) => s.querySelector(":scope > .card-head > .cf-btn"));
+      const anyShut = foldable.some((s) => s.classList.contains("cf-shut"));
+      nav.innerHTML = items.map((x, i) => `<button type="button" data-i="${i}">${esc(x.t)}</button>`).join("")
+        + (foldable.length > 1 ? `<button type="button" class="sn-all">${anyShut ? "모두 펼치기 ▾" : "모두 접기 ▴"}</button>` : "");
+      nav.querySelector(".sn-all")?.addEventListener("click", () => { foldable.forEach((s) => setShut(s, !anyShut)); build(); });
+      nav.querySelectorAll("button[data-i]").forEach((b) => b.addEventListener("click", () => {
         const i = +b.dataset.i, x = items[i];
         if (!x) return;
+        // 접힌 카드로 가면 펼쳐서 보여 준다
+        if (x.el.classList?.contains("cf-shut")) setShut(x.el, false);
         // 휴대폰에서 아래로 갈 땐 머리가 접히므로 칩 줄 높이만큼만 띄운다
         const r = x.el.getBoundingClientRect(), down = r.top > 0;
         const small = innerWidth < 640;
@@ -96,18 +103,22 @@
   // 그 외엔 펼침. 사용자가 바꾼 건 기억한다(제목 글자로 구분). 매크로 탭 지표 카드는 접지 않는다(2026-11-11 사용자: 모두 펼쳐 보이게).
   let fmem = {};
   try { fmem = JSON.parse(localStorage.getItem("cfold") || "{}") || {}; } catch (e) {}
-  const fkey = (sec) => { const h = sec.querySelector(":scope > .card-head h2, :scope > .card-head summary h2"); return h ? label(h) : ""; };
+  // 기억 열쇠는 '탭 id:제목'(2026-11-13: 다른 탭의 같은 제목과 섞이지 않게). 예전 제목만 쓴 기억도 읽는다.
+  const fkey = (sec) => { const h = sec.querySelector(":scope > .card-head h2, :scope > .card-head summary h2"); return h ? (sec.closest("main")?.id || "") + ":" + label(h) : ""; };
+  const fget = (k) => k in fmem ? fmem[k] : fmem[k.slice(k.indexOf(":") + 1)];
+  const fsave = () => { try { localStorage.setItem("cfold", JSON.stringify(fmem)); } catch (e) {} };
+  function setShut(sec, shut) { const k = fkey(sec); if (!k) return; fmem[k] = shut; delete fmem[k.slice(k.indexOf(":") + 1)]; fsave(); paint(sec); }
   function folds() {
     document.querySelectorAll("main section.card").forEach((sec) => {
       const head = sec.querySelector(":scope > .card-head");
       if (!head || sec.classList.contains("guide") || !fkey(sec)) return;
       let b = head.querySelector(":scope > .cf-btn");
-      if (!b) { b = document.createElement("button"); b.type = "button"; b.className = "cf-btn"; head.appendChild(b); b.addEventListener("click", () => { const k = fkey(sec); fmem[k] = !sec.classList.contains("cf-shut"); try { localStorage.setItem("cfold", JSON.stringify(fmem)); } catch (e) {} paint(sec); later(); }); }
+      if (!b) { b = document.createElement("button"); b.type = "button"; b.className = "cf-btn"; head.appendChild(b); b.addEventListener("click", () => { setShut(sec, !sec.classList.contains("cf-shut")); later(); }); }
       paint(sec);
     });
   }
   function paint(sec) {
-    const k = fkey(sec), shut = k in fmem ? fmem[k] : sec.dataset.fold === "closed";
+    const k = fkey(sec), v = fget(k), shut = v != null ? v : sec.dataset.fold === "closed";
     sec.classList.toggle("cf-shut", shut);
     const b = sec.querySelector(":scope > .card-head > .cf-btn");
     const t = shut ? "펼치기 ▾" : "접기 ▴";
@@ -117,7 +128,10 @@
   // 탭을 바꾸거나 내용이 새로 그려지면 다시 만든다
   let t;
   const later = () => { clearTimeout(t); t = setTimeout(() => { folds(); build(); }, 250); };
-  const mo = new MutationObserver((recs) => { if (recs.some((r) => r.type === "attributes" || [...r.addedNodes].some((n) => n.nodeType === 1 && (n.matches?.(SEL) || n.querySelector?.(SEL))))) later(); });
+  // 새로 그려진 카드는 그 자리에서 바로 접힘 상태를 입힌다(잠깐 펼쳐졌다 접히며 화면이 튀던 것, 2026-11-13).
+  const mo = new MutationObserver((recs) => { if (recs.some((r) => r.type === "attributes" || [...r.addedNodes].some((n) => n.nodeType === 1 && (n.matches?.(SEL) || n.querySelector?.(SEL))))) { folds(); later(); } });
+  // 다른 화면 코드가 접힌 카드를 펼칠 때(바로가기 등)
+  window.__cfold = { open: (sec) => { if (sec && sec.classList.contains("cf-shut")) setShut(sec, false); } };
   document.querySelectorAll("main").forEach((m) => mo.observe(m, { attributes: true, attributeFilter: ["hidden"], childList: true, subtree: true }));
   addEventListener("load", later);
   later();
