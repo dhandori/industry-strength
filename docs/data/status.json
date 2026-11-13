@@ -1,7 +1,7 @@
 {
- "updated_at": "2026-11-14 02:56 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/43477719950",
- "trigger": "schedule",
+ "updated_at": "2026-11-14 06:12 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/43508567453",
+ "trigger": "workflow_dispatch",
  "markets": {
   "KR": {
    "ok": true,
@@ -11,7 +11,7 @@
   },
   "US": {
    "ok": true,
-   "basis_date": "2026-11-12",
+   "basis_date": "2026-11-13",
    "n": 70,
    "warnings": [
     "최신 가격이 없는 종목 1개: 로쿠"
