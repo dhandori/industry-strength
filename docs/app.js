@@ -50,9 +50,9 @@
   // 시장별로 의미 있는 탭만 (2026-11-12 사용자 결정): 한국은 산업 강도·52주 신고가·매크로 3개, 미국은 6개 모두.
   // AI 시장(세계 공통)·페어(미국 ETF 위주)·포지셔닝(미국 CTA·S&P500·CFTC)은 미국에서만 보인다.
   // 한국인 채로 이 탭 주소(#KR-ai 등)로 들어오면 시장을 미국으로 바꿔 연다(옛 링크가 깨지지 않게).
-  // 일본(2026-11-16 추가)은 산업 강도 탭만. 52주 신고가·매크로 자료는 아직 한국·미국만 만든다.
+  // 일본(2026-11-16 추가)은 한국처럼 산업 강도·52주 신고가·매크로 지수 3개.
   const US_ONLY = ["ai", "pairs", "positioning"];
-  const JP_VIEWS = ["strength"];
+  const JP_VIEWS = ["strength", "highs", "macro"];
   const viewOk = (v, mk = state.market) => mk === "US" || (mk === "JP" ? JP_VIEWS.includes(v) : !US_ONLY.includes(v));
   function marketTabs() {
     $$(".view-tabs button").forEach((x) => { x.hidden = !viewOk(x.dataset.view); });

@@ -19,7 +19,7 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parents[1]
 SHOTS = ROOT / "test-results"
 VIEWS = [("KR", v) for v in ("strength", "highs", "macro")] + \
-        [("US", v) for v in ("strength", "highs", "macro", "ai", "pairs", "positioning")] + [("JP", "strength")]
+        [("US", v) for v in ("strength", "highs", "macro", "ai", "pairs", "positioning")] + [("JP", v) for v in ("strength", "highs", "macro")]
 SIZES = [("pc", 1440, 900), ("phone", 390, 844)]
 MAIN = {"strength": "#viewStrength"}
 BAD = re.compile(r"undefined|NaN|\bnull\b|Infinity|\[object Object\]")

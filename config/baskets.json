@@ -7617,11 +7617,11 @@
        "mcap_jpy_eok": 21793
       },
       {
-       "code": "9508",
-       "name": "규슈전력",
-       "ticker": "9508.T",
+       "code": "642A",
+       "name": "규슈전력(큐덴 홀딩스)",
+       "ticker": "642A.T",
        "market": "TSE",
-       "mcap_jpy_eok": 10281
+       "mcap_jpy_eok": 9900
       },
       {
        "code": "9501",

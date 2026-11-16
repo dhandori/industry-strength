@@ -193,7 +193,7 @@ JP = [
     ("전력·에너지", "전력기기·변압기", ["6501", "6503", "6508", "6622", "6617"]),
     ("전력·에너지", "전기·설비 공사", ["1944", "1942", "1959", "1941", "1951", "1721"]),
     ("전력·에너지", "원전 설비", ["7011", "5631", "6501"]),
-    ("전력·에너지", "전력회사", ["9503", "9502", "9501", "9506", "9508", "9513"]),
+    ("전력·에너지", "전력회사", ["9503", "9502", "9501", "9506", "642A", "9513"]),
     ("전력·에너지", "도시가스", ["9532", "9531", "9533"]),
     ("전력·에너지", "신재생에너지", ["9519", "9517", "1407"]),
     ("전력·에너지", "자원개발", ["1605", "1662"]),
@@ -291,6 +291,13 @@ US_SUPPLEMENT = {
     "EOSE": ("이오스 에너지", "NAS", 0.7),
 }
 
+# 일본 종목 목록에 아직 없지만 넣을 종목: 코드 → (종목명, 시가총액 억 엔)
+JP_SUPPLEMENT = {
+    # 규슈전력(9508)이 지주회사 KYUDEN Holdings 로 바뀌며 새 코드로 옮겨 상장(2026-11-16 TradingView·야후 확인,
+    # 옛 코드는 TradingView 에서 사라졌고 야후는 11/16 값이 비었다).
+    "642A": ("규슈전력(큐덴 홀딩스)", 9900),
+}
+
 # 한국 종목 목록(시가총액 5,000억원 이상)에서 빠져 있지만 산업 흐름상 꼭 넣을 종목 (2026-10-20 TradingView 확인)
 #   코드: (종목명, 시장, 시가총액 억원)
 KR_SUPPLEMENT = {
@@ -306,6 +313,9 @@ def build_jp(ghr: Path, problems: list) -> dict:
         members = []
         for c in codes:
             r = tse.get(c)
+            if not r and c in JP_SUPPLEMENT:
+                kn, mc = JP_SUPPLEMENT[c]
+                r = {"korean_name": kn, "market_cap_snapshot_local": mc * 1e8}
             if not r:
                 problems.append(f"JP {name}: {c} 일본 종목 목록에 없음")
                 continue
@@ -330,6 +340,53 @@ def build_jp(ghr: Path, problems: list) -> dict:
             "items": items, "sectors": sectors}
 
 
+# 도쿄거래소 33업종 → (한글 이름, 큰 분류). 52주 신고가 탭(일본)에서 바구니 밖 종목의 업종으로 쓴다.
+JP33 = {
+    "水産・農林業": ("수산·농림", "소비재"), "鉱業": ("광업", "전력·에너지"), "建設業": ("건설", "건설·소재"),
+    "食料品": ("식료품", "소비재"), "繊維製品": ("섬유", "건설·소재"), "パルプ・紙": ("펄프·종이", "건설·소재"),
+    "化学": ("화학", "건설·소재"), "医薬品": ("의약품", "헬스케어"), "石油・石炭製品": ("석유·석탄", "전력·에너지"),
+    "ゴム製品": ("고무", "자동차"), "ガラス・土石製品": ("유리·요업", "건설·소재"), "鉄鋼": ("철강", "건설·소재"),
+    "非鉄金属": ("비철금속", "건설·소재"), "金属製品": ("금속제품", "건설·소재"), "機械": ("기계", "조선·기계"),
+    "電気機器": ("전기기기", "전자·IT하드웨어"), "輸送用機器": ("수송기기", "자동차"), "精密機器": ("정밀기기", "전자·IT하드웨어"),
+    "その他製品": ("기타 제품", "소비재"), "電気・ガス業": ("전력·가스", "전력·에너지"), "陸運業": ("육운", "운송·통신"),
+    "海運業": ("해운", "운송·통신"), "空運業": ("항공", "운송·통신"), "倉庫・運輸関連業": ("창고·운수", "운송·통신"),
+    "情報・通信業": ("정보통신", "인터넷·소프트웨어"), "卸売業": ("도매", "상사"), "小売業": ("소매", "소비재"),
+    "銀行業": ("은행", "금융"), "証券、商品先物取引業": ("증권", "금융"), "保険業": ("보험", "금융"),
+    "その他金融業": ("기타 금융", "금융"), "不動産業": ("부동산", "부동산"), "サービス業": ("서비스", "인터넷·소프트웨어"),
+}
+JP_UNI_FLOOR = 700   # 억 엔. 신고가 기준(1,000억 엔)의 70%까지 넓게 담고, 그날 종가 시총으로 다시 거른다(wamo_highs52 US_CAP_SLACK 와 같은 방식)
+
+
+def build_jp_universe(ghr: Path, jp: dict, problems: list) -> dict:
+    """52주 신고가(일본) 대상: 도쿄 보통주(리츠·우선주 제외) 시총 700억 엔 이상. 업종은 일본 바구니 이름, 없으면 33업종."""
+    recs = [r for r in json.loads((ghr / "data/universe_overseas.json").read_text())["records"] if r.get("exchange") == "TSE"]
+    ev = json.loads((ghr / "data/industry_evidence_jp.json").read_text())["records"]
+    in_basket = {}
+    for it in jp["items"]:
+        for mb in it["members"]:
+            in_basket.setdefault(mb["code"], (it["name"], it["group"]))
+    out, skipped = [], 0
+    for r in recs:
+        code = r["symbol"]
+        s33 = (ev.get(f"TSE:{code}") or {}).get("provider_industry")
+        if len(code) != 4 or s33 not in JP33 or not r.get("shares"):
+            skipped += 1   # 리츠('-')·우선주(5자리)·업종 미상
+            continue
+        mcap = (r.get("market_cap_snapshot_local") or 0) / 1e8
+        if mcap < JP_UNI_FLOOR and code not in in_basket:
+            continue
+        ind, big = in_basket.get(code) or JP33[s33]
+        out.append({"code": code, "name": r.get("korean_name") or r.get("english_name") or code, "shares": int(r["shares"]),
+                    "ind": ind, "big": big, "s33": JP33[s33][0]})
+    for code, (kn, mc) in JP_SUPPLEMENT.items():
+        if code in in_basket and not any(x["code"] == code for x in out):
+            ind, big = in_basket[code]
+            problems.append(f"JP 신고가 대상 {code} {kn}: 주식 수를 몰라 시총 없이 넣지 않음")
+    out.sort(key=lambda x: x["code"])
+    return {"_note": "52주 신고가 탭(일본) 대상 종목. scripts/build_baskets.py --only-jp 가 global-high-radar 해외 종목 목록(TSE)으로 만든다.",
+            "floor_eok_jpy": JP_UNI_FLOOR, "count": len(out), "stocks": out}
+
+
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     ghr = Path(args[0] if args else "/home/user/global-high-radar")
@@ -339,6 +396,9 @@ def main():
         problems = []
         prev["markets"]["JP"] = build_jp(ghr, problems)
         cfg_path.write_text(json.dumps(prev, ensure_ascii=False, indent=1), encoding="utf-8")
+        uni = build_jp_universe(ghr, prev["markets"]["JP"], problems)
+        (ROOT / "config/jp_universe.json").write_text(json.dumps(uni, ensure_ascii=False, indent=0), encoding="utf-8")
+        print(f"일본 52주 신고가 대상 {uni['count']}종목(시총 {JP_UNI_FLOOR}억 엔 이상, 리츠·우선주 제외)")
         jp = prev["markets"]["JP"]["items"]
         print(f"일본 세부 산업 {len(jp)}개 / 종목 {sum(len(i['members']) for i in jp)}개 (한국·미국은 그대로)")
         print("\n".join(problems) or "문제 없음")

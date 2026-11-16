@@ -177,9 +177,9 @@
     const KR = market === "KR";
     const [d, H, S, F, P] = await Promise.all([
       board(market),
-      getJSON("highs.json").catch(() => null),
+      highsAll(),
       KR ? getJSON("KR_supply.json").catch(() => null) : Promise.resolve(null),
-      market === "JP" ? Promise.resolve(null) : getJSON(`${market}_sectorflow.json`).catch(() => null),   // 일본은 섹터 흐름 자료가 아직 없다
+      getJSON(`${market}_sectorflow.json`).catch(() => null),
       getJSON("pairs.json").catch(() => null),
     ]);
     if (token !== open._t) return;
@@ -642,7 +642,13 @@
 
   // 산업 강도 탭 종목 이름 옆 🚀: 지금 52주 신고가 행진 중(마지막 기록일에 신고가)이면 연속 일수
   let HX = null;
-  getJSON("highs.json").then((h) => { HX = h; }).catch(() => {});
+  // 한국·미국은 highs.json, 일본은 highs_JP.json(scripts/highs_jp.py) → markets 하나로 합친다
+  async function highsAll() {
+    const [h, j] = await Promise.all([getJSON("highs.json").catch(() => null), getJSON("highs_JP.json").catch(() => null)]);
+    if (h && j && j.markets && j.markets.JP) h.markets.JP = j.markets.JP;
+    return h || j;
+  }
+  highsAll().then((h) => { HX = h; }).catch(() => {});
   function highMark(code, market) {
     const hx = HX && highsOf(HX, market, code);
     if (!hx || !hx.run) return "";

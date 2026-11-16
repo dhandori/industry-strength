@@ -247,10 +247,12 @@ def fix_price_glitches(mkey: str, c: pd.DataFrame, v: pd.DataFrame, tickers: dic
        (1306 은 실제로 376.4·371.4엔이었다), 없으면 직전 값과의 비율이 10의 거듭제곱(1/10, 1/100…)이면 그만큼 되돌리고,
        그것도 아니면 직전 값으로 메운다.
     2) 분할 미반영: 시마무라(8227) 2026-02-18 3:1 분할 전 가격이 그대로라 하루 -66% 로 보인다.
-       돌아오지 않고 1/2~1/10(또는 2~10배)에 4% 안으로 맞는 하루 변화는 분할로 보고 그 전 가격·거래량을 맞춘다.
+       돌아오지 않고 1/2~1/10(또는 2~10배)에 4% 안으로 맞으며, 야후 공식 분할 기록(앞뒤 4일 안, 같은 비율)이 있을 때만
+       분할로 보고 그 전 가격·거래량을 맞춘다. 비율만 보면 안 된다: 저팬디스플레이(6740) 2026-03-09 은 27→52엔
+       실제 급등(+92.6%)인데 ×2 분할로 오인했었다. 기록을 받지 못하거나 없으면 그대로 두고 로그에만 남긴다.
     하루 40% 넘는 변화만 본다. 고친 내용은 로그에 남긴다."""
     c, v = c.astype(float), v.astype(float)
-    notes, refs = [], {}
+    notes, refs, splits = [], {}, {}
     for col in c.columns:
         x = c[col].dropna()
         for _ in range(10):
@@ -288,6 +290,15 @@ def fix_price_glitches(mkey: str, c: pd.DataFrame, v: pd.DataFrame, tickers: dic
                     x.loc[d] = fixv
                 continue
             split = next((t for n in range(2, 11) for t in (1 / n, n) if abs(q / t - 1) < 0.04), None)
+            if split is not None and tickers and col in tickers:
+                if col not in splits:
+                    splits[col] = aux.yahoo_splits(tickers[col])
+                ok = any(abs((d - d0).days) <= 4 and abs(f / split - 1) < 0.04 for d, f in (splits[col] or []))
+                if not ok:
+                    notes.append(f"{col} {d0.date()} 하루 ×{q:.4g}: 분할 비율과 비슷하지만 공식 분할 기록이 없어 그대로 둠")
+                    split = None
+            elif split is not None:
+                split = None   # 종목 티커를 모르면 분할 기록을 확인할 수 없어 고치지 않는다
             if split is None:
                 break   # 실제로 크게 움직인 날로 보고 그대로 둔다
             notes.append(f"{col} {d0.date()} 분할 보정 ×{split:.4g}(앞 가격, 그날 실제 비율 {q:.4g})")

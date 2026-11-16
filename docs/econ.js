@@ -359,6 +359,7 @@
     const box = $("#mxEcon"), top = $("#mxTop");
     if (!box) return;
     if (top) top.innerHTML = "";
+    if (market === "JP") { box.innerHTML = ""; return; }   // 일본 경기·빚투 칸은 아직 없다
     if (market !== "US") {
       if (!st.kr) { loadKR(); box.innerHTML = ""; return; }
       box.innerHTML = krCredit(st.kr);
