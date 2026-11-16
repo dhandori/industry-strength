@@ -1,5 +1,6 @@
 /* 52주 신고가 탭 (2026-10-21 추가)
    데이터: data/highs.json — global-high-radar의 '52주 신고가 기록' 작업이 한국장 17시·미국장 08시 기록 뒤 올린다.
+   일본(2026-11-16): data/highs_JP.json — 이 저장소 갱신 작업(scripts/highs_jp.py)이 따로 만든다. 읽을 때 markets.JP 로 합친다.
    산업 강도 탭(app.js)과 코드를 섞지 않는다. 공유하는 것은 시장 선택, 테마 색, 산업 상세 서랍(window.__isBoard)뿐이다. */
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
@@ -17,9 +18,14 @@
 
   async function loadRaw() {
     if (st.raw) return st.raw;
-    const r = await fetch("data/highs.json?v=" + Date.now(), { cache: "no-store" });
+    const [r, j] = await Promise.all([
+      fetch("data/highs.json?v=" + Date.now(), { cache: "no-store" }),
+      fetch("data/highs_JP.json?v=" + Date.now(), { cache: "no-store" }).catch(() => null),
+    ]);
     if (!r.ok) throw new Error("highs.json " + r.status);
-    st.raw = await r.json();
+    const raw = await r.json();
+    try { if (j && j.ok) { const jp = await j.json(); if (jp.markets && jp.markets.JP) { raw.markets.JP = jp.markets.JP; raw.updatedJP = jp.updated_at; } } } catch (e) {}
+    st.raw = raw;
     return st.raw;
   }
 
@@ -52,7 +58,7 @@
     const b = window.__isBoard && window.__isBoard();
     const d = b && b.data[st.market];
     if (!d) return null;
-    if (!d._memIdx) { d._memIdx = {}; d.items.forEach((it) => (it.members || []).forEach((mm) => { const c = String(mm.code || "").toUpperCase(); if (c && !d._memIdx[c]) d._memIdx[c] = it; })); }
+    if (!d._memIdx) { d._memIdx = {}; d.items.forEach((it) => (it.members || []).forEach((mm) => { [mm.code, mm.ticker].forEach((c) => { c = String(c || "").toUpperCase(); if (c && !d._memIdx[c]) d._memIdx[c] = it; }); })); }
     return d._memIdx[String(code).toUpperCase()] || null;
   }
   // 산업 강도 자료의 구성 종목 값(수익률·RS·추세) — 바구니에 든 종목만 있다
@@ -74,10 +80,11 @@
     st.market = market || st.market;
     const meta = $("#hxMeta");
     try { await loadRaw(); } catch (e) { meta.textContent = "신고가 데이터를 불러오지 못했어요. 잠시 후 새로고침해 주세요."; return; }
+    if (!st.raw.markets[st.market]) { meta.textContent = "이 시장의 신고가 기록이 아직 없어요. 다음 갱신 뒤에 보여요."; return; }
     const D = model(st.market);
     if (!D.days.length) { meta.textContent = "아직 기록이 없어요."; return; }
     if (!st.day || !D.byDay[st.day]) st.day = D.days.at(-1);
-    meta.textContent = `${st.market === "KR" ? "한국" : "미국"} 기준일 ${D.days.at(-1)} 종가 · 최근 ${D.days.length}거래일 기록 · 갱신 ${st.raw.updated_at}`;
+    meta.textContent = `${{ KR: "한국", US: "미국", JP: "일본" }[st.market]} 기준일 ${D.days.at(-1)} 종가 · 최근 ${D.days.length}거래일 기록 · 갱신 ${st.market === "JP" ? st.raw.updatedJP : st.raw.updated_at}${st.market === "JP" ? " · 도쿄 시총 1,000억 엔 이상" : ""}`;
     renderTiles(D); renderChart(D); renderStrong(D); renderHeat(D); renderFreq(D); renderDay(D);
   }
 
@@ -294,7 +301,7 @@
     $$("#hxFreq th.sortable").forEach((t) => t.addEventListener("click", () => { st.sortF = { k: t.dataset.k, d: st.sortF.k === t.dataset.k ? -st.sortF.d : (["name", "ind"].includes(t.dataset.k) ? 1 : -1) }; renderFreq(D); }));
     bindStock($("#hxFreq"));
   }
-  const cap = (v) => st.market === "KR" ? (v >= 10000 ? `${Math.floor(v / 10000)}조 ${(v % 10000).toLocaleString("ko-KR")}억` : `${v.toLocaleString("ko-KR")}억`) : `${v.toLocaleString("en-US")}억$`;
+  const cap = (v) => st.market === "KR" || st.market === "JP" ? (v >= 10000 ? `${Math.floor(v / 10000)}조 ${(v % 10000).toLocaleString("ko-KR")}억` : `${v.toLocaleString("ko-KR")}억`) + (st.market === "JP" ? "엔" : "") : `${v.toLocaleString("en-US")}억$`;
   function stockCell(r) {
     const b = basketOf(r.code);
     return `<b>${nameBtn(r)}</b><span>${esc(r.code)} · <a href="${tvUrl(r.code)}" target="_blank" rel="noopener noreferrer">차트</a>${nvA(r.code)}${b ? ` · <button class="lnk" data-bid="${esc(b.id)}" title="산업 강도 탭의 이 산업 상세">강도판: ${esc(b.name)}</button>` : ""}</span>`;
@@ -336,7 +343,7 @@
       el.innerHTML = `<div class="hx-wrap"><table class="hx-table"><thead><tr>${th("name", "종목", 0)}${th("ind", "업종", 0)}${th("chg", "등락률", 1)}${th("mcap", "시가총액", 1)}${th("run", "연속", 1)}${th("close", "종가", 1)}${th("ret20", "20일", 1)}${th("rs", "RS", 1)}<th>추세</th></tr></thead><tbody>
         ${list.map((r) => `<tr class="${r.run >= 2 ? "streak" : ""}"><td class="hx-name">${stockCell(r)}</td><td>${esc(r.ind)}<span class="rsub">${esc(r.big)}</span></td>
           <td class="num"><span class="ret ${cls(r.chg)}">${pct(r.chg)}</span></td><td class="num">${cap(r.mcap)}</td>
-          <td class="num">${r.run >= 2 ? `<b>🔁 ${r.run}일째</b>` : r.isNew ? "🆕" : "1일"}</td><td class="num">${r.close == null ? "–" : st.market === "KR" ? Math.round(r.close).toLocaleString("ko-KR") : r.close.toFixed(2)}</td>
+          <td class="num">${r.run >= 2 ? `<b>🔁 ${r.run}일째</b>` : r.isNew ? "🆕" : "1일"}</td><td class="num">${r.close == null ? "–" : st.market === "KR" || st.market === "JP" ? Math.round(r.close).toLocaleString("ko-KR") : r.close.toFixed(2)}</td>
           <td class="num">${r.ret20 == null ? '<span class="muted">–</span>' : `<span class="ret ${cls(r.ret20)}">${pct(r.ret20, 1)}</span>`}</td>
           <td class="num">${r.rs == null ? '<span class="muted">–</span>' : `<b class="rs-num ${r.rs >= 80 ? "hi" : r.rs < 40 ? "lo" : ""}">${r.rs}</b>`}</td>
           <td>${r.stage ? `<span class="stage ${STG[r.stage] || ""}">${esc(r.stage)}</span>` : '<span class="muted">–</span>'}</td></tr>`).join("")}

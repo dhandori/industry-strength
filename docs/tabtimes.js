@@ -10,14 +10,16 @@
   const WK = [1, 2, 3, 4, 5];
   const SCHED = {
     // update.yml: 한국 15:52(평일), 미국 뉴욕 16:12(평일) = 05:12/06:12 KST
-    strength: { KR: [{ h: 15, m: 52, d: WK }], US: [{ tz: NY, h: 16, m: 12, d: WK }],
-      src: "data/status.json", key: "updated_at", note: "한국 평일 15:52 · 미국 뉴욕 16:12(한국 05:12, 서머타임 해제 땐 06:12)" },
+    strength: { KR: [{ h: 15, m: 52, d: WK }], US: [{ tz: NY, h: 16, m: 12, d: WK }], JP: [{ h: 15, m: 52, d: WK }],
+      src: "data/status.json", key: "updated_at", note: "한국·일본 평일 15:52 · 미국 뉴욕 16:12(한국 05:12, 서머타임 해제 땐 06:12)" },
     // 52주 신고가 기록 예약 작업: 한국 16:05(평일), 미국 08:05 KST(화~토, 직전 미국장)
-    highs: { KR: [{ h: 16, m: 5, d: WK }], US: [{ h: 8, m: 5, d: [2, 3, 4, 5, 6] }],
-      src: "data/highs.json", key: "updated_at", note: "한국 평일 16:05 · 미국 화~토 08:05(직전 미국장)" },
+    // 일본은 이 저장소 update.yml 이 산업 강도와 같이 만든다(scripts/highs_jp.py → data/highs_JP.json)
+    highs: { KR: [{ h: 16, m: 5, d: WK }], US: [{ h: 8, m: 5, d: [2, 3, 4, 5, 6] }], JP: [{ h: 15, m: 52, d: WK }],
+      src: "data/highs.json", srcJP: "data/highs_JP.json", key: "updated_at", note: "한국 평일 16:05 · 미국 화~토 08:05(직전 미국장) · 일본 평일 15:52" },
     // wamo-choochoo-dashboard macro.yml: 07:05(월~토), 18:30(평일)
-    macro: { all: [{ h: 7, m: 5, d: [1, 2, 3, 4, 5, 6] }, { h: 18, m: 30, d: WK }],
-      src: "/wamo-choochoo-dashboard/wamo_macro.json", key: "asOf", note: "월~토 07:05 · 평일 18:30" },
+    // 일본은 이 저장소 update.yml 이 산업 강도와 같이 만든다(scripts/macro_jp.py → data/macro_JP.json)
+    macro: { all: [{ h: 7, m: 5, d: [1, 2, 3, 4, 5, 6] }, { h: 18, m: 30, d: WK }], JP: [{ h: 15, m: 52, d: WK }],
+      src: "/wamo-choochoo-dashboard/wamo_macro.json", srcJP: "data/macro_JP.json", key: "asOf", note: "한국·미국 월~토 07:05 · 평일 18:30 · 일본 평일 15:52" },
     // ai-market.yml: 매일 09:20·18:20
     ai: { all: [{ h: 9, m: 20, d: [0, 1, 2, 3, 4, 5, 6] }, { h: 18, m: 20, d: [0, 1, 2, 3, 4, 5, 6] }],
       src: "data/ai_market.json", key: "updated_at", note: "매일 09:20 · 18:20" },
@@ -82,9 +84,9 @@
 
   const last = {};
   const market = () => (window.__isMarket && window.__isMarket()) || "KR";
-  const slotsOf = (v) => SCHED[v].all || SCHED[v][market()] || [];
+  const slotsOf = (v) => SCHED[v][market()] || SCHED[v].all || [];
   function text(v) {
-    const L = last[v], nx = nextRun(slotsOf(v));
+    const L = SCHED[v].srcJP && market() === "JP" ? last[v + "JP"] : last[v], nx = nextRun(slotsOf(v));
     const a = L === undefined ? "갱신 …" : L ? `갱신 ${L.dateOnly ? kstLabel(L.t, false) : kstLabel(L.t)}` : "갱신 확인 못 함";
     const b = nx ? `다음 ${kstLabel(nx)}` : "";
     return [a, b];
@@ -115,7 +117,10 @@
     }
   }
   async function refresh() {
-    await Promise.all(Object.entries(SCHED).map(async ([v, s]) => { last[v] = await head(s.src, s.key); }));
+    await Promise.all(Object.entries(SCHED).map(async ([v, s]) => {
+      last[v] = await head(s.src, s.key);
+      if (s.srcJP) last[v + "JP"] = await head(s.srcJP, s.key);
+    }));
     paint();
   }
   // 탭·시장을 바꾸면 다시 그린다(다음 갱신은 시장마다 다르다)

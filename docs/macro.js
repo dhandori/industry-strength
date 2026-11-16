@@ -4,6 +4,9 @@
    산업 강도·52주 신고가 탭(app.js·highs.js)과 코드를 섞지 않는다. 공유하는 것은 테마 색뿐이다. */
 (() => {
   const SRC = "/wamo-choochoo-dashboard/wamo_macro.json";
+  // 일본(2026-11-16): 이 저장소 scripts/macro_jp.py 가 같은 계산법으로 따로 만든다(한국·미국 종합 위험도에 섞지 않으려고)
+  const SRC_JP = "data/macro_JP.json";
+  const isJP = () => ((window.__isMarket && window.__isMarket()) || "KR") === "JP";
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const LV = { 1: ["🔴", "위기"], 2: ["🟠", "경계"], 3: ["🟡", "주의"], 4: ["🔵", "관심"], 5: ["🟢", "정상"] };
@@ -284,26 +287,28 @@
   }
 
   function render() {
-    const d = st.data, c = d.composite, t = new Date(d.asOf);
-    $("#mxMeta").textContent = `마지막 갱신 ${t.getMonth() + 1}월 ${t.getDate()}일 ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")} · 지표 ${c.total}개 중 ${c.available}개 받음 · 매일 아침 7시쯤 자동으로 새로 고쳐져요`;
+    const JP = isJP();
+    if (JP && !st.jp) { load(false); return; }
+    const d = JP ? st.jp : st.data, c = d.composite, t = new Date(d.asOf);
+    $("#mxMeta").textContent = `마지막 갱신 ${t.getMonth() + 1}월 ${t.getDate()}일 ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")} · 지표 ${c.total}개 중 ${c.available}개 받음 · ${JP ? "평일 장 마감 뒤(한국 15:52)와 미국장 뒤에 새로 고쳐져요 · 재무성 국채 금리·야후·FRED" : "매일 아침 7시쯤 자동으로 새로 고쳐져요"}`;
     // 왼쪽 안전 → 오른쪽 위험 (지표 카드의 칸 막대와 같은 방향)
     const steps = [5, 4, 3, 2, 1].map((lv) => `<div class="mx-step ${lv === c.level ? "on" : ""}" style="--c:${col(lv)}"><div class="n">${c.counts[lv] ?? 0}</div><div class="t">${LV[lv][0]} ${LV[lv][1]}</div><div class="mx-bar" style="opacity:${(c.counts[lv] ?? 0) ? .9 : .15}"></div></div>`).join("");
     const alarms = d.indicators.filter((r) => r.level && r.level <= 2).map((r) => `<span class="mx-chip" style="--c:${col(r.level)}">${r.emoji} ${esc(short(r))}</span>`).join("");
     let h = `<section class="mx-hero">
-      <div class="card mx-verdict" style="--c:${col(c.level)}"><div class="k">오늘 시장 위험도 (한국·미국 지표 ${c.available}개 종합)</div>
+      <div class="card mx-verdict" style="--c:${col(c.level)}"><div class="k">오늘 시장 위험도 (${JP ? "일본" : "한국·미국"} 지표 ${c.available}개 종합)</div>
         <div class="big"><b>${c.emoji} ${esc(c.label)}</b><span>5단계 중 ${c.level ?? "–"}단계 · 1단계가 가장 위험</span></div><p>${esc(sentence(d))}</p></div>
       <div class="card"><div class="mx-ladder">${steps}</div>${alarms ? `<div class="mx-alarms">${alarms}</div>` : ""}
         <p class="foot-note">칸 안 숫자는 그 단계에 있는 지표 개수예요. <b>오른쪽(🔴 위기)으로 갈수록 위험</b>해요. 아래 칩은 지금 🟠경계 이상인 지표예요. 단계는 '최근 5년과 비교한 위치'와 '최근 한 달 동안 얼마나 빨리 변했는지'를 함께 보고 정해요.</p></div></section>`;
     // 2026-10-25 재배치: 미국 지표를 먼저, 굵은 구분선 뒤에 한국 지표.
     // VKOSPI는 한국 변동성, CNN 공포탐욕지수는 미국 투자 심리로 각 나라 안에 넣는다(원본 group 값은 '변동성'·'심리'라 key로 나눈다).
-    const market = (r) => r.key === "vkospi" || /^kr_/.test(r.key) || /^한국/.test(r.group) ? "KR" : "US";
+    const market = (r) => /^(jp_|usjp_|usdjpy)/.test(r.key) ? "JP" : r.key === "vkospi" || /^kr_/.test(r.key) || /^한국/.test(r.group) ? "KR" : "US";
     const sub = (r) => r.group === "변동성" ? "변동성" : r.group === "심리" ? "투자 심리" : "신용·금리·유동성";
     const SUBS = ["신용·금리·유동성", "변동성", "투자 심리"];
     const worstOf = (rows) => Math.min(6, ...rows.filter((r) => r.level).map((r) => r.level));
     // 2026-10-25: 위쪽 한국/미국 버튼(52주 신고가 탭과 같은 버튼)에 맞춰 고른 나라 지표만 보여 준다.
     const cur = (window.__isMarket && window.__isMarket()) || "KR";
     h += spanBar();
-    [["US", "🇺🇸", "미국"], ["KR", "🇰🇷", "한국"]].filter(([mk]) => mk === cur).forEach(([mk, flag, title], i) => {
+    [["US", "🇺🇸", "미국"], ["KR", "🇰🇷", "한국"], ["JP", "🇯🇵", "일본"]].filter(([mk]) => mk === cur).forEach(([mk, flag, title], i) => {
       const rows = d.indicators.filter((r) => market(r) === mk);
       if (!rows.length) return;
       const w = worstOf(rows);
@@ -315,7 +320,7 @@
         const sr = rows.filter((r) => sub(r) === s);
         if (!sr.length) return;
         const sw = worstOf(sr);
-        const label = mk === "KR" && s === "신용·금리·유동성" ? "신용·금리" : s;
+        const label = mk === "KR" && s === "신용·금리·유동성" ? "신용·금리" : mk === "JP" && s === "신용·금리·유동성" ? "금리·환율" : s;
         h += `<div class="mx-group-h"><h3>${label}</h3><span class="sub">${sr.length}개 지표${sw <= 5 ? ` · 가장 위험한 지표: ${LV[sw][0]} ${LV[sw][1]}` : ""}</span></div><div class="mx-grid">${sr.map(card).join("")}${mk === "US" && s === "투자 심리" && window.__pc ? window.__pc.card() : ""}</div>`;   // 풋콜레이시오(putcall.js)
         if (mk === "US" && s === "투자 심리") h += duo(d);
       });
@@ -348,6 +353,15 @@
     // 장기 자료는 따로(없어도 2년 그래프는 그대로). 오면 다시 그린다
     if (!st.long && !st.longLoading) st.longLoading = fetch("data/macro_long.json?v=" + Date.now(), { cache: "no-store" }).then((r) => r.ok ? r.json() : null)
       .then((j) => { if (j && j.series) { st.long = j.series; if (st.data && !$("#viewMacro").hidden) { const y = scrollY; render(); scrollTo({ top: y }); } } }).catch(() => {});
+    if (isJP()) {
+      if (st.jp && !force) return render();
+      try {
+        const r = await fetch(SRC_JP + "?v=" + Date.now(), { cache: "no-store" });
+        if (!r.ok) throw new Error(r.status);
+        st.jp = await r.json(); render();
+      } catch (e) { $("#mxBody").innerHTML = `<div class="mx-empty">일본 매크로 자료를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</div>`; }
+      return;
+    }
     if (st.data && !force) return render();
     if (!st.loading) st.loading = fetch(SRC + "?v=" + Date.now(), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
     try { st.data = await st.loading; render(); }
@@ -355,5 +369,5 @@
     finally { st.loading = null; }
   }
 
-  window.__macro = { show: () => load(false), rerender: () => { if (st.data && !$("#viewMacro").hidden) render(); }, reload: () => { st.data = null; if (!$("#viewMacro").hidden) load(true); } };
+  window.__macro = { show: () => load(false), rerender: () => { if ((st.data || isJP()) && !$("#viewMacro").hidden) render(); }, reload: () => { st.data = null; st.jp = null; if (!$("#viewMacro").hidden) load(true); } };
 })();

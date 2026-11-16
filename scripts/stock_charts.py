@@ -124,7 +124,7 @@ def main():
     cfg = json.loads((ROOT / "config/baskets.json").read_text(encoding="utf-8"))
     out_dir = ROOT / "docs/data"
     ok = False
-    for mkey in ("KR", "US"):
+    for mkey in ("KR", "US", "JP"):
         try:
             res = build(mkey, cfg)
         except Exception as e:  # 한 시장이 실패해도 다른 시장과 기존 파일은 그대로 둔다

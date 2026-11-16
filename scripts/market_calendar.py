@@ -1,6 +1,6 @@
-"""한국·미국 휴장일 목록을 docs/data/calendar.json 에 쓴다(화면 docs/refresh.js 가 읽는다).
+"""한국·미국·일본 휴장일 목록을 docs/data/calendar.json 에 쓴다(화면 docs/refresh.js 가 읽는다).
 
-거래소 달력(exchange_calendars: XKRX·XNYS)으로 시장 현지 날짜 기준 30일 전~45일 뒤의 휴장일(주말 포함)과
+거래소 달력(exchange_calendars: XKRX·XNYS·XTKS)으로 시장 현지 날짜 기준 30일 전~45일 뒤의 휴장일(주말 포함)과
 각 휴장일 다음 개장일을 담는다. 화면은 보는 순간의 현지 날짜로 찾아
 '오늘 휴장 · 개천절 · 다음 개장 10/5(월)'을 적고, 기대 기준일·다음 자동 갱신 계산에서 휴장일을 건너뛴다.
 앞뒤로 넉넉히 담아 하루 이틀 갱신이 빠져도, 추석 같은 긴 연휴에도 맞게 한다.
@@ -14,7 +14,7 @@ import re
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "data" / "calendar.json"
-MARKETS = {"KR": ("XKRX", "Asia/Seoul"), "US": ("XNYS", "America/New_York")}
+MARKETS = {"KR": ("XKRX", "Asia/Seoul"), "US": ("XNYS", "America/New_York"), "JP": ("XTKS", "Asia/Tokyo")}
 BACK, AHEAD = 30, 45
 
 HOLIDAY_KO = {
@@ -27,6 +27,12 @@ HOLIDAY_KO = {
     "Korean National Foundation Day": "개천절", "Hangul Proclamation Day": "한글날",
     "Dr. Martin Luther King Jr. Day": "마틴 루서 킹 데이", "President's Day": "대통령의 날", "Good Friday": "성금요일",
     "Juneteenth National Independence Day": "노예해방기념일", "July 4th": "독립기념일", "Thanksgiving": "추수감사절",
+    # 일본(XTKS). 춘분·추분·대체휴일은 달력에 이름이 없어 '휴장일'로 나온다.
+    "New Year's Holiday (Dec 31)": "연말 휴장", "New Year's Holiday (Jan 2)": "연초 휴장", "New Year's Holiday (Jan 3)": "연초 휴장",
+    "Coming of Age Day": "성인의 날", "National Foundation Day": "건국기념일", "Emperor Naruhito's Birthday": "일왕 생일",
+    "Showa Day": "쇼와의 날", "Constitution Memorial Day": "헌법기념일", "Greenery Day": "녹색의 날", "Marine Day": "바다의 날",
+    "Mountain Day": "산의 날", "Respect for the Aged Day": "경로의 날", "Health and Sports Day": "스포츠의 날",
+    "Culture Day": "문화의 날", "Labor Thanksgiving Day": "근로감사의 날",
 }
 
 
@@ -37,6 +43,8 @@ def holiday_ko(name, market):
         ko = "노동절"
     if name == "Memorial Day" and market == "US":
         ko = "메모리얼 데이"
+    if name == "Children's Day" and market == "JP":
+        ko = "어린이날"
     return ko or "휴장일"
 
 
@@ -68,7 +76,7 @@ def closures(market, now):
 
 def main(now=None):
     now = now or datetime.now(timezone.utc)
-    data = {"_note": "한국·미국 휴장일(주말 포함)과 다음 개장일. scripts/market_calendar.py",
+    data = {"_note": "한국·미국·일본 휴장일(주말 포함)과 다음 개장일. scripts/market_calendar.py",
             "markets": {m: closures(m, now) for m in MARKETS}}
     text = json.dumps(data, ensure_ascii=False, separators=(",", ":"))
     if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:

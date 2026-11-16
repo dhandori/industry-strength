@@ -177,7 +177,7 @@
     const KR = market === "KR";
     const [d, H, S, F, P] = await Promise.all([
       board(market),
-      getJSON("highs.json").catch(() => null),
+      highsAll(),
       KR ? getJSON("KR_supply.json").catch(() => null) : Promise.resolve(null),
       getJSON(`${market}_sectorflow.json`).catch(() => null),
       getJSON("pairs.json").catch(() => null),
@@ -210,7 +210,8 @@
     const prs = KR ? [] : pairHits(P, tick);
     const lastHit = hx && hx.list.length ? hx.hit[hx.list.at(-1)] : null;
     const close = m && m.close != null ? m.close : lastHit ? lastHit.close : null;
-    const money = (v) => v == null ? "–" : KR ? Math.round(v).toLocaleString("ko-KR") + "원" : "$" + v.toFixed(2);
+    const JP = market === "JP";
+    const money = (v) => v == null ? "–" : KR ? Math.round(v).toLocaleString("ko-KR") + "원" : JP ? Math.round(v).toLocaleString("ko-KR") + "엔" : "$" + v.toFixed(2);
     const price = close == null ? "" : money(close);
     const mcap = lastHit ? lastHit.mcap : sup && sup.mcap != null ? sup.mcap : rk[0] ? rk[0].r.mcap : null;
     const capTxt = mcap == null ? "" : KR ? (mcap >= 10000 ? `${(mcap / 10000).toFixed(1)}조` : `${Math.round(mcap).toLocaleString("ko-KR")}억`) + " 원" : `${Math.round(mcap).toLocaleString("en-US")}억 달러`;
@@ -349,7 +350,12 @@
 
     // 바깥 링크
     const L = window.__links;
-    const links = KR ? [
+    const links = JP ? [
+      ["네이버 증권", L.naverJP(tick)],
+      ["TradingView 차트", L.tvChart(tick, "JP")],
+      ["야후 재팬 파이낸스", L.yahooJP(tick)],
+      ["가부탄(공시·실적)", L.kabutan(tick)],
+    ] : KR ? [
       ["네이버 종합", L.naver(code, "total")],
       ["네이버 뉴스", L.naver(code, "news")],
       ["네이버 재무", L.naver(code, "finance/annual")],
@@ -399,7 +405,7 @@
       bd.open(b.dataset.ind);
     }));
     $$(".sk-peer", box).forEach((b) => b.addEventListener("click", () => { if (!b.classList.contains("me")) open(b.dataset.code, market, b.dataset.name); }));
-    return { code, key, tick, market, KR, m, inds, hx, d, name, money };
+    return { code, key, tick, market, KR, JP, m, inds, hx, d, name, money };
   }
 
   // ---------- 차트
@@ -435,14 +441,14 @@
   }
 
   function drawCharts(ctx, X, SE) {
-    const { key, KR, m, inds, hx, d } = ctx;
+    const { key, KR, JP, m, inds, hx, d } = ctx;
     const rec = X && X.s && X.s[key];
     ["#skPrice", "#skCmp", "#skRs", "#skFlow", "#skHold"].forEach((q) => { const e = $(q, box); if (e) e.innerHTML = ""; });
     if (!rec || !hasLW()) { fallback(ctx); return; }
 
     const dates = X.dates, n = dates.length, c = rec.c, v = rec.v || [];
     const kStart = Math.max(0, n - (RANGES.find(([k]) => k === range) || RANGES[2])[2]);
-    const fmtP = (x) => KR ? Math.round(x).toLocaleString("ko-KR") : x >= 100 ? x.toFixed(1) : x.toFixed(2);
+    const fmtP = (x) => KR || JP ? Math.round(x).toLocaleString("ko-KR") : x >= 100 ? x.toFixed(1) : x.toFixed(2);
     const ma = { 20: sma(c, 20), 50: sma(c, 50), 150: sma(c, 150), 200: sma(c, 200) };
     const hi52 = rollMax(c, 252);
     const vma = sma(v.map((x) => x ?? null), 50);
@@ -618,7 +624,7 @@
         const im = $("img", el); if (im) im.src = img(b.dataset.k);
       }));
     } else {
-      const sym = (window.__links && window.__links.tvSym(ctx.tick, "US")) || ctx.tick;
+      const sym = (window.__links && window.__links.tvSym(ctx.tick, ctx.JP ? "JP" : "US")) || ctx.tick;
       const dark = root.dataset.theme === "dark" || (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
       el.classList.add("sk-img");
       el.innerHTML = `<iframe class="sk-tv" title="${esc(ctx.name)} TradingView 차트" loading="lazy" src="https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(sym)}&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=f1f3f6&studies=%5B%22MASimple%40tv-basicstudies%22%5D&theme=${dark ? "dark" : "light"}&style=1&timezone=Asia%2FSeoul&locale=kr&range=12M"></iframe>
@@ -636,7 +642,13 @@
 
   // 산업 강도 탭 종목 이름 옆 🚀: 지금 52주 신고가 행진 중(마지막 기록일에 신고가)이면 연속 일수
   let HX = null;
-  getJSON("highs.json").then((h) => { HX = h; }).catch(() => {});
+  // 한국·미국은 highs.json, 일본은 highs_JP.json(scripts/highs_jp.py) → markets 하나로 합친다
+  async function highsAll() {
+    const [h, j] = await Promise.all([getJSON("highs.json").catch(() => null), getJSON("highs_JP.json").catch(() => null)]);
+    if (h && j && j.markets && j.markets.JP) h.markets.JP = j.markets.JP;
+    return h || j;
+  }
+  highsAll().then((h) => { HX = h; }).catch(() => {});
   function highMark(code, market) {
     const hx = HX && highsOf(HX, market, code);
     if (!hx || !hx.run) return "";

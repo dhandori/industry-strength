@@ -1,9 +1,11 @@
-"""섹터 워치 차트 카드 자료: 업종 ETF의 당일·5일·20일·60일·200일 흐름 (한국·미국).
+"""섹터 워치 차트 카드 자료: 업종 ETF의 당일·5일·20일·60일·200일 흐름 (한국·미국·일본).
 
 - 한국: 당일·5일은 네이버 1분봉(최근 약 7거래일), 일봉은 data/prices/KR_stocks_close.csv (없으면 네이버 일봉).
   업종 목록 = config/baskets.json 의 KR.sectors (섹터 워치 칸과 같다).
 - 미국: 당일·5일은 야후 5분봉(정규장만), 일봉은 야후 일봉(수정 전 종가, update.py 와 같은 기준).
   업종 목록 = US.flow (세부 업종 ETF). 섹터 워치 칸(S&P 500 큰 업종 11개)과는 따로 둔다.
+- 일본(2026-11-16): 당일·5일은 야후 5분봉(도쿄 시각, 11:30~12:30 점심 휴장은 직전 가격으로 잇는다), 일봉은
+  data/prices/JP_stocks_close.csv(update.py 가 야후 오류값을 고친 저장 가격). 업종 목록 = JP.sectors(TOPIX-17 업종 ETF).
 - 선 값은 모두 '기간 시작 가격 대비 %'. 마지막 점은 공식 종가로 맞춘다.
 - 오른쪽 종목: 그 업종에 묶인 세부 산업 구성 종목 중 시가총액 상위 5개(중복 제외), 일봉 종가 기준.
 
@@ -32,6 +34,9 @@ SESSION = {
            "labels": ["09:00", "15:30"], "clock": "한국 시각"},
     "US": {"open": (9, 30), "minutes": 390, "freq": "5min", "unit": 5, "step1": 1, "step5": 3, "sparse": 50,
            "labels": ["09:30", "16:00"], "clock": "뉴욕 시각"},
+    # 도쿄 09:00~15:30(점심 11:30~12:30 포함 390분). 업종 ETF는 거래가 적어 '거래 적음' 기준을 낮게 둔다.
+    "JP": {"open": (9, 0), "minutes": 390, "freq": "5min", "unit": 5, "step1": 1, "step5": 3, "sparse": 30,
+           "labels": ["09:00", "15:30"], "clock": "도쿄 시각", "tz": "Asia/Tokyo"},
 }
 
 
@@ -65,7 +70,7 @@ def naver_daily(code: str) -> pd.Series:
     return pd.Series(dict(rows)).sort_index()
 
 
-def yahoo(tickers: list[str], period: str, interval: str) -> dict[str, pd.Series]:
+def yahoo(tickers: list[str], period: str, interval: str, tz: str = "America/New_York") -> dict[str, pd.Series]:
     import yfinance as yf
 
     out = {}
@@ -90,7 +95,7 @@ def yahoo(tickers: list[str], period: str, interval: str) -> dict[str, pd.Series
                 continue
             idx = pd.to_datetime(c.index)
             if idx.tz is not None:
-                idx = idx.tz_convert("America/New_York").tz_localize(None)
+                idx = idx.tz_convert(tz).tz_localize(None)
             c.index = idx if interval != "1d" else idx.normalize()
             out[t] = c
         if len(out) < len(tickers):
@@ -232,19 +237,21 @@ def run_market(mkey: str, cfg: dict, force: bool) -> None:
     inst = [("bench", b1["name"], b1["etf"], b1["code"] if mkey == "KR" else b1["ticker"], None)]
     if b2:
         inst.append(("bench", b2["name"], b2["etf"], b2["code"] if mkey == "KR" else b2["ticker"], None))
-    groups = cfg.get("sectors") if mkey == "KR" else cfg.get("flow")
-    inst += [("sector", s["name"], s["en"], s["code"], s) for s in groups or []]
+    groups = cfg.get("sectors") if mkey in ("KR", "JP") else cfg.get("flow")
+    inst += [("sector", s["name"], s["en"], s["ticker"] if mkey == "JP" else s["code"], s) for s in groups or []]
     if not groups:
         log(mkey, "업종 목록 없음")
         return
 
     problems = []
-    if mkey == "US":
+    if mkey in ("US", "JP"):
         codes = [x[3] for x in inst]
-        daily_all = yahoo(codes, "2y", "1d")
-        minute_all = yahoo(codes, "8d", "5m")   # 장중에 돌아도 지난 5거래일이 다 들어오게 넉넉히
+        daily_all = yahoo(codes, "2y", "1d") if mkey == "US" else {}
+        minute_all = yahoo(codes, "8d", "5m", ses.get("tz", "America/New_York"))   # 장중에 돌아도 지난 5거래일이 다 들어오게 넉넉히
     out = {"market": mkey, "basis": basis.strftime("%Y-%m-%d"), "updated_at": datetime.now(KST).strftime("%Y-%m-%d %H:%M KST"),
-           "source": "네이버 분봉(당일·5일), 일봉 종가(20일·60일·200일)" if mkey == "KR" else "야후 5분봉(당일·5일, 정규장), 일봉 종가(20일·60일·200일)",
+           "source": {"KR": "네이버 분봉(당일·5일), 일봉 종가(20일·60일·200일)",
+                      "JP": "야후 5분봉(당일·5일, 도쿄 정규장), 일봉 종가(20일·60일·200일, 오류값 보정한 저장 가격)"}.get(
+                          mkey, "야후 5분봉(당일·5일, 정규장), 일봉 종가(20일·60일·200일)"),
            "session": {"open": ses["labels"][0], "minutes": ses["minutes"], "step1": ses["unit"] * ses["step1"],
                        "step5": ses["unit"] * ses["step5"], "clock": ses["clock"]},
            "dates": [x.strftime("%Y-%m-%d") for x in close["__bench__"].dropna().index[-201:]],
@@ -266,6 +273,13 @@ def run_market(mkey: str, cfg: dict, force: bool) -> None:
             except Exception as e:  # noqa: BLE001
                 problems.append(f"{name} 분봉 실패 {type(e).__name__}")
                 minute = pd.Series(dtype=float)
+        elif mkey == "JP":
+            col = "__bench__" if kind == "bench" and name == b1["name"] else "__bench2__" if kind == "bench" else "__sec_" + grp["ticker"]
+            daily = close[col] if col in close and close[col].notna().sum() > 210 else None
+            minute = minute_all.get(code, pd.Series(dtype=float))
+            if daily is None:
+                problems.append(f"{name} 일봉 실패")
+                continue
         else:
             daily = daily_all.get(code)
             minute = minute_all.get(code, pd.Series(dtype=float))
@@ -281,8 +295,10 @@ def run_market(mkey: str, cfg: dict, force: bool) -> None:
         if grp:
             row["ticker"] = grp["ticker"]
             row["items"] = grp["items"]
-            row["stocks"] = [{"name": mb["name"], "code": mb["code"], "ret": stock_rets(close, mb["ticker"], basis)}
-                             for mb in top_members(cfg, grp["items"], "mcap_eok" if mkey == "KR" else "mcap_usd_b")]
+            cap = {"KR": "mcap_eok", "JP": "mcap_jpy_eok"}.get(mkey, "mcap_usd_b")
+            row["stocks"] = [{"name": mb["name"], "code": mb["code"], **({"ticker": mb["ticker"]} if mkey == "JP" else {}),
+                              "ret": stock_rets(close, mb["ticker"], basis)}
+                             for mb in top_members(cfg, grp["items"], cap)]
         out["bench" if kind == "bench" else "sectors"].append(row)
     if not out["bench"] or len(out["sectors"]) < len(groups) * 0.7:
         log(mkey, "자료가 너무 부족해서 기존 파일 유지", problems)
@@ -296,7 +312,7 @@ def run_market(mkey: str, cfg: dict, force: bool) -> None:
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
-    ap.add_argument("--markets", default="KR,US")
+    ap.add_argument("--markets", default="KR,US,JP")
     a = ap.parse_args()
     cfg = json.loads((ROOT / "config/baskets.json").read_text(encoding="utf-8"))["markets"]
     for mkey in a.markets.split(","):

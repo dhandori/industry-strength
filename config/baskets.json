@@ -6344,13 +6344,6 @@
        "ticker": "CMCSA",
        "market": "NAS",
        "mcap_usd_b": 73.1
-      },
-      {
-       "code": "ROKU",
-       "name": "로쿠",
-       "ticker": "ROKU",
-       "market": "NAS",
-       "mcap_usd_b": 20.2
       }
      ]
     },
@@ -6891,6 +6884,3507 @@
      "items": [
       "미디어·스트리밍",
       "통신"
+     ]
+    }
+   ]
+  },
+  "JP": {
+   "label": "일본",
+   "currency": "엔",
+   "benchmark": {
+    "name": "TOPIX",
+    "etf": "NEXT FUNDS TOPIX",
+    "ticker": "1306.T",
+    "code": "1306"
+   },
+   "benchmark2": {
+    "name": "닛케이225",
+    "etf": "NEXT FUNDS 닛케이225",
+    "ticker": "1321.T",
+    "code": "1321"
+   },
+   "items": [
+    {
+     "id": "jp_00",
+     "name": "전공정 장비",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "8035",
+       "name": "도쿄일렉트론",
+       "ticker": "8035.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 231554
+      },
+      {
+       "code": "7735",
+       "name": "스크린홀딩스",
+       "ticker": "7735.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 22894
+      },
+      {
+       "code": "6361",
+       "name": "에바라",
+       "ticker": "6361.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 19158
+      },
+      {
+       "code": "6525",
+       "name": "고쿠사이일렉트릭",
+       "ticker": "6525.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18486
+      },
+      {
+       "code": "6728",
+       "name": "알박",
+       "ticker": "6728.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4042
+      }
+     ]
+    },
+    {
+     "id": "jp_01",
+     "name": "후공정·절단 장비",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "6146",
+       "name": "디스코",
+       "ticker": "6146.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 58431
+      },
+      {
+       "code": "7729",
+       "name": "도쿄정밀",
+       "ticker": "7729.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6545
+      },
+      {
+       "code": "6315",
+       "name": "도와",
+       "ticker": "6315.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1625
+      },
+      {
+       "code": "6266",
+       "name": "다쓰모",
+       "ticker": "6266.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 571
+      }
+     ]
+    },
+    {
+     "id": "jp_02",
+     "name": "검사·계측 장비",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "6920",
+       "name": "레이져테크",
+       "ticker": "6920.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 36928
+      },
+      {
+       "code": "268A",
+       "name": "리가쿠홀딩스",
+       "ticker": "268A.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3410
+      },
+      {
+       "code": "6590",
+       "name": "시바우라메카트로닉",
+       "ticker": "6590.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2386
+      },
+      {
+       "code": "7717",
+       "name": "브이테크놀로지",
+       "ticker": "7717.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 510
+      }
+     ]
+    },
+    {
+     "id": "jp_03",
+     "name": "테스트·프로브",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "6857",
+       "name": "어드밴테스트",
+       "ticker": "6857.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 249986
+      },
+      {
+       "code": "6871",
+       "name": "일본마이크로닉스",
+       "ticker": "6871.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5215
+      },
+      {
+       "code": "6855",
+       "name": "일본전자재료",
+       "ticker": "6855.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1046
+      }
+     ]
+    },
+    {
+     "id": "jp_04",
+     "name": "웨이퍼",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "4063",
+       "name": "신에츠화학",
+       "ticker": "4063.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 111173
+      },
+      {
+       "code": "3436",
+       "name": "섬코",
+       "ticker": "3436.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9453
+      }
+     ]
+    },
+    {
+     "id": "jp_05",
+     "name": "반도체 소재(레지스트·가스·연마)",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "4004",
+       "name": "레저낙홀딩스",
+       "ticker": "4004.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 28532
+      },
+      {
+       "code": "4091",
+       "name": "닛폰산소홀딩스",
+       "ticker": "4091.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 23625
+      },
+      {
+       "code": "4021",
+       "name": "닛산화학",
+       "ticker": "4021.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11395
+      },
+      {
+       "code": "4186",
+       "name": "도쿄응화공업",
+       "ticker": "4186.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9995
+      },
+      {
+       "code": "5384",
+       "name": "후지미인코퍼레이티드",
+       "ticker": "5384.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2463
+      },
+      {
+       "code": "4369",
+       "name": "도리케미컬연구소",
+       "ticker": "4369.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1038
+      },
+      {
+       "code": "4970",
+       "name": "도요합성",
+       "ticker": "4970.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 741
+      }
+     ]
+    },
+    {
+     "id": "jp_06",
+     "name": "포토마스크·블랭크",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "7741",
+       "name": "호야",
+       "ticker": "7741.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 75032
+      },
+      {
+       "code": "7912",
+       "name": "다이닛폰인쇄",
+       "ticker": "7912.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 12882
+      },
+      {
+       "code": "429A",
+       "name": "TEKSCEND PHOTOMASK CORP.",
+       "ticker": "429A.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3403
+      }
+     ]
+    },
+    {
+     "id": "jp_07",
+     "name": "패키지 기판",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "4062",
+       "name": "이비덴",
+       "ticker": "4062.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 55212
+      },
+      {
+       "code": "6787",
+       "name": "메이코",
+       "ticker": "6787.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5544
+      },
+      {
+       "code": "4626",
+       "name": "다이요홀딩스",
+       "ticker": "4626.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5280
+      }
+     ]
+    },
+    {
+     "id": "jp_08",
+     "name": "반도체 소자(메모리·로직)",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "285A",
+       "name": "키오시아홀딩스",
+       "ticker": "285A.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 220176
+      },
+      {
+       "code": "6723",
+       "name": "르네사스일렉트로닉스",
+       "ticker": "6723.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 55702
+      },
+      {
+       "code": "6526",
+       "name": "소시오넥스트",
+       "ticker": "6526.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3349
+      }
+     ]
+    },
+    {
+     "id": "jp_09",
+     "name": "전력반도체",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "6504",
+       "name": "후지 전기",
+       "ticker": "6504.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 20709
+      },
+      {
+       "code": "6963",
+       "name": "롬",
+       "ticker": "6963.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14407
+      },
+      {
+       "code": "6707",
+       "name": "산켄전기",
+       "ticker": "6707.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1193
+      }
+     ]
+    },
+    {
+     "id": "jp_10",
+     "name": "반도체 공장설비(클린룸·초순수)",
+     "group": "반도체",
+     "members": [
+      {
+       "code": "6370",
+       "name": "구리타공업",
+       "ticker": "6370.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7889
+      },
+      {
+       "code": "6323",
+       "name": "로체",
+       "ticker": "6323.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7735
+      },
+      {
+       "code": "6368",
+       "name": "오르가노",
+       "ticker": "6368.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5728
+      },
+      {
+       "code": "1969",
+       "name": "다카사고열학",
+       "ticker": "1969.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5484
+      },
+      {
+       "code": "6254",
+       "name": "노무라마이크로사이언스",
+       "ticker": "6254.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1219
+      }
+     ]
+    },
+    {
+     "id": "jp_11",
+     "name": "MLCC·수동소자",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "6981",
+       "name": "무라타 제작",
+       "ticker": "6981.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 114223
+      },
+      {
+       "code": "6762",
+       "name": "TDK",
+       "ticker": "6762.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 55815
+      },
+      {
+       "code": "6971",
+       "name": "쿄세라",
+       "ticker": "6971.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 44883
+      },
+      {
+       "code": "6976",
+       "name": "다이요유전",
+       "ticker": "6976.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11074
+      },
+      {
+       "code": "6996",
+       "name": "니치콘",
+       "ticker": "6996.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1426
+      }
+     ]
+    },
+    {
+     "id": "jp_12",
+     "name": "전자부품·커넥터·모터",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "6594",
+       "name": "일본전산",
+       "ticker": "6594.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 20634
+      },
+      {
+       "code": "6479",
+       "name": "미네베아미쓰미",
+       "ticker": "6479.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13321
+      },
+      {
+       "code": "6806",
+       "name": "히로세전기",
+       "ticker": "6806.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8027
+      },
+      {
+       "code": "6770",
+       "name": "알프스알파인",
+       "ticker": "6770.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4176
+      },
+      {
+       "code": "6807",
+       "name": "일본항공전자",
+       "ticker": "6807.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1871
+      }
+     ]
+    },
+    {
+     "id": "jp_13",
+     "name": "전선·광케이블",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "5803",
+       "name": "후지쿠라",
+       "ticker": "5803.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 74577
+      },
+      {
+       "code": "5802",
+       "name": "스미토모 전기",
+       "ticker": "5802.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 66168
+      },
+      {
+       "code": "5801",
+       "name": "후루카와전기",
+       "ticker": "5801.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 23680
+      },
+      {
+       "code": "5805",
+       "name": "SWCC",
+       "ticker": "5805.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3697
+      }
+     ]
+    },
+    {
+     "id": "jp_14",
+     "name": "전자·카메라·이미지센서",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "6758",
+       "name": "소니",
+       "ticker": "6758.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 232491
+      },
+      {
+       "code": "6752",
+       "name": "파나소닉",
+       "ticker": "6752.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 92393
+      },
+      {
+       "code": "4901",
+       "name": "후지포토 필름",
+       "ticker": "4901.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 41033
+      },
+      {
+       "code": "7751",
+       "name": "캐논",
+       "ticker": "7751.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 37795
+      },
+      {
+       "code": "7731",
+       "name": "니콘",
+       "ticker": "7731.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5633
+      }
+     ]
+    },
+    {
+     "id": "jp_15",
+     "name": "FA·센서",
+     "group": "전자·IT하드웨어",
+     "members": [
+      {
+       "code": "6861",
+       "name": "키엔스",
+       "ticker": "6861.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 195864
+      },
+      {
+       "code": "6273",
+       "name": "SMC",
+       "ticker": "6273.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 42537
+      },
+      {
+       "code": "6645",
+       "name": "옴론",
+       "ticker": "6645.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11515
+      },
+      {
+       "code": "6841",
+       "name": "요코가와전기",
+       "ticker": "6841.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11175
+      }
+     ]
+    },
+    {
+     "id": "jp_16",
+     "name": "전력기기·변압기",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "6501",
+       "name": "히타치",
+       "ticker": "6501.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 257977
+      },
+      {
+       "code": "6503",
+       "name": "미쓰비시전기",
+       "ticker": "6503.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 102446
+      },
+      {
+       "code": "6508",
+       "name": "메이덴샤",
+       "ticker": "6508.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5253
+      },
+      {
+       "code": "6622",
+       "name": "다이헨",
+       "ticker": "6622.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3130
+      },
+      {
+       "code": "6617",
+       "name": "도코타카오카",
+       "ticker": "6617.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1045
+      }
+     ]
+    },
+    {
+     "id": "jp_17",
+     "name": "전기·설비 공사",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "1944",
+       "name": "긴덴",
+       "ticker": "1944.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10604
+      },
+      {
+       "code": "1942",
+       "name": "간덴코",
+       "ticker": "1942.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10347
+      },
+      {
+       "code": "1721",
+       "name": "콤시스홀딩스",
+       "ticker": "1721.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6432
+      },
+      {
+       "code": "1959",
+       "name": "규덴코",
+       "ticker": "1959.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5394
+      },
+      {
+       "code": "1951",
+       "name": "엑시오그룹",
+       "ticker": "1951.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5214
+      },
+      {
+       "code": "1941",
+       "name": "주덴코",
+       "ticker": "1941.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2726
+      }
+     ]
+    },
+    {
+     "id": "jp_18",
+     "name": "원전 설비",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "6501",
+       "name": "히타치",
+       "ticker": "6501.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 257977
+      },
+      {
+       "code": "7011",
+       "name": "미쓰비시 중공업",
+       "ticker": "7011.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 121454
+      },
+      {
+       "code": "5631",
+       "name": "일본제강소",
+       "ticker": "5631.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4961
+      }
+     ]
+    },
+    {
+     "id": "jp_19",
+     "name": "전력회사",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "9503",
+       "name": "간사이전력",
+       "ticker": "9503.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 33409
+      },
+      {
+       "code": "9502",
+       "name": "주부전력",
+       "ticker": "9502.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 21793
+      },
+      {
+       "code": "642A",
+       "name": "규슈전력(큐덴 홀딩스)",
+       "ticker": "642A.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9900
+      },
+      {
+       "code": "9501",
+       "name": "도쿄 전력",
+       "ticker": "9501.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8624
+      },
+      {
+       "code": "9513",
+       "name": "덴겐개발",
+       "ticker": "9513.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7391
+      },
+      {
+       "code": "9506",
+       "name": "도호쿠전력",
+       "ticker": "9506.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7113
+      }
+     ]
+    },
+    {
+     "id": "jp_20",
+     "name": "도시가스",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "9532",
+       "name": "오사카 가스",
+       "ticker": "9532.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 23243
+      },
+      {
+       "code": "9531",
+       "name": "도쿄가스",
+       "ticker": "9531.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 21104
+      },
+      {
+       "code": "9533",
+       "name": "도호가스",
+       "ticker": "9533.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4744
+      }
+     ]
+    },
+    {
+     "id": "jp_21",
+     "name": "신재생에너지",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "1407",
+       "name": "웨스트홀딩스",
+       "ticker": "1407.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 900
+      },
+      {
+       "code": "9519",
+       "name": "레노바",
+       "ticker": "9519.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 793
+      },
+      {
+       "code": "9517",
+       "name": "이렉스",
+       "ticker": "9517.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 650
+      }
+     ]
+    },
+    {
+     "id": "jp_22",
+     "name": "자원개발",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "1605",
+       "name": "인펙스",
+       "ticker": "1605.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 42653
+      },
+      {
+       "code": "1662",
+       "name": "JAPEX",
+       "ticker": "1662.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4296
+      }
+     ]
+    },
+    {
+     "id": "jp_23",
+     "name": "정유",
+     "group": "전력·에너지",
+     "members": [
+      {
+       "code": "5020",
+       "name": "ENEOS홀딩스",
+       "ticker": "5020.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 36964
+      },
+      {
+       "code": "5019",
+       "name": "이데미쓰코산",
+       "ticker": "5019.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18519
+      },
+      {
+       "code": "5021",
+       "name": "코스모에너지홀딩스",
+       "ticker": "5021.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6548
+      }
+     ]
+    },
+    {
+     "id": "jp_24",
+     "name": "배터리·소재",
+     "group": "2차전지",
+     "members": [
+      {
+       "code": "6752",
+       "name": "파나소닉",
+       "ticker": "6752.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 92393
+      },
+      {
+       "code": "3407",
+       "name": "아사히 합성화학",
+       "ticker": "3407.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 21573
+      },
+      {
+       "code": "5706",
+       "name": "미쓰이금속광업",
+       "ticker": "5706.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13388
+      },
+      {
+       "code": "6674",
+       "name": "지에스유아사",
+       "ticker": "6674.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5046
+      }
+     ]
+    },
+    {
+     "id": "jp_25",
+     "name": "완성차",
+     "group": "자동차",
+     "members": [
+      {
+       "code": "7203",
+       "name": "도요타자동차",
+       "ticker": "7203.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 367689
+      },
+      {
+       "code": "7267",
+       "name": "혼다자동차",
+       "ticker": "7267.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 69880
+      },
+      {
+       "code": "7269",
+       "name": "스즈키모터",
+       "ticker": "7269.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 39965
+      },
+      {
+       "code": "7270",
+       "name": "스바루",
+       "ticker": "7270.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18777
+      },
+      {
+       "code": "7201",
+       "name": "닛산자동차",
+       "ticker": "7201.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9392
+      },
+      {
+       "code": "7261",
+       "name": "마쓰다 자동차",
+       "ticker": "7261.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6844
+      },
+      {
+       "code": "7211",
+       "name": "미쓰비시자동차",
+       "ticker": "7211.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4630
+      }
+     ]
+    },
+    {
+     "id": "jp_26",
+     "name": "트럭·이륜차",
+     "group": "자동차",
+     "members": [
+      {
+       "code": "7272",
+       "name": "야마하모터",
+       "ticker": "7272.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 17151
+      },
+      {
+       "code": "7309",
+       "name": "시마노",
+       "ticker": "7309.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 15770
+      },
+      {
+       "code": "7202",
+       "name": "이스즈자동차",
+       "ticker": "7202.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14525
+      }
+     ]
+    },
+    {
+     "id": "jp_27",
+     "name": "자동차 부품",
+     "group": "자동차",
+     "members": [
+      {
+       "code": "6902",
+       "name": "덴소",
+       "ticker": "6902.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 46919
+      },
+      {
+       "code": "7259",
+       "name": "아이신",
+       "ticker": "7259.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 15044
+      },
+      {
+       "code": "5334",
+       "name": "니혼특수도업",
+       "ticker": "5334.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14348
+      },
+      {
+       "code": "6473",
+       "name": "제이텍트",
+       "ticker": "6473.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6805
+      },
+      {
+       "code": "7282",
+       "name": "토요타합성",
+       "ticker": "7282.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5803
+      },
+      {
+       "code": "3116",
+       "name": "토요타방직",
+       "ticker": "3116.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3923
+      }
+     ]
+    },
+    {
+     "id": "jp_28",
+     "name": "타이어",
+     "group": "자동차",
+     "members": [
+      {
+       "code": "5108",
+       "name": "브릿지스톤",
+       "ticker": "5108.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 48525
+      },
+      {
+       "code": "5101",
+       "name": "요꼬하마 고무",
+       "ticker": "5101.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11391
+      },
+      {
+       "code": "5110",
+       "name": "수미토모 고무",
+       "ticker": "5110.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5403
+      },
+      {
+       "code": "5105",
+       "name": "도요타이어",
+       "ticker": "5105.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5211
+      }
+     ]
+    },
+    {
+     "id": "jp_29",
+     "name": "조선·선박엔진",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "7012",
+       "name": "가와사키 중공업",
+       "ticker": "7012.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18887
+      },
+      {
+       "code": "7003",
+       "name": "미쓰이E&S홀딩스",
+       "ticker": "7003.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3543
+      },
+      {
+       "code": "7014",
+       "name": "나무라조선소",
+       "ticker": "7014.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2879
+      }
+     ]
+    },
+    {
+     "id": "jp_30",
+     "name": "로봇·물류자동화",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "6954",
+       "name": "화낙",
+       "ticker": "6954.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 55868
+      },
+      {
+       "code": "6383",
+       "name": "다이후쿠",
+       "ticker": "6383.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 20438
+      },
+      {
+       "code": "6506",
+       "name": "야스카와전기",
+       "ticker": "6506.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11358
+      },
+      {
+       "code": "6481",
+       "name": "THK",
+       "ticker": "6481.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6999
+      },
+      {
+       "code": "6268",
+       "name": "나브테스코",
+       "ticker": "6268.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5261
+      },
+      {
+       "code": "6324",
+       "name": "하모닉 드라이브 시스템스",
+       "ticker": "6324.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5065
+      }
+     ]
+    },
+    {
+     "id": "jp_31",
+     "name": "건설기계·농기계",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "6301",
+       "name": "고마츄",
+       "ticker": "6301.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 64189
+      },
+      {
+       "code": "6326",
+       "name": "구보타",
+       "ticker": "6326.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 29788
+      },
+      {
+       "code": "6305",
+       "name": "히타치건기",
+       "ticker": "6305.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11517
+      },
+      {
+       "code": "6302",
+       "name": "스미토모중공업",
+       "ticker": "6302.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6790
+      },
+      {
+       "code": "6395",
+       "name": "다다노",
+       "ticker": "6395.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1664
+      }
+     ]
+    },
+    {
+     "id": "jp_32",
+     "name": "공작기계",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "6113",
+       "name": "아마다",
+       "ticker": "6113.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7557
+      },
+      {
+       "code": "6134",
+       "name": "후지",
+       "ticker": "6134.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6164
+      },
+      {
+       "code": "6141",
+       "name": "DMG모리정밀기계",
+       "ticker": "6141.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4327
+      },
+      {
+       "code": "6135",
+       "name": "마키노프레이즈",
+       "ticker": "6135.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3830
+      },
+      {
+       "code": "6103",
+       "name": "오쿠마",
+       "ticker": "6103.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2795
+      }
+     ]
+    },
+    {
+     "id": "jp_33",
+     "name": "공조·데이터센터 냉각",
+     "group": "조선·기계",
+     "members": [
+      {
+       "code": "6367",
+       "name": "다이킨공업",
+       "ticker": "6367.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 59411
+      },
+      {
+       "code": "6361",
+       "name": "에바라",
+       "ticker": "6361.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 19158
+      },
+      {
+       "code": "1969",
+       "name": "다카사고열학",
+       "ticker": "1969.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5484
+      },
+      {
+       "code": "1979",
+       "name": "다이키샤",
+       "ticker": "1979.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2350
+      }
+     ]
+    },
+    {
+     "id": "jp_34",
+     "name": "방산",
+     "group": "방산·우주",
+     "members": [
+      {
+       "code": "7011",
+       "name": "미쓰비시 중공업",
+       "ticker": "7011.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 121454
+      },
+      {
+       "code": "7013",
+       "name": "IHI",
+       "ticker": "7013.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 25974
+      },
+      {
+       "code": "7012",
+       "name": "가와사키 중공업",
+       "ticker": "7012.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18887
+      },
+      {
+       "code": "7721",
+       "name": "도쿄계기",
+       "ticker": "7721.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1101
+      },
+      {
+       "code": "6946",
+       "name": "닛폰아비오닉스",
+       "ticker": "6946.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1006
+      }
+     ]
+    },
+    {
+     "id": "jp_35",
+     "name": "우주",
+     "group": "방산·우주",
+     "members": [
+      {
+       "code": "186A",
+       "name": "아스트로스케일 홀딩스",
+       "ticker": "186A.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1536
+      },
+      {
+       "code": "9348",
+       "name": "아이스페이스",
+       "ticker": "9348.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 598
+      }
+     ]
+    },
+    {
+     "id": "jp_36",
+     "name": "종합건설",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "1802",
+       "name": "오바야시구미",
+       "ticker": "1802.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 19688
+      },
+      {
+       "code": "1812",
+       "name": "가지마건설",
+       "ticker": "1812.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 19581
+      },
+      {
+       "code": "1801",
+       "name": "다이세이",
+       "ticker": "1801.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18404
+      },
+      {
+       "code": "1803",
+       "name": "시미즈건설",
+       "ticker": "1803.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13628
+      },
+      {
+       "code": "5076",
+       "name": "인프로니어홀딩스",
+       "ticker": "5076.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5821
+      },
+      {
+       "code": "1860",
+       "name": "도다건설",
+       "ticker": "1860.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4079
+      }
+     ]
+    },
+    {
+     "id": "jp_37",
+     "name": "주택건설",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "1925",
+       "name": "다이와 하우스",
+       "ticker": "1925.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 27508
+      },
+      {
+       "code": "1928",
+       "name": "세키수이 하우스",
+       "ticker": "1928.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 21981
+      },
+      {
+       "code": "3288",
+       "name": "오픈하우스그룹",
+       "ticker": "3288.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8601
+      },
+      {
+       "code": "1911",
+       "name": "스미토모임업",
+       "ticker": "1911.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7383
+      },
+      {
+       "code": "3291",
+       "name": "이다그룹홀딩스",
+       "ticker": "3291.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5963
+      }
+     ]
+    },
+    {
+     "id": "jp_38",
+     "name": "건자재",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "5201",
+       "name": "AGC",
+       "ticker": "5201.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11792
+      },
+      {
+       "code": "5332",
+       "name": "토토",
+       "ticker": "5332.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9461
+      },
+      {
+       "code": "5929",
+       "name": "산와홀딩스",
+       "ticker": "5929.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7503
+      },
+      {
+       "code": "5938",
+       "name": "릭실",
+       "ticker": "5938.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4870
+      },
+      {
+       "code": "5233",
+       "name": "다이헤이요시멘트",
+       "ticker": "5233.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4587
+      }
+     ]
+    },
+    {
+     "id": "jp_39",
+     "name": "철강",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "5401",
+       "name": "신일본제철",
+       "ticker": "5401.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 33631
+      },
+      {
+       "code": "5411",
+       "name": "JFE홀딩스",
+       "ticker": "5411.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10954
+      },
+      {
+       "code": "5406",
+       "name": "고베제강",
+       "ticker": "5406.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8015
+      },
+      {
+       "code": "5444",
+       "name": "야마토공업",
+       "ticker": "5444.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7523
+      },
+      {
+       "code": "5471",
+       "name": "다이도특수강",
+       "ticker": "5471.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4642
+      }
+     ]
+    },
+    {
+     "id": "jp_40",
+     "name": "비철금속·귀금속",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "5713",
+       "name": "스미토모 금속",
+       "ticker": "5713.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 23400
+      },
+      {
+       "code": "5706",
+       "name": "미쓰이금속광업",
+       "ticker": "5706.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13388
+      },
+      {
+       "code": "5711",
+       "name": "미쯔비시머테리얼",
+       "ticker": "5711.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6079
+      },
+      {
+       "code": "5714",
+       "name": "도와홀딩스",
+       "ticker": "5714.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4974
+      },
+      {
+       "code": "5857",
+       "name": "ARE홀딩스",
+       "ticker": "5857.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2896
+      }
+     ]
+    },
+    {
+     "id": "jp_41",
+     "name": "범용 화학·섬유",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "3407",
+       "name": "아사히 합성화학",
+       "ticker": "3407.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 21573
+      },
+      {
+       "code": "3402",
+       "name": "도레이",
+       "ticker": "3402.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18150
+      },
+      {
+       "code": "4188",
+       "name": "미쓰비시케미컬그룹",
+       "ticker": "4188.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 15786
+      },
+      {
+       "code": "4005",
+       "name": "스미토모 화학",
+       "ticker": "4005.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9947
+      },
+      {
+       "code": "4042",
+       "name": "도소",
+       "ticker": "4042.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8056
+      },
+      {
+       "code": "4183",
+       "name": "미쓰이화학",
+       "ticker": "4183.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7178
+      }
+     ]
+    },
+    {
+     "id": "jp_42",
+     "name": "전자·기능성 화학",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "6988",
+       "name": "니토전공",
+       "ticker": "6988.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 23147
+      },
+      {
+       "code": "4203",
+       "name": "스미토모베이클라이트",
+       "ticker": "4203.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7600
+      },
+      {
+       "code": "4182",
+       "name": "미쓰비시가스화학",
+       "ticker": "4182.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7271
+      },
+      {
+       "code": "3405",
+       "name": "구라레",
+       "ticker": "3405.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5687
+      },
+      {
+       "code": "4980",
+       "name": "덱세리얼스",
+       "ticker": "4980.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5542
+      }
+     ]
+    },
+    {
+     "id": "jp_43",
+     "name": "도료·산업가스",
+     "group": "건설·소재",
+     "members": [
+      {
+       "code": "4612",
+       "name": "닛폰페인트홀딩스",
+       "ticker": "4612.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 29782
+      },
+      {
+       "code": "4091",
+       "name": "닛폰산소홀딩스",
+       "ticker": "4091.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 23625
+      },
+      {
+       "code": "4088",
+       "name": "에어워터",
+       "ticker": "4088.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6292
+      },
+      {
+       "code": "4613",
+       "name": "간사이페인트",
+       "ticker": "4613.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5215
+      }
+     ]
+    },
+    {
+     "id": "jp_44",
+     "name": "대형 제약",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "4502",
+       "name": "타케다 제약",
+       "ticker": "4502.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 99018
+      },
+      {
+       "code": "4578",
+       "name": "오츠카 홀딩스",
+       "ticker": "4578.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 64689
+      },
+      {
+       "code": "4503",
+       "name": "아스텔라스제약",
+       "ticker": "4503.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 43364
+      },
+      {
+       "code": "4523",
+       "name": "에이사이",
+       "ticker": "4523.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13897
+      },
+      {
+       "code": "4151",
+       "name": "교와키린",
+       "ticker": "4151.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 12262
+      },
+      {
+       "code": "4528",
+       "name": "오노약품",
+       "ticker": "4528.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11346
+      }
+     ]
+    },
+    {
+     "id": "jp_45",
+     "name": "신약 성장주(항암·ADC·감염)",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "4519",
+       "name": "주가이제약",
+       "ticker": "4519.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 104526
+      },
+      {
+       "code": "4568",
+       "name": "다이이찌산쿄",
+       "ticker": "4568.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 49887
+      },
+      {
+       "code": "4507",
+       "name": "시오노기",
+       "ticker": "4507.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 24968
+      }
+     ]
+    },
+    {
+     "id": "jp_46",
+     "name": "바이오 벤처",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "2160",
+       "name": "지엔아이",
+       "ticker": "2160.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1939
+      },
+      {
+       "code": "4588",
+       "name": "온콜리스바이오파머",
+       "ticker": "4588.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1527
+      },
+      {
+       "code": "4587",
+       "name": "펩티드림",
+       "ticker": "4587.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1379
+      },
+      {
+       "code": "4565",
+       "name": "넥세라파머",
+       "ticker": "4565.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1140
+      },
+      {
+       "code": "4592",
+       "name": "산바이오",
+       "ticker": "4592.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 781
+      }
+     ]
+    },
+    {
+     "id": "jp_47",
+     "name": "의료기기",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "4543",
+       "name": "테루모",
+       "ticker": "4543.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 34473
+      },
+      {
+       "code": "7733",
+       "name": "올림푸스",
+       "ticker": "7733.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 21108
+      },
+      {
+       "code": "7701",
+       "name": "시마즈",
+       "ticker": "7701.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11098
+      },
+      {
+       "code": "6869",
+       "name": "시스멕스",
+       "ticker": "6869.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10823
+      },
+      {
+       "code": "7747",
+       "name": "아사히인텍",
+       "ticker": "7747.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8626
+      },
+      {
+       "code": "8086",
+       "name": "니프로",
+       "ticker": "8086.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2404
+      }
+     ]
+    },
+    {
+     "id": "jp_48",
+     "name": "의약품 유통·의료 IT",
+     "group": "헬스케어",
+     "members": [
+      {
+       "code": "2413",
+       "name": "엠스리",
+       "ticker": "2413.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 12755
+      },
+      {
+       "code": "7459",
+       "name": "메디팔홀딩스",
+       "ticker": "7459.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6563
+      },
+      {
+       "code": "2784",
+       "name": "알프레사홀딩스",
+       "ticker": "2784.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4088
+      },
+      {
+       "code": "9987",
+       "name": "스즈켄",
+       "ticker": "9987.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3555
+      }
+     ]
+    },
+    {
+     "id": "jp_49",
+     "name": "메가뱅크",
+     "group": "금융",
+     "members": [
+      {
+       "code": "8306",
+       "name": "미쯔비시UFJ파이낸셜",
+       "ticker": "8306.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 418714
+      },
+      {
+       "code": "8316",
+       "name": "스미토모미쓰이파이낸셜",
+       "ticker": "8316.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 265160
+      },
+      {
+       "code": "8411",
+       "name": "미즈호파이낸셜그룹",
+       "ticker": "8411.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 213908
+      },
+      {
+       "code": "8308",
+       "name": "리소나홀딩스",
+       "ticker": "8308.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 57115
+      },
+      {
+       "code": "8309",
+       "name": "미쓰이스미토모트러스트그룹",
+       "ticker": "8309.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 49530
+      }
+     ]
+    },
+    {
+     "id": "jp_50",
+     "name": "지방은행",
+     "group": "금융",
+     "members": [
+      {
+       "code": "8331",
+       "name": "지바은행",
+       "ticker": "8331.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 19148
+      },
+      {
+       "code": "7186",
+       "name": "콩코르디아파이낸셜그룹",
+       "ticker": "7186.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 17842
+      },
+      {
+       "code": "5831",
+       "name": "시즈오카파이낸셜그룹",
+       "ticker": "5831.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 16929
+      },
+      {
+       "code": "8354",
+       "name": "후쿠오카파이낸셜그룹",
+       "ticker": "8354.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14959
+      },
+      {
+       "code": "7167",
+       "name": "메부키파이낸셜그룹",
+       "ticker": "7167.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13562
+      },
+      {
+       "code": "8359",
+       "name": "하치주니은행",
+       "ticker": "8359.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 12455
+      },
+      {
+       "code": "8334",
+       "name": "군마은행",
+       "ticker": "8334.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11084
+      },
+      {
+       "code": "8377",
+       "name": "호쿠호쿠파이낸셜그룹",
+       "ticker": "8377.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9985
+      }
+     ]
+    },
+    {
+     "id": "jp_51",
+     "name": "증권",
+     "group": "금융",
+     "members": [
+      {
+       "code": "8604",
+       "name": "노무라 홀딩스",
+       "ticker": "8604.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 48953
+      },
+      {
+       "code": "8601",
+       "name": "다이와증권",
+       "ticker": "8601.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 25993
+      },
+      {
+       "code": "8473",
+       "name": "SBI홀딩스",
+       "ticker": "8473.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 21506
+      },
+      {
+       "code": "8628",
+       "name": "마쯔이증권",
+       "ticker": "8628.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3130
+      },
+      {
+       "code": "8609",
+       "name": "오카산증권그룹",
+       "ticker": "8609.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2452
+      },
+      {
+       "code": "8698",
+       "name": "모넥스그룹",
+       "ticker": "8698.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1822
+      }
+     ]
+    },
+    {
+     "id": "jp_52",
+     "name": "손해보험",
+     "group": "금융",
+     "members": [
+      {
+       "code": "8766",
+       "name": "도쿄카이조홀딩스",
+       "ticker": "8766.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 155857
+      },
+      {
+       "code": "8725",
+       "name": "MS&AD인슈어런스홀딩스",
+       "ticker": "8725.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 75051
+      },
+      {
+       "code": "8630",
+       "name": "솜포홀딩스",
+       "ticker": "8630.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 61955
+      }
+     ]
+    },
+    {
+     "id": "jp_53",
+     "name": "생명보험",
+     "group": "금융",
+     "members": [
+      {
+       "code": "8750",
+       "name": "다이이치생명홀딩스",
+       "ticker": "8750.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 68982
+      },
+      {
+       "code": "8795",
+       "name": "T&D홀딩스",
+       "ticker": "8795.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 23975
+      },
+      {
+       "code": "7181",
+       "name": "간포생명보험",
+       "ticker": "7181.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18325
+      },
+      {
+       "code": "8729",
+       "name": "SONY FINANCIAL GROUP INC.",
+       "ticker": "8729.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11711
+      }
+     ]
+    },
+    {
+     "id": "jp_54",
+     "name": "리스·소비자금융·거래소",
+     "group": "금융",
+     "members": [
+      {
+       "code": "8591",
+       "name": "오릭스",
+       "ticker": "8591.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 67381
+      },
+      {
+       "code": "8697",
+       "name": "일본거래소 그룹",
+       "ticker": "8697.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 22564
+      },
+      {
+       "code": "8593",
+       "name": "미쓰비시HC캐피털",
+       "ticker": "8593.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 20052
+      },
+      {
+       "code": "8439",
+       "name": "도쿄센추리",
+       "ticker": "8439.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13086
+      },
+      {
+       "code": "8572",
+       "name": "아콤",
+       "ticker": "8572.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7667
+      }
+     ]
+    },
+    {
+     "id": "jp_55",
+     "name": "종합상사",
+     "group": "상사",
+     "members": [
+      {
+       "code": "8058",
+       "name": "미쓰비시",
+       "ticker": "8058.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 182805
+      },
+      {
+       "code": "8001",
+       "name": "이토추",
+       "ticker": "8001.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 163672
+      },
+      {
+       "code": "8031",
+       "name": "미쯔이",
+       "ticker": "8031.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 146392
+      },
+      {
+       "code": "8053",
+       "name": "스미토모",
+       "ticker": "8053.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 85797
+      },
+      {
+       "code": "8002",
+       "name": "마루베니",
+       "ticker": "8002.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 82819
+      },
+      {
+       "code": "8015",
+       "name": "도요타 통상",
+       "ticker": "8015.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 70392
+      },
+      {
+       "code": "2768",
+       "name": "소지쓰",
+       "ticker": "2768.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11315
+      }
+     ]
+    },
+    {
+     "id": "jp_56",
+     "name": "의류 SPA·유통",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "9983",
+       "name": "패스트리테일링",
+       "ticker": "9983.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 204854
+      },
+      {
+       "code": "7453",
+       "name": "양품계획",
+       "ticker": "7453.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 25041
+      },
+      {
+       "code": "3092",
+       "name": "ZOZO",
+       "ticker": "3092.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10696
+      },
+      {
+       "code": "8227",
+       "name": "시마무라",
+       "ticker": "8227.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6713
+      }
+     ]
+    },
+    {
+     "id": "jp_57",
+     "name": "스포츠 브랜드",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "7936",
+       "name": "아식스 고베",
+       "ticker": "7936.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 28860
+      },
+      {
+       "code": "8022",
+       "name": "미즈노",
+       "ticker": "8022.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3045
+      },
+      {
+       "code": "8111",
+       "name": "골드윈",
+       "ticker": "8111.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2926
+      },
+      {
+       "code": "7906",
+       "name": "요넥스",
+       "ticker": "7906.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2064
+      }
+     ]
+    },
+    {
+     "id": "jp_58",
+     "name": "화장품",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "4911",
+       "name": "시세이도",
+       "ticker": "4911.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14003
+      },
+      {
+       "code": "4922",
+       "name": "고세",
+       "ticker": "4922.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3365
+      },
+      {
+       "code": "4927",
+       "name": "폴라오르비스홀딩스",
+       "ticker": "4927.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3170
+      }
+     ]
+    },
+    {
+     "id": "jp_59",
+     "name": "생활용품",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "4452",
+       "name": "카오",
+       "ticker": "4452.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 33675
+      },
+      {
+       "code": "8113",
+       "name": "유니참",
+       "ticker": "8113.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 16733
+      },
+      {
+       "code": "4967",
+       "name": "코바야시제약",
+       "ticker": "4967.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5414
+      },
+      {
+       "code": "4912",
+       "name": "라이온",
+       "ticker": "4912.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5212
+      }
+     ]
+    },
+    {
+     "id": "jp_60",
+     "name": "음식료",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "2802",
+       "name": "아지노모토",
+       "ticker": "2802.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 50401
+      },
+      {
+       "code": "2801",
+       "name": "키코만",
+       "ticker": "2801.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 16798
+      },
+      {
+       "code": "2269",
+       "name": "메이지홀딩스",
+       "ticker": "2269.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11687
+      },
+      {
+       "code": "2897",
+       "name": "닛신식품홀딩스",
+       "ticker": "2897.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8583
+      },
+      {
+       "code": "2267",
+       "name": "야쿠르트혼샤",
+       "ticker": "2267.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8207
+      },
+      {
+       "code": "2212",
+       "name": "야마자키제빵",
+       "ticker": "2212.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7514
+      },
+      {
+       "code": "2282",
+       "name": "닛폰햄",
+       "ticker": "2282.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5845
+      }
+     ]
+    },
+    {
+     "id": "jp_61",
+     "name": "주류·음료·담배",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "2914",
+       "name": "JT",
+       "ticker": "2914.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 132874
+      },
+      {
+       "code": "2502",
+       "name": "아사히 양조",
+       "ticker": "2502.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 24010
+      },
+      {
+       "code": "2503",
+       "name": "기린 양조",
+       "ticker": "2503.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 23161
+      },
+      {
+       "code": "2587",
+       "name": "산토리식품인터내셔널",
+       "ticker": "2587.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14813
+      },
+      {
+       "code": "2501",
+       "name": "삿포로홀딩스",
+       "ticker": "2501.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7688
+      }
+     ]
+    },
+    {
+     "id": "jp_62",
+     "name": "편의점·슈퍼",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "3382",
+       "name": "세븐앤드아이홀딩스",
+       "ticker": "3382.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 46453
+      },
+      {
+       "code": "8267",
+       "name": "이온",
+       "ticker": "8267.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 37809
+      },
+      {
+       "code": "141A",
+       "name": "트라이얼홀딩스",
+       "ticker": "141A.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4402
+      }
+     ]
+    },
+    {
+     "id": "jp_63",
+     "name": "드럭스토어",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "3391",
+       "name": "쓰루하홀딩스",
+       "ticker": "3391.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10013
+      },
+      {
+       "code": "3088",
+       "name": "마쓰키요코코카라앤드컴퍼니",
+       "ticker": "3088.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10010
+      },
+      {
+       "code": "3349",
+       "name": "코스모스약품",
+       "ticker": "3349.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5118
+      },
+      {
+       "code": "7649",
+       "name": "스기홀딩스",
+       "ticker": "7649.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4828
+      },
+      {
+       "code": "9989",
+       "name": "선드러그",
+       "ticker": "9989.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4362
+      },
+      {
+       "code": "3549",
+       "name": "구스리노아오키홀딩스",
+       "ticker": "3549.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4040
+      }
+     ]
+    },
+    {
+     "id": "jp_64",
+     "name": "할인점·생활용품점",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "7532",
+       "name": "판퍼시픽인터내셔널홀딩스",
+       "ticker": "7532.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 22267
+      },
+      {
+       "code": "9843",
+       "name": "니토리",
+       "ticker": "9843.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18410
+      },
+      {
+       "code": "3064",
+       "name": "모노타로",
+       "ticker": "3064.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 11763
+      },
+      {
+       "code": "7564",
+       "name": "워크맨",
+       "ticker": "7564.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4595
+      }
+     ]
+    },
+    {
+     "id": "jp_65",
+     "name": "백화점·인바운드 소비",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "3099",
+       "name": "미쓰코시이세탄홀딩스",
+       "ticker": "3099.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 12405
+      },
+      {
+       "code": "3086",
+       "name": "제이프론트리테일링",
+       "ticker": "3086.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6594
+      },
+      {
+       "code": "8233",
+       "name": "다카시마야",
+       "ticker": "8233.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6148
+      },
+      {
+       "code": "8252",
+       "name": "마루이그룹",
+       "ticker": "8252.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5182
+      }
+     ]
+    },
+    {
+     "id": "jp_66",
+     "name": "외식",
+     "group": "소비재",
+     "members": [
+      {
+       "code": "7550",
+       "name": "젠쇼홀딩스",
+       "ticker": "7550.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18783
+      },
+      {
+       "code": "3563",
+       "name": "푸드앤드라이프컴퍼니스",
+       "ticker": "3563.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13123
+      },
+      {
+       "code": "2702",
+       "name": "일본맥도날드홀딩스",
+       "ticker": "2702.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10517
+      },
+      {
+       "code": "3197",
+       "name": "스카이라크홀딩스",
+       "ticker": "3197.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7828
+      },
+      {
+       "code": "3397",
+       "name": "토리돌홀딩스",
+       "ticker": "3397.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3906
+      }
+     ]
+    },
+    {
+     "id": "jp_67",
+     "name": "게임",
+     "group": "미디어·레저",
+     "members": [
+      {
+       "code": "7974",
+       "name": "닌텐도",
+       "ticker": "7974.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 95316
+      },
+      {
+       "code": "9766",
+       "name": "코나미그룹",
+       "ticker": "9766.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 29226
+      },
+      {
+       "code": "3659",
+       "name": "넥슨 일본",
+       "ticker": "3659.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 21692
+      },
+      {
+       "code": "9697",
+       "name": "캡콤",
+       "ticker": "9697.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 18226
+      },
+      {
+       "code": "9684",
+       "name": "스퀘어 에닉스",
+       "ticker": "9684.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10773
+      },
+      {
+       "code": "6460",
+       "name": "세가사미홀딩스",
+       "ticker": "6460.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6869
+      },
+      {
+       "code": "3635",
+       "name": "고에테크모홀딩스",
+       "ticker": "3635.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5619
+      }
+     ]
+    },
+    {
+     "id": "jp_68",
+     "name": "캐릭터·애니메이션 IP",
+     "group": "미디어·레저",
+     "members": [
+      {
+       "code": "7832",
+       "name": "남코 반다이 홀딩스",
+       "ticker": "7832.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 36026
+      },
+      {
+       "code": "8136",
+       "name": "산리오",
+       "ticker": "8136.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14986
+      },
+      {
+       "code": "9602",
+       "name": "도호",
+       "ticker": "9602.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13676
+      },
+      {
+       "code": "4816",
+       "name": "토에이 애니메이션",
+       "ticker": "4816.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5939
+      },
+      {
+       "code": "9468",
+       "name": "가도카와",
+       "ticker": "9468.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5411
+      },
+      {
+       "code": "7867",
+       "name": "다카라토미",
+       "ticker": "7867.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3305
+      }
+     ]
+    },
+    {
+     "id": "jp_69",
+     "name": "방송·광고",
+     "group": "미디어·레저",
+     "members": [
+      {
+       "code": "4324",
+       "name": "덴쓰그룹",
+       "ticker": "4324.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9966
+      },
+      {
+       "code": "9401",
+       "name": "TBS홀딩스",
+       "ticker": "9401.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8964
+      },
+      {
+       "code": "9404",
+       "name": "닛폰텔레비전홀딩스",
+       "ticker": "9404.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7339
+      },
+      {
+       "code": "4751",
+       "name": "사이버에이전트",
+       "ticker": "4751.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6687
+      },
+      {
+       "code": "4676",
+       "name": "후지미디어홀딩스",
+       "ticker": "4676.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5894
+      },
+      {
+       "code": "2433",
+       "name": "하쿠호도DY홀딩스",
+       "ticker": "2433.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5037
+      }
+     ]
+    },
+    {
+     "id": "jp_70",
+     "name": "테마파크·레저",
+     "group": "미디어·레저",
+     "members": [
+      {
+       "code": "4661",
+       "name": "오리엔탈랜드",
+       "ticker": "4661.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 51933
+      },
+      {
+       "code": "4681",
+       "name": "리조트트러스트",
+       "ticker": "4681.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3775
+      },
+      {
+       "code": "4680",
+       "name": "라운드원",
+       "ticker": "4680.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3597
+      },
+      {
+       "code": "9603",
+       "name": "에이치아이에스",
+       "ticker": "9603.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 875
+      }
+     ]
+    },
+    {
+     "id": "jp_71",
+     "name": "인터넷 플랫폼",
+     "group": "인터넷·소프트웨어",
+     "members": [
+      {
+       "code": "6098",
+       "name": "리쿠르트홀딩스",
+       "ticker": "6098.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 256437
+      },
+      {
+       "code": "4689",
+       "name": "라인야후",
+       "ticker": "4689.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 36764
+      },
+      {
+       "code": "4755",
+       "name": "라쿠텐",
+       "ticker": "4755.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14071
+      },
+      {
+       "code": "2371",
+       "name": "카카쿠컴",
+       "ticker": "2371.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7522
+      },
+      {
+       "code": "4385",
+       "name": "메루카리",
+       "ticker": "4385.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6316
+      }
+     ]
+    },
+    {
+     "id": "jp_72",
+     "name": "SaaS·핀테크",
+     "group": "인터넷·소프트웨어",
+     "members": [
+      {
+       "code": "4704",
+       "name": "트렌드마이크로",
+       "ticker": "4704.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9535
+      },
+      {
+       "code": "3769",
+       "name": "GMO 페이먼트게이트웨이",
+       "ticker": "3769.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7026
+      },
+      {
+       "code": "3994",
+       "name": "머니포워드",
+       "ticker": "3994.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 3594
+      },
+      {
+       "code": "4443",
+       "name": "산산",
+       "ticker": "4443.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2515
+      },
+      {
+       "code": "4478",
+       "name": "프리",
+       "ticker": "4478.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2248
+      }
+     ]
+    },
+    {
+     "id": "jp_73",
+     "name": "IT서비스·SI",
+     "group": "인터넷·소프트웨어",
+     "members": [
+      {
+       "code": "6702",
+       "name": "후지쯔",
+       "ticker": "6702.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 76729
+      },
+      {
+       "code": "6701",
+       "name": "NEC",
+       "ticker": "6701.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 71490
+      },
+      {
+       "code": "4307",
+       "name": "노무라종합연구소",
+       "ticker": "4307.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 33319
+      },
+      {
+       "code": "4684",
+       "name": "오빅",
+       "ticker": "4684.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 24589
+      },
+      {
+       "code": "4716",
+       "name": "일본오라클",
+       "ticker": "4716.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13014
+      },
+      {
+       "code": "3626",
+       "name": "TIS",
+       "ticker": "3626.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8624
+      },
+      {
+       "code": "2327",
+       "name": "닛테츠솔루션스",
+       "ticker": "2327.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7502
+      }
+     ]
+    },
+    {
+     "id": "jp_74",
+     "name": "AI·데이터센터 투자",
+     "group": "인터넷·소프트웨어",
+     "members": [
+      {
+       "code": "9984",
+       "name": "소프트뱅크그룹",
+       "ticker": "9984.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 332768
+      },
+      {
+       "code": "3774",
+       "name": "인터넷이니셔티브",
+       "ticker": "3774.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6449
+      },
+      {
+       "code": "3778",
+       "name": "사쿠라인터넷",
+       "ticker": "3778.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1325
+      }
+     ]
+    },
+    {
+     "id": "jp_75",
+     "name": "인력·컨설팅",
+     "group": "인터넷·소프트웨어",
+     "members": [
+      {
+       "code": "6532",
+       "name": "베이커런트",
+       "ticker": "6532.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14753
+      },
+      {
+       "code": "2181",
+       "name": "퍼솔홀딩스",
+       "ticker": "2181.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6560
+      },
+      {
+       "code": "9744",
+       "name": "메이텍그룹홀딩스",
+       "ticker": "9744.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2630
+      },
+      {
+       "code": "2127",
+       "name": "니혼M&A센터홀딩스",
+       "ticker": "2127.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1992
+      }
+     ]
+    },
+    {
+     "id": "jp_76",
+     "name": "통신",
+     "group": "운송·통신",
+     "members": [
+      {
+       "code": "9432",
+       "name": "NTT",
+       "ticker": "9432.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 145180
+      },
+      {
+       "code": "9434",
+       "name": "소프트뱅크",
+       "ticker": "9434.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 120167
+      },
+      {
+       "code": "9433",
+       "name": "KDDI",
+       "ticker": "9433.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 116885
+      },
+      {
+       "code": "9435",
+       "name": "히카리통신",
+       "ticker": "9435.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 16814
+      }
+     ]
+    },
+    {
+     "id": "jp_77",
+     "name": "해운",
+     "group": "운송·통신",
+     "members": [
+      {
+       "code": "9101",
+       "name": "니폰 우체선",
+       "ticker": "9101.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 29609
+      },
+      {
+       "code": "9104",
+       "name": "미쯔이O.S.K.상선",
+       "ticker": "9104.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 24428
+      },
+      {
+       "code": "9107",
+       "name": "카와사키 기선",
+       "ticker": "9107.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 20756
+      },
+      {
+       "code": "9110",
+       "name": "NS유나이티드해운",
+       "ticker": "9110.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 2472
+      },
+      {
+       "code": "9119",
+       "name": "이노해운",
+       "ticker": "9119.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 1835
+      }
+     ]
+    },
+    {
+     "id": "jp_78",
+     "name": "항공",
+     "group": "운송·통신",
+     "members": [
+      {
+       "code": "9202",
+       "name": "올니폰 항공",
+       "ticker": "9202.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 14153
+      },
+      {
+       "code": "9201",
+       "name": "일본항공",
+       "ticker": "9201.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 12869
+      }
+     ]
+    },
+    {
+     "id": "jp_79",
+     "name": "물류·택배",
+     "group": "운송·통신",
+     "members": [
+      {
+       "code": "9147",
+       "name": "닛폰익스프레스홀딩스",
+       "ticker": "9147.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13015
+      },
+      {
+       "code": "9143",
+       "name": "SG홀딩스",
+       "ticker": "9143.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8936
+      },
+      {
+       "code": "9072",
+       "name": "닛콘홀딩스",
+       "ticker": "9072.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6375
+      },
+      {
+       "code": "9064",
+       "name": "야마토홀딩스",
+       "ticker": "9064.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6330
+      },
+      {
+       "code": "9076",
+       "name": "세이노홀딩스",
+       "ticker": "9076.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 4435
+      }
+     ]
+    },
+    {
+     "id": "jp_80",
+     "name": "철도(인바운드)",
+     "group": "운송·통신",
+     "members": [
+      {
+       "code": "9020",
+       "name": "동일본여객철도",
+       "ticker": "9020.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 40522
+      },
+      {
+       "code": "9022",
+       "name": "센트럴재팬철도",
+       "ticker": "9022.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 36515
+      },
+      {
+       "code": "9021",
+       "name": "서일본여객철도",
+       "ticker": "9021.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 13957
+      },
+      {
+       "code": "9042",
+       "name": "한큐한신홀딩스",
+       "ticker": "9042.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10883
+      },
+      {
+       "code": "9005",
+       "name": "도큐",
+       "ticker": "9005.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 9562
+      },
+      {
+       "code": "9142",
+       "name": "규슈여객철도",
+       "ticker": "9142.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5503
+      }
+     ]
+    },
+    {
+     "id": "jp_81",
+     "name": "부동산 개발",
+     "group": "부동산",
+     "members": [
+      {
+       "code": "8802",
+       "name": "미쯔비시 부동산",
+       "ticker": "8802.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 43842
+      },
+      {
+       "code": "8801",
+       "name": "미쯔이 부동산",
+       "ticker": "8801.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 39882
+      },
+      {
+       "code": "8830",
+       "name": "스미토모부동산",
+       "ticker": "8830.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 29797
+      },
+      {
+       "code": "3003",
+       "name": "휴릭",
+       "ticker": "3003.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 12930
+      },
+      {
+       "code": "3289",
+       "name": "도큐부동산홀딩스",
+       "ticker": "3289.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8605
+      },
+      {
+       "code": "3231",
+       "name": "노무라부동산홀딩스",
+       "ticker": "3231.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 7382
+      },
+      {
+       "code": "8804",
+       "name": "도쿄타테모노",
+       "ticker": "8804.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6914
+      }
+     ]
+    },
+    {
+     "id": "jp_82",
+     "name": "리츠",
+     "group": "부동산",
+     "members": [
+      {
+       "code": "8951",
+       "name": "니폰 빌딩 펀드",
+       "ticker": "8951.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 10781
+      },
+      {
+       "code": "8952",
+       "name": "일본 부동산투자증권",
+       "ticker": "8952.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 8325
+      },
+      {
+       "code": "3283",
+       "name": "니폰 프로로지스 REIT",
+       "ticker": "3283.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6678
+      },
+      {
+       "code": "3462",
+       "name": "노무라부동산마스터펀드",
+       "ticker": "3462.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6291
+      },
+      {
+       "code": "3281",
+       "name": "GLP리츠",
+       "ticker": "3281.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 6161
+      },
+      {
+       "code": "8972",
+       "name": "KDX리츠",
+       "ticker": "8972.T",
+       "market": "TSE",
+       "mcap_jpy_eok": 5942
+      }
+     ]
+    }
+   ],
+   "sectors": [
+    {
+     "ticker": "1617.T",
+     "code": "1617",
+     "name": "식품",
+     "en": "NEXT FUNDS TOPIX-17 식품",
+     "items": [
+      "음식료",
+      "주류·음료·담배"
+     ]
+    },
+    {
+     "ticker": "1618.T",
+     "code": "1618",
+     "name": "에너지자원",
+     "en": "NEXT FUNDS TOPIX-17 에너지자원",
+     "items": [
+      "자원개발",
+      "정유"
+     ]
+    },
+    {
+     "ticker": "1619.T",
+     "code": "1619",
+     "name": "건설·자재",
+     "en": "NEXT FUNDS TOPIX-17 건설·자재",
+     "items": [
+      "종합건설",
+      "주택건설",
+      "건자재"
+     ]
+    },
+    {
+     "ticker": "1620.T",
+     "code": "1620",
+     "name": "소재·화학",
+     "en": "NEXT FUNDS TOPIX-17 소재·화학",
+     "items": [
+      "범용 화학·섬유",
+      "전자·기능성 화학",
+      "도료·산업가스",
+      "반도체 소재(레지스트·가스·연마)",
+      "웨이퍼",
+      "타이어",
+      "화장품",
+      "생활용품"
+     ]
+    },
+    {
+     "ticker": "1621.T",
+     "code": "1621",
+     "name": "의약품",
+     "en": "NEXT FUNDS TOPIX-17 의약품",
+     "items": [
+      "대형 제약",
+      "신약 성장주(항암·ADC·감염)",
+      "바이오 벤처"
+     ]
+    },
+    {
+     "ticker": "1622.T",
+     "code": "1622",
+     "name": "자동차·수송기",
+     "en": "NEXT FUNDS TOPIX-17 자동차·수송기",
+     "items": [
+      "완성차",
+      "트럭·이륜차",
+      "자동차 부품",
+      "조선·선박엔진"
+     ]
+    },
+    {
+     "ticker": "1623.T",
+     "code": "1623",
+     "name": "철강·비철",
+     "en": "NEXT FUNDS TOPIX-17 철강·비철",
+     "items": [
+      "철강",
+      "비철금속·귀금속",
+      "전선·광케이블"
+     ]
+    },
+    {
+     "ticker": "1624.T",
+     "code": "1624",
+     "name": "기계",
+     "en": "NEXT FUNDS TOPIX-17 기계",
+     "items": [
+      "후공정·절단 장비",
+      "로봇·물류자동화",
+      "건설기계·농기계",
+      "공작기계",
+      "공조·데이터센터 냉각",
+      "반도체 공장설비(클린룸·초순수)"
+     ]
+    },
+    {
+     "ticker": "1625.T",
+     "code": "1625",
+     "name": "전기·정밀",
+     "en": "NEXT FUNDS TOPIX-17 전기·정밀",
+     "items": [
+      "전공정 장비",
+      "검사·계측 장비",
+      "테스트·프로브",
+      "반도체 소자(메모리·로직)",
+      "전력반도체",
+      "패키지 기판",
+      "MLCC·수동소자",
+      "전자부품·커넥터·모터",
+      "전자·카메라·이미지센서",
+      "FA·센서",
+      "전력기기·변압기",
+      "의료기기",
+      "배터리·소재"
+     ]
+    },
+    {
+     "ticker": "1626.T",
+     "code": "1626",
+     "name": "정보통신·서비스",
+     "en": "NEXT FUNDS TOPIX-17 정보통신·서비스",
+     "items": [
+      "IT서비스·SI",
+      "인터넷 플랫폼",
+      "SaaS·핀테크",
+      "AI·데이터센터 투자",
+      "통신",
+      "게임",
+      "방송·광고",
+      "인력·컨설팅",
+      "테마파크·레저"
+     ]
+    },
+    {
+     "ticker": "1627.T",
+     "code": "1627",
+     "name": "전력·가스",
+     "en": "NEXT FUNDS TOPIX-17 전력·가스",
+     "items": [
+      "전력회사",
+      "도시가스",
+      "신재생에너지"
+     ]
+    },
+    {
+     "ticker": "1628.T",
+     "code": "1628",
+     "name": "운수·물류",
+     "en": "NEXT FUNDS TOPIX-17 운수·물류",
+     "items": [
+      "해운",
+      "항공",
+      "물류·택배",
+      "철도(인바운드)"
+     ]
+    },
+    {
+     "ticker": "1629.T",
+     "code": "1629",
+     "name": "상사·도매",
+     "en": "NEXT FUNDS TOPIX-17 상사·도매",
+     "items": [
+      "종합상사",
+      "의약품 유통·의료 IT"
+     ]
+    },
+    {
+     "ticker": "1630.T",
+     "code": "1630",
+     "name": "소매",
+     "en": "NEXT FUNDS TOPIX-17 소매",
+     "items": [
+      "의류 SPA·유통",
+      "편의점·슈퍼",
+      "드럭스토어",
+      "할인점·생활용품점",
+      "백화점·인바운드 소비",
+      "외식"
+     ]
+    },
+    {
+     "ticker": "1631.T",
+     "code": "1631",
+     "name": "은행",
+     "en": "NEXT FUNDS TOPIX-17 은행",
+     "items": [
+      "메가뱅크",
+      "지방은행"
+     ]
+    },
+    {
+     "ticker": "1632.T",
+     "code": "1632",
+     "name": "금융(은행 제외)",
+     "en": "NEXT FUNDS TOPIX-17 금융(은행 제외)",
+     "items": [
+      "증권",
+      "손해보험",
+      "생명보험",
+      "리스·소비자금융·거래소"
+     ]
+    },
+    {
+     "ticker": "1633.T",
+     "code": "1633",
+     "name": "부동산",
+     "en": "NEXT FUNDS TOPIX-17 부동산",
+     "items": [
+      "부동산 개발",
+      "리츠"
      ]
     }
    ]

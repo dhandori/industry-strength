@@ -66,6 +66,9 @@ def atr14(ticker: str, close: pd.Series, last, n: int = 14):
     return float(atr), float(atr / df["c"].iloc[-1] * 100)
 
 
+import aux_sources as aux   # noqa: E402  보조 자료원(네이버 해외주식·TradingView)
+
+
 def fetch_yahoo(tickers: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
     import yfinance as yf
 
@@ -214,13 +217,14 @@ def fetch_market(mkey: str, m: dict) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
             source[e["id"]] = "yahoo"
             continue
         try:
-            got = fetch_naver(e["code"], recent_only=e["id"] in stored) if mkey == "KR" else fetch_stooq(e["code"])
+            got = (fetch_naver(e["code"], recent_only=e["id"] in stored) if mkey == "KR"
+                   else aux.naver_foreign(e["ticker"]) if mkey == "JP" else fetch_stooq(e["code"]))
         except Exception as ex:  # noqa: BLE001
             log("대체 수집 실패", t, ex)
             got = None
         if got:
             closes[e["id"]], vols[e["id"]] = got
-            source[e["id"]] = "naver" if mkey == "KR" else "stooq"
+            source[e["id"]] = "naver" if mkey in ("KR", "JP") else "stooq"
         else:
             source[e["id"]] = "failed"
     log(mkey, "수집 결과", {k: sum(1 for s in source.values() if s == k) for k in set(source.values())})
@@ -228,7 +232,139 @@ def fetch_market(mkey: str, m: dict) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
     if failed:
         log(mkey, "수집 실패 종목", failed)
     c, v = drop_intraday(mkey, pd.DataFrame(closes), pd.DataFrame(vols))
+    if mkey == "JP":
+        c, v = fix_price_glitches(mkey, c, v, {e["id"]: e["ticker"] for e in entries})
+    c, v = tv_check(mkey, entries, c, v)
     return c, v, source
+
+
+
+def fix_price_glitches(mkey: str, c: pd.DataFrame, v: pd.DataFrame, tickers: dict | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """야후 일본 자료의 두 가지 오류를 고친다(2026-11-16, 일본 추가 때 확인. 한국·미국 자료에는 없었다).
+
+    1) 잘못 찍힌 값: TOPIX ETF(1306) 2026-03-30~31 이 382엔 → 37엔처럼 하루이틀 1/10 로 찍혔다가 돌아온다.
+       5거래일 안에 직전 값의 ±15% 로 돌아오면 그 사이를 고친다. 네이버 해외주식 일봉에 그날 값이 있으면 그 값
+       (1306 은 실제로 376.4·371.4엔이었다), 없으면 직전 값과의 비율이 10의 거듭제곱(1/10, 1/100…)이면 그만큼 되돌리고,
+       그것도 아니면 직전 값으로 메운다.
+    2) 분할 미반영: 시마무라(8227) 2026-02-18 3:1 분할 전 가격이 그대로라 하루 -66% 로 보인다.
+       돌아오지 않고 1/2~1/10(또는 2~10배)에 4% 안으로 맞으며, 야후 공식 분할 기록(앞뒤 4일 안, 같은 비율)이 있을 때만
+       분할로 보고 그 전 가격·거래량을 맞춘다. 비율만 보면 안 된다: 저팬디스플레이(6740) 2026-03-09 은 27→52엔
+       실제 급등(+92.6%)인데 ×2 분할로 오인했었다. 기록을 받지 못하거나 없으면 그대로 두고 로그에만 남긴다.
+    하루 40% 넘는 변화만 본다. 고친 내용은 로그에 남긴다."""
+    c, v = c.astype(float), v.astype(float)
+    notes, refs, splits = [], {}, {}
+    for col in c.columns:
+        x = c[col].dropna()
+        for _ in range(10):
+            if len(x) < 10:
+                break
+            r = x / x.shift(1)
+            jumps = r[(r < 0.6) | (r > 1.67)]
+            if jumps.empty:
+                break
+            d0, q = jumps.index[0], float(jumps.iloc[0])
+            k = x.index.get_loc(d0)
+            prev = x.iloc[k - 1]
+            back = next((j for j in range(k + 1, min(k + 6, len(x))) if abs(x.iloc[j] / prev - 1) < 0.15), None)
+            if back is not None:
+                days = x.index[k:back]
+                ref = refs.get(col)
+                if ref is None and tickers and col in tickers:
+                    try:
+                        got = aux.naver_foreign(tickers[col])
+                    except Exception:  # noqa: BLE001
+                        got = None
+                    ref = refs[col] = got[0] if got else pd.Series(dtype=float)
+                for d in days:
+                    bad = x.loc[d]
+                    near = ref.get(d) if ref is not None else None
+                    p10 = next((f for f in (10, 100, 1000, 10000, 0.1, 0.01, 0.001, 0.0001)
+                                if abs(bad * f / prev - 1) < 0.1), None)
+                    if near is not None and 0.6 < near / prev < 1.67:
+                        fixv, how = float(near), "네이버"
+                    elif p10 is not None:
+                        fixv, how = bad * p10, f"×{p10:g}"
+                    else:
+                        fixv, how = prev, "직전 값"
+                    notes.append(f"{col} {d.date()} 잘못 찍힌 값 {bad:.4g} → {fixv:.4g}({how})")
+                    x.loc[d] = fixv
+                continue
+            split = next((t for n in range(2, 11) for t in (1 / n, n) if abs(q / t - 1) < 0.04), None)
+            if split is not None and tickers and col in tickers:
+                if col not in splits:
+                    splits[col] = aux.yahoo_splits(tickers[col])
+                ok = any(abs((d - d0).days) <= 4 and abs(f / split - 1) < 0.04 for d, f in (splits[col] or []))
+                if not ok:
+                    notes.append(f"{col} {d0.date()} 하루 ×{q:.4g}: 분할 비율과 비슷하지만 공식 분할 기록이 없어 그대로 둠")
+                    split = None
+            elif split is not None:
+                split = None   # 종목 티커를 모르면 분할 기록을 확인할 수 없어 고치지 않는다
+            if split is None:
+                break   # 실제로 크게 움직인 날로 보고 그대로 둔다
+            notes.append(f"{col} {d0.date()} 분할 보정 ×{split:.4g}(앞 가격, 그날 실제 비율 {q:.4g})")
+            x.iloc[:k] = x.iloc[:k] * split    # 분할 비율 그대로 곱해 그날의 실제 등락은 남긴다
+            if col in v:
+                before = v.index < d0
+                v.loc[before, col] = v.loc[before, col] / split
+        c.loc[x.index, col] = x
+    if notes:
+        log(mkey, "가격 오류 보정", len(notes), "건:", "; ".join(notes[:20]))
+    return c, v
+
+
+TV_STATS: dict = {}
+
+
+def tv_check(mkey: str, entries: list[dict], c: pd.DataFrame, v: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """장이 끝난 최신 거래일 한 줄을 TradingView 시세로 검사한다(scripts/aux_sources.py 설명).
+
+    - 야후에 그날 값이 없으면 TradingView 종가·거래량으로 메운다(그날 줄이 통째로 없으면 지수 시세가 있을 때 줄을 만든다).
+    - 그날 값이 TradingView 와 1.5% 넘게 다르면 TradingView 값으로 바꾼다.
+    TradingView 가 막히면 아무것도 바꾸지 않는다. 결과는 TV_STATS 와 실행 로그에 남는다."""
+    exp = aux.last_closed_session(mkey)
+    if exp is None or c.empty:
+        return c, v
+    tv_ex = aux.load_tv_ex() if mkey == "US" else {}
+    sym = {}
+    for e in entries:
+        code = str(e["ticker"]).rsplit(".", 1)[0] if mkey == "JP" else e["code"]
+        s_ = aux.tv_symbol(mkey, e["ticker"], code, tv_ex)
+        if s_:
+            sym[e["id"]] = s_
+    q = aux.tv_quotes(mkey, sorted(set(sym.values())))
+    st = TV_STATS[mkey] = {"date": exp.strftime("%Y-%m-%d"), "asked": len(sym), "got": len(q), "filled": [], "fixed": []}
+    if not q:
+        log(mkey, "TradingView 시세를 받지 못해 최신일 검사 생략")
+        return c, v
+    c, v = c.astype(float), v.astype(float)
+    if exp not in c.index:
+        if exp < c.index.max() or sym.get("__bench__") not in q:
+            return c, v
+        c.loc[exp] = float("nan")
+        v.loc[exp] = float("nan")
+        c, v = c.sort_index(), v.sort_index()
+        log(mkey, "야후에 없는 최신 거래일 줄을 TradingView 로 만든다", exp.date())
+    for col, s_ in sym.items():
+        if s_ not in q:
+            continue
+        if col not in c:   # 야후·예비 자료원 모두 실패한 종목: 최신일만 채운 열을 만든다(저장된 과거 값과 합칠 때 빈칸은 기존 값이 채운다)
+            c[col] = float("nan")
+            v[col] = float("nan")
+        tc, tvol = q[s_]
+        cur = c.at[exp, col]
+        if pd.isna(cur):
+            c.at[exp, col] = tc
+            if col in v:
+                v.at[exp, col] = tvol
+            st["filled"].append(col)
+        elif abs(cur / tc - 1) > 0.015:
+            st["fixed"].append(f"{col} {cur:.4g}→{tc:.4g}")
+            c.at[exp, col] = tc
+            if col in v and tvol:
+                v.at[exp, col] = tvol
+    log(mkey, f"TradingView 최신일 검사 {exp.date()}: 요청 {len(sym)} · 받음 {len(q)} · 메움 {len(st['filled'])} · 바꿈 {len(st['fixed'])}",
+        ("" if not st["fixed"] else "바꾼 것: " + "; ".join(st["fixed"][:15])))
+    return c, v
 
 
 def drop_intraday(mkey: str, c: pd.DataFrame, v: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -241,6 +377,10 @@ def drop_intraday(mkey: str, c: pd.DataFrame, v: pd.DataFrame) -> tuple[pd.DataF
         now = datetime.now(ZoneInfo("Asia/Seoul"))
         # 수능날은 16:30 마감(scripts/wait_close.py LATE와 같이 바꾼다)
         close_hm = (16, 45) if now.date().isoformat() in ("2026-11-19",) else (15, 45)
+    elif mkey == "JP":
+        # 도쿄는 2024-11-05부터 15:30 마감(한국과 같은 시각대). 종가 경매 뒤 여유를 둔다.
+        now = datetime.now(ZoneInfo("Asia/Tokyo"))
+        close_hm = (15, 45)
     else:
         now = datetime.now(ZoneInfo("America/New_York"))
         close_hm = (16, 10)
@@ -281,7 +421,7 @@ def merge_store(mkey: str, new_c: pd.DataFrame, new_v: pd.DataFrame, store: Path
 def synthetic(m: dict, seed: int) -> tuple[pd.DataFrame, pd.DataFrame]:
     rng = np.random.default_rng(seed)
     idx = pd.bdate_range(end=pd.Timestamp.today().normalize(), periods=500)
-    ids = [e["id"] for e in market_entries("KR" if m["label"] == "한국" else "US", m)]
+    ids = [e["id"] for e in market_entries({"한국": "KR", "일본": "JP"}.get(m["label"], "US"), m)]
     data, vol = {}, {}
     for k, i in enumerate(ids):
         drift = rng.normal(0.0004, 0.0008)
@@ -675,7 +815,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-fetch", action="store_true")
     ap.add_argument("--synthetic", action="store_true")
-    ap.add_argument("--markets", default="KR,US")
+    ap.add_argument("--markets", default="KR,US,JP")   # 일본은 2026-11-16 추가(한국과 같은 갱신 시각에 함께 받는다)
     a = ap.parse_args()
 
     cfg = json.loads((ROOT / "config/baskets.json").read_text(encoding="utf-8"))
@@ -726,6 +866,10 @@ def main():
         (out_dir / f"{mkey}.json").write_text(json.dumps(summary, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         (out_dir / f"{mkey}_series.json").write_text(json.dumps(series, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         status["markets"][mkey] = {"ok": True, "basis_date": summary["basis_date"], "n": summary["n"], "warnings": probs}
+        if mkey in TV_STATS:   # TradingView 최신일 검사 결과(메운·바꾼 종목 수)
+            t = TV_STATS[mkey]
+            status["markets"][mkey]["tradingview"] = {"date": t["date"], "asked": t["asked"], "got": t["got"],
+                                                      "filled": len(t["filled"]), "fixed": t["fixed"][:20]}
         log(mkey, "기준일", summary["basis_date"], "산업", summary["n"], "경고", probs)
     (out_dir / "status.json").write_text(json.dumps(status, ensure_ascii=False, indent=1), encoding="utf-8")
     if fatal and not any(s.get("ok") for s in status["markets"].values()):

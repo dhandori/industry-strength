@@ -87,6 +87,20 @@ jobs:
         timeout-minutes: 6
         run: python scripts/sector_flow.py
 
+      # 일본 52주 신고가(docs/data/highs_JP.json). 한국·미국 신고가는 global-high-radar 예약 작업이 highs.json 으로 올린다.
+      - name: 일본 52주 신고가
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 10
+        run: python scripts/highs_jp.py
+
+      # 일본 매크로 지표(docs/data/macro_JP.json). 한국·미국 지표는 wamo-choochoo-dashboard 가 만든다.
+      - name: 일본 매크로
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 5
+        run: python scripts/macro_jp.py
+
       # 외국인·기관·개인 순매수. 새 거래일 자료가 없으면 한 종목만 확인하고 바로 끝난다.
       - name: 한국 수급 수집
         if: always()

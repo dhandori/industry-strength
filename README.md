@@ -1,10 +1,14 @@
 # 시장 흐름판
 
-한국·미국 세부 산업(구성 종목 같은 비중 바구니 지수)의 강도를 매일 순위로 보여주는 추세추종용 대시보드.
+한국·미국·일본 세부 산업(구성 종목 같은 비중 바구니 지수)의 강도를 매일 순위로 보여주는 추세추종용 대시보드.
 
 - 화면: GitHub Pages (`docs/` 폴더)
 - 갱신: GitHub Actions가 평일 한국장 마감 직후(15:52 KST, 마감 전에 미리 출발해 대기)와 미국장 마감 직후(뉴욕 16:12 = 05:12·06:12 KST)에 자동 실행. 16:40·18:10 KST·06:50 KST 등은 안전망 재시도
-- 데이터: Yahoo Finance 종가(실패 시 한국은 네이버, 미국은 stooq)
+- 데이터: Yahoo Finance 종가(실패 시 한국은 네이버, 미국은 stooq, 일본은 네이버 해외주식 일봉)
+- 보조 자료원(2026-11-16, `scripts/aux_sources.py`, 데일리 마켓 레이더의 자료원을 참고):
+  - **TradingView 스캐너**: 과거 일봉은 없고 지금 시세만 준다. 장이 끝난 최신 거래일 한 줄을 세 시장 모두 검사해, 야후에 없는 값은 메우고 1.5% 넘게 다른 값은 TradingView 값으로 바꾼다. 결과는 `status.json` 의 `tradingview` 칸과 실행 로그에 남는다. 공식 API가 아니라 막히면 검사만 건너뛴다. 2026-11-16 확인 때 한국 358·미국 315·일본 393종목이 모두 야후와 1.5% 안에서 같았다.
+  - **네이버 해외주식 일봉**(`api.stock.naver.com/chart/foreign/item/8035.T/day`, 레이더가 미국 예비 자료원으로 쓰는 경로): 일본 예비 자료원이자, 야후 일본 자료가 잘못 찍은 날의 실제 값을 찾는 데 쓴다.
+- 일본(2026-11-16 추가): 도쿄장도 15:30에 끝나 한국 15:52 갱신 때 같이 받는다. 야후 일본 자료에는 하루이틀 1/10로 찍히는 값(TOPIX ETF 2026-03-30 실제 376.4엔 → 37.64엔)과 분할 미반영(시마무라 3:1)이 있다. `update.py` 의 `fix_price_glitches` 가 네이버 실제 값이나 분할 비율로 고치고, 고친 내용을 실행 로그에 남긴다.
 
 ## 화면 구성
 
@@ -12,9 +16,13 @@
 - **🚀 52주 신고가** 탭(`docs/highs.js`, `docs/data/highs.json`): 한국·미국 52주 신고가 종목의 흐름(신고가 수 추이, 강해지는 업종, 업종×날짜, 자주 나온 종목, 날짜별 명단). 데이터는 이 저장소의 Actions가 아니라 dhandori/global-high-radar 의 '52주 신고가 기록' 예약 작업이 한국장 17시·미국장 08시 기록 뒤 `docs/data/highs.json` 한 파일만 올린다. 두 탭은 시장 선택(한국/미국)과 산업 상세 서랍만 공유한다.
 - **종목 상세 창**(`docs/stock.js`): 어느 탭에서든 종목 이름을 누르면 열린다(산업 강도·RS 강한 종목·업종 탐색·52주 신고가·외국인·기관 보유 변화·섹터 워치). 주가 차트(종가·20·50·150·200일선·52주 최고 종가선·거래량, 신고가 기록일 ▼, 3개월~2년), 산업·시장과 비교 차트와 RS선, 기간 수익률 비교표, 추세 점검 8가지, 위험 관리(ATR·손절·비중), 52주 신고가 기록, 수급(표·누적 순매수·외국인 보유율·보유 변화 순위), 속한 산업·같은 바구니 종목, 섹터 워치 ETF, 페어를 한 화면에 모은다. 차트 자료는 `scripts/stock_charts.py`가 저장된 가격으로 만든 `docs/data/<시장>_stocks.json`(최근 2년, 갱신 워크플로 마지막 단계). 바구니 밖 종목은 한국은 네이버 차트 그림, 미국은 TradingView 차트로 대신한다.
 - **🌐 매크로 지수** 탭: 모든 카드를 펼쳐 그래프·설명까지 다 보인다(2026-11-11 접기 없앰).
+- **일본 칸(2026-11-16)**: 세 탭 모두 이 저장소 갱신 작업(`update.yml`)이 한국 15:52 갱신 때 같이 만든다.
+  - 52주 신고가: `scripts/highs_jp.py` → `docs/data/highs_JP.json`. 한국·미국 `highs.json` 은 global-high-radar 예약 작업이 통째로 다시 쓰므로 따로 둔다(화면이 합쳐 읽는다). 기준은 노션 기록과 같다(도쿄 보통주 그날 종가 시총 1,000억 엔 이상, 장중 고가 ≥ 1년 최고가 × 0.9999). 대상 목록은 `config/jp_universe.json`(`build_baskets.py --only-jp` 가 만든다). 2026-11-16 TradingView 스크리너와 비교: 76개 중 74개 일치.
+  - 매크로: `scripts/macro_jp.py` → `docs/data/macro_JP.json`. 일본 10년 국채 금리·장단기 금리차(재무성), 미일 10년 금리차(FRED, 느리면 야후 ^TNX), 엔/달러(야후), 닛케이225 20일 실현 변동성(야후로 계산; 닛케이 VI 공식 파일은 무단 전재 금지라 쓰지 않는다). 단계 계산은 wamo_macro.py 와 같고, 한국·미국 종합 위험도에는 섞지 않는다.
+  - 섹터 차트 펼치기: `sector_flow.py` 의 JP(TOPIX-17 업종 ETF, 야후 5분봉, 도쿄 시각).
 - **🤖 AI 시장** 탭(`docs/ai.js`, `docs/data/ai_market.json`): OpenAI·Anthropic 매출 런레이트(Epoch AI), 오픈웨이트 vs 클로즈드 토큰 비중(OpenRouter, 주간), 토큰 비중 vs 지출 비중(Vercel AI Gateway, 매일). `scripts/ai_market.py`를 `.github/workflows/ai-market.yml`이 매일 09:20·18:20 KST에 돌린다. 분기 실적표(두 회사 분기 매출·전분기 대비·합계·핵심 보도, 확인된 보도는 `config/ai_revenue_manual.json` 의 quarters)도 같이 만든다. 텔레그램 알림(새 분기 실적·새 매출 보도·월요일 주간 요약)은 dhandori/wamo_claude_bot 의 `scripts/ai_market_alert.py`가 이 JSON을 읽어 보낸다.
 - **탭별 갱신 시각(2026-11-12 사용자 요청)**: 탭 이름 아래에 마지막 갱신과 다음 갱신 예정(한국 시간)을 적는다(휴대폰은 탭 줄 아래 한 줄에 지금 탭만). 마지막 갱신은 각 자료 파일 맨 앞 시각 칸을 앞 400바이트만 받아 읽고, 다음 갱신은 `docs/tabtimes.js` 의 `SCHED` 표로 계산한다. 작업의 예약 시각을 바꾸면 이 표도 같이 바꾼다.
-- **시장별 탭(2026-11-12 사용자 결정)**: 한국을 고르면 산업 강도·52주 신고가·매크로 지수 3개만, 미국을 고르면 6개 모두 보인다. AI 시장(세계 공통)·페어(미국 ETF 위주)·포지셔닝(미국 CTA·S&P500·CFTC)은 미국 전용이다. 한국인 채로 `#KR-ai`·`#KR-positioning` 같은 주소로 들어오면 시장을 미국으로 바꿔 연다(`docs/app.js` 의 `US_ONLY`).
+- **시장별 탭(2026-11-12 사용자 결정)**: 한국을 고르면 산업 강도·52주 신고가·매크로 지수 3개만, 미국을 고르면 6개 모두 보인다. 일본(2026-11-16)은 한국처럼 산업 강도·52주 신고가·매크로 지수 3개가 보인다(외국인·기관 수급은 일본에 종목별 자료가 없어 뺐다). 일본 섹터 워치는 노무라 NEXT FUNDS TOPIX-17 업종 ETF(1617~1633), 지수는 TOPIX(1306)·닛케이225(1321) ETF로 본다. AI 시장(세계 공통)·페어(미국 ETF 위주)·포지셔닝(미국 CTA·S&P500·CFTC)은 미국 전용이다. 한국인 채로 `#KR-ai`·`#KR-positioning` 같은 주소로 들어오면 시장을 미국으로 바꿔 연다(`docs/app.js` 의 `US_ONLY`).
 - **💰 포지셔닝** 탭(`docs/positioning.js`, `docs/positioning.css`, `docs/data/positioning.json`, 2026-11-12 추가): 가격 뒤의 돈. CTA(추세추종 펀드)가 지금 팔고 있는지, 헤지펀드·자산운용사 선물 포지션이 지난 3년 중 어디쯤인지, BofA 펀드매니저 설문이 무엇을 말하는지를 보여 준다. **매주 수요일 오후 1시쯤(KST) 한 번만 바뀐다.** 탭 맨 위에 그 사실과 기준일·며칠 전 숫자인지·다음 갱신일이 나오고, 다음 수요일이 지나도 새 자료가 없으면 노란색으로 바뀐다. 이 저장소의 Actions가 아니라 dhandori/global-high-radar 의 예약 작업 '06-1 차트 갱신'이 `claude-automations/dashboards/positioning_dashboard.py` 로 만든 `docs/data/positioning.json` 한 파일만 올린다(옛 Claude 아티팩트 화면을 옮겨 왔다). 그래프는 d3(탭을 처음 열 때만 불러옴)로 그린다. 페어 탭이 `.pr-*` 를 쓰므로 이 탭은 `#po`·`.po-*` 이름만 쓴다.
 
 ## 계산 방법
@@ -39,12 +47,12 @@
 
 ## 산업 목록 바꾸기
 
-`scripts/build_baskets.py`의 KR·US 목록을 고친 뒤 `python scripts/build_baskets.py <global-high-radar 경로>`로 `config/baskets.json`을 다시 만들고 push하면 바로 다시 계산된다. 한국 분류는 global-high-radar의 산업 분류표(data/industry_business_registry.json)를 따른다.
+`scripts/build_baskets.py`의 KR·US·JP 목록을 고친 뒤 `python scripts/build_baskets.py <global-high-radar 경로>`로 `config/baskets.json`을 다시 만들고 push하면 바로 다시 계산된다. 일본만 고쳤으면 `--only-jp` 를 붙인다(한국·미국 설정은 그대로 둔다). 일본 종목명·시가총액은 global-high-radar 의 `data/universe_overseas.json`(TSE)에서 확인한다. 한국 분류는 global-high-radar의 산업 분류표(data/industry_business_registry.json)를 따른다.
 
 ## 화면 코드를 고칠 때 (2026-11-13 추가)
 
 - **캐시 버전은 손으로 쓰지 않는다.** `docs/` 의 CSS·스크립트를 고친 뒤 `python scripts/version_assets.py` 를 돌리면 `docs/index.html` 의 `?v=` 가 파일 내용 해시로 바뀐다. 그 `index.html` 을 함께 커밋한다. 잊으면 화면 검사가 막는다.
-- **화면 검사**: `python tests/browser_check.py` 가 탭 9개를 PC·휴대폰 크기로 열어 스크립트 오류, 받지 못한 파일, 가로 넘침, 깨진 값(undefined·NaN), 11px보다 작은 글씨를 본다. 그날 자료(`docs/data`)로 돌기 때문에 종목이나 숫자를 가정하지 않는다. 매크로 자료만 `tests/fixtures/wamo_macro.json` 으로 고정한다. 탭을 새로 만들면 `VIEWS` 에 더한다.
+- **화면 검사**: `python tests/browser_check.py` 가 탭 9개와 일본 산업 강도를 PC·휴대폰 크기로 열어 스크립트 오류, 받지 못한 파일, 가로 넘침, 깨진 값(undefined·NaN), 11px보다 작은 글씨를 본다. 그날 자료(`docs/data`)로 돌기 때문에 종목이나 숫자를 가정하지 않는다. 매크로 자료만 `tests/fixtures/wamo_macro.json` 으로 고정한다. 탭을 새로 만들면 `VIEWS` 에 더한다.
 - GitHub Actions `화면 검사`(`ci.yml`)가 PR과 화면 코드가 바뀐 main 커밋에서 같은 검사를 돌린다. 자료 커밋에는 돌지 않는다.
 - 글씨는 11px 아래로 쓰지 않는다. `small`·`sup` 도 11px 바닥을 둔다(`style.css`).
 - 머리말의 'WAMO 레이더 ↗' 는 짝 화면(dhandori/wamo-choochoo-dashboard 레이더)으로 가는 링크다. 레이더에도 이쪽으로 오는 링크가 있다.
