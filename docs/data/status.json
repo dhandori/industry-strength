@@ -1,6 +1,6 @@
 {
- "updated_at": "2026-11-17 00:58 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/43902176800",
+ "updated_at": "2026-11-17 02:23 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/43917803150",
  "trigger": "schedule",
  "markets": {
   "KR": {
@@ -27,26 +27,26 @@
     "got": 315,
     "filled": 0,
     "fixed": [
-     "__bench2__ 679.9→665.5",
-     "__sec_XLK 170.3→165.7",
-     "NVDA 162.9→159.1",
-     "AVGO 347→331.8",
-     "AMD 534.1→507.8",
-     "MRVL 156.8→146.1",
-     "MU 778.3→727.6",
-     "SNDK 885→813.6",
-     "STX 528.3→500.5",
-     "WDC 295.6→282.8",
-     "ASML 1495→1427",
-     "AMAT 370.5→354.5",
-     "LRCX 225.9→212.7",
-     "ACMR 47.95→45",
-     "KLAC 152.3→143.8",
-     "NVMI 317.9→305.1",
-     "ONTO 203.6→191.1",
-     "CAMT 101.7→93.05",
-     "TER 249.6→233",
-     "FORM 87.53→80.77"
+     "__bench2__ 679.9→667",
+     "__sec_XLK 170.3→166.2",
+     "NVDA 162.9→158.6",
+     "AVGO 347→335.2",
+     "AMD 534.1→509.2",
+     "MRVL 156.8→147.5",
+     "MU 778.3→734.8",
+     "SNDK 885→826.1",
+     "STX 528.3→501.6",
+     "WDC 295.6→285",
+     "ASML 1495→1430",
+     "AMAT 370.5→357",
+     "LRCX 225.9→214.3",
+     "ACMR 47.95→45.62",
+     "KLAC 152.3→146.9",
+     "NVMI 317.9→309.7",
+     "ONTO 203.6→197.6",
+     "CAMT 101.7→93.57",
+     "TER 249.6→234.7",
+     "FORM 87.53→82.85"
     ]
    }
   },
@@ -59,7 +59,7 @@
     "date": "2026-11-16",
     "asked": 394,
     "got": 394,
-    "filled": 394,
+    "filled": 375,
     "fixed": []
    }
   }
