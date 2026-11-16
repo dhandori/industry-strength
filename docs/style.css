@@ -105,6 +105,13 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 .tile .v .of { font-size: 15px; color: var(--muted); font-weight: 600; }
 .tile-main { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); }
 .tile .d { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+.tile .k { display: flex; align-items: center; gap: 2px; }
+.tile .k .tile-link { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--accent); text-decoration: none; white-space: nowrap; }
+.tile .k .tile-link:hover { text-decoration: underline; }
+.tile-bar { display: flex; height: 6px; margin: 8px 0 6px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.tile-bar i { display: block; height: 100%; }
+.tile-bar .s2 { background: var(--good); }
+.tile-bar .s2t { background: color-mix(in srgb, var(--good) 40%, transparent); }
 .idx-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; }
 .idx-n { font-size: 13px; font-weight: 650; }
 .idx-v { font-size: 20px; font-weight: 750; letter-spacing: -0.02em; }
@@ -117,11 +124,14 @@ main { max-width: 1180px; margin: 0 auto; padding: 16px; display: grid; gap: 14p
 /* signals */
 .signals { display: grid; gap: 14px; }
 .sig-row-title { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 6px; letter-spacing: .02em; }
-.sig-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
-.sig-grid { align-items: start; }
-.sig-empties { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; }
-.sig-empty { display: inline-flex; align-items: center; gap: 8px; }
-.sig-empty h3 { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; margin: 0; }
+/* 벤토: 5개 넘는 신호(.wide)는 두 배 너비로 시작하고, 줄마다 남는 자리는 카드들이 나눠 채운다 */
+.sig-grid { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+.sig-grid > .sig { flex: 1 1 210px; }
+.sig-grid > .sig.wide { flex: 2 1 420px; }
+.sig .chip { max-width: 100%; white-space: normal; text-align: left; }
+.sig-empties { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.sig-empties .sig-row-title { margin: 0; }
+.sig-empty { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
 [hidden] { display: none !important; }
 .chips.rest { margin-top: 5px; }
 .chip.more { border-style: dashed; color: var(--accent); background: transparent; }

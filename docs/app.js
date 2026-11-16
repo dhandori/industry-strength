@@ -247,24 +247,30 @@
     const reg = (x) => { const c = x.regime === "상승 추세" ? "up" : x.regime === "하락 추세" ? "down" : "neutral"; return `<span class="badge ${c}"><span class="dot"></span>${x.regime}</span>`; };
     // 첫 번째 타일이 결론: 지금 추세가 살아 있는 산업이 몇 개인가.
     const tone = s2 / Math.max(1, d.items.length) >= 0.3 ? "up" : s2 / Math.max(1, d.items.length) <= 0.1 ? "down" : "";
+    // 카드 4장은 같은 틀(이름표 → 큰 숫자 → 비교 한 줄)로 맞춘다. 긴 설명은 ? 도움말로 뺐다(2026-11-16 배치 정리).
+    const n = Math.max(1, d.items.length);
+    const regHelp = "지수가 50일·200일선 위인지만 본 판정이에요. 분산일·거래량·신고가 수까지 합친 판정은 레이더 ‘시장 날씨’에 있어서 서로 다를 수 있어요.";
+    const help = (t, label) => `<button class="help" type="button" aria-label="${label} 뜻" data-help="${esc(t)}">?</button>`;
     $("#tiles").innerHTML = `
       <div class="tile tile-main"><div class="k">상승 추세 산업</div>
         <div class="v big ${tone}">${s2}<span class="of"> / ${d.items.length}</span></div>
+        <div class="tile-bar" role="img" aria-label="상승 추세 ${s2}개, 상승 전환 시도 ${s2t}개, 전체 ${d.items.length}개"><i class="s2" style="width:${(s2 / n * 100).toFixed(1)}%"></i><i class="s2t" style="width:${(s2t / n * 100).toFixed(1)}%"></i></div>
         <div class="d">상승 전환 시도 ${s2t}개까지 합치면 ${s2 + s2t}개</div></div>
-      <div class="tile"><div class="k">시장 국면</div>
+      <div class="tile"><div class="k">시장 국면${help(regHelp, "시장 국면")}<a class="tile-link" href="https://dhandori.github.io/wamo-choochoo-dashboard/radar.html?market=${state.market}&tab=trend">레이더 날씨 ↗</a></div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span>${reg(x)}</div>
-        <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}</div>`).join("")}
-        <div class="d tile-xref">지수가 50일·200일선 위인지만 본 판정이에요. 분산일·거래량·신고가 수까지 합친 판정은 <a href="https://dhandori.github.io/wamo-choochoo-dashboard/radar.html?market=${state.market}&tab=trend">레이더 ‘시장 날씨’ ↗</a>에 있어서 서로 다를 수 있어요.</div></div>
+        <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}</div>`).join("")}</div>
       <div class="tile"><div class="k">지수 20일 수익률</div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span><span class="ret ${cls(x.ret20)} idx-v">${fmtPct(x.ret20)}</span></div>
         <div class="d">5일 ${fmtPct(x.ret5)} · 60일 ${fmtPct(x.ret60)}</div>`).join("")}</div>
       <div class="tile"><div class="k">50일선 위 산업 비율</div>
         <div class="v">${brNow == null ? "–" : brNow.toFixed(0) + "%"}</div>
+        <div class="tile-bar" role="img" aria-label="50일선 위 산업 비율"><i class="s2" style="width:${brNow == null ? 0 : Math.min(100, brNow).toFixed(1)}%"></i></div>
         <div class="d">20거래일 전 ${brPrev == null ? "–" : brPrev.toFixed(0) + "%"}${brNow != null && brPrev != null ? ` (${brNow >= brPrev ? "▲" : "▼"}${Math.abs(brNow - brPrev).toFixed(0)}%p)` : ""}</div></div>`;
+    $$(".help", $("#tiles")).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); showHelp(b, b.dataset.help); }));
   }
 
   // ---------- signals
-  const SHOW = 5;
+  const SHOW = 5, SHOW_WIDE = 10;   // 5개가 넘는 신호는 두 칸 너비(벤토)로 키우고 10개까지 바로 보인다
   const weakHelp = "순위는 올랐지만 가격은 아직 하락하거나 힘이 빠진 산업이에요. 덜 빠져서 순위가 오른 경우일 수 있으니 추세 확인이 먼저예요.";
   function renderSignals(d) {
     // 강세 신호 3종은 한 줄, 주의 신호 2종은 그 아래 한 줄. 0개인 카드는 한 줄로 접는다.
@@ -282,8 +288,8 @@
       ] },
     ];
     if (d._sup && window.__supply) rows.push(window.__supply.signalRow());   // 한국만: 외국인·기관 수급과 가격을 합친 신호
+    const empties = [];   // 0건 신호는 줄마다 흩지 않고 맨 아래 한 줄로 모은다
     $("#signals").innerHTML = rows.map((row) => {
-      const empties = [];
       const cards = row.groups.map((g) => {
         const keys = g.any || [g.t];
         const list = d.items.filter((i) => i.tags.some((t) => keys.includes(t)));
@@ -292,14 +298,15 @@
           return `<button class="chip${weak ? " weak" : ""}" data-id="${i.id}"${weak ? ` title="${weakHelp}"` : ""}>${esc(i.name)}${weak ? '<span class="chip-tail">순위↑ 가격↓</span>' : ""}</button>`;
         };
         const head = `<h3><span class="dot" style="color:${g.c}"></span>${g.t} <span class="cnt">${list.length}</span><button class="help" type="button" aria-label="${g.t} 뜻" data-help="${esc(g.help)}">?</button></h3>`;
-        if (!list.length) { empties.push(`<span class="sig-empty">${head}<span class="none">해당 없음</span></span>`); return ""; }
-        const more = list.length > SHOW ? `<button class="chip more" type="button" data-more="${g.t}">+${list.length - SHOW}개 더</button>` : "";
-        return `<div class="sig" data-sig="${g.t}">${head}
-          <div class="chips">${list.slice(0, SHOW).map(chip).join("")}${more}</div>
-          ${list.length > SHOW ? `<div class="chips rest" hidden>${list.slice(SHOW).map(chip).join("")}<button class="chip more" type="button" data-less="${g.t}">접기</button></div>` : ""}</div>`;
-      });
-      return `<div class="sig-row"><div class="sig-row-title">${row.title}</div><div class="sig-grid">${cards.join("")}</div>${empties.length ? `<div class="sig-empties">${empties.join("")}</div>` : ""}</div>`;
-    }).join("");
+        if (!list.length) { empties.push(`<span class="sig-empty"><span class="dot" style="color:${g.c}"></span>${g.t}<button class="help" type="button" aria-label="${g.t} 뜻" data-help="${esc(g.help)}">?</button></span>`); return ""; }
+        const wide = list.length > SHOW, show = wide ? SHOW_WIDE : SHOW;
+        const more = list.length > show ? `<button class="chip more" type="button" data-more="${g.t}">+${list.length - show}개 더</button>` : "";
+        return `<div class="sig${wide ? " wide" : ""}" data-sig="${g.t}">${head}
+          <div class="chips">${list.slice(0, show).map(chip).join("")}${more}</div>
+          ${list.length > show ? `<div class="chips rest" hidden>${list.slice(show).map(chip).join("")}<button class="chip more" type="button" data-less="${g.t}">접기</button></div>` : ""}</div>`;
+      }).filter(Boolean);
+      return cards.length ? `<div class="sig-row"><div class="sig-row-title">${row.title}</div><div class="sig-grid">${cards.join("")}</div></div>` : "";
+    }).join("") + (empties.length ? `<div class="sig-empties"><span class="sig-row-title">오늘 없는 신호</span>${empties.join("")}</div>` : "");
     const sg = $("#signals");
     $$(".chip[data-id]", sg).forEach((c) => c.addEventListener("click", () => openDetail(c.dataset.id)));
     $$(".chip[data-more]", sg).forEach((b) => b.addEventListener("click", () => { const s = b.closest(".sig"); $(".rest", s).hidden = false; b.hidden = true; }));
