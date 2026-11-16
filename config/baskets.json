@@ -6344,13 +6344,6 @@
        "ticker": "CMCSA",
        "market": "NAS",
        "mcap_usd_b": 73.1
-      },
-      {
-       "code": "ROKU",
-       "name": "로쿠",
-       "ticker": "ROKU",
-       "market": "NAS",
-       "mcap_usd_b": 20.2
       }
      ]
     },
