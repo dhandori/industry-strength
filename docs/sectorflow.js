@@ -20,9 +20,11 @@
   let open = pref("is-sf-open", "0") === "1";
   if (!PERIODS.some(([k]) => k === period)) period = "1d";
 
+  const FLOW_MARKETS = ["KR", "US"];
   async function get(m) {
     if (m in store) return store[m];
     store[m] = null;
+    if (!FLOW_MARKETS.includes(m)) return null;   // 일본은 아직 섹터 흐름 자료(scripts/sector_flow.py)가 없다
     try {
       const r = await fetch(`data/${m}_sectorflow.json?v=${Date.now()}`, { cache: "no-store" });
       if (r.ok) store[m] = await r.json();

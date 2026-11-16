@@ -32,14 +32,14 @@
   const isOpen = (market, d) => weekday(d) && !closedOn(market, ymd(d));
   function prevOpen(market, d) { const x = new Date(d); do { x.setUTCDate(x.getUTCDate() - 1); } while (!isOpen(market, x)); return x; }
   const nyNow = () => new Date(Date.now() + nyOffset() * 3600e3);
-  const localToday = (market) => ymd(market === "KR" ? kstNow() : nyNow());
+  const localToday = (market) => ymd(market === "US" ? nyNow() : kstNow());   // 도쿄도 UTC+9
   const WD = ["일", "월", "화", "수", "목", "금", "토"];
   const shortDay = (iso) => { const [y, m, d] = String(iso || "").split("-").map(Number); return y ? `${m}/${d}(${WD[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]})` : "–"; };
   // 가장 최근에 장이 끝난 거래일. 휴장일 목록이 있으면 휴장일을 건너뛴다.
   function expected(market) {
-    if (market === "KR") {
-      const k = kstNow(); const after = isOpen("KR", k) && (k.getUTCHours() * 60 + k.getUTCMinutes()) >= 15 * 60 + 52;
-      return ymd(after ? k : prevOpen("KR", k));
+    if (market === "KR" || market === "JP") {   // 일본은 한국 15:52 갱신 때 같이 받는다
+      const k = kstNow(); const after = isOpen(market, k) && (k.getUTCHours() * 60 + k.getUTCMinutes()) >= 15 * 60 + 52;
+      return ymd(after ? k : prevOpen(market, k));
     }
     const ny = nyNow();
     const after = isOpen("US", ny) && (ny.getUTCHours() * 60 + ny.getUTCMinutes()) >= 16 * 60 + 12;
@@ -120,7 +120,7 @@
     const off = closedOn(mk, localToday(mk));
     const offText = off ? `${off.name === "주말" ? "주말 휴장" : `오늘 휴장 · ${off.name}`}${off.nextOpen ? ` · 다음 개장 ${shortDay(off.nextOpen)}` : ""}` : "";
     box.innerHTML = `
-      <span class="rb-item"><b>${mk === "KR" ? "한국" : "미국"} 기준일</b> ${basis || "–"}
+      <span class="rb-item"><b>${{ KR: "한국", US: "미국", JP: "일본" }[mk] || mk} 기준일</b> ${basis || "–"}
         <span class="rb-badge ${!st ? "" : st.ok === false ? "bad" : stale ? "warn" : "ok"}">${!st ? "확인 중" : st.ok === false ? "지난 수집 실패" : stale ? `${exp} 장 데이터 없음` : "최신"}</span></span>
       ${off ? `<span class="rb-item"><span class="rb-badge holiday">${offText}</span></span>` : ""}
       <span class="rb-item"><b>마지막 갱신</b> ${status?.updated_at?.replace(" KST", "") || "–"}</span>

@@ -23,7 +23,7 @@
   const fmtPct = (v, d = 1) => v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(d) + "%";
   const cls = (v) => v == null ? "" : v > 0 ? "up" : v < 0 ? "down" : "";
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const fmtNum = (v, cur) => v == null ? "–" : cur === "원" ? Math.round(v).toLocaleString("ko-KR") + "원" : "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtNum = (v, cur) => v == null ? "–" : cur === "원" || cur === "엔" ? Math.round(v).toLocaleString("ko-KR") + cur : "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const md = (d) => { const [, m, dd] = d.split("-"); return `${+m}/${+dd}`; };
 
   async function getJSON(url) {
@@ -37,7 +37,7 @@
     state.market = b.dataset.market;
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x === b));
     marketTabs();
-    if (state.market === "KR" && US_ONLY.includes(state.view)) setView("strength");
+    if (!viewOk(state.view)) setView("strength");
     state.group = "전체"; state.sector = null; state.exOpen = new Set(); state.exAll = new Set();
     setHash();
     load();
@@ -50,9 +50,12 @@
   // 시장별로 의미 있는 탭만 (2026-11-12 사용자 결정): 한국은 산업 강도·52주 신고가·매크로 3개, 미국은 6개 모두.
   // AI 시장(세계 공통)·페어(미국 ETF 위주)·포지셔닝(미국 CTA·S&P500·CFTC)은 미국에서만 보인다.
   // 한국인 채로 이 탭 주소(#KR-ai 등)로 들어오면 시장을 미국으로 바꿔 연다(옛 링크가 깨지지 않게).
+  // 일본(2026-11-16 추가)은 산업 강도 탭만. 52주 신고가·매크로 자료는 아직 한국·미국만 만든다.
   const US_ONLY = ["ai", "pairs", "positioning"];
+  const JP_VIEWS = ["strength"];
+  const viewOk = (v, mk = state.market) => mk === "US" || (mk === "JP" ? JP_VIEWS.includes(v) : !US_ONLY.includes(v));
   function marketTabs() {
-    $$(".view-tabs button").forEach((x) => { x.hidden = state.market === "KR" && US_ONLY.includes(x.dataset.view); });
+    $$(".view-tabs button").forEach((x) => { x.hidden = !viewOk(x.dataset.view); });
   }
   function useMarket(m) {
     if (state.market === m) return;
@@ -63,7 +66,7 @@
   }
   function setHash() { try { history.replaceState(null, "", "#" + state.market + (state.view !== "strength" ? "-" + state.view : "")); } catch (e) {} }
   function setView(v) {
-    if (US_ONLY.includes(v) && state.market === "KR") useMarket("US");
+    if (!viewOk(v)) useMarket(US_ONLY.includes(v) ? "US" : "KR");
     state.view = v;
     $$(".view-tabs button").forEach((x) => x.setAttribute("aria-selected", x.dataset.view === v));
     $("#viewStrength").hidden = v !== "strength";
@@ -209,6 +212,8 @@
     window.__secflow && window.__secflow.show(state.market);
     $("#secNote").textContent = state.market === "KR"
       ? "한국 업종 20개를 대표 업종 ETF(KODEX 반도체, PLUS K방산 등) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 묶인 산업만 보여요. 원전, 전자부품, 통신, 리츠는 아직 칸이 없어요."
+      : state.market === "JP"
+      ? "도쿄 증시 TOPIX-17 업종을 노무라 NEXT FUNDS 업종 ETF(1617~1633) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 묶인 산업만 보여요. 업종 ETF는 거래가 적어 하루 등락이 지수와 조금 다를 수 있어요."
       : "S&P 500 큰 업종 11개를 섹터 ETF(XLK, XLE 등) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 속한 산업만 보여요. 세부 산업은 가장 가까운 큰 업종 하나에 넣어 묶었어요.";
     $("#sectors").hidden = !(list && list.length);
     card.hidden = !(list && list.length) && !(window.__secflow && window.__secflow.has(state.market));
@@ -249,14 +254,14 @@
     const tone = s2 / Math.max(1, d.items.length) >= 0.3 ? "up" : s2 / Math.max(1, d.items.length) <= 0.1 ? "down" : "";
     // 카드 4장은 같은 틀(이름표 → 큰 숫자 → 비교 한 줄)로 맞춘다. 긴 설명은 ? 도움말로 뺐다(2026-11-16 배치 정리).
     const n = Math.max(1, d.items.length);
-    const regHelp = "지수가 50일·200일선 위인지만 본 판정이에요. 분산일·거래량·신고가 수까지 합친 판정은 레이더 ‘시장 날씨’에 있어서 서로 다를 수 있어요.";
+    const regHelp = "지수가 50일·200일선 위인지만 본 판정이에요." + (state.market === "JP" ? "" : " 분산일·거래량·신고가 수까지 합친 판정은 레이더 ‘시장 날씨’에 있어서 서로 다를 수 있어요.");
     const help = (t, label) => `<button class="help" type="button" aria-label="${label} 뜻" data-help="${esc(t)}">?</button>`;
     $("#tiles").innerHTML = `
       <div class="tile tile-main"><div class="k">상승 추세 산업</div>
         <div class="v big ${tone}">${s2}<span class="of"> / ${d.items.length}</span></div>
         <div class="tile-bar" role="img" aria-label="상승 추세 ${s2}개, 상승 전환 시도 ${s2t}개, 전체 ${d.items.length}개"><i class="s2" style="width:${(s2 / n * 100).toFixed(1)}%"></i><i class="s2t" style="width:${(s2t / n * 100).toFixed(1)}%"></i></div>
         <div class="d">상승 전환 시도 ${s2t}개까지 합치면 ${s2 + s2t}개</div></div>
-      <div class="tile"><div class="k">시장 국면${help(regHelp, "시장 국면")}<a class="tile-link" href="https://dhandori.github.io/wamo-choochoo-dashboard/radar.html?market=${state.market}&tab=trend">레이더 날씨 ↗</a></div>
+      <div class="tile"><div class="k">시장 국면${help(regHelp, "시장 국면")}${state.market === "JP" ? "" : `<a class="tile-link" href="https://dhandori.github.io/wamo-choochoo-dashboard/radar.html?market=${state.market}&tab=trend">레이더 날씨 ↗</a>`}</div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span>${reg(x)}</div>
         <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}</div>`).join("")}</div>
       <div class="tile"><div class="k">지수 20일 수익률</div>
@@ -332,6 +337,9 @@
     const L = window.__links, code = m.code || m.ticker;
     if (market === "KR") {
       return `<span class="xl"><a href="${L.naver(code)}" target="_blank" rel="noopener" title="네이버 증권에서 보기">네이버</a><a href="${L.tvChart(code, "KR")}" target="_blank" rel="noopener" title="TradingView 차트">TV</a></span>`;
+    }
+    if (market === "JP") {
+      return `<span class="xl"><a href="${L.naverJP(code)}" target="_blank" rel="noopener" title="네이버 증권에서 보기">네이버</a><a href="${L.tvChart(code, "JP")}" target="_blank" rel="noopener" title="TradingView 차트">TV</a><a href="${L.yahooJP(code)}" target="_blank" rel="noopener" title="야후 재팬 파이낸스에서 보기">야후JP</a></span>`;
     }
     const t = m.ticker || code;
     const nu = L.naverUS(t);
@@ -565,7 +573,7 @@
     const rsChip = (m) => m.rs_up === true ? `<span class="rs-chip rs-up">시장보다 강함</span>` : m.rs_up === false ? `<span class="rs-chip rs-dn">시장보다 약함</span>` : "";
     const r = (v) => `<span class="ret ${cls(v)}">${fmtPct(v)}</span>`;
     const indBtns = (inds) => inds.map((i) => `<button class="ind-link" type="button" data-id="${i.id}" title="${esc(i.name)} 상세 보기">${esc(i.name)}</button>`).join("");
-    const code = (m) => esc(state.market === "KR" ? m.code : m.ticker);
+    const code = (m) => esc(state.market === "US" ? m.ticker : m.code);
     const sup = d._sup && window.__supply;
     $("#rsstTable").classList.toggle("no-sup", !sup);
     $("#rsstTable tbody").innerHTML = shown.map(({ m, inds }, n) => `<tr>
@@ -773,7 +781,7 @@
   }
   function renderMembers(it, d) {
     const cur = d.currency;
-    const fmtP = (v) => v == null ? "–" : cur === "원" ? Math.round(v).toLocaleString("ko-KR") : v.toFixed(2);
+    const fmtP = (v) => v == null ? "–" : cur === "원" || cur === "엔" ? Math.round(v).toLocaleString("ko-KR") : v.toFixed(2);
     const stCls = { "상승 추세": "s2", "상승 전환 시도": "s2t", "하락 추세": "s4" };
     const link = (m) => {
       const code = String(m.code || "").trim();
@@ -915,13 +923,13 @@
   // start
   const [hm, hv] = (location.hash || "").replace("#", "").split("-");
   const h = (hm || "").toUpperCase();
-  if (h === "US" || h === "KR") {
+  if (h === "US" || h === "KR" || h === "JP") {
     state.market = h;
     $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === h));
   }
-  if (US_ONLY.includes(hv) && state.market !== "US") {
-    state.market = "US";
-    $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === "US"));
+  if (hv && !viewOk(hv)) {   // 이 시장에 없는 탭 주소: 미국 전용 탭은 미국으로, 일본에서 연 신고가·매크로는 한국으로
+    state.market = US_ONLY.includes(hv) ? "US" : "KR";
+    $$(".seg[role=tablist] button").forEach((x) => x.setAttribute("aria-selected", x.dataset.market === state.market));
   }
   marketTabs();
   load();

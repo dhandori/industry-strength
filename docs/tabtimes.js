@@ -10,8 +10,8 @@
   const WK = [1, 2, 3, 4, 5];
   const SCHED = {
     // update.yml: 한국 15:52(평일), 미국 뉴욕 16:12(평일) = 05:12/06:12 KST
-    strength: { KR: [{ h: 15, m: 52, d: WK }], US: [{ tz: NY, h: 16, m: 12, d: WK }],
-      src: "data/status.json", key: "updated_at", note: "한국 평일 15:52 · 미국 뉴욕 16:12(한국 05:12, 서머타임 해제 땐 06:12)" },
+    strength: { KR: [{ h: 15, m: 52, d: WK }], US: [{ tz: NY, h: 16, m: 12, d: WK }], JP: [{ h: 15, m: 52, d: WK }],
+      src: "data/status.json", key: "updated_at", note: "한국·일본 평일 15:52 · 미국 뉴욕 16:12(한국 05:12, 서머타임 해제 땐 06:12)" },
     // 52주 신고가 기록 예약 작업: 한국 16:05(평일), 미국 08:05 KST(화~토, 직전 미국장)
     highs: { KR: [{ h: 16, m: 5, d: WK }], US: [{ h: 8, m: 5, d: [2, 3, 4, 5, 6] }],
       src: "data/highs.json", key: "updated_at", note: "한국 평일 16:05 · 미국 화~토 08:05(직전 미국장)" },

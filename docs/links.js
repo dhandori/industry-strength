@@ -10,24 +10,27 @@
   fetch("data/naver_us.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : null).then((d) => { if (d && d.map) { NV = d.map; NVNONE = new Set(d.none || []); } }).catch(() => {});
   fetch("data/tv_ex.json", { cache: "no-cache" }).then((r) => r.ok ? r.json() : null).then((d) => { if (d && d.map) { EX = d.map; NONE = new Set(d.none || []); } }).catch(() => {});
   const isKR = (m) => m === "KR";
+  const isJP = (m) => m === "JP";
+  const jpCode = (c) => String(c || "").trim().replace(/\.T$/i, "").toUpperCase();   // 8035.T → 8035
   const krCode = (c) => String(c || "").trim().replace(/\.(KS|KQ)$/i, "").toUpperCase();
   const usTick = (c) => String(c || "").trim().toUpperCase().replace(/^([A-Z]+)-([A-Z])$/, "$1.$2");
   const enc = encodeURIComponent;
   // 'KRX:005930' · 'NYSE:HAL' · 표에 없으면 null
   function tvSym(code, market) {
     if (isKR(market)) return "KRX:" + krCode(code);
+    if (isJP(market)) return "TSE:" + jpCode(code);
     const t = usTick(code), ex = EX[t];
     return ex ? ex + ":" + t : null;
   }
   window.__links = {
     tvSym,
     tvChart(code, market) {
-      if (!isKR(market) && NONE.has(usTick(code))) return window.__links.finviz(code);
+      if (!isKR(market) && !isJP(market) && NONE.has(usTick(code))) return window.__links.finviz(code);
       const s = tvSym(code, market);
       return s ? `https://www.tradingview.com/chart/?symbol=${enc(s)}` : `https://www.tradingview.com/symbols/${enc(usTick(code))}/`;
     },
     tvPage(code, market) {
-      if (!isKR(market) && NONE.has(usTick(code))) return window.__links.finviz(code);
+      if (!isKR(market) && !isJP(market) && NONE.has(usTick(code))) return window.__links.finviz(code);
       const s = tvSym(code, market);
       return `https://www.tradingview.com/symbols/${enc(s ? s.replace(":", "-") : usTick(code))}/`;
     },
@@ -40,7 +43,11 @@
       return `https://m.stock.naver.com/worldstock/stock/${enc(t.replace(".", "") + (EX[t] === "NASDAQ" ? ".O" : ""))}/total`;
     },
     // 시장 구분 없이: 한국은 국내 종목 화면, 미국은 해외주식 화면
-    naverAny(code, market) { return isKR(market) ? window.__links.naver(code) : window.__links.naverUS(code); },
+    naverAny(code, market) { return isKR(market) ? window.__links.naver(code) : isJP(market) ? window.__links.naverJP(code) : window.__links.naverUS(code); },
+    // 일본(2026-11-16): 네이버 해외주식은 '8035.T', 야후 재팬·가부탄은 숫자 코드
+    naverJP(code) { return `https://m.stock.naver.com/worldstock/stock/${enc(jpCode(code))}.T/total`; },
+    yahooJP(code) { return `https://finance.yahoo.co.jp/quote/${enc(jpCode(code))}.T`; },
+    kabutan(code) { return `https://kabutan.jp/stock/?code=${enc(jpCode(code))}`; },
     finviz(code) { return `https://finviz.com/quote.ashx?t=${enc(usTick(code).replace(".", "-"))}`; },
     yahooNews(code) { return `https://finance.yahoo.com/quote/${enc(usTick(code).replace(".", "-"))}/news`; },
     sec(code) { return `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&ticker=${enc(usTick(code).replace(".", "-"))}&type=&dateb=&owner=include&count=40`; },

@@ -188,7 +188,8 @@ def market_entries(mkey: str, m: dict) -> list[dict]:
             if mb["ticker"] in seen:
                 continue
             seen.add(mb["ticker"])
-            code = mb["code"] if mkey == "KR" else f"{mb['ticker'].lower().replace('.', '-')}.us"
+            code = (mb["code"] if mkey == "KR" else f"{mb['code']}.jp" if mkey == "JP"
+                    else f"{mb['ticker'].lower().replace('.', '-')}.us")
             out.append({"id": mb["ticker"], "ticker": mb["ticker"], "code": code})
     return out
 
@@ -228,7 +229,51 @@ def fetch_market(mkey: str, m: dict) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
     if failed:
         log(mkey, "수집 실패 종목", failed)
     c, v = drop_intraday(mkey, pd.DataFrame(closes), pd.DataFrame(vols))
+    if mkey == "JP":
+        c, v = fix_price_glitches(mkey, c, v)
     return c, v, source
+
+
+
+def fix_price_glitches(mkey: str, c: pd.DataFrame, v: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """야후 일본 자료의 두 가지 오류를 고친다(2026-11-16, 일본 추가 때 확인. 한국·미국 자료에는 없었다).
+
+    1) 잘못 찍힌 값: TOPIX ETF(1306) 2026-03-30~31 이 382엔 → 37엔처럼 하루이틀 1/10 로 찍혔다가 돌아온다.
+       5거래일 안에 직전 값의 ±15% 로 돌아오면 그 사이를 직전 값으로 메운다.
+    2) 분할 미반영: 시마무라(8227) 2026-02-18 3:1 분할 전 가격이 그대로라 하루 -66% 로 보인다.
+       돌아오지 않고 1/2~1/10(또는 2~10배)에 4% 안으로 맞는 하루 변화는 분할로 보고 그 전 가격·거래량을 맞춘다.
+    하루 40% 넘는 변화만 본다. 고친 내용은 로그에 남긴다."""
+    c, v = c.astype(float), v.astype(float)
+    notes = []
+    for col in c.columns:
+        x = c[col].dropna()
+        for _ in range(10):
+            if len(x) < 10:
+                break
+            r = x / x.shift(1)
+            jumps = r[(r < 0.6) | (r > 1.67)]
+            if jumps.empty:
+                break
+            d0, q = jumps.index[0], float(jumps.iloc[0])
+            k = x.index.get_loc(d0)
+            prev = x.iloc[k - 1]
+            back = next((j for j in range(k + 1, min(k + 6, len(x))) if abs(x.iloc[j] / prev - 1) < 0.15), None)
+            if back is not None:
+                notes.append(f"{col} {d0.date()}~{x.index[back - 1].date()} 잘못 찍힌 값 {x.iloc[k]:.4g} → {prev:.4g}")
+                x.iloc[k:back] = prev
+                continue
+            split = next((t for n in range(2, 11) for t in (1 / n, n) if abs(q / t - 1) < 0.04), None)
+            if split is None:
+                break   # 실제로 크게 움직인 날로 보고 그대로 둔다
+            notes.append(f"{col} {d0.date()} 분할 보정 ×{split:.4g}(앞 가격, 그날 실제 비율 {q:.4g})")
+            x.iloc[:k] = x.iloc[:k] * split    # 분할 비율 그대로 곱해 그날의 실제 등락은 남긴다
+            if col in v:
+                before = v.index < d0
+                v.loc[before, col] = v.loc[before, col] / split
+        c.loc[x.index, col] = x
+    if notes:
+        log(mkey, "가격 오류 보정", len(notes), "건:", "; ".join(notes[:20]))
+    return c, v
 
 
 def drop_intraday(mkey: str, c: pd.DataFrame, v: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -241,6 +286,10 @@ def drop_intraday(mkey: str, c: pd.DataFrame, v: pd.DataFrame) -> tuple[pd.DataF
         now = datetime.now(ZoneInfo("Asia/Seoul"))
         # 수능날은 16:30 마감(scripts/wait_close.py LATE와 같이 바꾼다)
         close_hm = (16, 45) if now.date().isoformat() in ("2026-11-19",) else (15, 45)
+    elif mkey == "JP":
+        # 도쿄는 2024-11-05부터 15:30 마감(한국과 같은 시각대). 종가 경매 뒤 여유를 둔다.
+        now = datetime.now(ZoneInfo("Asia/Tokyo"))
+        close_hm = (15, 45)
     else:
         now = datetime.now(ZoneInfo("America/New_York"))
         close_hm = (16, 10)
@@ -281,7 +330,7 @@ def merge_store(mkey: str, new_c: pd.DataFrame, new_v: pd.DataFrame, store: Path
 def synthetic(m: dict, seed: int) -> tuple[pd.DataFrame, pd.DataFrame]:
     rng = np.random.default_rng(seed)
     idx = pd.bdate_range(end=pd.Timestamp.today().normalize(), periods=500)
-    ids = [e["id"] for e in market_entries("KR" if m["label"] == "한국" else "US", m)]
+    ids = [e["id"] for e in market_entries({"한국": "KR", "일본": "JP"}.get(m["label"], "US"), m)]
     data, vol = {}, {}
     for k, i in enumerate(ids):
         drift = rng.normal(0.0004, 0.0008)
@@ -675,7 +724,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-fetch", action="store_true")
     ap.add_argument("--synthetic", action="store_true")
-    ap.add_argument("--markets", default="KR,US")
+    ap.add_argument("--markets", default="KR,US,JP")   # 일본은 2026-11-16 추가(한국과 같은 갱신 시각에 함께 받는다)
     a = ap.parse_args()
 
     cfg = json.loads((ROOT / "config/baskets.json").read_text(encoding="utf-8"))
