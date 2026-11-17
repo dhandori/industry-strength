@@ -6,6 +6,8 @@
 - 토큰 점유율: OpenRouter 순위 화면이 쓰는 자료. 주 단위(월요일 00:00 UTC = 09:00 KST 마감).
   오픈웨이트 여부는 OpenRouter 모델 목록의 hugging_face_id(가중치 공개 저장소)가 있는지로 판정.
 - 토큰 vs 지출: Vercel AI Gateway 순위 화면에 박힌 하루 단위 상위 10개 모델 비중.
+- 토큰 가격 지수: Silicon Data 상품 페이지에 공개된 세 지수(전체 SDLLMTK·오픈웨이트·클로즈드)의 최근 7일 일별 값.
+  정식 자료는 유료라 페이지 값을 날짜별로 쌓는다(silicon.history).
 - 뉴스: 구글 뉴스 검색(RSS)에서 'run rate·annualized revenue·분기 매출' 기사 제목의 금액을 읽는다.
   같은 숫자를 두 곳 이상(또는 주요 매체 한 곳)이 쓴 것만 채택. 목표·전망 표현은 따로 표시.
 - 상장 서류(S-1·S-1/A·424B): SEC EDGAR에서 매일 확인. 새 서류면 본문에서 분기 매출표, '런레이트 $__ (날짜 기준)',
@@ -588,6 +590,32 @@ def rank_chart(base, nice, cls, partial, keep=13, back=4):
 
 
 # ---------- 토큰 vs 지출: Vercel AI Gateway
+# ---------- 토큰 가격 지수: Silicon Data (2026-11-17 사용자 요청)
+# 정식 자료(API·블룸버그 SDLLMTK)는 유료라, 상품 페이지에 공개된 세 지수의 최신값과 최근 7일 일별 값을 읽어 우리 쪽에 쌓는다.
+# 단위: 100만 토큰당 달러. 전체 혼합(blend)·오픈웨이트(open)·클로즈드(prop).
+SD_URL = "https://www.silicondata.com/products/llm-token-index"
+SD_NAMES = {"LLM Token Expenditure Index": "blend", "Open LLM Token Index": "open", "Proprietary LLM Token Index": "prop"}
+
+
+def silicon(prev):
+    s = get(SD_URL).decode("utf-8", "ignore").replace('\\"', '"')
+    hist = {h["date"]: dict(h) for h in (prev.get("history") or [])}
+    found, asof = set(), None
+    for name, key in SD_NAMES.items():
+        m = re.search(r'"name":"' + re.escape(name) + r'".{0,600}?"asOf":"([^"]*)","points":(\[[^\]]*\])', s, re.S)
+        if not m:
+            continue
+        asof = asof or m.group(1)
+        for p in json.loads(m.group(2)):
+            if p.get("date") and isinstance(p.get("price"), (int, float)) and p["price"] > 0:
+                hist.setdefault(p["date"], {"date": p["date"]})[key] = round(p["price"], 4)
+        found.add(key)
+    if found != set(SD_NAMES.values()):
+        raise RuntimeError(f"silicon: 지수를 다 찾지 못함 {sorted(found)}")
+    rows = sorted(hist.values(), key=lambda h: h["date"])
+    return {"history": rows, "asof": asof, "url": SD_URL}
+
+
 def vercel(open_names, prev_history=None, prev_models=None):
     s = get("https://vercel.com/ai-gateway/leaderboards").decode("utf-8", "ignore").replace('\\"', '"')
     days = {}
@@ -688,6 +716,14 @@ def main():
         print(f"vercel: 실패 {type(e).__name__}: {e}")
         data["vercel"] = prev.get("vercel")
         data["sources"]["vercel"] = {**(prev.get("sources", {}).get("vercel") or {}), "ok": False, "error": type(e).__name__}
+
+    try:
+        data["silicon"] = silicon(prev.get("silicon") or {})
+        data["sources"]["silicon"] = {"ok": True, "fetched_at": data["updated_at"]}
+    except Exception as e:  # noqa: BLE001
+        print(f"silicon: 실패 {type(e).__name__}: {e}")
+        data["silicon"] = prev.get("silicon")
+        data["sources"]["silicon"] = {**(prev.get("sources", {}).get("silicon") or {}), "ok": False, "error": type(e).__name__}
 
     try:
         sec = sec_filings((prev.get("revenue") or {}).get("sec"))

@@ -214,3 +214,5 @@ tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-thr
 :root { --ai-tan: #d6336c; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ai-tan: #f06595; } }
 :root[data-theme="dark"] { --ai-tan: #f06595; }
+.ai-oc4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 560px) { .ai-oc4 { grid-template-columns: 1fr 1fr; } .ai-oc4 .ai-ock.alt { grid-column: auto; } }
