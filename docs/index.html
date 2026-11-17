@@ -7,7 +7,7 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=bd0ed1f52a">
+<link rel="stylesheet" href="style.css?v=e1309968a4">
 <link rel="stylesheet" href="macro.css?v=84bb2d63a0">
 <link rel="stylesheet" href="ai.css?v=01deacce02">
 <link rel="stylesheet" href="pairs.css?v=8cf2a99974">
@@ -125,6 +125,18 @@
       <p class="foot-note">이 선이 오르면 강세가 여러 산업으로 퍼지고 있다는 뜻이고, 내리면 일부 산업만 버티고 있다는 뜻이에요.</p>
     </section>
   </div>
+
+  <section class="card" aria-labelledby="sm-h">
+    <div class="card-head wrap">
+      <h2 id="sm-h">상승 추세 종목 비중 <span class="sub">Stage 2 순위</span></h2>
+      <div class="seg small" id="smSeg" aria-label="묶음 단위">
+        <button data-k="group" aria-pressed="true">큰 분류</button>
+        <button data-k="item" aria-pressed="false">세부 산업</button>
+      </div>
+    </div>
+    <div id="stageMix" class="sm"></div>
+    <p class="foot-note"><b>상승 추세</b> = 가격 &gt; 50일선 &gt; 150일선 &gt; 200일선, 200일선 상승, 고점 -25% 안(순위표·종목 상세와 같은 기준). 큰 분류는 겹친 종목을 한 번만 세고, 세부 산업은 5종목 이상만 보여요. 바구니가 작아 한두 종목에도 비율이 크게 움직이니 오른쪽 종목 수를 같이 보세요. 큰 분류를 누르면 순위표가 그 분류로 걸러지고, 세부 산업을 누르면 상세 화면이 열려요.</p>
+  </section>
 
   <section class="card" aria-labelledby="rank-h">
     <div class="card-head wrap">
@@ -478,7 +490,7 @@
 <script src="flow.js?v=581438d5b9"></script>
 <script src="stock.js?v=3581eb2457"></script>
 <script src="supply.js?v=8fb1618209"></script>
-<script src="app.js?v=6d69c75653"></script>
+<script src="app.js?v=f5b5b8814a"></script>
 <script src="sectorflow.js?v=864daa9d87"></script>
 <script src="highs.js?v=4f8ee979e3"></script>
 <script src="econ.js?v=ef21cef610"></script>
