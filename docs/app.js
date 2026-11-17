@@ -705,9 +705,18 @@
     const bar = (r) => `<span class="sm-bar" role="img" aria-label="${SM_ORDER.map(([k]) => `${k} ${r.c[k]}`).join(", ")}">${SM_ORDER.map(([k, c]) => r.c[k] ? `<i class="${c}" style="width:${r.c[k] / r.n * 100}%"></i>` : "").join("")}</span>`;
     const tip = (r) => `${r.name}: ` + SM_ORDER.map(([k]) => `${k} ${r.c[k]}`).join(" · ") + ` (${r.n}종목)`;
     const legend = `<div class="sm-legend">${SM_ORDER.map(([k, c]) => `<span><i class="${c}"></i>${k} <b>${pct(all.n ? all.c[k] / all.n * 100 : null)}</b></span>`).join("")}</div>`;
-    const head = `<p class="sm-all">바구니 전체 <b>${all.n.toLocaleString()}종목</b> 중 상승 추세 <b class="sm-good">${pct(all.s2)}</b> · 하락 추세 <b class="sm-bad">${pct(all.n ? all.c["하락 추세"] / all.n * 100 : null)}</b></p>`;
-    el.innerHTML = head + `<div class="sm-all-bar">${bar({ ...all, name: "전체" })}</div>` + legend
-      + `<div class="sm-rows">${shown.map((r, k) => `<button type="button" class="sm-row" data-k="${esc(r.key)}" title="${esc(tip(r))}">
+    const s4all = all.n ? all.c["하락 추세"] / all.n * 100 : null;
+    const head = `<p class="sm-all">바구니 전체 <b>${all.n.toLocaleString()}종목</b> 중 상승 추세 <b class="sm-good">${pct(all.s2)}</b> · 하락 추세 <b class="sm-bad">${pct(s4all)}</b></p>`;
+    // 한 줄 결론: 가장 강한 묶음 2곳과 상승 추세가 하나도 없는 묶음.
+    const strong = rows.filter((r) => r.s2 > 0).slice(0, 2), none = rows.filter((r) => r.s2 === 0);
+    const unit = mode === "group" ? "분류" : "산업";
+    const verdict = !rows.length ? "" : (strong.length
+      ? `상승 추세 종목이 가장 많은 ${unit}는 ${strong.map((r) => `<b>${esc(r.name)}</b>(${pct(r.s2)})`).join(", ")}예요.`
+      : `상승 추세 종목이 있는 ${unit}가 없어요.`)
+      + (none.length && strong.length ? ` ${none.length >= 4 ? `${none.length}개 ${unit}` : none.map((r) => esc(r.name)).join(", ")}에는 상승 추세 종목이 하나도 없어요.` : "");
+    const cols = `<div class="sm-cols" aria-hidden="true"><span></span><span>${mode === "group" ? "큰 분류" : "세부 산업"}</span><span>단계 분포</span><span>상승 추세</span><span>종목</span></div>`;
+    el.innerHTML = (verdict ? `<p class="sm-verdict">${verdict}</p>` : "") + head + `<div class="sm-all-bar">${bar({ ...all, name: "전체" })}</div>` + legend
+      + cols + `<div class="sm-rows">${shown.map((r, k) => `<button type="button" class="sm-row" data-k="${esc(r.key)}" title="${esc(tip(r))}">
           <span class="sm-rk">${k + 1}</span><span class="sm-name"><b>${esc(r.name)}</b>${r.sub ? `<em>${esc(r.sub)}</em>` : ""}</span>
           ${bar(r)}<span class="sm-pct">${pct(r.s2)}</span><span class="sm-n">${r.c["상승 추세"]}/${r.n}</span></button>`).join("")}</div>`
       + (showAll ? "" : `<button class="ex-more" id="smMore">나머지 ${rows.length - LIM}개 더 보기 ›</button>`)
