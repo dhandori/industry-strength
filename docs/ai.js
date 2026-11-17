@@ -171,7 +171,47 @@
     const sumAt = (t) => { const xs = cs.map((c) => val(c, t)); return xs.some((x) => x == null) ? null : xs.reduce((p, q) => p + q, 0); };
     const ts = [...new Set(cs.flatMap((c) => S[c].map((p) => p[0])))].filter((t) => t - WIN >= first && t <= lastReal).sort((p, q) => p - q);
     out["합계"] = { steps: [], pts: ts.map((t) => { const v = sumAt(t), v0 = sumAt(t - WIN); return { t, v, v0, ...rate(v0, v, WIN) }; }), need: null };
+    // 합산 전용 그래프용: 매달 말 + 마지막 공통 보도일, 직전 3개월 기준 회사별 증가액과 합계 성장률
+    const grid = [];
+    for (let y = 2025, m = 1; ; m++) { if (m > 12) { m = 1; y++; } const t = Date.UTC(y, m, 0); if (t > lastReal) break; if (t - WIN >= first) grid.push(t); }
+    if (!grid.length || grid.at(-1) < lastReal) grid.push(lastReal);
+    out._sum = grid.map((t) => { const a = val("Anthropic", t), a0 = val("Anthropic", t - WIN), o = val("OpenAI", t), o0 = val("OpenAI", t - WIN);
+      return { t, a, o, da: (a - a0) / (WIN / MO), do: (o - o0) / (WIN / MO), v: a + o, v0: a0 + o0, ...rate(a0 + o0, a + o, WIN) }; });
     return out;
+  }
+  // ---------- 1-1c) 두 회사 합산 기울기 (2026-11-17 사용자 요청): 위 = 월 증가액(회사별로 쌓은 막대), 아래 = 합계 월 성장률
+  function sumSlopeChart(sd, W) {
+    const D = (sd._sum || []).filter((p) => p.t >= Date.parse("2025-01-01"));
+    if (D.length < 2) return "";
+    const P = { l: 46, r: 96, t: 26 }, H1 = Math.round(Math.max(150, Math.min(200, W * 0.27))), H2 = Math.round(H1 * 0.75), gapY = 40, H = P.t + H1 + gapY + H2 + 26;
+    const t0 = Date.UTC(2025, 0, 1), t1 = D.at(-1).t + 25 * 864e5;
+    const X = (t) => P.l + (t - t0) / (t1 - t0) * (W - P.l - P.r);
+    const bw = Math.max(4, Math.min(22, (W - P.l - P.r) / 24 * 0.7));
+    const umax = Math.max(...D.map((p) => (p.da + p.do) / 1e9)), ustep = umax <= 6 ? 1 : umax <= 15 ? 3 : 5, uM = Math.ceil(umax * 1.1 / ustep) * ustep;
+    const Yu = (v) => P.t + (1 - v / 1e9 / uM) * H1;
+    const top2 = P.t + H1 + gapY, gmax = Math.max(...D.map((p) => p.pct)), gstep = gmax <= 15 ? 5 : 10, gM = Math.ceil(gmax * 1.1 / gstep) * gstep;
+    const Yg = (v) => top2 + (1 - v / gM) * H2;
+    const dstr = (t) => new Date(t).toISOString().slice(0, 10);
+    let g = "";
+    for (let v = 0; v <= uM; v += ustep) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Yu(v * 1e9)}" y2="${Yu(v * 1e9)}" class="ai-grid"/><text x="${P.l - 6}" y="${Yu(v * 1e9) + 4}" text-anchor="end" class="ai-tk">${v ? v * 10 + "억" : "0"}</text>`;
+    for (let v = 0; v <= gM; v += gstep) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Yg(v)}" y2="${Yg(v)}" class="ai-grid"/><text x="${P.l - 6}" y="${Yg(v) + 4}" text-anchor="end" class="ai-tk">${v}%</text>`;
+    g += `<text x="${P.l}" y="${P.t - 14}" class="ai-tk" font-weight="700">월 증가액 (직전 3개월 평균)</text><text x="${P.l}" y="${top2 - 12}" class="ai-tk" font-weight="700">합계 월 성장률</text>`;
+    for (const y of [2025, 2026, 2027]) { const x = X(Date.UTC(y, 0, 1)); if (x >= P.l && x <= W - P.r) g += `<line x1="${x}" x2="${x}" y1="${P.t}" y2="${top2 + H2}" class="ai-grid"/><text x="${x}" y="${H - 6}" class="ai-tk" text-anchor="middle">${y}</text>`; }
+    let bars = "";
+    for (const p of D) { const x = X(p.t) - bw / 2, ya = Yu(p.da), yo = Yu(p.da + p.do), last = p === D.at(-1);
+      const tip = tipAttr(`${dstr(p.t)} 기준 직전 3개월 · 합계 월 +${((p.da + p.do) / 1e8).toFixed(0)}억 달러 = Anthropic +${(p.da / 1e8).toFixed(0)}억 + OpenAI +${(p.do / 1e8).toFixed(0)}억 · 합계 월 성장률 ${p.pct.toFixed(1)}% · 런레이트 합계 ${won(p.v)}`);
+      bars += `<rect x="${x.toFixed(1)}" y="${ya.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0, Yu(0) - ya).toFixed(1)}" fill="var(--ai-a)" opacity="${last ? 1 : .8}" ${tip}/>`
+        + `<rect x="${x.toFixed(1)}" y="${yo.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0, ya - yo).toFixed(1)}" fill="var(--ai-o)" opacity="${last ? 1 : .8}" ${tip}/>`; }
+    const line = `<polyline fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round" points="${D.map((p) => `${X(p.t).toFixed(1)},${Yg(p.pct).toFixed(1)}`).join(" ")}"/>`
+      + D.map((p) => `<circle cx="${X(p.t).toFixed(1)}" cy="${Yg(p.pct).toFixed(1)}" r="3.2" fill="var(--ink)" stroke="var(--surface)" stroke-width="1.5" ${tipAttr(`${dstr(p.t)} 기준 직전 3개월 합계 ${won(p.v0)}→${won(p.v)} · 월 ${p.pct.toFixed(1)}%${p.pct > 0 ? ` · ${(Math.log(2) / Math.log(1 + p.pct / 100)).toFixed(1)}개월마다 두 배` : ""}`)}/>`).join("");
+    const L = D.at(-1), lx = X(L.t) + bw / 2 + 6;
+    const labels = `<text x="${lx}" y="${Yu(L.da + L.do) + 4}" class="ai-end" fill="var(--ink)">월 +${((L.da + L.do) / 1e8).toFixed(0)}억 달러</text><text x="${lx}" y="${Yu(L.da + L.do) + 18}" class="ai-tk">${md(dstr(L.t))} 기준</text>`
+      + `<text x="${lx}" y="${Yg(L.pct) + 4}" class="ai-end" fill="var(--ink)">월 ${L.pct.toFixed(1)}%</text>`;
+    // 정점 대비
+    const pk = D.reduce((m, p) => p.pct > m.pct ? p : m, D[0]), pkU = D.reduce((m, p) => p.da + p.do > m.da + m.do ? p : m, D[0]);
+    const note = `<p class="foot-note">두 회사 런레이트를 같은 날짜로 맞춰(보도 사이는 꾸준한 비율 성장으로 보간) 더한 값의 기울기예요. 막대는 매달 말 기준 <b>직전 3개월 동안 한 달 평균 몇 달러씩 늘었는지</b>이고, 아래 칸 색이 Anthropic, 위 칸 색이 OpenAI 몫이에요. 아래 선은 합계의 <b>월 성장률</b>이에요. 성장률 정점은 ${md(dstr(pk.t))}의 월 ${pk.pct.toFixed(1)}%이고 지금은 ${L.pct.toFixed(1)}%예요. 월 증가액 정점은 ${md(dstr(pkU.t))}의 +${((pkU.da + pkU.do) / 1e8).toFixed(0)}억 달러이고 지금은 +${((L.da + L.do) / 1e8).toFixed(0)}억 달러예요. 두 회사 보도가 모두 있는 날(${ymd(dstr(L.t))})까지만 그렸어요. 계산법(총액·순액)이 달라 합계는 참고용이에요.</p>`;
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="두 회사 합산 런레이트 기울기">${g}${bars}${line}${labels}</svg>
+      <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic 몫</span><span><i style="background:var(--ai-o)"></i>OpenAI 몫</span><span><i style="background:var(--ink)"></i>합계 월 성장률</span></div>${note}`;
   }
   // 최근 값과 약 3개월 전 값 비교 → 가속·둔화
   function slopeRead(sd, c) {
@@ -629,7 +669,9 @@
         <div id="aiRev"></div>
         <h3 class="ai-h3">두 회사 합산 (Anthropic + OpenAI) <span class="sub">보도 날짜가 달라 사이 값은 보간 · 위 테두리 = 합계</span></h3>
         <div id="aiSum"></div>
-        <h3 class="ai-h3">성장 속도 (기울기) <span class="sub">런레이트를 미분한 값 · 직전 3개월 평균 · 성장 둔화·가속 확인용</span></h3>
+        <h3 class="ai-h3">두 회사 합산 기울기 <span class="sub">합계가 한 달에 얼마씩, 몇 %씩 늘고 있나 · 누구 몫인가</span></h3>
+        <div id="aiSumSlope"></div>
+        <h3 class="ai-h3">회사별 성장 속도 (기울기) <span class="sub">런레이트를 미분한 값 · 직전 3개월 평균 · 성장 둔화·가속 확인용</span></h3>
         <div id="aiSlope"></div>
         <div class="ai-warn"><b>두 회사 숫자를 그냥 비교·합산하면 안 돼요.</b> Anthropic은 아마존 같은 클라우드 파트너를 통한 판매의 <b>총액</b>을, OpenAI는 <b>자기 몫</b>만 매출로 잡아요. 그래서 같은 장사를 해도 Anthropic 쪽 숫자가 크게 나와요. ${sumNote}</div>
         <h3 class="ai-h3">최근 보도</h3>
@@ -682,6 +724,7 @@
     $("#aiRev").innerHTML = revenueChart(rv, width($("#aiRev")));
     $("#aiSum").innerHTML = sumChart(rv, width($("#aiSum")));
     SLOPE.sd = slopeData(rv);
+    if (SLOPE.sd) $("#aiSumSlope").innerHTML = sumSlopeChart(SLOPE.sd, width($("#aiSumSlope")));
     if (SLOPE.sd) { $("#aiSlope").innerHTML = slopeCard(SLOPE.sd); $("#aiSlopeG").innerHTML = slopeChart(SLOPE.sd, width($("#aiSlopeG")), SLOPE.mode); }
     $("#aiOpen").innerHTML = openChart(or, vc, width($("#aiOpen")));
     $("#aiWeek").innerHTML = weekChart(or, vc, width($("#aiWeek")));
