@@ -40,6 +40,9 @@
     "하락 추세": ["s4", "가격이 200일선 아래이고 200일선도 내려가는 중. 피하는 게 좋은 상태예요."],
     "바닥 다지기": ["", "뚜렷한 방향 없이 옆으로 기는 구간이에요."],
   };
+  // 흐름판의 다섯 단계를 와인스타인 Stage 1~4 번호로(레이더 배지와 같은 이름). 상승 전환 시도는 1에서 2로 넘어가는 중.
+  const STAGE_NO = { "상승 추세": "Stage 2", "상승 전환 시도": "Stage 1→2", "상승 둔화": "Stage 3", "하락 추세": "Stage 4", "바닥 다지기": "Stage 1" };
+  const stageText = (st) => STAGE_NO[st] ? `${STAGE_NO[st]} · ${st}` : st;
   const RANGES = [["3m", "3개월", 63], ["6m", "6개월", 126], ["1y", "1년", 252], ["2y", "2년", 9999]];
   let range = "1y";
   try { const r = localStorage.getItem("sk-range"); if (RANGES.some(([k]) => k === r)) range = r; } catch (e) {}
@@ -221,7 +224,7 @@
 
     // 꼬리표: 이 종목의 지금 상태를 한 줄로
     const badges = [];
-    if (m && m.stage) badges.push(`<span class="stage ${(STAGE[m.stage] || [""])[0]}">${esc(m.stage)}</span>`);
+    if (m && m.stage) badges.push(`<span class="stage ${(STAGE[m.stage] || [""])[0]}" title="${esc((STAGE[m.stage] || ["", ""])[1])}">${esc(stageText(m.stage))}</span>`);
     if (m && m.rs_rating != null) badges.push(`<span class="sk-bd ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}">RS ${m.rs_rating}</span>`);
     if (hx && hx.run) badges.push(`<span class="sk-bd hot">🚀 신고가 ${hx.run >= 2 ? hx.run + "일 연속" : "오늘"}</span>`);
     else if (m && m.dist_high != null && m.dist_high >= -5) badges.push(`<span class="sk-bd">고점 근처 ${m.dist_high.toFixed(1)}%</span>`);
@@ -233,7 +236,7 @@
     // 한눈에: 한 줄씩
     const lines = [];
     if (m) {
-      const stg = m.stage ? `추세 <b>${esc(m.stage)}</b>` : "";
+      const stg = m.stage ? `추세 <b>${esc(stageText(m.stage))}</b>` : "";
       const rs = m.rs_rating != null ? `RS 지수 <b>${m.rs_rating}</b>(시장 안 상위 ${100 - m.rs_rating + 1}% 안팎)` : "";
       lines.push([stg, rs, m.rs_up === true ? "시장보다 강함" : m.rs_up === false ? "시장보다 약함" : ""].filter(Boolean).join(" · "));
     }
@@ -260,7 +263,7 @@
     const stat = [];
     if (m) {
       const sg = STAGE[m.stage] || ["", ""];
-      if (m.stage) stat.push(["추세 상태", `<span class="stage ${sg[0]}">${esc(m.stage)}</span>`, sg[1]]);
+      if (m.stage) stat.push(["추세 단계", `<span class="stage ${sg[0]}">${esc(stageText(m.stage))}</span>`, sg[1]]);
       if (m.rs_rating != null) stat.push(["RS 지수 (1~99)", `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}">${m.rs_rating}</b>`, "1년 수익률을 시장 안 모든 종목과 비교한 백분위. 80 이상이면 주도주 후보예요."]);
       if (m.atr_pct != null) stat.push(["ATR(14일) 평균 변동폭", `<b>${m.atr == null ? "" : money(m.atr) + " "}(${m.atr_pct.toFixed(1)}%)</b>`, `최근 14거래일 동안 하루에 보통 ${m.atr_pct.toFixed(1)}% 움직였어요(고가−저가, 전날 종가와의 갭 포함). 손절 폭·목표가를 잡는 기준으로 써요.`]);
       // 손절 기준 두 가지: −8% 한도(미너비니 최대 손절)와 2×ATR(그 종목의 보통 흔들림 밖). 종가를 매수가로 가정.
