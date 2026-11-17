@@ -429,6 +429,49 @@
 
   // '오픈/클로즈드로 분류된 몫 중 오픈웨이트 비율'(미분류·10위 밖은 분모에서 뺀다).
   const openRatio = (o, c) => (o != null && c != null && o + c > 0 ? (o / (o + c)) * 100 : null);
+  // ---------- 2-0) 토큰 가격 지수 (Silicon Data, 2026-11-17 사용자 요청): 100만 토큰당 달러, 매일. 공개 페이지에서 쌓은 기록.
+  const SDK = { prop: { n: "클로즈드", c: "var(--ai-closed)" }, blend: { n: "전체 혼합", c: "var(--ink)" }, open: { n: "오픈웨이트", c: "var(--ai-open)" } };
+  function priceChart(si, W) {
+    const H = Math.round(Math.max(170, Math.min(230, W * 0.3))), P = { l: 46, r: 118, t: 12, b: 24 };
+    const h = (si.history || []).filter((x) => x.blend && x.open && x.prop);
+    if (h.length < 2) return "";
+    const ts = h.map((x) => Date.parse(x.date)), t0 = ts[0], t1 = ts.at(-1);
+    const X = (t) => P.l + (t1 > t0 ? (t - t0) / (t1 - t0) : 0.5) * (W - P.l - P.r);
+    const ymax = Math.ceil(Math.max(...h.map((x) => x.prop)) * 1.1 * 2) / 2, step = ymax <= 2 ? 0.5 : 1;
+    const Y = (v) => P.t + (1 - v / ymax) * (H - P.t - P.b);
+    let g = "";
+    for (let v = 0; v <= ymax + 1e-9; v += step) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(v) + 4}" text-anchor="end" class="ai-tk">$${v.toFixed(v % 1 ? 1 : 0)}</text>`;
+    const nT = Math.min(W < 520 ? 3 : 6, h.length);
+    for (let i = 0; i < nT; i++) { const k = Math.round(i * (h.length - 1) / Math.max(1, nT - 1)); g += `<text x="${X(ts[k])}" y="${H - 6}" class="ai-tk" text-anchor="middle">${md(h[k].date)}</text>`; }
+    let lines = "", labels = "";
+    const ends = [];
+    for (const [k, s] of Object.entries(SDK)) {
+      lines += `<polyline fill="none" stroke="${s.c}" stroke-width="${k === "blend" ? 1.8 : 2.4}"${k === "blend" ? ' stroke-dasharray="5 3"' : ""} stroke-linejoin="round" points="${h.map((x, i) => `${X(ts[i]).toFixed(1)},${Y(x[k]).toFixed(1)}`).join(" ")}"/>`;
+      lines += h.map((x, i) => `<circle cx="${X(ts[i]).toFixed(1)}" cy="${Y(x[k]).toFixed(1)}" r="2.6" fill="${s.c}" ${tipAttr(`${x.date} · 클로즈드 $${x.prop.toFixed(2)} · 전체 $${x.blend.toFixed(2)} · 오픈웨이트 $${x.open.toFixed(2)} (100만 토큰당) · 클로즈드가 ${(x.prop / x.open).toFixed(1)}배`)}/>`).join("");
+      ends.push({ c: s.c, y: Y(h.at(-1)[k]), t: `${s.n} $${h.at(-1)[k].toFixed(2)}` });
+    }
+    ends.sort((a, b) => a.y - b.y); for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
+    labels = ends.map((e) => `<text x="${X(t1) + 8}" y="${e.y + 4}" class="ai-end" fill="${e.c}">${esc(e.t)}</text>`).join("");
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="LLM 토큰 가격 지수 추이">${g}${lines}${labels}</svg>`;
+  }
+  function priceBox(si) {
+    const h = ((si && si.history) || []).filter((x) => x.blend && x.open && x.prop);
+    if (!h.length) return "";
+    const L = h.at(-1), base = h.find((x) => Date.parse(x.date) >= Date.parse(L.date) - 7 * 864e5) || h[0];
+    const ch = (k) => { if (base === L) return ""; const d = (L[k] / base[k] - 1) * 100; return ` <b class="${d >= 0 ? "up" : "down"}">${d >= 0 ? "▲" : "▼"}${Math.abs(d).toFixed(1)}%</b>`; };
+    const mNow = L.prop / L.open, mOld = base.prop / base.open;
+    const days = Math.round((Date.parse(L.date) - Date.parse(base.date)) / 864e5);
+    return `<h3 class="ai-h3">토큰 가격 지수 <span class="sub">Silicon Data · 100만 토큰당 달러 · ${md(L.date)} 기준${days ? ` · 변화는 ${days}일 전 대비` : ""}</span></h3>
+      <div class="ai-oc ai-oc4">
+        <div class="ai-ock" style="border-left-color:var(--ai-closed)"><span>클로즈드</span><b>$${L.prop.toFixed(2)}</b><small>Proprietary LLM Token Index${ch("prop")}</small></div>
+        <div class="ai-ock" style="border-left-color:var(--ai-open)"><span>오픈웨이트</span><b>$${L.open.toFixed(2)}</b><small>Open LLM Token Index${ch("open")}</small></div>
+        <div class="ai-ock" style="border-left-color:var(--ink)"><span>전체 혼합(SDLLMTK)</span><b>$${L.blend.toFixed(2)}</b><small>실제 쓰인 양으로 가중한 평균${ch("blend")}</small></div>
+        <div class="ai-ock alt"><span>가격 배수</span><b>클로즈드가 ${mNow.toFixed(1)}배</b><small>${base === L ? "오픈웨이트 대비" : `${days}일 전 ${mOld.toFixed(1)}배`}</small></div>
+      </div>
+      <div id="aiPrice"></div>
+      <p class="foot-note">Silicon Data가 매일 내는 LLM 추론 토큰 가격 지수예요. <b>전체 혼합</b>은 실제로 쓰인 양으로 가중한 평균이라, 가격을 내리지 않아도 싼 모델 쪽으로 옮겨 가면 내려가요. 그래서 오픈웨이트·클로즈드 지수와 같이 보면 ‘값을 내린 것’과 ‘싼 모델로 옮겨 간 것’을 나눠 볼 수 있어요. 위 Vercel ‘토큰당 가격’ 배수는 실제 지출에서 계산한 값이라 이 배수와 다를 수 있어요. 정식 자료(API·블룸버그 SDLLMTK)는 유료라 <a href="${esc(si.url)}" target="_blank" rel="noopener">상품 페이지</a>에 공개된 최근 7일 값을 하루 두 번 받아 쌓고 있어요. 그래서 기록은 ${ymd(h[0].date)}부터예요.</p>`;
+  }
+
   // ---------- 2) 오픈웨이트 vs 클로즈드(토큰·지출)
   // 오픈웨이트 vs 클로즈드 한 그래프: 위 줄 = 토큰(OpenRouter 주간, 모든 모델), 아래 줄 = 지출(Vercel 매일을 주 평균).
   // 줄마다 아래 청록이 오픈웨이트, 위 남색이 클로즈드(합 100%). 둘 다 '분류된 몫 중 비율'로 같은 기준이다.
@@ -596,7 +639,7 @@
     const d = st.data, box = $("#aiBody");
     if (!d) return;
     const src = d.sources || {};
-    const bad = Object.entries(src).filter(([, v]) => !v.ok).map(([k]) => ({ revenue: "매출", openrouter: "OpenRouter", vercel: "Vercel", news: "뉴스", sec: "SEC 상장 서류" }[k] || k));
+    const bad = Object.entries(src).filter(([, v]) => !v.ok).map(([k]) => ({ revenue: "매출", openrouter: "OpenRouter", vercel: "Vercel", news: "뉴스", sec: "SEC 상장 서류", silicon: "Silicon Data" }[k] || k));
     $("#aiMeta").innerHTML = `갱신 ${esc(d.updated_at)} · 매일 09:20·18:20 KST 자동 수집${bad.length ? ` · <b class="ai-bad">이번 수집 실패: ${bad.join(", ")} (지난 값 표시)</b>` : ""}`;
     const rv0 = d.revenue || { companies: {}, others: [] }, or = d.openrouter || {}, vc = d.vercel || null;
     // 상장 서류에 런레이트 금액이 실리면 그 회사 선의 마지막 점으로 넣는다(회사 공시라 가장 믿을 만함)
@@ -727,6 +770,7 @@
         <div class="chart-legend"><span class="ai-lg open"><i></i>오픈웨이트</span><span class="ai-lg closed"><i></i>클로즈드</span></div>
         <div id="aiWeek"></div>
         <p class="foot-note">주마다 오픈웨이트(아래 청록)와 클로즈드(위 남색)가 나눠 가진 비중이에요. 위 줄은 토큰(OpenRouter), 아래 줄은 지출(Vercel 그 주 평균)이에요. 찬 점은 모델별 실측값, 점선 동그라미는 아직 끝나지 않은 이번 주예요.</p>
+        ${priceBox(d.silicon)}
         <div class="ai-two">
           <div><h3 class="ai-h3">토큰 비중 상위 모델 <span class="sub">OpenRouter · ${lt.week ? md(lt.week) + " 주" : ""}</span></h3>
             <div class="ai-mlist">${topRows}</div></div>
@@ -746,6 +790,7 @@
           <tr><td>S-1 분기 매출</td><td><a href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=2130357&amp;type=S-1" target="_blank" rel="noopener">SEC EDGAR</a></td><td>서류가 올라올 때</td><td>하루 두 번 확인 · 새 서류면 자동 반영</td></tr>
           <tr><td>토큰 점유율</td><td><a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter</a></td><td>주간(월요일 09:00 KST 마감)</td><td>하루 두 번 확인 · 월요일에 주간 요약 알림</td></tr>
           <tr><td>지출 비중</td><td><a href="https://vercel.com/ai-gateway/leaderboards" target="_blank" rel="noopener">Vercel AI Gateway</a></td><td>매일</td><td>매일</td></tr>
+          <tr><td>토큰 가격 지수</td><td><a href="https://www.silicondata.com/products/llm-token-index" target="_blank" rel="noopener">Silicon Data</a></td><td>매일(공개 페이지는 최근 7일)</td><td>하루 두 번 받아 쌓음</td></tr>
         </tbody></table></div>
         <p class="foot-note">투자 판단의 참고 자료예요. 보도 수치는 회사마다 기준이 달라 직접 비교에 주의하세요.</p>
       </section>`;
@@ -755,6 +800,7 @@
     if (SLOPE.sd) { $("#aiSlope").innerHTML = slopeCard(SLOPE.sd); $("#aiSlopeG").innerHTML = slopeChart(SLOPE.sd, width($("#aiSlopeG")), SLOPE.mode); }
     $("#aiOpen").innerHTML = openChart(or, vc, width($("#aiOpen")));
     $("#aiWeek").innerHTML = weekChart(or, vc, width($("#aiWeek")));
+    if ($("#aiPrice")) $("#aiPrice").innerHTML = priceChart(d.silicon, width($("#aiPrice")));
     if ($("#aiQ")) $("#aiQ").innerHTML = quarterChart(rv.quarterly, width($("#aiQ")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
