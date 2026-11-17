@@ -1,4 +1,4 @@
-/* AI 시장 탭 아래 'AI 인프라 수요' 카드 (2026-11-03 추가: 토큰 총량 누적, 지출, GPU 단가)
+/* AI 시장 탭 아래 'AI 인프라 수요' 카드 (2026-11-03 추가: 토큰 총량, 지출, GPU 단가 · 2026-11-17 누적 토큰 그래프는 주간 그래프와 겹쳐 빼고 '최근 52주 합계' 타일로 바꿈)
    데이터: docs/data/ai_infra.json — scripts/ai_infra.py 가 매일 09:40·12:40 KST에 만든다(.github/workflows/ai-infra.yml).
    토큰 = OpenRouter 주간 합계(월요일 09:00 KST 마감), 지출 = 빅테크 설비투자(SEC 분기 공시) + OpenRouter 지출 추정(정가 x 토큰),
    GPU = Vast.ai 공개 마켓 중앙값 + RunPod 공개 정가(매일 한 줄씩 쌓음).
@@ -86,27 +86,6 @@
     return `<svg class="ai-svg" viewBox="0 0 ${w} ${H}" width="${w}" height="${H}" role="img" aria-label="${esc(o.aria)}">${g}</svg>`;
   }
 
-  // ---------- 누적 토큰: 면적 그래프
-  function cumChart(weeks, w) {
-    const mobile = w < 520, H = Math.round(Math.max(200, Math.min(280, w * 0.34))), P = { l: 8, r: mobile ? 56 : 66, t: 14, b: 40 };
-    const S = yScale(0, weeks.at(-1).cum, false), n = weeks.length;
-    const X = (i) => P.l + (n > 1 ? i / (n - 1) : 0.5) * (w - P.l - P.r), Y = (v) => P.t + (1 - S.f(v)) * (H - P.t - P.b);
-    let g = "";
-    S.ticks.forEach((v) => { g += `<line class="ai-grid" x1="${P.l}" x2="${w - P.r}" y1="${Y(v)}" y2="${Y(v)}"/><text class="ai-tk" x="${w - P.r + 6}" y="${Y(v) + 3.5}">${tok(v)}</text>`; });
-    const pts = weeks.map((h, i) => `${X(i)},${Y(h.cum)}`);
-    g += `<path d="M${X(0)},${Y(0)} L${pts.join(" L")} L${X(n - 1)},${Y(0)} Z" fill="color-mix(in srgb, var(--ai-tok) 22%, transparent)"/><polyline points="${pts.join(" ")}" fill="none" stroke="var(--ai-tok)" stroke-width="2.4"/>`;
-    let lastM = -1;
-    weeks.forEach((h, i) => {
-      const m = +h.week.slice(5, 7);
-      if (m !== lastM) { if (lastM !== -1 && (!mobile || m % 2 === 1)) g += `<text class="ai-tk" x="${X(i)}" y="${H - P.b + 14}" text-anchor="middle">${m}월</text>`; if (m === 1) g += `<text x="${X(i) + 4}" y="${H - 6}" font-size="11" font-weight="700" fill="var(--ink-2)">${h.week.slice(0, 4)}</text>`; lastM = m; }
-      const xp = i ? (X(i - 1) + X(i)) / 2 : P.l, xn = i < n - 1 ? (X(i) + X(i + 1)) / 2 : w - P.r;
-      g += `<rect class="cp-hov" x="${xp}" y="${P.t}" width="${xn - xp}" height="${H - P.t - P.b}" ${tipAttr(`${ymd(h.week)} 주까지 누적 ${tok(h.cum)} 토큰 · 그 주 ${tok(h.total)}`)}/>`;
-    });
-    const y = Y(weeks.at(-1).cum), x = w - P.r + 1, tw = P.r - 4;
-    g += `<line class="cp-axis" x1="${P.l}" x2="${w - P.r}" y1="${H - P.b}" y2="${H - P.b}"/><line class="cp-axis" x1="${w - P.r}" x2="${w - P.r}" y1="${P.t}" y2="${H - P.b}"/>`;
-    g += `<path d="M${x},${y} l6,-8 h${tw - 6} v16 h-${tw - 6} z" fill="var(--ai-tok)"/><text x="${x + 8}" y="${y + 4}" font-size="11" font-weight="700" fill="#fff">${tok(weeks.at(-1).cum)}</text>`;
-    return `<svg class="ai-svg" viewBox="0 0 ${w} ${H}" width="${w}" height="${H}" role="img" aria-label="OpenRouter 누적 토큰">${g}</svg>`;
-  }
 
   // ---------- GPU 임대료: 날짜별 선(모델마다) + 7일 이동평균
   function gpuChart(days, w) {
@@ -158,6 +137,8 @@
     const done = tw.filter((h) => !h.partial), last = done.at(-1), first = done[0];
     const mult = last && first ? last.total / first.total : null, weeksSpan = last && first ? Math.round((Date.parse(last.week) - Date.parse(first.week)) / 6048e5) : 0;
     const prev4 = done.length > 4 ? done.at(-5) : null;
+    // 최근 52주 합계(2026-11-17: 시작점이 의미 없는 '누적 토큰'을 대신함). 52주가 다 차야 보여 준다.
+    const y52 = done.length >= 52 ? { sum: done.slice(-52).reduce((t, h) => t + h.total, 0), from: done.at(-52).week } : null;
     const tCats = tw.map((h, i) => ({ label: md(h.week), sub: i && h.week.slice(0, 4) !== tw[i - 1].week.slice(0, 4) ? h.week.slice(0, 4) : "", faded: h.partial,
       stack: [{ v: h.total, c: "var(--ai-tok)" }], tip: `${ymd(h.week)} 주 · ${tok(h.total)} 토큰${h.partial ? " (진행 중, 아직 덜 쌓임)" : ""}` }));
     const tLine = ma(tw.map((h) => h.total), 4).map((v, i) => tw[i].partial ? null : v);
@@ -198,7 +179,7 @@
       <p class="ai-meta">갱신 ${esc(d.updated_at)} · 매일 09:40·12:40 KST 자동 수집${bad.length ? ` · <b class="ai-bad">이번 수집 실패: ${bad.join(", ")} (지난 값 표시)</b>` : ""}</p>
       <div class="tiles ai-tiles">
         ${last ? tile("지난주 토큰 (OpenRouter)", tok(last.total), `${ymd(last.week)} 주${mult ? ` · ${weeksSpan}주 전의 <b class="up">${mult.toFixed(1)}배</b>` : ""}`) : ""}
-        ${last ? tile("누적 토큰", tok(last.cum), `${first ? ymd(first.week) : ""}부터 ${done.length}주 합계`) : ""}
+        ${y52 ? tile("최근 52주 합계", tok(y52.sum), `${ymd(y52.from)} 주 ~ ${ymd(last.week)} 주 · 1년 규모`) : ""}
         ${cLast ? tile("빅테크 5사 설비투자", bn(cLast.usd), `${cLast.q.slice(2, 4)}년 ${cLast.q.slice(-1)}분기${cYoY != null ? ` · 1년 전보다 <b class="${cYoY >= 0 ? "up" : "down"}">${sgn(cYoY)}%</b>` : ""}`) : ""}
         ${h100 ? tile("H100 시간당 임대료", hr(h100), `Vast 시장 중앙값 · RunPod 정가 ${hr(gl.runpod?.H100?.secure)}`) : ""}
       </div>
@@ -208,8 +189,6 @@
         <div class="cp-tabs"><button class="toggle" aria-pressed="${st.tlog}" data-tlog="1">로그 눈금</button></div></div>
       <div id="inTok"></div>
       <p class="cp-sub">${prev4 && last ? `4주 전(${ymd(prev4.week)} 주 ${tok(prev4.total)})보다 <b class="${last.total >= prev4.total ? "up" : "down"}">${sgn((last.total / prev4.total - 1) * 100)}%</b>예요. ` : ""}로그 눈금을 켜면 같은 배수로 늘어난 구간이 같은 높이로 보여서, 증가 속도가 빨라지는지 느려지는지 읽기 쉬워요.</p>
-      <h3 class="ai-h3">누적 토큰 <span class="sub">기록을 시작한 주부터 마감된 주를 모두 더한 값</span></h3>
-      <div id="inCum"></div>
       <p class="foot-note">OpenRouter는 여러 AI 모델을 한 창구에서 파는 중개 서비스라, 여기 숫자는 시장 전체가 아니라 그중 한 조각이에요. 오픈AI·구글·앤트로픽이 자기 API로 직접 판 양은 빠져 있고, 값싼 중국 모델 비중이 높아요. 그래도 같은 기준으로 매주 재기 때문에 수요가 늘어나는 속도를 보기에는 좋은 지표예요. 1조는 10<sup>12</sup>, 1경은 10<sup>16</sup>이에요.</p>
 
       <h3 class="ai-h3">빅테크 설비투자 <span class="sub">아마존, 구글, 마이크로소프트, 메타, 오라클 · 분기별 현금 지출</span></h3>
@@ -235,7 +214,6 @@
       <p class="foot-note">자료: <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter</a>(CC BY 4.0), <a href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC EDGAR</a>, <a href="https://vast.ai/" target="_blank" rel="noopener">Vast.ai</a>, <a href="https://www.runpod.io/pricing" target="_blank" rel="noopener">RunPod</a>. 투자 판단의 참고 자료예요.</p>
     </section>`;
     if (tw.length) $("#inTok").innerHTML = barChart(tCats, W($("#inTok")), { line: tLine, log: st.tlog, fmt: tok, aria: "OpenRouter 주간 토큰 총량" });
-    if (done.length) $("#inCum").innerHTML = cumChart(done, W($("#inCum")));
     if (cShow.length) $("#inCap").innerHTML = barChart(cCats, W($("#inCap")), { line: cShow.map((t) => c4map[t.q]), lineDash: "5 3", fmt: (v) => bn(v), aria: "빅테크 5사 분기 설비투자", sparse: true });
     if ($("#inSpend")) $("#inSpend").innerHTML = barChart(sCats, W($("#inSpend")), { line: ma(sw.map((h) => h.usd), 4), fmt: (v) => `$${Math.round(v / 1e6)}M`, aria: "OpenRouter 주간 지출 추정", H: 220 });
     if (gd.length) $("#inGpu").innerHTML = gpuChart(gd, W($("#inGpu")));
