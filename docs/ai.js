@@ -255,8 +255,8 @@
   function slopeChart(sd, W, mode) {
     const P = { l: 46, r: 128, t: 14, b: 26 }, H = Math.round(Math.max(230, Math.min(290, W * 0.42)));
     const key = mode === "usd" ? "usd" : "pct";
-    const cols = { Anthropic: "var(--ai-a)", OpenAI: "var(--ai-o)", "합계": "var(--ink)" };
-    const T0 = Date.parse("2025-01-01"), names = ["Anthropic", "OpenAI", "합계"];
+    const cols = { Anthropic: "var(--ai-a)", OpenAI: "var(--ai-o)" };
+    const T0 = Date.parse("2025-01-01"), names = ["Anthropic", "OpenAI"];   // 합계는 위 합산 그래프 아래 기울기 칸에(2026-11-17 중복 정리)
     const allPts = names.flatMap((c) => sd[c].pts.filter((p) => p.t >= T0).map((p) => p[key]));
     const needV = Object.keys(CO).map((c) => sd[c].need && sd[c].need[key]).filter((x) => x != null);
     const stepV = Object.keys(CO).flatMap((c) => sd[c].steps.filter((s) => s.t1 > T0).map((s) => s[key]));
@@ -306,10 +306,10 @@
     if (over) lab.forEach((e) => { e.y = Math.max(P.t + 6, e.y - over); });
     const labels = lab.map((e) => `<text x="${e.x + 8}" y="${e.y + 4}" class="ai-end" fill="${e.col}">${esc(e.t)}</text>${narrow ? "" : `<text x="${e.x + 8}" y="${e.y + 17}" class="ai-tk">${esc(e.d)}</text>`}`).join("");
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="런레이트 성장 속도(월 ${key === "usd" ? "증가액" : "성장률"})">${g}${steps}${need}${lines}${dots}${labels}</svg>
-      <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i style="background:var(--ink)"></i>두 회사 합계(점선)</span><span><i style="background:var(--ai-other);opacity:.5"></i>옅은 띠 = 보도 사이 구간</span></div>`;
+      <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i style="background:var(--ai-other);opacity:.5"></i>옅은 띠 = 보도 사이 구간</span></div>`;
   }
   function slopeCard(sd) {
-    const chips = [...Object.keys(CO), "합계"].map((c) => { const r = slopeRead(sd, c); if (!r) return "";
+    const chips = Object.keys(CO).map((c) => { const r = slopeRead(sd, c); if (!r) return "";
       const col = c === "합계" ? "var(--ink)" : CO[c].c;
       const needTxt = r.need ? `<em>연말 목표엔 월 ${r.need.pct.toFixed(1)}% 필요 → ${r.need.pct > r.L.pct ? "<b class='up'>지금보다 빨라야 함</b>" : "<b class='down'>지금 속도면 충분</b>"}</em>` : "";
       return `<div class="ai-slope" style="--c:${col}"><div class="k">${c}</div><div class="v"><b>월 ${r.L.pct.toFixed(1)}%</b> <span class="ai-sv ${r.cls}">${r.verdict}</span></div>
@@ -507,17 +507,15 @@
     if (!h.length) return "";
     const L = h.at(-1), base = h.find((x) => Date.parse(x.date) >= Date.parse(L.date) - 7 * 864e5) || h[0];
     const ch = (k) => { if (base === L) return ""; const d = (L[k] / base[k] - 1) * 100; return ` <b class="${d >= 0 ? "up" : "down"}">${d >= 0 ? "▲" : "▼"}${Math.abs(d).toFixed(1)}%</b>`; };
-    const mNow = L.prop / L.open, mOld = base.prop / base.open;
     const days = Math.round((Date.parse(L.date) - Date.parse(base.date)) / 864e5);
     return `<h3 class="ai-h3">토큰 가격 지수 <span class="sub">Silicon Data · 100만 토큰당 달러 · ${md(L.date)} 기준${days ? ` · 변화는 ${days}일 전 대비` : ""}</span></h3>
-      <div class="ai-oc ai-oc4">
+      <div class="ai-oc">
         <div class="ai-ock" style="border-left-color:var(--ai-closed)"><span>클로즈드</span><b>$${L.prop.toFixed(2)}</b><small>Proprietary LLM Token Index${ch("prop")}</small></div>
         <div class="ai-ock" style="border-left-color:var(--ai-open)"><span>오픈웨이트</span><b>$${L.open.toFixed(2)}</b><small>Open LLM Token Index${ch("open")}</small></div>
         <div class="ai-ock" style="border-left-color:var(--ink)"><span>전체 혼합(SDLLMTK)</span><b>$${L.blend.toFixed(2)}</b><small>실제 쓰인 양으로 가중한 평균${ch("blend")}</small></div>
-        <div class="ai-ock alt"><span>가격 배수</span><b>클로즈드가 ${mNow.toFixed(1)}배</b><small>${base === L ? "오픈웨이트 대비" : `${days}일 전 ${mOld.toFixed(1)}배`}</small></div>
       </div>
       <div id="aiPrice"></div>
-      <p class="foot-note">Silicon Data가 매일 내는 LLM 추론 토큰 가격 지수예요. <b>전체 혼합</b>은 실제로 쓰인 양으로 가중한 평균이라, 가격을 내리지 않아도 싼 모델 쪽으로 옮겨 가면 내려가요. 그래서 오픈웨이트·클로즈드 지수와 같이 보면 ‘값을 내린 것’과 ‘싼 모델로 옮겨 간 것’을 나눠 볼 수 있어요. 위 Vercel ‘토큰당 가격’ 배수는 실제 지출에서 계산한 값이라 이 배수와 다를 수 있어요. 정식 자료(API·블룸버그 SDLLMTK)는 유료라 <a href="${esc(si.url)}" target="_blank" rel="noopener">상품 페이지</a>에 공개된 최근 7일 값을 하루 두 번 받아 쌓고 있어요. 그래서 기록은 ${ymd(h[0].date)}부터예요.</p>`;
+      <p class="foot-note">Silicon Data가 매일 내는 LLM 추론 토큰 가격 지수예요. <b>전체 혼합</b>은 실제로 쓰인 양으로 가중한 평균이라, 가격을 내리지 않아도 싼 모델 쪽으로 옮겨 가면 내려가요. 그래서 오픈웨이트·클로즈드 지수와 같이 보면 ‘값을 내린 것’과 ‘싼 모델로 옮겨 간 것’을 나눠 볼 수 있어요. 클로즈드가 몇 배 비싼지(가격 배수)는 위 ‘토큰당 가격’ 칸에 Vercel 실제 지출 기준과 나란히 적었어요. 정식 자료(API·블룸버그 SDLLMTK)는 유료라 <a href="${esc(si.url)}" target="_blank" rel="noopener">상품 페이지</a>에 공개된 최근 7일 값을 하루 두 번 받아 쌓고 있어요. 그래서 기록은 ${ymd(h[0].date)}부터예요.</p>`;
   }
 
   // ---------- 2) 오픈웨이트 vs 클로즈드(토큰·지출)
@@ -724,16 +722,28 @@
       const sum = (k) => ds.reduce((t, h) => t + (h[k] || 0), 0);
       if (ds.length && sum("open_cost") > 0) mult = (sum("closed_cost") / sum("closed_tokens")) / (sum("open_cost") / sum("open_tokens"));
     }
+    // Silicon Data 가격 배수(클로즈드 지수 ÷ 오픈웨이트 지수)와 7일 전 값
+    const siH = ((d.silicon || {}).history || []).filter((x) => x.open && x.prop), siL = siH.at(-1);
+    const siB = siL && siH.find((x) => Date.parse(x.date) >= Date.parse(siL.date) - 7 * 864e5);
+    const siM = siL ? { now: siL.prop / siL.open, date: siL.date, old: siB && siB !== siL ? siB.prop / siB.open : null, days: siB ? Math.round((Date.parse(siL.date) - Date.parse(siB.date)) / 864e5) : 0 } : null;
     const chg = (d) => d == null ? "" : `<b class="${d >= 0 ? "up" : "down"}">${d >= 0 ? "▲" : "▼"}${Math.abs(d).toFixed(1)}%p</b>`;
-    tiles += tile("오픈웨이트 비중", `<span class="ai-vs">토큰</span> <b style="color:var(--ai-open)">${pct(openNow)}</b>${cNow ? ` <span class="ai-vs">지출</span> <b style="color:var(--ai-open)">${pct(cNow.v)}</b>` : ""}`, `${lt.week ? md(lt.week) + " 주 · " : ""}토큰은 OpenRouter, 지출은 Vercel 기준`);
+    // 2026-11-17 중복 정리: 오픈웨이트 비중 타일은 아래 '오픈웨이트 vs 클로즈드' 카드와 같아서 빼고, 두 회사 합계 성장 속도로 바꿈
+    const sdT = slopeData(rv), sr = sdT && slopeRead(sdT, "합계");
+    if (sr) tiles += tile("두 회사 합계 성장 속도", `<b>월 ${sr.L.pct.toFixed(1)}%</b> <span class="ai-sv ${sr.cls}">${sr.verdict}</span>`, `${md(new Date(sr.L.t).toISOString().slice(0, 10))} 기준 직전 3개월 · 월 +${(sr.L.usd / 1e8).toFixed(0)}억 달러${sr.ref ? ` · 3개월 전 월 ${sr.ref.pct.toFixed(1)}%` : ""}`);
 
     // 매출 카드
     const sumNote = A && O ? `두 회사를 더하면 약 <b>${won(A.usd + O.usd)}</b>지만, 계산법(총액·순액)과 시점(${md(A.date)}·${md(O.date)})이 달라 참고용이에요.` : "";
     const supRows = (rv.supplements || []).filter((x) => CO[x.company]).map((x) => ({ c: x.company, date: x.date, usd: x.usd, type: "target", confidence: "회사 설명(보도)", report_date: x.report_date, source: x.source, note: x.note }));
     const recent = Object.keys(CO).flatMap((c) => (rv.companies[c] || []).map((x) => ({ c, ...x }))).concat(supRows).sort((a, b) => (b.date + b.report_date).localeCompare(a.date + a.report_date)).slice(0, 8);
-    const repRows = recent.map((x) => `<tr><td class="tnum">${ymd(x.date)}${x.type === "target" ? " <small>(목표)</small>" : ""}</td><td><span class="ai-dot" style="background:${CO[x.c].c}"></span>${x.c}</td><td class="num"><b>${won(x.usd)}</b></td><td>${TYPE[x.type] || esc(x.type)}</td><td>${CONF[x.confidence] || esc(x.confidence || "–")}</td><td>${x.source ? `<a href="${esc(x.source)}" target="_blank" rel="noopener noreferrer" ${tipAttr(x.note || "")}>출처 ↗</a>` : "–"}</td></tr>`).join("");
+    const repRow = (x) => `<tr><td class="tnum">${ymd(x.date)}${x.type === "target" ? " <small>(목표)</small>" : ""}</td><td><span class="ai-dot" style="background:${CO[x.c].c}"></span>${x.c}</td><td class="num"><b>${won(x.usd)}</b></td><td>${TYPE[x.type] || esc(x.type)}</td><td>${x.type === "s1" ? "상장 서류(공시)" : x.type === "target" ? "회사 설명(보도)" : `Epoch AI · ${CONF[x.confidence] || esc(x.confidence || "–")}`}</td><td>${x.source ? `<a href="${esc(x.source)}" target="_blank" rel="noopener noreferrer" ${tipAttr(x.note || "")}>출처 ↗</a>` : "–"}</td></tr>`;
     const NK = { run: "런레이트", quarter: "분기 매출" };
-    const newsRows = (rv.news || []).filter((g) => CO[g.company] && g.metric === "run").slice(0, 10).map((g) => `<tr class="${g.superseded ? "ai-sup" : ""}"><td class="tnum">${ymd(g.date)}</td><td><span class="ai-dot" style="background:${CO[g.company].c}"></span>${g.company}</td><td class="num"><b>${won(g.usd)}</b></td><td>${g.quarter ? esc(g.quarter) + " " : ""}${NK[g.metric]}${g.kind === "target" ? ' <span class="ai-ntag target">전망</span>' : ""}${g.superseded ? ' <span class="ai-ntag">정정됨</span>' : ""}</td><td>${g.outlets.length}곳</td><td><a href="${esc(g.link)}" target="_blank" rel="noopener noreferrer" ${tipAttr(g.title + " · " + g.outlets.join(", "))}>${esc(g.outlets[0])} ↗</a></td></tr>`).join("");
+    // 2026-11-17 중복 정리: Epoch 보도 표와 기사 자동 판독 표를 한 표로. 같은 숫자(±5%, 30일 이내)가 Epoch에 있으면 기사 줄은 뺀다.
+    const ddays = (a, b) => Math.abs(Date.parse(a) - Date.parse(b)) / 864e5;
+    const inEpoch = (g) => (rv.companies[g.company] || []).concat((rv.supplements || []).filter((x) => x.company === g.company)).some((e) => Math.abs(e.usd - g.usd) <= 0.05 * g.usd && (ddays(e.date, g.date) <= 30 || ddays(e.report_date || e.date, g.date) <= 30));
+    const newsOnly = (rv.news || []).filter((g) => CO[g.company] && g.metric === "run" && !inEpoch(g));
+    const allRows = recent.map((x) => ({ k: x.date + (x.report_date || ""), h: repRow(x) }))
+      .concat(newsOnly.map((g) => ({ k: g.date + g.date, h: `<tr class="${g.superseded ? "ai-sup" : ""}"><td class="tnum">${ymd(g.date)} <small>(보도일)</small></td><td><span class="ai-dot" style="background:${CO[g.company].c}"></span>${g.company}</td><td class="num"><b>${won(g.usd)}</b></td><td>${NK[g.metric]}${g.kind === "target" ? ' <span class="ai-ntag target">전망</span>' : ""}${g.superseded ? ' <span class="ai-ntag">정정됨</span>' : ""}</td><td>기사 자동 판독 · ${g.outlets.length}곳 <small>(미검증)</small></td><td><a href="${esc(g.link)}" target="_blank" rel="noopener noreferrer" ${tipAttr(g.title + " · " + g.outlets.join(", "))}>${esc(g.outlets[0])} ↗</a></td></tr>` })))
+      .sort((a, b) => b.k.localeCompare(a.k)).slice(0, 10).map((r) => r.h).join("");
     const others = (rv.others || []).slice(0, 8).map((x) => `<span class="ai-chip" ${tipAttr(`${x.company} · ${x.date} 기준 · ${TYPE[x.type] || x.type || "매출"}`)}>${esc(x.company)} <b>${won(x.usd)}</b><em>${ymd(x.date)}</em></span>`).join("");
 
     // OpenRouter 카드
@@ -790,14 +800,12 @@
         <div id="aiRev"></div>
         <h3 class="ai-h3">두 회사 합산 (Anthropic + OpenAI) <span class="sub">위 = 금액 · 아래 = 기울기(한 달 증가액·월 성장률) · 보도 사이 값은 보간</span></h3>
         <div id="aiSum"></div>
-        <h3 class="ai-h3">회사별 성장 속도 (기울기) <span class="sub">런레이트를 미분한 값 · 직전 3개월 평균 · 성장 둔화·가속 확인용</span></h3>
+        <h3 class="ai-h3">회사별 성장 속도 (기울기) <span class="sub">직전 3개월 평균 · 성장 둔화·가속 확인용 · 두 회사 합계는 위 합산 그래프에</span></h3>
         <div id="aiSlope"></div>
         <div class="ai-warn"><b>두 회사 숫자를 그냥 비교·합산하면 안 돼요.</b> Anthropic은 아마존 같은 클라우드 파트너를 통한 판매의 <b>총액</b>을, OpenAI는 <b>자기 몫</b>만 매출로 잡아요. 그래서 같은 장사를 해도 Anthropic 쪽 숫자가 크게 나와요. ${sumNote}</div>
-        <h3 class="ai-h3">최근 보도</h3>
-        <div class="ai-tw"><table class="mem-table ai-rep"><thead><tr><th>기준일</th><th>회사</th><th class="num">연환산 매출</th><th>종류</th><th>신뢰도</th><th>출처</th></tr></thead><tbody>${repRows}</tbody></table></div>
-        ${newsRows ? `<h3 class="ai-h3">기사에서 자동으로 잡은 런레이트 <span class="sub">구글 뉴스 · 하루 두 번 판독 · 분기 매출 기사는 아래 '분기 실적' 카드에</span></h3>
-        <div class="ai-tw"><table class="mem-table ai-rep"><thead><tr><th>보도일</th><th>회사</th><th class="num">금액</th><th>종류</th><th>보도</th><th>기사</th></tr></thead><tbody>${newsRows}</tbody></table></div>
-        <p class="foot-note">기사 제목에 나온 금액을 자동으로 읽은 값이라 <b>미검증</b>이에요. 같은 숫자를 두 곳 이상 쓰거나 주요 매체가 쓴 것만 남겼고, 나중에 정정 기사가 나온 숫자는 줄을 그었어요. 기준일은 실적 시점이 아니라 보도일이에요.</p>` : ""}
+        <h3 class="ai-h3">최근 보도 <span class="sub">Epoch AI 정리 + 아직 Epoch에 없는 기사 숫자 · 분기 매출 기사는 아래 '분기 실적' 카드에</span></h3>
+        <div class="ai-tw"><table class="mem-table ai-rep"><thead><tr><th>기준일</th><th>회사</th><th class="num">연환산 매출</th><th>종류</th><th>출처·신뢰도</th><th>원문</th></tr></thead><tbody>${allRows}</tbody></table></div>
+        <p class="foot-note">‘기사 자동 판독’ 줄은 구글 뉴스 기사 제목의 금액을 하루 두 번 자동으로 읽은 값이라 <b>미검증</b>이에요. 같은 숫자를 두 곳 이상 쓰거나 주요 매체가 쓴 것만 남겼고, 정정 기사가 나온 숫자는 줄을 그었어요. 이 줄의 날짜는 실적 시점이 아니라 보도일이에요. Epoch AI가 같은 숫자(5% 이내, 30일 이내)를 이미 정리했으면 기사 줄은 빼서 한 번만 보여요.</p>
         ${others ? `<h3 class="ai-h3">다른 AI 회사 최근 매출</h3><div class="ai-chips">${others}</div>` : ""}
         <p class="foot-note">자료: <a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI, ‘Data on AI companies’</a>(CC BY 4.0). 언론 보도·회사 발표를 모은 표라 <b>새 보도가 날 때만</b> 점이 늘어요(최근엔 2~4주에 한 번). <b>속 빈 점과 점선</b>은 회사가 투자자에게 밝힌 연말 목표로 실제 실적이 아니에요. <b>마름모</b>는 Epoch에 아직 없는 새 기사 숫자(자동 판독)예요. 점에 손가락·마우스를 대면 원문 요약이 보여요. 런레이트 = 최근 한 달 매출 × 12, ARR = 반복 매출 연환산.</p>
       </section>
@@ -808,7 +816,7 @@
         <div class="ai-oc">
           <div class="ai-ock"><span>오픈웨이트 토큰 비중</span><b>${pct(openNow)}</b><small>OpenRouter · ${lt.week ? md(lt.week) + " 주" : ""}${dOpen != null ? " · 전주보다 " + chg(dOpen) : ""}</small></div>
           <div class="ai-ock"><span>오픈웨이트 지출 비중</span><b>${cNow ? pct(cNow.v) : "–"}</b><small>${cNow ? `Vercel · ${md(cNow.week)} 주${cNow.partial ? "(진행 중)" : ""} ${cNow.n}일 평균${dCost != null ? " · 전주보다 " + chg(dCost) : ""}` : "자료 없음"}</small></div>
-          ${mult ? `<div class="ai-ock alt"><span>토큰당 가격</span><b>클로즈드가 ${mult.toFixed(1)}배</b><small>오픈웨이트보다 비쌈 · Vercel ${md(cNow.week)} 주 합계</small></div>` : ""}
+          ${mult || siM ? `<div class="ai-ock alt"><span>토큰당 가격 (클로즈드 ÷ 오픈웨이트)</span><b>클로즈드가 ${(mult || siM.now).toFixed(1)}배</b><small>${mult ? `Vercel ${md(cNow.week)} 주 실제 지출 기준` : ""}${mult && siM ? " · " : ""}${siM ? `Silicon Data 지수 ${siM.now.toFixed(1)}배(${md(siM.date)}${siM.old ? `, ${siM.days}일 전 ${siM.old.toFixed(1)}배` : ""})` : ""}</small></div>` : ""}
         </div>
         <h3 class="ai-h3">월별 오픈웨이트 비중</h3>
         <div class="chart-legend"><span><i style="background:var(--ai-open)"></i>토큰 비중(막대, OpenRouter)</span><span><i style="background:var(--ink);height:3px"></i>지출 비중(선, Vercel)</span></div>
