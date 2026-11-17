@@ -95,11 +95,15 @@
     return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="OpenAI·Anthropic 런레이트 추이">${g}${lines}${dots}${labels}</svg>`;
   }
 
-  // ---------- 1-1) 두 회사 합산 (2026-11-04): 보도 날짜가 서로 달라서, 각 회사 값을 보도 사이에서 로그 보간(꾸준한 비율 성장 가정)해
-  // 같은 날짜로 맞춘 뒤 더한다. 아래 칠 = Anthropic, 그 위 = OpenAI, 위 테두리 = 합계.
-  // 한 회사의 마지막 보도 뒤로는 그 회사 값을 마지막 보도값 그대로 두고 그 구간은 점선으로 표시한다.
-  function sumChart(rv, W) {
-    const P = { l: 46, r: 108, t: 14, b: 26 }, H = Math.round(Math.max(200, Math.min(280, W * 0.4)));
+  // ---------- 1-1) 두 회사 합산 (2026-11-04, 2026-11-17 기울기가 보이게 다시 만듦)
+  // 보도 날짜가 서로 달라서, 각 회사 값을 보도 사이에서 로그 보간(꾸준한 비율 성장 가정)해 같은 날짜로 맞춘 뒤 더한다.
+  // 맨 위 = 금액(일반 눈금이면 아래 칠 Anthropic·위 칠 OpenAI·위 테두리 합계, 로그 눈금이면 세 선). 성장률 정점과 최근 지점에 접선(기울기)을 긋는다.
+  // 그 아래 같은 가로축으로 = 월 증가액(직전 3개월 평균, 회사별 몫을 쌓은 막대), 맨 아래 = 합계 월 성장률.
+  // 한 회사의 마지막 보도 뒤로는 그 회사 값을 마지막 보도값 그대로 두고 그 구간은 점선으로 표시한다(기울기 칸은 그 앞까지만).
+  const SUM = { mode: "lin" };
+  function sumChart(rv, W, sd) {
+    const mode = SUM.mode;
+    const P = { l: 46, r: 108, t: 14 }, H1 = Math.round(Math.max(200, Math.min(280, W * 0.4)));
     const S = Object.fromEntries(Object.keys(CO).map((c) => [c, (rv.companies[c] || []).filter((x) => x.usd > 0).map((x) => [Date.parse(x.date), x.usd]).sort((a, b) => a[0] - b[0])]));
     const cs = Object.keys(CO);
     if (cs.some((c) => S[c].length < 2)) return "";
@@ -107,38 +111,98 @@
       let i = a.findIndex((p) => p[0] >= t); const [t0, v0] = a[i - 1], [t1, v1] = a[i]; return Math.exp(Math.log(v0) + (Math.log(v1) - Math.log(v0)) * (t - t0) / (t1 - t0)); };
     const start = Math.max(Date.parse("2024-01-01"), ...cs.map((c) => S[c][0][0]));
     const lastReal = Math.min(...cs.map((c) => S[c].at(-1)[0])), end = Math.max(...cs.map((c) => S[c].at(-1)[0]));
-    // 보도 날짜 + 2주 간격 점을 섞어 곡선이 매끄럽게
     const ts = new Set(cs.flatMap((c) => S[c].map((p) => p[0])).filter((t) => t >= start && t <= end));
     for (let t = start; t <= end; t += 14 * 864e5) ts.add(t);
     ts.add(end);
     const T = [...ts].sort((a, b) => a - b).map((t) => ({ t, a: val("Anthropic", t), o: val("OpenAI", t) })).filter((p) => p.a != null && p.o != null);
     if (T.length < 2) return "";
-    const ymax = Math.ceil(Math.max(...T.map((p) => p.a + p.o)) / 1e9 / 10) * 10;
     const t0 = T[0].t, t1 = end + 20 * 864e5;
-    const X = (t) => P.l + (t - t0) / (t1 - t0) * (W - P.l - P.r), Y = (v) => P.t + (1 - v / 1e9 / ymax) * (H - P.t - P.b);
-    let g = "";
-    const step = ymax <= 40 ? 10 : ymax <= 100 ? 20 : 50;
-    for (let v = 0; v <= ymax; v += step) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v * 1e9)}" y2="${Y(v * 1e9)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(v * 1e9) + 4}" text-anchor="end" class="ai-tk">${v ? v * 10 + "억" : "0"}</text>`;
-    for (const y of [2024, 2025, 2026, 2027]) { const x = X(Date.parse(`${y}-01-01`)); if (x >= P.l && x <= W - P.r) g += `<text x="${x}" y="${H - 8}" class="ai-tk" text-anchor="middle">${y}</text><line x1="${x}" x2="${x}" y1="${P.t}" y2="${H - P.b}" class="ai-grid"/>`; }
+    const X = (t) => P.l + (t - t0) / (t1 - t0) * (W - P.l - P.r);
+    const D = ((sd && sd._sum) || []).filter((p) => p.t >= t0 && p.t <= lastReal);
+    const has = D.length > 1, gap = 42;
+    const hB = has ? Math.round(H1 * 0.55) : 0, hG = has ? Math.round(H1 * 0.42) : 0;
+    const yB = P.t + H1 + gap, yG = yB + hB + gap, H = (has ? yG + hG : P.t + H1) + 26;
+    const dstr = (t) => new Date(t).toISOString().slice(0, 10);
+    // 맨 위 칸 눈금
+    let Y, g = "";
+    if (mode === "log") {
+      const C = [0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000];
+      const lo = Math.min(...T.filter((p) => p.t >= Date.parse("2025-01-01")).map((p) => Math.min(p.a, p.o, p.a + p.o)), T[0].a + T[0].o) / 1e9, hi = Math.max(...T.map((p) => p.a + p.o)) / 1e9;
+      const a = [...C].reverse().find((c) => c <= lo) || C[0], b = C.find((c) => c >= hi) || C.at(-1);
+      Y = (v) => P.t + (1 - (Math.log(v / 1e9) - Math.log(a)) / (Math.log(b) - Math.log(a))) * H1;
+      for (const c of C.filter((c) => c >= a && c <= b)) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(c * 1e9)}" y2="${Y(c * 1e9)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(c * 1e9) + 4}" text-anchor="end" class="ai-tk">${(c * 10).toLocaleString()}억</text>`;
+    } else {
+      const ymax = Math.ceil(Math.max(...T.map((p) => p.a + p.o)) / 1e9 / 10) * 10, step = ymax <= 40 ? 10 : ymax <= 100 ? 20 : 50;
+      Y = (v) => P.t + (1 - v / 1e9 / ymax) * H1;
+      for (let v = 0; v <= ymax; v += step) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v * 1e9)}" y2="${Y(v * 1e9)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(v * 1e9) + 4}" text-anchor="end" class="ai-tk">${v ? v * 10 + "억" : "0"}</text>`;
+    }
+    const bot = has ? yG + hG : P.t + H1;
+    for (const y of [2024, 2025, 2026, 2027]) { const x = X(Date.parse(`${y}-01-01`)); if (x >= P.l && x <= W - P.r) g += `<text x="${x}" y="${H - 8}" class="ai-tk" text-anchor="middle">${y}</text><line x1="${x}" x2="${x}" y1="${P.t}" y2="${bot}" class="ai-grid"/>`; }
     const pt = (p, v) => `${X(p.t).toFixed(1)},${Y(v).toFixed(1)}`;
-    const base = `${X(T.at(-1).t).toFixed(1)},${Y(0)} ${X(T[0].t).toFixed(1)},${Y(0)}`;
-    const areaA = `<polygon points="${T.map((p) => pt(p, p.a)).join(" ")} ${base}" fill="var(--ai-a)" opacity=".55"/>`;
-    const areaO = `<polygon points="${T.map((p) => pt(p, p.a + p.o)).join(" ")} ${[...T].reverse().map((p) => pt(p, p.a)).join(" ")}" fill="var(--ai-o)" opacity=".5"/>`;
     const real = T.filter((p) => p.t <= lastReal), tail = T.filter((p) => p.t >= lastReal);
-    let top = `<polyline fill="none" stroke="var(--ink)" stroke-width="2.2" stroke-linejoin="round" points="${real.map((p) => pt(p, p.a + p.o)).join(" ")}"/>`;
-    if (tail.length > 1) top += `<polyline fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 4" points="${tail.map((p) => pt(p, p.a + p.o)).join(" ")}"/>`;
-    // 보도가 있던 날짜에만 손가락·마우스용 점
+    let body = "";
+    if (mode === "log") {
+      body += `<clipPath id="aiSumClip"><rect x="${P.l}" y="${P.t}" width="${W - P.l - P.r + 2}" height="${H1}"/></clipPath><g clip-path="url(#aiSumClip)">`;
+      for (const [c, k] of [["Anthropic", "a"], ["OpenAI", "o"]]) body += `<polyline fill="none" stroke="${CO[c].c}" stroke-width="1.8" stroke-linejoin="round" opacity=".85" points="${T.map((p) => pt(p, p[k])).join(" ")}"/>`;
+      body += "</g>";
+    } else {
+      const base = `${X(T.at(-1).t).toFixed(1)},${Y(0)} ${X(T[0].t).toFixed(1)},${Y(0)}`;
+      body += `<polygon points="${T.map((p) => pt(p, p.a)).join(" ")} ${base}" fill="var(--ai-a)" opacity=".45"/>`;
+      body += `<polygon points="${T.map((p) => pt(p, p.a + p.o)).join(" ")} ${[...T].reverse().map((p) => pt(p, p.a)).join(" ")}" fill="var(--ai-o)" opacity=".4"/>`;
+    }
+    body += `<polyline fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round" points="${real.map((p) => pt(p, p.a + p.o)).join(" ")}"/>`;
+    if (tail.length > 1) body += `<polyline fill="none" stroke="var(--ink)" stroke-width="2" stroke-dasharray="4 4" points="${tail.map((p) => pt(p, p.a + p.o)).join(" ")}"/>`;
+    // 접선: 성장률 정점과 최근 지점(직전 3개월 평균 기울기를 앞뒤 45일로 그음)
+    const marks = [];
+    if (has) { const pk = D.reduce((m, p) => p.pct > m.pct ? p : m, D[0]); marks.push(pk); if (D.at(-1) !== pk) marks.push(D.at(-1)); }
+    for (const p of marks) {
+      const span = 45 * 864e5, f = (dt) => mode === "log" ? p.v * Math.pow(1 + p.pct / 100, dt / MO) : p.v + p.usd * dt / MO;
+      const xa = p.t - span, xb = Math.min(p.t + span, t1);
+      body += `<line x1="${X(xa).toFixed(1)}" y1="${Y(f(xa - p.t)).toFixed(1)}" x2="${X(xb).toFixed(1)}" y2="${Y(f(xb - p.t)).toFixed(1)}" stroke="var(--ai-tan)" stroke-width="2" stroke-dasharray="5 3"/>`
+        + `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="4.5" fill="var(--surface)" stroke="var(--ai-tan)" stroke-width="2"/>`
+        + `<text x="${X(p.t).toFixed(1)}" y="${(Y(p.v) - 12).toFixed(1)}" text-anchor="end" class="ai-tk" font-weight="700" fill="var(--ai-tan)">${p === marks[0] ? "정점 " : "최근 "}월 +${p.pct.toFixed(1)}%</text>`;
+    }
     const rep = new Set(cs.flatMap((c) => S[c].map((p) => p[0])));
-    const dots = T.filter((p) => rep.has(p.t)).map((p) => { const d = new Date(p.t).toISOString().slice(0, 10);
-      return `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.a + p.o).toFixed(1)}" r="3.5" fill="var(--ink)" stroke="var(--surface)" stroke-width="1.5" ${tipAttr(`${d} 합계 약 ${won(p.a + p.o)} = Anthropic ${won(p.a)} + OpenAI ${won(p.o)}${p.t > lastReal ? " (한쪽은 마지막 보도값)" : ""}`)}/>`; }).join("");
+    const dots = T.filter((p) => rep.has(p.t)).map((p) => `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.a + p.o).toFixed(1)}" r="3.2" fill="var(--ink)" stroke="var(--surface)" stroke-width="1.5" ${tipAttr(`${dstr(p.t)} 합계 약 ${won(p.a + p.o)} = Anthropic ${won(p.a)} + OpenAI ${won(p.o)}${p.t > lastReal ? " (한쪽은 마지막 보도값)" : ""}`)}/>`).join("");
     const L = T.at(-1), lx = X(L.t) + 8, ly = Y(L.a + L.o);
+    let labels = `<text x="${lx}" y="${ly + 1}" class="ai-end" fill="var(--ink)">합계 ${esc(won(L.a + L.o))}</text><text x="${lx}" y="${ly + 15}" class="ai-tk">${md(dstr(end))} 기준</text>`;
+    if (mode === "log") {
+      const cl = [{ c: "Anthropic", y: Y(L.a), v: L.a }, { c: "OpenAI", y: Y(L.o), v: L.o }].sort((p, q) => p.y - q.y);
+      cl[0].y = Math.max(ly + 32, cl[0].y); cl[1].y = Math.max(cl[0].y + 15, cl[1].y);
+      labels += cl.map((e) => `<text x="${lx}" y="${e.y + 4}" class="ai-tk" fill="${CO[e.c].c}">${e.c} ${esc(won(e.v))}</text>`).join("");
+    } else {
+      labels += `<text x="${lx}" y="${Math.min(P.t + H1 - 4, Y(L.a / 2)) + 4}" class="ai-tk" fill="var(--ai-a)">Anthropic ${Math.round(L.a / (L.a + L.o) * 100)}%</text>`
+        + `<text x="${lx}" y="${Math.max(ly + 32, Y(L.a + L.o / 2)) + 4}" class="ai-tk" fill="var(--ai-o)">OpenAI ${Math.round(L.o / (L.a + L.o) * 100)}%</text>`;
+    }
+    // 아래 두 칸: 기울기
+    let slope = "";
+    if (has) {
+      const mw = (X(Date.UTC(2026, 1, 1)) - X(Date.UTC(2026, 0, 1)));
+      const bw = Math.max(3, Math.min(22, mw * 0.7));
+      const umax = Math.max(...D.map((p) => (p.da + p.do) / 1e9)), ustep = umax <= 6 ? 1 : umax <= 15 ? 3 : 5, uM = Math.ceil(umax * 1.1 / ustep) * ustep;
+      const Yu = (v) => yB + (1 - v / 1e9 / uM) * hB;
+      const gmax = Math.max(...D.map((p) => p.pct)), gstep = gmax <= 15 ? 5 : 10, gM = Math.ceil(gmax * 1.1 / gstep) * gstep;
+      const Yg = (v) => yG + (1 - v / gM) * hG;
+      for (let v = 0; v <= uM; v += ustep) slope += `<line x1="${P.l}" x2="${W - P.r}" y1="${Yu(v * 1e9)}" y2="${Yu(v * 1e9)}" class="ai-grid"/><text x="${P.l - 6}" y="${Yu(v * 1e9) + 4}" text-anchor="end" class="ai-tk">${v ? v * 10 + "억" : "0"}</text>`;
+      for (let v = 0; v <= gM; v += gstep) slope += `<line x1="${P.l}" x2="${W - P.r}" y1="${Yg(v)}" y2="${Yg(v)}" class="ai-grid"/><text x="${P.l - 6}" y="${Yg(v) + 4}" text-anchor="end" class="ai-tk">${v}%</text>`;
+      slope += `<text x="${P.l}" y="${yB - 12}" class="ai-tk" font-weight="700">기울기 ① 한 달에 늘어난 금액 (직전 3개월 평균 · 회사별 몫)</text><text x="${P.l}" y="${yG - 12}" class="ai-tk" font-weight="700">기울기 ② 합계 월 성장률 (내려가면 성장 둔화)</text>`;
+      for (const p of D) { const x = X(p.t) - bw / 2, ya = Yu(p.da), yo = Yu(p.da + p.do), last = p === D.at(-1);
+        const tip = tipAttr(`${dstr(p.t)} 기준 직전 3개월 · 합계 월 +${((p.da + p.do) / 1e8).toFixed(0)}억 달러 = Anthropic +${(p.da / 1e8).toFixed(0)}억 + OpenAI +${(p.do / 1e8).toFixed(0)}억 · 합계 월 성장률 ${p.pct.toFixed(1)}%`);
+        slope += `<rect x="${x.toFixed(1)}" y="${ya.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0, Yu(0) - ya).toFixed(1)}" fill="var(--ai-a)" opacity="${last ? 1 : .8}" ${tip}/>`
+          + `<rect x="${x.toFixed(1)}" y="${yo.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0, ya - yo).toFixed(1)}" fill="var(--ai-o)" opacity="${last ? 1 : .8}" ${tip}/>`; }
+      slope += `<polyline fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round" points="${D.map((p) => `${X(p.t).toFixed(1)},${Yg(p.pct).toFixed(1)}`).join(" ")}"/>`
+        + D.map((p) => `<circle cx="${X(p.t).toFixed(1)}" cy="${Yg(p.pct).toFixed(1)}" r="3" fill="${marks.includes(p) ? "var(--ai-tan)" : "var(--ink)"}" stroke="var(--surface)" stroke-width="1.5" ${tipAttr(`${dstr(p.t)} 기준 직전 3개월 합계 ${won(p.v0)}→${won(p.v)} · 월 ${p.pct.toFixed(1)}%${p.pct > 0 ? ` · ${(Math.log(2) / Math.log(1 + p.pct / 100)).toFixed(1)}개월마다 두 배` : ""}`)}/>`).join("");
+      const E = D.at(-1), ex = X(E.t) + bw / 2 + 6;
+      slope += `<text x="${ex}" y="${Yu(E.da + E.do) + 4}" class="ai-end" fill="var(--ink)">월 +${((E.da + E.do) / 1e8).toFixed(0)}억 달러</text><text x="${ex}" y="${Yu(E.da + E.do) + 18}" class="ai-tk">${md(dstr(E.t))} 기준</text>`
+        + `<text x="${ex}" y="${Yg(E.pct) + 4}" class="ai-end" fill="var(--ink)">월 ${E.pct.toFixed(1)}%</text>`;
+    }
     const stale = cs.find((c) => S[c].at(-1)[0] < end);
-    const labels = `<text x="${lx}" y="${ly + 1}" class="ai-end" fill="var(--ink)">합계 ${esc(won(L.a + L.o))}</text><text x="${lx}" y="${ly + 15}" class="ai-tk">${md(new Date(end).toISOString().slice(0, 10))} 기준</text>`
-      + `<text x="${lx}" y="${Math.min(H - P.b - 4, Y(L.a / 2)) + 4}" class="ai-tk" fill="var(--ai-a)">Anthropic ${Math.round(L.a / (L.a + L.o) * 100)}%</text>`
-      + `<text x="${lx}" y="${Math.max(ly + 32, Y(L.a + L.o / 2)) + 4}" class="ai-tk" fill="var(--ai-o)">OpenAI ${Math.round(L.o / (L.a + L.o) * 100)}%</text>`;
-    const note = stale ? `<p class="foot-note">${esc(stale)}의 마지막 보도(${ymd(new Date(S[stale].at(-1)[0]).toISOString().slice(0, 10))}) 뒤로는 그 값을 그대로 더해서 <b>점선</b>으로 그렸어요.</p>` : "";
-    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="Anthropic·OpenAI 런레이트 합산 추이">${g}${areaA}${areaO}${top}${dots}${labels}</svg>
-      <div class="chart-legend"><span><i style="background:var(--ink)"></i>두 회사 합계</span><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span></div>${note}`;
+    const pk = has ? D.reduce((m, p) => p.pct > m.pct ? p : m, D[0]) : null, pkU = has ? D.reduce((m, p) => p.da + p.do > m.da + m.do ? p : m, D[0]) : null, E = has ? D.at(-1) : null;
+    const read = has ? `합계 월 성장률은 ${md(dstr(pk.t))}의 <b>${pk.pct.toFixed(1)}%</b>가 정점이었고 ${md(dstr(E.t))}엔 <b>${E.pct.toFixed(1)}%</b>예요. 한 달에 늘어난 금액은 ${md(dstr(pkU.t))}의 +${((pkU.da + pkU.do) / 1e8).toFixed(0)}억 달러가 정점이었고 지금은 +${((E.da + E.do) / 1e8).toFixed(0)}억 달러예요. ` : "";
+    const note = `<p class="foot-note">${read}<b>분홍 점선</b>은 그 지점의 기울기(직전 3개월 평균 속도)를 곡선 위에 그은 접선이에요. ${mode === "log" ? "<b>로그 눈금</b>에서는 선의 기울기가 곧 성장률이라, 선이 곧게 오르면 같은 속도, 눕기 시작하면 성장 둔화예요." : "<b>로그 눈금</b>을 누르면 기울기가 곧 성장률로 바뀌어 둔화가 더 잘 보여요."} 아래 두 칸은 같은 날짜 축의 기울기예요. 막대의 아래 칸 색이 Anthropic, 위 칸 색이 OpenAI 몫이에요.${stale ? ` ${esc(stale)}의 마지막 보도(${ymd(dstr(S[stale].at(-1)[0]))}) 뒤로는 그 값을 그대로 더해서 <b>점선</b>으로 그렸고, 기울기 칸은 그 앞까지만 그렸어요.` : ""}</p>`;
+    return `<div class="ai-slope-bar"><div class="seg small" role="group" aria-label="세로 눈금"><button type="button" data-aisum="lin" aria-pressed="${mode !== "log"}">금액 눈금</button><button type="button" data-aisum="log" aria-pressed="${mode === "log"}">로그 눈금(기울기=성장률)</button></div></div>
+      <svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="Anthropic·OpenAI 런레이트 합산 추이와 기울기">${g}${body}${dots}${labels}${slope}</svg>
+      <div class="chart-legend"><span><i style="background:var(--ink)"></i>두 회사 합계</span><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i style="background:var(--ai-tan)"></i>접선(그 지점 기울기)</span></div>${note}`;
   }
 
   // ---------- 1-1a) 성장 속도(기울기) (2026-11-17 사용자: 미분값으로 성장 둔화 확인)
@@ -173,45 +237,11 @@
     out["합계"] = { steps: [], pts: ts.map((t) => { const v = sumAt(t), v0 = sumAt(t - WIN); return { t, v, v0, ...rate(v0, v, WIN) }; }), need: null };
     // 합산 전용 그래프용: 매달 말 + 마지막 공통 보도일, 직전 3개월 기준 회사별 증가액과 합계 성장률
     const grid = [];
-    for (let y = 2025, m = 1; ; m++) { if (m > 12) { m = 1; y++; } const t = Date.UTC(y, m, 0); if (t > lastReal) break; if (t - WIN >= first) grid.push(t); }
+    for (let y = 2024, m = 1; ; m++) { if (m > 12) { m = 1; y++; } const t = Date.UTC(y, m, 0); if (t > lastReal) break; if (t - WIN >= first) grid.push(t); }
     if (!grid.length || grid.at(-1) < lastReal) grid.push(lastReal);
     out._sum = grid.map((t) => { const a = val("Anthropic", t), a0 = val("Anthropic", t - WIN), o = val("OpenAI", t), o0 = val("OpenAI", t - WIN);
       return { t, a, o, da: (a - a0) / (WIN / MO), do: (o - o0) / (WIN / MO), v: a + o, v0: a0 + o0, ...rate(a0 + o0, a + o, WIN) }; });
     return out;
-  }
-  // ---------- 1-1c) 두 회사 합산 기울기 (2026-11-17 사용자 요청): 위 = 월 증가액(회사별로 쌓은 막대), 아래 = 합계 월 성장률
-  function sumSlopeChart(sd, W) {
-    const D = (sd._sum || []).filter((p) => p.t >= Date.parse("2025-01-01"));
-    if (D.length < 2) return "";
-    const P = { l: 46, r: 96, t: 26 }, H1 = Math.round(Math.max(150, Math.min(200, W * 0.27))), H2 = Math.round(H1 * 0.75), gapY = 40, H = P.t + H1 + gapY + H2 + 26;
-    const t0 = Date.UTC(2025, 0, 1), t1 = D.at(-1).t + 25 * 864e5;
-    const X = (t) => P.l + (t - t0) / (t1 - t0) * (W - P.l - P.r);
-    const bw = Math.max(4, Math.min(22, (W - P.l - P.r) / 24 * 0.7));
-    const umax = Math.max(...D.map((p) => (p.da + p.do) / 1e9)), ustep = umax <= 6 ? 1 : umax <= 15 ? 3 : 5, uM = Math.ceil(umax * 1.1 / ustep) * ustep;
-    const Yu = (v) => P.t + (1 - v / 1e9 / uM) * H1;
-    const top2 = P.t + H1 + gapY, gmax = Math.max(...D.map((p) => p.pct)), gstep = gmax <= 15 ? 5 : 10, gM = Math.ceil(gmax * 1.1 / gstep) * gstep;
-    const Yg = (v) => top2 + (1 - v / gM) * H2;
-    const dstr = (t) => new Date(t).toISOString().slice(0, 10);
-    let g = "";
-    for (let v = 0; v <= uM; v += ustep) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Yu(v * 1e9)}" y2="${Yu(v * 1e9)}" class="ai-grid"/><text x="${P.l - 6}" y="${Yu(v * 1e9) + 4}" text-anchor="end" class="ai-tk">${v ? v * 10 + "억" : "0"}</text>`;
-    for (let v = 0; v <= gM; v += gstep) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Yg(v)}" y2="${Yg(v)}" class="ai-grid"/><text x="${P.l - 6}" y="${Yg(v) + 4}" text-anchor="end" class="ai-tk">${v}%</text>`;
-    g += `<text x="${P.l}" y="${P.t - 14}" class="ai-tk" font-weight="700">월 증가액 (직전 3개월 평균)</text><text x="${P.l}" y="${top2 - 12}" class="ai-tk" font-weight="700">합계 월 성장률</text>`;
-    for (const y of [2025, 2026, 2027]) { const x = X(Date.UTC(y, 0, 1)); if (x >= P.l && x <= W - P.r) g += `<line x1="${x}" x2="${x}" y1="${P.t}" y2="${top2 + H2}" class="ai-grid"/><text x="${x}" y="${H - 6}" class="ai-tk" text-anchor="middle">${y}</text>`; }
-    let bars = "";
-    for (const p of D) { const x = X(p.t) - bw / 2, ya = Yu(p.da), yo = Yu(p.da + p.do), last = p === D.at(-1);
-      const tip = tipAttr(`${dstr(p.t)} 기준 직전 3개월 · 합계 월 +${((p.da + p.do) / 1e8).toFixed(0)}억 달러 = Anthropic +${(p.da / 1e8).toFixed(0)}억 + OpenAI +${(p.do / 1e8).toFixed(0)}억 · 합계 월 성장률 ${p.pct.toFixed(1)}% · 런레이트 합계 ${won(p.v)}`);
-      bars += `<rect x="${x.toFixed(1)}" y="${ya.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0, Yu(0) - ya).toFixed(1)}" fill="var(--ai-a)" opacity="${last ? 1 : .8}" ${tip}/>`
-        + `<rect x="${x.toFixed(1)}" y="${yo.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(0, ya - yo).toFixed(1)}" fill="var(--ai-o)" opacity="${last ? 1 : .8}" ${tip}/>`; }
-    const line = `<polyline fill="none" stroke="var(--ink)" stroke-width="2.4" stroke-linejoin="round" points="${D.map((p) => `${X(p.t).toFixed(1)},${Yg(p.pct).toFixed(1)}`).join(" ")}"/>`
-      + D.map((p) => `<circle cx="${X(p.t).toFixed(1)}" cy="${Yg(p.pct).toFixed(1)}" r="3.2" fill="var(--ink)" stroke="var(--surface)" stroke-width="1.5" ${tipAttr(`${dstr(p.t)} 기준 직전 3개월 합계 ${won(p.v0)}→${won(p.v)} · 월 ${p.pct.toFixed(1)}%${p.pct > 0 ? ` · ${(Math.log(2) / Math.log(1 + p.pct / 100)).toFixed(1)}개월마다 두 배` : ""}`)}/>`).join("");
-    const L = D.at(-1), lx = X(L.t) + bw / 2 + 6;
-    const labels = `<text x="${lx}" y="${Yu(L.da + L.do) + 4}" class="ai-end" fill="var(--ink)">월 +${((L.da + L.do) / 1e8).toFixed(0)}억 달러</text><text x="${lx}" y="${Yu(L.da + L.do) + 18}" class="ai-tk">${md(dstr(L.t))} 기준</text>`
-      + `<text x="${lx}" y="${Yg(L.pct) + 4}" class="ai-end" fill="var(--ink)">월 ${L.pct.toFixed(1)}%</text>`;
-    // 정점 대비
-    const pk = D.reduce((m, p) => p.pct > m.pct ? p : m, D[0]), pkU = D.reduce((m, p) => p.da + p.do > m.da + m.do ? p : m, D[0]);
-    const note = `<p class="foot-note">두 회사 런레이트를 같은 날짜로 맞춰(보도 사이는 꾸준한 비율 성장으로 보간) 더한 값의 기울기예요. 막대는 매달 말 기준 <b>직전 3개월 동안 한 달 평균 몇 달러씩 늘었는지</b>이고, 아래 칸 색이 Anthropic, 위 칸 색이 OpenAI 몫이에요. 아래 선은 합계의 <b>월 성장률</b>이에요. 성장률 정점은 ${md(dstr(pk.t))}의 월 ${pk.pct.toFixed(1)}%이고 지금은 ${L.pct.toFixed(1)}%예요. 월 증가액 정점은 ${md(dstr(pkU.t))}의 +${((pkU.da + pkU.do) / 1e8).toFixed(0)}억 달러이고 지금은 +${((L.da + L.do) / 1e8).toFixed(0)}억 달러예요. 두 회사 보도가 모두 있는 날(${ymd(dstr(L.t))})까지만 그렸어요. 계산법(총액·순액)이 달라 합계는 참고용이에요.</p>`;
-    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="두 회사 합산 런레이트 기울기">${g}${bars}${line}${labels}</svg>
-      <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic 몫</span><span><i style="background:var(--ai-o)"></i>OpenAI 몫</span><span><i style="background:var(--ink)"></i>합계 월 성장률</span></div>${note}`;
   }
   // 최근 값과 약 3개월 전 값 비교 → 가속·둔화
   function slopeRead(sd, c) {
@@ -667,10 +697,8 @@
       <section class="card ai-o-rev">
         <div class="card-head wrap"><h2>AI 연구소 매출 런레이트 <span class="sub">연환산 매출 · 보도 시점 기준 점</span></h2></div>
         <div id="aiRev"></div>
-        <h3 class="ai-h3">두 회사 합산 (Anthropic + OpenAI) <span class="sub">보도 날짜가 달라 사이 값은 보간 · 위 테두리 = 합계</span></h3>
+        <h3 class="ai-h3">두 회사 합산 (Anthropic + OpenAI) <span class="sub">위 = 금액 · 아래 = 기울기(한 달 증가액·월 성장률) · 보도 사이 값은 보간</span></h3>
         <div id="aiSum"></div>
-        <h3 class="ai-h3">두 회사 합산 기울기 <span class="sub">합계가 한 달에 얼마씩, 몇 %씩 늘고 있나 · 누구 몫인가</span></h3>
-        <div id="aiSumSlope"></div>
         <h3 class="ai-h3">회사별 성장 속도 (기울기) <span class="sub">런레이트를 미분한 값 · 직전 3개월 평균 · 성장 둔화·가속 확인용</span></h3>
         <div id="aiSlope"></div>
         <div class="ai-warn"><b>두 회사 숫자를 그냥 비교·합산하면 안 돼요.</b> Anthropic은 아마존 같은 클라우드 파트너를 통한 판매의 <b>총액</b>을, OpenAI는 <b>자기 몫</b>만 매출로 잡아요. 그래서 같은 장사를 해도 Anthropic 쪽 숫자가 크게 나와요. ${sumNote}</div>
@@ -722,9 +750,8 @@
         <p class="foot-note">투자 판단의 참고 자료예요. 보도 수치는 회사마다 기준이 달라 직접 비교에 주의하세요.</p>
       </section>`;
     $("#aiRev").innerHTML = revenueChart(rv, width($("#aiRev")));
-    $("#aiSum").innerHTML = sumChart(rv, width($("#aiSum")));
-    SLOPE.sd = slopeData(rv);
-    if (SLOPE.sd) $("#aiSumSlope").innerHTML = sumSlopeChart(SLOPE.sd, width($("#aiSumSlope")));
+    SLOPE.sd = slopeData(rv); SUM.rv = rv;
+    $("#aiSum").innerHTML = sumChart(rv, width($("#aiSum")), SLOPE.sd);
     if (SLOPE.sd) { $("#aiSlope").innerHTML = slopeCard(SLOPE.sd); $("#aiSlopeG").innerHTML = slopeChart(SLOPE.sd, width($("#aiSlopeG")), SLOPE.mode); }
     $("#aiOpen").innerHTML = openChart(or, vc, width($("#aiOpen")));
     $("#aiWeek").innerHTML = weekChart(or, vc, width($("#aiWeek")));
@@ -733,6 +760,8 @@
     bindTip(box);
     if (!box._aim) { box._aim = true; box.addEventListener("click", (e) => {
       if (!st.data) return;
+      const sm = e.target.closest("[data-aisum]");
+      if (sm) { SUM.mode = sm.dataset.aisum; $("#aiSum").innerHTML = sumChart(SUM.rv, width($("#aiSum")), SLOPE.sd); return; }
       const sl = e.target.closest("[data-aislope]");
       if (sl) { SLOPE.mode = sl.dataset.aislope; $$("[data-aislope]", box).forEach((x) => x.setAttribute("aria-pressed", String(x === sl)));
         if (SLOPE.sd) $("#aiSlopeG").innerHTML = slopeChart(SLOPE.sd, width($("#aiSlopeG")), SLOPE.mode); return; }

@@ -210,3 +210,7 @@ tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-thr
 .ai-sv.up { color: #138a52; background: color-mix(in srgb, #138a52 13%, transparent); }
 .ai-sv.flat { color: var(--muted); background: color-mix(in srgb, var(--muted) 13%, transparent); }
 .ai-slope-bar { display: flex; justify-content: flex-end; margin: 0 0 6px; }
+/* 합산 그래프 접선 색 (2026-11-17) */
+:root { --ai-tan: #d6336c; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ai-tan: #f06595; } }
+:root[data-theme="dark"] { --ai-tan: #f06595; }
