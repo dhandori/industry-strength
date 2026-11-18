@@ -59,7 +59,7 @@ const store = {
   get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
   set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
 };
-let META = null, CUR = null, ITEMS = [], io = null, HEADS = [], SPY = -1;
+let META = null, CUR = null, ITEMS = [], io = null, HEADS = [], SPY = -1, LOCK = false;
 
 function fmt(v, dg){ return v.toLocaleString("en-US",{minimumFractionDigits:dg,maximumFractionDigits:dg}); }
 function sign(v, d){ return (v > 0 ? "+" : "") + v.toFixed(d) + "%"; }
@@ -169,11 +169,7 @@ function card(it, idx){
 }
 
 // 지금 화면에 보이는 섹터의 버튼에 불을 켜고, 그 버튼이 버튼 줄 가운데로 오게 민다.
-function spy(){
-  if (!HEADS.length) return;
-  const line = document.querySelector("header").offsetHeight + 24;
-  let cur = 0;
-  for (let i = 0; i < HEADS.length; i++){ if (HEADS[i].getBoundingClientRect().top <= line) cur = i; else break; }
+function light(cur){
   if (cur === SPY) return;
   SPY = cur;
   const row = $("secs");
@@ -181,6 +177,17 @@ function spy(){
   const b = row.children[cur];
   if (b) row.scrollTo({left: b.offsetLeft - (row.clientWidth - b.offsetWidth) / 2, behavior: "smooth"});
 }
+function spy(){
+  if (!HEADS.length || LOCK) return;
+  const line = document.querySelector("header").offsetHeight + 24;
+  let cur = 0;
+  for (let i = 0; i < HEADS.length; i++){ if (HEADS[i].getBoundingClientRect().top <= line) cur = i; else break; }
+  light(cur);
+}
+// 버튼을 눌러 이동했을 때는 누른 버튼을 켜 둔다(페이지 끝이라 제목이 위까지 못 올라와도). 손으로 다시 움직이면 풀린다.
+["touchstart","wheel","keydown","mousedown"].forEach(ev => window.addEventListener(ev, e => {
+  if (!(e.target.closest && e.target.closest("#secs"))) LOCK = false;
+}, {passive: true}));
 
 async function openTab(id, restore){
   CUR = id; store.set("wl.tab", id);
@@ -196,13 +203,16 @@ async function openTab(id, restore){
     if (e.isIntersecting){ if (!cv.width || cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }
     else { cv.width = 0; cv.height = 0; }
   }), {rootMargin: "700px 0px"});
-  main.innerHTML = ""; ITEMS = []; HEADS = []; SPY = -1;
+  main.innerHTML = ""; ITEMS = []; HEADS = []; SPY = -1; LOCK = false;
   data.sections.forEach((s, si) => {
     const h = document.createElement("h2"); h.id = "s" + si; h.textContent = s.name;
     const c = document.createElement("small"); c.textContent = s.items.length + "개"; h.appendChild(c);
     main.appendChild(h); HEADS.push(h);
     const b = document.createElement("button"); b.textContent = s.name;
-    b.onclick = () => h.scrollIntoView({block: "start"});
+    b.onclick = () => {
+      LOCK = true; light(si);
+      window.scrollTo(0, h.getBoundingClientRect().top + window.scrollY - document.querySelector("header").offsetHeight - 10);
+    };
     $("secs").appendChild(b);
     s.items.forEach(it => { ITEMS.push(it); main.appendChild(card(it, ITEMS.length - 1)); });
   });
