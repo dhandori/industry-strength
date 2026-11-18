@@ -825,6 +825,10 @@
     ];
     $("#dStats").innerHTML = st.map(([k, v]) => `<div><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join("");
     $("#dTags").innerHTML = it.tags.map((t) => `<span class="badge ${t.includes("이탈") ? "down" : "up"}">${t}</span>`).join("") || "";
+    // RS 한눈에: 산업 RS 지수 vs 시장 기준선(지수를 산업들 사이에 넣은 점수), RS선 흐름, 왜 중요한가
+    const dRs = $("#dRs");
+    if (dRs && window.__rsbox) dRs.innerHTML = window.__rsbox.html({ d, kind: "industry", b2: !!(d.benchmark2 && it.bench === d.benchmark2.name),
+      score: it.rs_rating, up: it.rs_above_ma50, hiDist: it.rs_hi_dist, who: "이 산업" });
     try {
       if (!state.series[state.market]) state.series[state.market] = await getJSON(`data/${state.market}_series.json`);
     } catch (e) { $("#cPrice").textContent = "차트 데이터를 불러오지 못했어요."; return; }
