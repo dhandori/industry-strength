@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#ffffff">
-<title>와모 워치리스트 차트</title>
+<title>WAMO 워치리스트 차트</title>
 <style>
 :root{--bg:#f4f5f7;--card:#fff;--line:#e3e5ea;--text:#16181d;--sub:#6b7280;--up:#089981;--dn:#f23645}
 *{box-sizing:border-box}
@@ -20,6 +20,7 @@ header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px 
 .row button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:14px;padding:7px 12px;border-radius:999px}
 #tabs button.on{background:var(--text);color:#fff;border-color:var(--text)}
 #secs button{font-size:13px;padding:5px 10px;color:var(--sub)}
+#secs button.on{background:#2962ff;border-color:#2962ff;color:#fff;font-weight:600}
 main{max-width:720px;margin:0 auto;padding:8px 8px 60px}
 h2{font-size:15px;margin:18px 6px 8px;scroll-margin-top:150px}
 h2 small{color:var(--sub);font-weight:400;margin-left:6px}
@@ -42,7 +43,7 @@ canvas{display:block;width:100%;height:300px}
 </head>
 <body>
 <header>
-  <div class="top"><b>와모 워치리스트</b><span id="upd"></span></div>
+  <div class="top"><b>WAMO 워치리스트 차트</b><span id="upd"></span></div>
   <div class="row" id="tabs"></div>
   <div class="row" id="secs"></div>
 </header>
@@ -58,7 +59,7 @@ const store = {
   get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
   set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
 };
-let META = null, CUR = null, ITEMS = [], io = null;
+let META = null, CUR = null, ITEMS = [], io = null, HEADS = [], SPY = -1;
 
 function fmt(v, dg){ return v.toLocaleString("en-US",{minimumFractionDigits:dg,maximumFractionDigits:dg}); }
 function sign(v, d){ return (v > 0 ? "+" : "") + v.toFixed(d) + "%"; }
@@ -167,6 +168,20 @@ function card(it, idx){
   return el;
 }
 
+// 지금 화면에 보이는 섹터의 버튼에 불을 켜고, 그 버튼이 버튼 줄 가운데로 오게 민다.
+function spy(){
+  if (!HEADS.length) return;
+  const line = document.querySelector("header").offsetHeight + 24;
+  let cur = 0;
+  for (let i = 0; i < HEADS.length; i++){ if (HEADS[i].getBoundingClientRect().top <= line) cur = i; else break; }
+  if (cur === SPY) return;
+  SPY = cur;
+  const row = $("secs");
+  [...row.children].forEach((b, i) => b.classList.toggle("on", i === cur));
+  const b = row.children[cur];
+  if (b) row.scrollTo({left: b.offsetLeft - (row.clientWidth - b.offsetWidth) / 2, behavior: "smooth"});
+}
+
 async function openTab(id, restore){
   CUR = id; store.set("wl.tab", id);
   [...$("tabs").children].forEach(b => b.classList.toggle("on", b.dataset.id === id));
@@ -181,11 +196,11 @@ async function openTab(id, restore){
     if (e.isIntersecting){ if (!cv.width || cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }
     else { cv.width = 0; cv.height = 0; }
   }), {rootMargin: "700px 0px"});
-  main.innerHTML = ""; ITEMS = [];
+  main.innerHTML = ""; ITEMS = []; HEADS = []; SPY = -1;
   data.sections.forEach((s, si) => {
     const h = document.createElement("h2"); h.id = "s" + si; h.textContent = s.name;
     const c = document.createElement("small"); c.textContent = s.items.length + "개"; h.appendChild(c);
-    main.appendChild(h);
+    main.appendChild(h); HEADS.push(h);
     const b = document.createElement("button"); b.textContent = s.name;
     b.onclick = () => h.scrollIntoView({block: "start"});
     $("secs").appendChild(b);
@@ -193,10 +208,12 @@ async function openTab(id, restore){
   });
   main.querySelectorAll("canvas").forEach(cv => io.observe(cv));
   window.scrollTo(0, restore ? +(store.get("wl.y." + id) || 0) : 0);
+  spy();
 }
 
-let tick = 0;
+let tick = 0, spyTick = 0;
 window.addEventListener("scroll", () => {
+  if (!spyTick) spyTick = requestAnimationFrame(() => { spyTick = 0; spy(); });
   if (tick) return;
   tick = setTimeout(() => { tick = 0; if (CUR) store.set("wl.y." + CUR, String(Math.round(window.scrollY))); }, 400);
 }, {passive: true});
