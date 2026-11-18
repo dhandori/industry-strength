@@ -126,16 +126,44 @@ def build(item, raw, now):
     }
 
 
+KST = dt.timezone(dt.timedelta(hours=9))
+
+
+def slot_start(now):
+    """갱신 회차의 시작 시각. 아침 회차(06:10 KST, 미국장 마감 뒤)와 저녁 회차(17:40 KST, 아시아장 마감 뒤)."""
+    morning = now.replace(hour=6, minute=10, second=0, microsecond=0)
+    evening = now.replace(hour=17, minute=40, second=0, microsecond=0)
+    if now >= evening:
+        return evening
+    if now >= morning:
+        return morning
+    return evening - dt.timedelta(days=1)
+
+
+def is_fresh(meta, now):
+    """이번 회차에 이미 갱신했고 실패가 3개 이하이면 다시 받을 필요가 없다."""
+    done = dt.datetime.strptime(meta["updated"], "%Y-%m-%d %H:%M").replace(tzinfo=KST)
+    return done >= slot_start(now) and len(meta.get("failed") or []) <= 3
+
+
+def tab_summary(sections):
+    its = [it for s in sections for it in s["items"]]
+    return {"al": sum(1 for x in its if x.get("al")),
+            "g": sum(1 for x in its if x.get("x") in ("gc", "gs")),
+            "d": sum(1 for x in its if x.get("x") in ("dc", "ds")),
+            "up": sum(1 for x in its if x.get("chg", 0) >= 5),
+            "dn": sum(1 for x in its if x.get("chg", 0) <= -5)}
+
+
 def main():
     tabs_path, out_dir = sys.argv[1], sys.argv[2]
     prev_dir = sys.argv[3] if len(sys.argv) > 3 else None
-    kst_now = dt.datetime.now(dt.timezone(dt.timedelta(hours=9)))
-    # 오늘 06:10 KST(미국장 마감 뒤) 이후에 실패 없이 갱신했다면 다시 받지 않는다. FORCE=1 이면 무조건 받는다.
+    kst_now = dt.datetime.now(KST)
+    # 이번 회차(아침 06:10, 저녁 17:40 KST 이후)에 이미 갱신했다면 다시 받지 않는다. FORCE=1 이면 무조건 받는다.
     if prev_dir and os.environ.get("FORCE") != "1":
         try:
             m = json.load(open(os.path.join(prev_dir, "meta.json"), encoding="utf-8"))
-            done = dt.datetime.strptime(m["updated"], "%Y-%m-%d %H:%M").replace(tzinfo=kst_now.tzinfo)
-            if done >= kst_now.replace(hour=6, minute=10, second=0, microsecond=0) and not m.get("failed"):
+            if is_fresh(m, kst_now):
                 print("이미 최신:", m["updated"])
                 return
         except (OSError, ValueError, KeyError):
@@ -172,8 +200,8 @@ def main():
             json.dump({"id": tab["id"], "title": tab["title"], "sections": sections}, f,
                       ensure_ascii=False, separators=(",", ":"))
         summary.append({"id": tab["id"], "title": tab["title"],
-                        "count": sum(len(s["items"]) for s in sections)})
-    kst = dt.datetime.now(dt.timezone(dt.timedelta(hours=9)))
+                        "count": sum(len(s["items"]) for s in sections), **tab_summary(sections)})
+    kst = dt.datetime.now(KST)
     with open(os.path.join(out_dir, "meta.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": kst.strftime("%Y-%m-%d %H:%M"), "tabs": summary,
                    "total": total, "failed": failed}, f, ensure_ascii=False, indent=1)

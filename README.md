@@ -73,7 +73,7 @@ python scripts/update.py --no-fetch   # 저장된 가격으로 계산만
 
 - 화면: `docs/watchlist/index.html` (주소 끝에 `/watchlist/`). 트레이딩뷰 워치리스트 종목의 1년 일봉을 휴대폰에서 아래로 내리며 훑어보는 페이지. 카드마다 일봉, EMA 20·50·200, 거래량, 52주 최고·최저 종가 대비 %.
 - 종목 목록: `config/watchlist_tabs.json` (탭 5개 → 섹터 → 종목 655개, `y` 는 야후 기호, `tv` 는 트레이딩뷰 기호. 2026-11-16에 만든 트레이딩뷰 워치리스트 5개와 같은 구성). 창업판·과창창업50 지수는 야후에 일봉이 없어 ETF로 대신한다. 트레이딩뷰와 자동으로 이어지지 않아, 목록이 바뀌면 이 파일을 고친다.
-- 갱신: `.github/workflows/watchlist.yml` 이 `scripts/watchlist_fetch.py` 를 화~토 06:40 KST에 돌린다(재시도 07:25·08:25, 시장 흐름판 갱신도 끝에서 한 번 깨운다). 종가 기준이라 장이 열려 있는 시장의 오늘 봉은 뺀다.
+- 갱신: `.github/workflows/watchlist.yml` 이 `scripts/watchlist_fetch.py` 를 하루 두 번 돌린다. 아침 06:30 KST(화~토, 재시도 07:25·08:25)는 미국장, 저녁 18:03 KST(월~금, 재시도 18:50)는 아시아장 마감을 반영한다. 이번 회차에 이미 갱신했으면 몇 초 안에 끝난다. 완료 텔레그램은 wamo_claude_bot `watchlist-notify.yml` 이 보내고, 아침 회차가 08:40 KST까지 안 되면 Claude 예약 작업이 `config/watchlist_wake.txt` 를 고쳐 다시 돌린다(2026-11-18). 종가 기준이라 장이 열려 있는 시장의 오늘 봉은 뺀다.
 - 자료 위치: main 이 아니라 `watchlist-data` 가지에 매번 덮어쓴다(기록이 쌓이지 않게). 화면은 raw.githubusercontent.com 에서 읽는다.
 - 받지 못한 종목은 어제 자료를 그대로 두고 카드에 '갱신 실패' 딱지를 붙인다. 절반 넘게 실패하면 그날 갱신을 버린다.
 - 추세 딱지(2026-11-18): 카드 위에 '정배열'(종가 > EMA20 > EMA50 > EMA200)을 붙인다. 기준은 `scripts/watchlist_fetch.py` 의 `trend_flags`. 변동성지수·금리·달러인덱스·환율에는 붙이지 않는다. 스테이지2 딱지는 같은 날 사용자 요청으로 뺐다.
