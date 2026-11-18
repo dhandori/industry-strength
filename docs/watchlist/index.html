@@ -205,7 +205,8 @@ function light(cur){
 }
 // 걸러 보기: 조건에 맞는 종목만 남긴다. 섹터 버튼 옆 숫자는 '맞는 종목 수/전체'(전체 보기일 때는 정배열 수).
 const FILTERS = [["all","전체",() => true],["al","정배열",it => it.al],
-  ["g","골든크로스",it => it.x === "gc" || it.x === "gs"],["d","데드크로스",it => it.x === "dc" || it.x === "ds"]];
+  ["g","골든크로스",it => it.x === "gc" || it.x === "gs"],["d","데드크로스",it => it.x === "dc" || it.x === "ds"],
+  ["up","5% 급등",it => it.chg >= 5],["dn","5% 급락",it => it.chg <= -5]];
 let FILTER = "all";
 function spy(){
   if (!HEADS.length || LOCK) return;
