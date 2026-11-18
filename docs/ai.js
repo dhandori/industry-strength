@@ -394,29 +394,24 @@
     const pk = D.offW.reduce((m, w) => (100 - D.aSum(w) > 100 - D.aSum(m) ? w : m), D.offW[0]);
     const tw = (or.weeks || []).find((w) => w.week === L.week), tA = tw ? tw.authors.anthropic / ((tw.authors.anthropic || 0) + (tw.authors.openai || 0)) * 100 : null;
     const eL = (or.spend && or.spend.weeks || []).at(-1);
-    const top = (co) => D.groups.filter((g) => g.k.startsWith(co) && !g.k.endsWith("_old") && L[g.k]).sort((x, y) => L[y.k] - L[x.k]);
-    const ta = top("a_")[0], to = top("o_");
     const chg = (d) => d == null ? "" : ` · 전주보다 Anthropic <b class="${d >= 0 ? "up" : "down"}">${d >= 0 ? "▲" : "▼"}${Math.abs(d).toFixed(1)}%p</b>`;
     const legend = [...D.groups].reverse().map((g) => `<span><i style="background:${walCol(g.k)}"></i>${esc(g.name)}</span>`).join("")
       + `<span><i class="ai-wal-lgest"></i>자동 추정(참고)</span>`;
     return `<section class="card ai-o-wal">
       <div class="card-head wrap"><h2>Anthropic vs OpenAI 지출 점유율 <span class="sub">OpenRouter · 주간 · 두 회사 지출만 더해 100%</span></h2></div>
-      <div class="ai-wal-why"><b>이 탭의 다른 그래프와 무엇이 다른가요?</b>
-        <p>① 버는 돈 묶음의 <b>분기 실적</b>과 <b>매출 런레이트</b>는 회사 전체 매출입니다. 구독·기업 계약·클라우드 판매가 모두 들어가고, 새 보도가 날 때만 점이 늘어납니다. 이 카드는 개발자들이 OpenRouter API에서 두 회사 모델에 쓴 돈을 주마다 나눈 몫입니다. 새 모델이 나오면 그 주에 바로 움직이므로, 매출보다 먼저 경쟁 판도의 변화를 보여 줍니다.</p>
-        <p>바로 아래 <b>오픈웨이트 vs 클로즈드</b>의 지출 비중은 Vercel 자료입니다. 모든 회사 모델을 오픈웨이트와 클로즈드로 나눈 것이라, 두 회사만 맞대는 이 카드와 자료원도 기준도 다릅니다. 그 카드의 <b>회사별 토큰 점유율</b>은 돈이 아니라 사용량이고, 다른 회사까지 모두 더한 전체에 대한 몫입니다. 이 카드 아래쪽 합산 토큰은 두 회사 사용량만 더해, 위 지출 몫과 나란히 비교하게 했습니다.</p></div>
+      <div class="ai-wal-why"><b>다른 카드와 다른 점</b> ① 묶음의 매출은 회사 전체 실적이라 몇 주에 한 번 바뀌어요. 이 카드는 OpenRouter API에서 두 회사 모델에 쓴 돈의 몫이라, 새 모델이 나오면 그 주에 바로 움직여요. 바로 아래 오픈웨이트 vs 클로즈드는 Vercel 자료로 모든 회사를 나눈 것이라 기준이 달라요.</div>
       <div class="ai-oc">
         <div class="ai-ock wal"><span>지출 점유율 (${md(L.week)} 주, 공식)</span><b><span style="color:var(--ai-a)">Anthropic ${Math.round(aL)}%</span> : <span style="color:var(--ai-o)">OpenAI ${Math.round(100 - aL)}%</span></b><small>${esc(D.meta.published || "")}${chg(dA)}</small></div>
         <div class="ai-ock wal"><span>OpenAI 고점과 지금</span><b>${Math.round(100 - D.aSum(pk))}% → ${Math.round(100 - aL)}%</b><small>${md(pk.week)} 주가 고점이었고, 그 뒤 ${Math.round((100 - D.aSum(pk)) - (100 - aL))}%p 내려왔어요.</small></div>
-        ${tA != null ? `<div class="ai-ock wal"><span>같은 주 토큰 점유율</span><b>Anthropic ${Math.round(tA)}%</b><small>토큰은 ${tA < 50 ? "OpenAI가 더 많지만" : "Anthropic이 더 많고"} 돈은 Anthropic 쪽으로 ${Math.round(aL)}% 갔어요. Claude의 토큰당 값이 비싸서예요.</small></div>` : ""}
+        ${tA != null ? `<div class="ai-ock wal"><span>같은 주 토큰 점유율</span><b>Anthropic ${Math.round(tA)}%</b><small>지출 몫(${Math.round(aL)}%)보다 작아요. Claude 토큰이 더 비싸서예요.</small></div>` : ""}
       </div>
       <div class="chart-legend ai-wal-leg">${legend}</div>
       <div id="aiWal"></div>
-      <p class="foot-note"><b>읽는 법</b>: 막대 하나가 한 주예요. 아래쪽 보라 계열이 OpenAI, 위쪽 주황 계열이 Anthropic 모델에 쓴 돈의 몫이고, 가운데 점선이 50%예요. ${ta ? `${md(L.week)} 주에는 Anthropic에서 <b>${esc(ta.name)}</b>(${pct(L[ta.k], 0)})가, ` : ""}${to.length ? `OpenAI에서 <b>${esc(to[0].name)}</b>(${pct(L[to[0].k], 0)})${to[1] ? `와 ${esc(to[1].name)}(${pct(L[to[1].k], 0)})` : ""}가 지출을 이끌었어요. ` : ""}9월 중순 GPT-6 Astra가 나오며 OpenAI 몫이 ${Math.round(100 - D.aSum(pk))}%까지 올랐다가, 9월 말 Opus 5.5가 나온 뒤 Anthropic 쪽으로 다시 기울었어요.</p>
-      <p class="foot-note"><b>숫자의 출처</b>: 막대는 <a href="${esc(D.meta.url)}" target="_blank" rel="noopener">OpenRouter</a>가 공개한 그래프의 값을 옮겨 적은 거예요(막대 안 숫자가 없는 칸은 그림에서 읽어 ±1~2%p 오차). OpenRouter가 새 그래프를 내면 그 주를 더해요. <b>흐린 점선과 속 빈 점</b>은 우리가 매일 계산하는 자동 추정이에요. 모델별 토큰에 공개 정가를 곱했는데, 공개 자료에 캐시 할인 정보가 없어 Anthropic이 공식값보다 10~20%p 높게 나와요. 그래서 수준보다 <b>방향</b>만 참고하세요${eL ? `(최근 추정: ${md(eL.week)} 주${eL.partial ? " 진행 중" : ""} Anthropic ${pct(eL.a_share, 0)})` : ""}. 이 비중은 OpenRouter 안에서 두 회사 모델끼리 나눈 몫이라 API 시장 전체 점유율이나 회사 매출과는 달라요. 모델 값이 다르면 같은 사용량도 지출 비중이 달라져요.</p>
+      <p class="foot-note">막대 하나가 한 주예요. 아래 보라가 OpenAI, 위 주황이 Anthropic이고 점선이 50%예요. 막대 값은 <a href="${esc(D.meta.url)}" target="_blank" rel="noopener">OpenRouter</a> 공개 그래프에서 옮겼어요(숫자 없는 칸은 ±1~2%p). <b>흐린 점선</b>은 토큰×정가로 매일 낸 자동 추정인데, 캐시 할인이 빠져 Anthropic이 10~20%p 높게 나와요. 방향만 보세요${eL ? `(최근 ${md(eL.week)} 주 Anthropic ${pct(eL.a_share, 0)})` : ""}.</p>
       <h3 class="ai-h3">두 회사 합산 토큰 <span class="sub">OpenRouter 공개 주간 토큰 · 막대 높이 = 두 회사 합계(조 토큰)</span></h3>
       <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i style="background:var(--ai-other);opacity:.5"></i>흐린 막대 = 진행 중인 주</span></div>
       <div id="aiWalTok"></div>
-      <p class="foot-note">위 그래프는 늘 100%라 두 회사 몫만 보이고, 이 그래프는 실제로 쓰인 양이 늘었는지 줄었는지를 보여 줘요. 막대 꼭대기 숫자가 그 주 두 회사 합계예요. OpenRouter가 공개하는 회사별 주간 토큰이라 추정이 아닌 실측이에요. 같은 주 위·아래 그래프를 비교하면 토큰 몫보다 지출 몫이 큰 쪽이 토큰당 더 비싼 모델을 판 회사예요.</p>
+      <p class="foot-note">위 그래프는 늘 100%라 몫만 보여요. 이 그래프는 실제 사용량(OpenRouter 실측)이라 꼭대기 숫자로 총량 변화를 봐요.</p>
     </section>`;
   }
 
