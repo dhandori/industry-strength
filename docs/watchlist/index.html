@@ -56,6 +56,9 @@ h2 small{color:var(--sub);font-weight:400;margin-left:6px}
 canvas{display:block;width:100%;height:300px}
 .lg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);padding:2px 2px 2px}
 .lg b{font-weight:600;margin-left:6px}
+#prog{position:fixed;right:3px;width:3px;border-radius:3px;background:rgba(107,114,128,.16);pointer-events:none;z-index:4;display:none}
+#prog i{position:absolute;left:0;width:3px;border-radius:3px;background:rgba(8,153,129,.6)}
+#prog b{position:absolute;right:7px;transform:translateY(-50%);font-size:10.5px;font-weight:600;color:#4b5563;background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:8px;padding:1px 6px;white-space:nowrap;font-variant-numeric:tabular-nums}
 #msg{padding:40px 16px;text-align:center;color:var(--sub);font-size:14px}
 </style>
 </head>
@@ -66,6 +69,7 @@ canvas{display:block;width:100%;height:300px}
   <div class="row" id="flt"></div>
   <div class="row" id="secs"></div>
 </header>
+<div id="prog"><i></i><b></b></div>
 <main id="main"><div id="msg">불러오는 중입니다.</div></main>
 <script>
 const EMA = [["20","#f23645"],["50","#ff9800"],["200","#2962ff"]];
@@ -78,7 +82,7 @@ const store = {
   get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
   set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
 };
-let META = null, CUR = null, ITEMS = [], io = null, HEADS = [], HIDX = [], SPY = -1, LOCK = false, ROWBUSY = 0, TAB = null;
+let META = null, CUR = null, ITEMS = [], io = null, HEADS = [], HIDX = [], SCARDS = [], SPY = -1, LOCK = false, ROWBUSY = 0, TAB = null;
 
 function fmt(v, dg){ return v.toLocaleString("en-US",{minimumFractionDigits:dg,maximumFractionDigits:dg}); }
 function sign(v, d){ return (v > 0 ? "+" : "") + v.toFixed(d) + "%"; }
@@ -208,7 +212,29 @@ const FILTERS = [["all","전체",() => true],["al","정배열",it => it.al],
   ["g","골든크로스",it => it.x === "gc" || it.x === "gs"],["d","데드크로스",it => it.x === "dc" || it.x === "ds"],
   ["up","5% 급등",it => it.chg >= 5],["dn","5% 급락",it => it.chg <= -5]];
 let FILTER = "all";
+// 오른쪽 가는 막대: 지금 보는 섹터를 어디까지 봤는지(막대 전체 = 섹터 하나, 옆 숫자 = 몇 번째 종목/섹터 종목 수).
+function prog(){
+  const bar = $("prog");
+  if (!HEADS.length){ bar.style.display = "none"; return; }
+  const hh = document.querySelector("header").offsetHeight, line = hh + 24, vh = window.innerHeight;
+  let cur = 0;
+  for (let i = 0; i < HEADS.length; i++){ if (HEADS[i].getBoundingClientRect().top <= line) cur = i; else break; }
+  const top = HEADS[cur].getBoundingClientRect().top;
+  const end = cur + 1 < HEADS.length ? HEADS[cur + 1].getBoundingClientRect().top : $("main").getBoundingClientRect().bottom;
+  const secH = Math.max(1, end - top), viewH = vh - hh;
+  const trackTop = hh + 10, trackH = vh - hh - 20;
+  const thumbH = Math.max(26, Math.min(trackH, trackH * viewH / secH));
+  const p = Math.max(0, Math.min(1, (hh - top) / Math.max(1, secH - viewH)));
+  const y = (trackH - thumbH) * p;
+  bar.style.display = "block"; bar.style.top = trackTop + "px"; bar.style.height = trackH + "px";
+  const th = bar.firstChild, lb = bar.lastChild;
+  th.style.top = y + "px"; th.style.height = thumbH + "px";
+  const cards = SCARDS[cur]; let k = 1;
+  for (let i = 0; i < cards.length; i++){ if (cards[i].getBoundingClientRect().top <= hh + viewH * 0.45) k = i + 1; else break; }
+  lb.textContent = k + "/" + cards.length; lb.style.top = (y + thumbH / 2) + "px";
+}
 function spy(){
+  prog();
   if (!HEADS.length || LOCK) return;
   const line = document.querySelector("header").offsetHeight + 24;
   let cur = 0;
@@ -241,7 +267,7 @@ function render(restore){
     if (e.isIntersecting){ if (!cv.width || cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }
     else { cv.width = 0; cv.height = 0; }
   }), {rootMargin: "700px 0px"});
-  main.innerHTML = ""; $("secs").innerHTML = ""; ITEMS = []; HEADS = []; HIDX = []; SPY = -1; LOCK = false;
+  main.innerHTML = ""; $("secs").innerHTML = ""; ITEMS = []; HEADS = []; HIDX = []; SCARDS = []; SPY = -1; LOCK = false;
   const test = FILTERS.find(f => f[0] === FILTER)[2], cnt = FILTER === "all" ? (it => it.al) : test;
   let shown = 0;
   data.sections.forEach((s, si) => {
@@ -254,13 +280,14 @@ function render(restore){
     const c = document.createElement("small");
     c.textContent = FILTER === "all" ? s.items.length + "개, 정배열 " + n + "개" : list.length + "개 (전체 " + s.items.length + "개)";
     h.appendChild(c);
-    main.appendChild(h); HEADS.push(h); HIDX.push(si);
+    main.appendChild(h); HEADS.push(h); HIDX.push(si); SCARDS.push([]);
     b.onclick = () => {
       LOCK = true; ROWBUSY = Date.now() + 2500; light(si);
       window.scrollTo(0, h.getBoundingClientRect().top + window.scrollY - document.querySelector("header").offsetHeight - 10);
     };
-    list.forEach(it => { ITEMS.push(it); main.appendChild(card(it, ITEMS.length - 1)); shown++; });
+    list.forEach(it => { ITEMS.push(it); const el = card(it, ITEMS.length - 1); main.appendChild(el); SCARDS[SCARDS.length - 1].push(el); shown++; });
   });
+  if (!shown) $("prog").style.display = "none";
   if (!shown) main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.</div>';
   main.querySelectorAll("canvas").forEach(cv => io.observe(cv));
   window.scrollTo(0, restore ? +(store.get("wl.y." + id) || 0) : 0);
@@ -276,7 +303,7 @@ window.addEventListener("scroll", () => {
 let rz = 0;
 window.addEventListener("resize", () => {
   clearTimeout(rz);
-  rz = setTimeout(() => document.querySelectorAll("canvas").forEach(cv => { if (cv.width && cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }), 200);
+  rz = setTimeout(() => { prog(); document.querySelectorAll("canvas").forEach(cv => { if (cv.width && cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }); }, 200);
 });
 
 // 버튼 줄을 만지는 동안과 그 뒤 2.5초는 버튼 줄을 자동으로 옮기지 않는다.
