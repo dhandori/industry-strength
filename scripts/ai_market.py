@@ -441,7 +441,9 @@ def quarterly(rv, prev_q, manual_q):
         for g in rv.get("news") or []:
             if g["company"] == co and g["metric"] == "quarter" and g["kind"] == "reported" and not g.get("superseded") \
                     and (len(g["outlets"]) >= 2 or any(t.lower() in g["outlets"][0].lower() for t in TRUST) or g.get("corroborated")):
-                if not g.get("quarter"):
+                # 분기를 못 읽어도 표에 같은 금액(5% 이내)이 이미 있으면 빠진 게 아니다
+                # (2026-11-18: OpenAI 100억·Anthropic 168억 기사가 확인된 보도 100억·170억으로 이미 표에 있는데 매번 실패로 끝남)
+                if not g.get("quarter") and not any(abs(r["usd"] - g["usd"]) <= 0.05 * g["usd"] for r in rows):
                     warn.append({"kind": "gap", "msg": f"{co} 분기 실적 보도({g['date']}, {g['usd'] / 1e8:,.0f}억 달러)가 몇 분기인지 못 읽어 분기 실적표에 빠짐: {g['title']}"})
                 elif g["quarter"] in by and abs(by[g["quarter"]]["usd"] - g["usd"]) > 0.1 * g["usd"] and by[g["quarter"]]["src"] == "기사 자동 판독":
                     warn.append({"kind": "check", "msg": f"{co} {g['quarter']} 보도 금액이 엇갈림: {g['usd'] / 1e8:,.0f}억 vs 표 {by[g['quarter']]['usd'] / 1e8:,.0f}억"})
