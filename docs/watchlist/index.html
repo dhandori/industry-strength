@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<title>와모 워치리스트 차트</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--line:#e3e5ea;--text:#16181d;--sub:#6b7280;--up:#089981;--dn:#f23645}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;-webkit-text-size-adjust:100%}
+header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.top{display:flex;justify-content:space-between;align-items:baseline;padding:10px 14px 4px}
+.top b{font-size:17px}
+.top span{font-size:12px;color:var(--sub)}
+.top span.old{color:var(--dn);font-weight:600}
+.row{display:flex;gap:6px;overflow-x:auto;padding:6px 12px;scrollbar-width:none}
+.row::-webkit-scrollbar{display:none}
+.row button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:14px;padding:7px 12px;border-radius:999px}
+#tabs button.on{background:var(--text);color:#fff;border-color:var(--text)}
+#secs button{font-size:13px;padding:5px 10px;color:var(--sub)}
+main{max-width:720px;margin:0 auto;padding:8px 8px 60px}
+h2{font-size:15px;margin:18px 6px 8px;scroll-margin-top:150px}
+h2 small{color:var(--sub);font-weight:400;margin-left:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 10px 6px;margin-bottom:10px}
+.hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.nm{font-size:16px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm small{font-size:11px;font-weight:400;color:var(--sub);margin-left:5px}
+.px{flex:none;font-size:15px;font-variant-numeric:tabular-nums}
+.px i{font-style:normal;font-size:13px;margin-left:5px}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.bd{display:flex;gap:6px;margin:6px 0 2px;flex-wrap:wrap}
+.bd span{font-size:13px;padding:3px 8px;border-radius:7px;font-variant-numeric:tabular-nums}
+.bh{background:#fdecec;color:#b71c1c}.bl{background:#e3f5ee;color:#0b6b50}
+.st{background:#fff4d6;color:#8a5a00}
+canvas{display:block;width:100%;height:300px}
+.lg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);padding:2px 2px 2px}
+.lg b{font-weight:600;margin-left:6px}
+#msg{padding:40px 16px;text-align:center;color:var(--sub);font-size:14px}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><b>와모 워치리스트</b><span id="upd"></span></div>
+  <div class="row" id="tabs"></div>
+  <div class="row" id="secs"></div>
+</header>
+<main id="main"><div id="msg">불러오는 중입니다.</div></main>
+<script>
+const EMA = [["20","#f23645"],["50","#ff9800"],["100","#00bcd4"],["200","#2962ff"]];
+const UP = "#089981", DN = "#f23645";
+// 자료는 같은 저장소의 watchlist-data 가지에 매일 덮어쓴다(기록이 쌓이지 않게). 내 컴퓨터 시험 때만 옆 폴더를 읽는다.
+const LOCAL = ["localhost","127.0.0.1"].includes(location.hostname);
+const DATA = LOCAL ? "data/" : "https://raw.githubusercontent.com/dhandori/industry-strength/watchlist-data/";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+};
+let META = null, CUR = null, ITEMS = [], io = null;
+
+function fmt(v, dg){ return v.toLocaleString("en-US",{minimumFractionDigits:dg,maximumFractionDigits:dg}); }
+function sign(v, d){ return (v > 0 ? "+" : "") + v.toFixed(d) + "%"; }
+
+function niceTicks(lo, hi, n){
+  const span = hi - lo, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1,2,2.5,5,10].map(m => m*mag).find(s => s >= raw) || raw;
+  const out = [];
+  for (let v = Math.ceil(lo/step)*step; v <= hi + step*1e-9; v += step) out.push(v);
+  return {ticks: out, step};
+}
+
+function draw(cv, it){
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  const g = cv.getContext("2d"); g.scale(dpr, dpr);
+  const n = it.c.length, hasVol = it.v.some(v => v > 0);
+  const axW = 50, padT = 6, xH = 18;
+  const volH = hasVol ? 46 : 0, gap = hasVol ? 6 : 0;
+  const pH = H - padT - xH - volH - gap, pW = W - axW;
+  let lo = Math.min(...it.l), hi = Math.max(...it.h);
+  EMA.forEach(([k]) => it.e[k].forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
+  const pad = (hi - lo) * 0.04 || 1; lo -= pad; hi += pad;
+  const X = i => (i + 0.5) * pW / n, Y = v => padT + (hi - v) / (hi - lo) * pH;
+  g.font = "11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textBaseline = "middle";
+
+  // 격자와 가격 눈금
+  const {ticks, step} = niceTicks(lo, hi, 5);
+  const tdg = step >= 1 ? 0 : Math.min(4, Math.ceil(-Math.log10(step)) + (String(step/Math.pow(10,Math.floor(Math.log10(step)))).startsWith("2.5") ? 1 : 0));
+  g.strokeStyle = "#eef0f3"; g.lineWidth = 1; g.fillStyle = "#6b7280"; g.textAlign = "left";
+  ticks.forEach(v => { const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(0,y); g.lineTo(pW,y); g.stroke(); g.fillText(fmt(v,tdg), pW + 5, y); });
+
+  // 월 눈금
+  g.textAlign = "center"; g.textBaseline = "top";
+  let lastLabelX = -99;
+  for (let i = 1; i < n; i++){
+    if (it.d[i].slice(2,4) !== it.d[i-1].slice(2,4)){
+      const x = Math.round(X(i) - pW/n/2) + 0.5;
+      g.strokeStyle = "#eef0f3"; g.beginPath(); g.moveTo(x, padT); g.lineTo(x, H - xH); g.stroke();
+      if (x - lastLabelX > 21 && x < pW - 8){
+        const m = +it.d[i].slice(2,4);
+        g.fillStyle = m === 1 ? "#16181d" : "#6b7280";
+        g.fillText(m === 1 ? "20" + it.d[i].slice(0,2) : m + "월", x, H - xH + 4);
+        lastLabelX = x;
+      }
+    }
+  }
+
+  // 52주 최고·최저 종가 점선
+  g.setLineDash([2,3]); g.strokeStyle = "#9aa1ad";
+  [it.hi, it.lo].forEach(v => { const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(0,y); g.lineTo(pW,y); g.stroke(); });
+  g.setLineDash([]);
+
+  // 일봉
+  const bw = Math.max(1, Math.min(7, pW / n * 0.7));
+  for (let i = 0; i < n; i++){
+    const up = it.c[i] >= it.o[i], x = X(i);
+    g.strokeStyle = g.fillStyle = up ? UP : DN; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(Math.round(x)+0.5, Y(it.h[i])); g.lineTo(Math.round(x)+0.5, Y(it.l[i])); g.stroke();
+    const y1 = Y(Math.max(it.o[i], it.c[i])), y2 = Y(Math.min(it.o[i], it.c[i]));
+    g.fillRect(x - bw/2, y1, bw, Math.max(1, y2 - y1));
+  }
+
+  // 이동평균선
+  g.lineWidth = 1.4; g.lineJoin = "round";
+  EMA.forEach(([k, col]) => {
+    g.strokeStyle = col; g.beginPath();
+    it.e[k].forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)));
+    g.stroke();
+  });
+
+  // 마지막 종가 표시
+  const last = it.c[n-1], ly = Math.max(padT + 8, Math.min(padT + pH - 8, Y(last)));
+  g.fillStyle = it.chg >= 0 ? UP : DN; g.fillRect(pW + 1, ly - 9, axW - 2, 18);
+  g.fillStyle = "#fff"; g.textAlign = "left"; g.textBaseline = "middle";
+  g.fillText(fmt(last, last >= 10000 ? 0 : last >= 1000 ? 1 : it.dg), pW + 4, ly);
+
+  // 거래량
+  if (hasVol){
+    const top = padT + pH + gap, vmax = Math.max(...it.v);
+    g.strokeStyle = "#e3e5ea"; g.beginPath(); g.moveTo(0, top - gap/2 + 0.5); g.lineTo(pW, top - gap/2 + 0.5); g.stroke();
+    g.globalAlpha = 0.7;
+    for (let i = 0; i < n; i++){
+      const h = it.v[i] / vmax * volH;
+      g.fillStyle = it.c[i] >= it.o[i] ? UP : DN;
+      g.fillRect(X(i) - bw/2, top + volH - h, bw, h);
+    }
+    g.globalAlpha = 1; g.fillStyle = "#6b7280"; g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText("거래량", pW + 5, top + 2);
+  }
+  g.strokeStyle = "#e3e5ea"; g.strokeRect(0.5, padT + 0.5, pW - 1, H - xH - padT - 1);
+}
+
+function card(it, idx){
+  const cls = it.chg >= 0 ? "up" : "dn", ld = it.d[it.d.length - 1];
+  const el = document.createElement("div"); el.className = "card";
+  el.innerHTML =
+    `<div class="hd"><div class="nm"></div><div class="px">${fmt(it.c[it.c.length-1], it.dg)}<i class="${cls}">${sign(it.chg,1)}</i></div></div>` +
+    `<div class="bd"><span class="bh">52주 고점 대비 ${sign(it.ph,1)}</span><span class="bl">52주 저점 대비 ${sign(it.pl,1)}</span>${it.stale ? '<span class="st">갱신 실패, 이전 자료</span>' : ""}</div>` +
+    `<canvas data-i="${idx}"></canvas>` +
+    `<div class="lg"><span>EMA${EMA.map(([k,c]) => `<b style="color:${c}">${k}</b>`).join("")}</span><span>${+ld.slice(2,4)}/${+ld.slice(4,6)} 종가 기준</span></div>`;
+  const nm = el.querySelector(".nm");
+  nm.textContent = it.n;
+  const sm = document.createElement("small"); sm.textContent = it.y; nm.appendChild(sm);
+  return el;
+}
+
+async function openTab(id, restore){
+  CUR = id; store.set("wl.tab", id);
+  [...$("tabs").children].forEach(b => b.classList.toggle("on", b.dataset.id === id));
+  const main = $("main"); main.innerHTML = '<div id="msg">불러오는 중입니다.</div>'; $("secs").innerHTML = "";
+  let data;
+  try { data = await (await fetch(`${DATA}${id}.json?t=${encodeURIComponent(META.updated)}`)).json(); }
+  catch(e){ main.innerHTML = '<div id="msg">자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.</div>'; return; }
+  if (CUR !== id) return;
+  if (io) io.disconnect();
+  io = new IntersectionObserver(es => es.forEach(e => {
+    const cv = e.target;
+    if (e.isIntersecting){ if (!cv.width || cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }
+    else { cv.width = 0; cv.height = 0; }
+  }), {rootMargin: "700px 0px"});
+  main.innerHTML = ""; ITEMS = [];
+  data.sections.forEach((s, si) => {
+    const h = document.createElement("h2"); h.id = "s" + si; h.textContent = s.name;
+    const c = document.createElement("small"); c.textContent = s.items.length + "개"; h.appendChild(c);
+    main.appendChild(h);
+    const b = document.createElement("button"); b.textContent = s.name;
+    b.onclick = () => h.scrollIntoView({block: "start"});
+    $("secs").appendChild(b);
+    s.items.forEach(it => { ITEMS.push(it); main.appendChild(card(it, ITEMS.length - 1)); });
+  });
+  main.querySelectorAll("canvas").forEach(cv => io.observe(cv));
+  window.scrollTo(0, restore ? +(store.get("wl.y." + id) || 0) : 0);
+}
+
+let tick = 0;
+window.addEventListener("scroll", () => {
+  if (tick) return;
+  tick = setTimeout(() => { tick = 0; if (CUR) store.set("wl.y." + CUR, String(Math.round(window.scrollY))); }, 400);
+}, {passive: true});
+let rz = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(rz);
+  rz = setTimeout(() => document.querySelectorAll("canvas").forEach(cv => { if (cv.width && cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }), 200);
+});
+
+(async () => {
+  try { META = await (await fetch(DATA + "meta.json?t=" + Date.now())).json(); }
+  catch(e){ $("msg").textContent = "자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요."; return; }
+  const up = $("upd"); up.textContent = META.updated.slice(5).replace("-", "/") + " KST 갱신";
+  const age = (Date.now() - new Date(META.updated.replace(" ", "T") + ":00+09:00")) / 36e5;
+  if (age > 80) { up.classList.add("old"); up.textContent += " (오래됨)"; }
+  META.tabs.forEach(t => {
+    const b = document.createElement("button"); b.dataset.id = t.id; b.textContent = t.title;
+    b.onclick = () => openTab(t.id, false);
+    $("tabs").appendChild(b);
+  });
+  const saved = store.get("wl.tab");
+  openTab(META.tabs.some(t => t.id === saved) ? saved : META.tabs[0].id, true);
+})();
+</script>
+</body>
+</html>

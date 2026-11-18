@@ -1,0 +1,159 @@
+"""워치리스트 종목의 1년 일봉을 야후 파이낸스에서 받아 페이지용 자료로 만든다.
+
+사용법: python scripts/watchlist_fetch.py config/watchlist_tabs.json 출력폴더 [이전자료폴더]
+- 종목마다 2년 치를 받아 EMA 20/50/100/200을 계산하고 최근 1년만 저장한다.
+- 아직 장이 끝나지 않은 오늘 봉은 뺀다(종가 기준).
+- 받지 못한 종목은 이전자료폴더에 있던 어제 자료를 그대로 쓴다.
+"""
+import datetime as dt
+import json
+import os
+import sys
+import time
+
+import requests
+
+UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
+EMAS = (20, 50, 100, 200)
+HOSTS = ("query1.finance.yahoo.com", "query2.finance.yahoo.com")
+
+
+def fetch_raw(sym, session):
+    last = None
+    for attempt in range(4):
+        host = HOSTS[attempt % 2]
+        try:
+            r = session.get(
+                f"https://{host}/v8/finance/chart/{requests.utils.quote(sym)}",
+                params={"range": "2y", "interval": "1d"}, headers=UA, timeout=20)
+            if r.status_code == 200:
+                res = r.json()["chart"]["result"]
+                if res:
+                    return res[0]
+            last = f"HTTP {r.status_code}"
+        except Exception as e:  # 네트워크 오류는 잠시 뒤 다시 시도
+            last = repr(e)
+        time.sleep(2 + 3 * attempt)
+    raise RuntimeError(last)
+
+
+def ema(values, span):
+    k = 2 / (span + 1)
+    out, prev = [], None
+    for v in values:
+        prev = v if prev is None else v * k + prev * (1 - k)
+        out.append(prev)
+    return out
+
+
+def digits(price):
+    return 2 if price >= 100 else 3 if price >= 10 else 4
+
+
+def build(item, raw, now):
+    meta, q = raw["meta"], raw["indicators"]["quote"][0]
+    off = meta.get("gmtoffset", 0)
+    rows = []
+    for i, ts in enumerate(raw.get("timestamp") or []):
+        o, h, l, c, v = (q[k][i] for k in ("open", "high", "low", "close", "volume"))
+        if c is None:
+            continue
+        o = c if o is None else o
+        h = max(o, c) if h is None else h
+        l = min(o, c) if l is None else l
+        if item["y"].endswith("=X"):
+            # 야후 환율 자료에는 튀는 꼬리가 섞여 있어, 몸통에서 2.5% 넘게 벗어난 꼬리는 잘라 낸다
+            h = min(h, max(o, c) * 1.025)
+            l = max(l, min(o, c) * 0.975)
+        rows.append((ts, o, h, l, c, v or 0))
+    if len(rows) < 30:
+        raise RuntimeError("자료 부족")
+    # 진행 중인 봉 제거: 정규장이 열려 있고 마지막 봉이 그 장에 속하면 뺀다
+    reg = (meta.get("currentTradingPeriod") or {}).get("regular") or {}
+    if reg and reg.get("start", 0) <= now < reg.get("end", 0) and rows[-1][0] >= reg["start"]:
+        rows.pop()
+    closes = [r[4] for r in rows]
+    emas = {n: ema(closes, n) for n in EMAS}
+    last_day = dt.datetime.fromtimestamp(rows[-1][0] + off, dt.timezone.utc).date()
+    try:
+        cut = last_day.replace(year=last_day.year - 1)
+    except ValueError:
+        cut = last_day.replace(year=last_day.year - 1, day=28)
+    days = [dt.datetime.fromtimestamp(r[0] + off, dt.timezone.utc).date() for r in rows]
+    start = next(i for i, d in enumerate(days) if d > cut)
+    dg = digits(closes[-1])
+    rd = lambda xs: [round(x, dg) for x in xs[start:]]
+    win = closes[start:]
+    hi, lo = max(win), min(win)
+    return {
+        "y": item["y"], "n": item["n"], "tv": item.get("tv", ""), "dg": dg,
+        "d": [d.strftime("%y%m%d") for d in days[start:]],
+        "o": rd([r[1] for r in rows]), "h": rd([r[2] for r in rows]),
+        "l": rd([r[3] for r in rows]), "c": rd(closes),
+        "v": [int(r[5]) for r in rows[start:]],
+        "e": {str(n): rd(emas[n]) for n in EMAS},
+        "hi": round(hi, dg), "lo": round(lo, dg),
+        "ph": round((win[-1] / hi - 1) * 100, 1), "pl": round((win[-1] / lo - 1) * 100, 1),
+        "chg": round((win[-1] / win[-2] - 1) * 100, 2),
+    }
+
+
+def main():
+    tabs_path, out_dir = sys.argv[1], sys.argv[2]
+    prev_dir = sys.argv[3] if len(sys.argv) > 3 else None
+    kst_now = dt.datetime.now(dt.timezone(dt.timedelta(hours=9)))
+    # 오늘 06:10 KST(미국장 마감 뒤) 이후에 실패 없이 갱신했다면 다시 받지 않는다. FORCE=1 이면 무조건 받는다.
+    if prev_dir and os.environ.get("FORCE") != "1":
+        try:
+            m = json.load(open(os.path.join(prev_dir, "meta.json"), encoding="utf-8"))
+            done = dt.datetime.strptime(m["updated"], "%Y-%m-%d %H:%M").replace(tzinfo=kst_now.tzinfo)
+            if done >= kst_now.replace(hour=6, minute=10, second=0, microsecond=0) and not m.get("failed"):
+                print("이미 최신:", m["updated"])
+                return
+        except (OSError, ValueError, KeyError):
+            pass
+    os.makedirs(out_dir, exist_ok=True)
+    tabs = json.load(open(tabs_path, encoding="utf-8"))
+    session = requests.Session()
+    now = int(time.time())
+    failed, summary, total = [], [], 0
+    for tab in tabs:
+        prev = {}
+        if prev_dir:
+            p = os.path.join(prev_dir, f"{tab['id']}.json")
+            if os.path.exists(p):
+                for s in json.load(open(p, encoding="utf-8"))["sections"]:
+                    prev.update({it["y"]: it for it in s["items"]})
+        sections = []
+        for sec in tab["sections"]:
+            items = []
+            for item in sec["items"]:
+                total += 1
+                try:
+                    items.append(build(item, fetch_raw(item["y"], session), now))
+                except Exception as e:
+                    failed.append({"y": item["y"], "n": item["n"], "why": str(e)[:80]})
+                    if item["y"] in prev:
+                        old = prev[item["y"]]
+                        old["stale"] = True
+                        items.append(old)
+                    print("실패", item["y"], e, file=sys.stderr)
+                time.sleep(0.25)
+            sections.append({"name": sec["name"], "items": items})
+        with open(os.path.join(out_dir, f"{tab['id']}.json"), "w", encoding="utf-8") as f:
+            json.dump({"id": tab["id"], "title": tab["title"], "sections": sections}, f,
+                      ensure_ascii=False, separators=(",", ":"))
+        summary.append({"id": tab["id"], "title": tab["title"],
+                        "count": sum(len(s["items"]) for s in sections)})
+    kst = dt.datetime.now(dt.timezone(dt.timedelta(hours=9)))
+    with open(os.path.join(out_dir, "meta.json"), "w", encoding="utf-8") as f:
+        json.dump({"updated": kst.strftime("%Y-%m-%d %H:%M"), "tabs": summary,
+                   "total": total, "failed": failed}, f, ensure_ascii=False, indent=1)
+    print(f"완료: {total}개 중 실패 {len(failed)}개")
+    # 절반 넘게 실패하면 갱신 실패로 처리해 어제 페이지를 지키게 한다
+    if total and len(failed) > total / 2:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
