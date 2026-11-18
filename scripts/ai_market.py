@@ -529,10 +529,95 @@ def openrouter(prev):
     for e in est:
         e["partial"] = partial(e["week"])
     weeks = [{"week": w["x"], "total": sum(w["ys"].values()), "authors": w["ys"], "partial": partial(w["x"])} for w in ms]
+    mh = model_history(prev, base, nice, cls, partial, week, by_model, T)
     return {"weeks": weeks, "latest": latest, "author_open_ratio": {a: round(r, 3) for a, r in ratio.items()},
             "open_history": sorted(hist_actual.values(), key=lambda h: h["week"]), "open_est": est,
             "rank_chart": rank_chart(base, nice, cls, partial),
-            **model_history(prev, base, nice, cls, partial, week, by_model, T)}
+            **mh,
+            "spend": spend_share(prev.get("spend") or {}, getj(base + "models?view=day")["data"], models, mh["model_hist"], weeks, partial)}
+
+
+# ---------- 두 회사 지출 점유율: OpenRouter (2026-11-18 사용자 요청: OpenRouter 'OpenAI vs Anthropic wallet share' 그래프 + 총합산)
+# OpenRouter는 모델별 지출을 공개하지 않는다(공개 그래프는 내부 자료). 그래서 모델별 하루 토큰(입력·캐시 읽기·출력, 자기 키로 쓴 BYOK 제외)에
+# 모델 목록의 공개 단가를 곱해 추정한다. 할인·대량 계약·캐시 쓰기 요금·이미지·임베딩 모델(단가 형식이 다름)은 빠진다.
+# 공개 자료의 캐시 토큰 칸이 0이라 캐시 할인을 못 넣어, 캐시를 많이 쓰는 Claude 쪽이 부풀려진다
+# (2026-11-18 확인: 정가 추정 Anthropic 75~87% vs 공식 11/9 주 64%). 그래서 화면은 공식값(config/openrouter_wallet_official.json)을
+# 막대로 그리고, 이 추정치는 흐린 점선(참고)으로만 겹친다.
+# 'models?view=day' 는 끝난 마지막 하루(UTC)만 주므로 날마다 쌓는다(spend.days). 하루 자료가 7일 다 없는 주는
+# 쌓아 둔 주간 토큰 비중(model_hist) × 그 주 전체 토큰 × 모델별 1토큰당 지출(가장 최근 하루)로 거꾸로 채운다(method=est).
+SPEND_CO = ("anthropic", "openai")
+WALLET_OFFICIAL = ROOT / "config" / "openrouter_wallet_official.json"
+
+
+def spend_share(prev, rows, models, model_hist, weeks, partial):
+    price = {}
+    for m in models:
+        p = m.get("pricing") or {}
+        f = lambda k: float(p.get(k) or 0)  # noqa: E731
+        v = (f("prompt"), f("input_cache_read") if p.get("input_cache_read") else f("prompt"), f("completion"))
+        if any(v):
+            for k in {m["id"], m.get("canonical_slug")} - {None}:
+                price.setdefault(k, v)
+    days = {d: dict(v) for d, v in (prev.get("days") or {}).items()}
+    fresh, unpriced, per_tok = {}, {}, {}
+    for r in rows:
+        slug = r["model_permaslug"]
+        if slug.split("/", 1)[0] not in SPEND_CO:
+            continue
+        pt = max(0, (r.get("total_prompt_tokens") or 0) - (r.get("total_byok_prompt_tokens") or 0))
+        ct = max(0, (r.get("total_completion_tokens") or 0) - (r.get("total_byok_completion_tokens") or 0))
+        tot = (r.get("total_prompt_tokens") or 0) + (r.get("total_completion_tokens") or 0)
+        pr = price.get(slug) or price.get(slug.split(":")[0])
+        if not pr:
+            unpriced[slug] = unpriced.get(slug, 0) + tot
+            continue
+        ca = min(r.get("total_native_tokens_cached") or 0, pt)
+        usd = (pt - ca) * pr[0] + ca * pr[1] + ct * pr[2]
+        d = r["date"][:10]
+        fresh.setdefault(d, {})[slug] = fresh.get(d, {}).get(slug, 0) + usd
+        a = per_tok.setdefault(slug, [0.0, 0])
+        a[0] += usd
+        a[1] += tot
+    for d, v in fresh.items():          # 같은 날은 이번에 받은 값이 이긴다(오늘은 아직 쌓이는 중)
+        days[d] = {k: round(x, 2) for k, x in v.items() if x >= 1}
+    days = dict(sorted(days.items())[-400:])
+    rate = {s: u / t for s, (u, t) in per_tok.items() if t > 0}
+    rate = {**(prev.get("rate") or {}), **rate}
+    mon = lambda d: (datetime.strptime(d, "%Y-%m-%d").date() - timedelta(days=datetime.strptime(d, "%Y-%m-%d").weekday())).isoformat()  # noqa: E731
+    by_week = {}
+    for d, v in days.items():
+        w = by_week.setdefault(mon(d), {"n": 0, "models": {}})
+        w["n"] += 1
+        for s_, u in v.items():
+            w["models"][s_] = w["models"].get(s_, 0) + u
+    total = {w["week"]: w["total"] for w in weeks}
+    # 거꾸로 채우기: 두 회사 모델이 3개 이상씩 기록된 주부터(그 전은 상위 9개만 남아 있어 두 회사 몫이 크게 빠진다)
+    est = {}
+    for s_, hist in model_hist.items():
+        if s_.split("/", 1)[0] not in SPEND_CO:
+            continue
+        for wk, p in hist.items():
+            est.setdefault(wk, {})[s_] = p
+    out = []
+    for wk in sorted(set(by_week) | set(est)):
+        w = by_week.get(wk)
+        if w and (w["n"] >= 7 or partial(wk)):
+            ms, method, n = w["models"], "day", w["n"]
+        else:
+            e = est.get(wk) or {}
+            cnt = {c: sum(1 for s_ in e if s_.startswith(c + "/")) for c in SPEND_CO}
+            if min(cnt.values()) < 3 or wk not in total:
+                continue
+            ms = {s_: p / 100 * total[wk] * rate[s_.split(":")[0]] for s_, p in e.items() if rate.get(s_.split(":")[0])}
+            method, n = "est", 7
+        ms = {s_: round(u) for s_, u in ms.items() if u >= 1}
+        sums = {c: sum(u for s_, u in ms.items() if s_.startswith(c + "/")) for c in SPEND_CO}
+        if not all(sums.values()):
+            continue
+        out.append({"week": wk, "method": method, "days": n, "partial": partial(wk), "models": ms,
+                    "usd": sums, "a_share": round(sums["anthropic"] / sum(sums.values()) * 100, 1)})
+    return {"weeks": out, "days": days, "rate": {s_: round(r_, 12) for s_, r_ in rate.items()},
+            "official": json.loads(WALLET_OFFICIAL.read_text(encoding="utf-8")) if WALLET_OFFICIAL.exists() else None, "unpriced": sorted(unpriced, key=lambda k: -unpriced[k])[:12]}
 
 
 def model_history(prev, base, nice, cls, partial, week, by_model, T, keep_top=40):
