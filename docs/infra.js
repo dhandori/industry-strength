@@ -13,7 +13,8 @@
   // 토큰 수: 조(10^12)·경(10^16) / 달러: 억·조 달러
   const tok = (v) => v >= 1e16 ? `${(v / 1e16).toFixed(2)}경` : v >= 1e12 ? `${(v / 1e12).toLocaleString(undefined, { maximumFractionDigits: v >= 1e14 ? 0 : 1 })}조` : `${Math.round(v / 1e8).toLocaleString()}억`;
   const dol = (v) => v >= 1e12 ? `${(v / 1e12).toFixed(2)}조 달러` : v >= 1e9 ? `${Math.round(v / 1e8).toLocaleString()}억 달러` : v >= 1e8 ? `${(v / 1e8).toFixed(1)}억 달러` : `${Math.round(v / 1e4).toLocaleString()}만 달러`;
-  const bn = (v) => `$${(v / 1e9).toFixed(v >= 1e11 ? 0 : 1)}B`;
+  const bn = (v) => `${Math.round(v / 1e8).toLocaleString()}억 달러`;   // 2026-11-18: 탭 전체를 억 달러로 맞춤(예전 $B)
+  const bnAx = (v) => `${Math.round(v / 1e8).toLocaleString()}억`;
   const hr = (v) => v == null ? "–" : `$${v.toFixed(2)}`;
   const st = { data: null, loading: null, tlog: false, crange: "5y", gpuOff: new Set(["A100"]) };
   const CO = [["Amazon", "아마존", "var(--cp-s2)"], ["Alphabet", "구글", "var(--cp-s3)"], ["Microsoft", "마이크로소프트", "var(--cp-s1)"], ["Meta", "메타", "var(--cp-s4)"], ["Oracle", "오라클", "var(--cp-s5)"]];
@@ -217,7 +218,7 @@
       </div></details>
     </section>`;
     if (tw.length) $("#inTok").innerHTML = barChart(tCats, W($("#inTok")), { line: tLine, log: st.tlog, fmt: tok, aria: "OpenRouter 주간 토큰 총량" });
-    if (cShow.length) $("#inCap").innerHTML = barChart(cCats, W($("#inCap")), { line: cShow.map((t) => c4map[t.q]), lineDash: "5 3", fmt: (v) => bn(v), aria: "빅테크 5사 분기 설비투자", sparse: true });
+    if (cShow.length) $("#inCap").innerHTML = barChart(cCats, W($("#inCap")), { line: cShow.map((t) => c4map[t.q]), lineDash: "5 3", fmt: bnAx, aria: "빅테크 5사 분기 설비투자", sparse: true });
     if ($("#inSpend")) $("#inSpend").innerHTML = barChart(sCats, W($("#inSpend")), { line: ma(sw.map((h) => h.usd), 4), fmt: (v) => `$${Math.round(v / 1e6)}M`, aria: "OpenRouter 주간 지출 추정", H: 220 });
     if (gd.length) $("#inGpu").innerHTML = gpuChart(gd, W($("#inGpu")));
     box.querySelector('[data-more="infra"]')?.addEventListener("toggle", (e) => { if (e.target.open === !!st.more) return; st.more = e.target.open; render(); });

@@ -41,7 +41,11 @@
         { no: "②", name: "업종", why: "신고가가 어느 업종에 몰리는지 봐요.", cards: ["최근 신고가가 자주 나온 업종", "업종별 신고가 달력"] },
         { no: "③", name: "종목 명단", why: "날짜별 명단과 자주 나온 종목이에요.", cards: ["날짜별 신고가 종목", "신고가가 자주 나온 종목"] },
       ], foot: "업종 이름은 산업 강도 탭과 기준이 달라요(맨 아래 <b>기준</b>)." },
-    viewMacro: { intro: "시장 전체의 <b>날씨</b>를 보는 탭이에요. 맨 위 종합 위험도가 결론이고, 아래 경기·시장 지표·빚투가 그 근거예요. 종목을 얼마나 과감하게 살지 정할 때 써요." },
+    viewMacro: { noBands: true, noFold: true, groups: [
+        { no: "", name: "경기", why: "물가·고용·금리처럼 경제 체력을 보는 지표예요.", cards: ["경기", "고통지수", "물가", "고용", "금리 (미국"] },
+        { no: "", name: "시장 지표", why: "신용·변동성·심리처럼 시장 안의 긴장도를 보는 지표예요.", cards: ["미국 시장 지표", "한국 시장 지표", "한국 공포탐욕", "신용", "변동성", "투자 심리"] },
+        { no: "", name: "빚투", why: "빚을 내 산 주식 규모예요. 과열과 급락 위험을 봐요.", cards: ["빚투"] },
+      ], intro: "시장 전체의 <b>날씨</b>를 보는 탭이에요. 맨 위 종합 위험도가 결론이고, 아래 경기·시장 지표·빚투가 그 근거예요. 종목을 얼마나 과감하게 살지 정할 때 써요." },
     viewAi: { board: true, intro: "AI를 <b>돈의 흐름</b> 순서로 따라가는 탭이에요. 버는 돈 → 그 돈이 가는 곳 → 누가 이기나 순서예요.",
       groups: [
         { no: "①", name: "버는 돈", why: "OpenAI·Anthropic 매출이에요. 새 보도가 날 때만 바뀌어요.", cards: ["분기 실적", "매출 런레이트"] },
@@ -54,7 +58,7 @@
         { no: "①", name: "오늘", why: "오늘 크게 움직인 짝이에요.", cards: ["오늘 눈여겨볼 페어"] },
         { no: "②", name: "주제별", why: "같은 질문에 답하는 짝끼리 묶었어요.", cards: [], rest: true },
       ] },
-    viewPositioning: { intro: "가격 뒤에서 <b>누가 얼마나 사 두었나</b>를 보는 탭이에요. 자료가 매주 수요일에만 바뀌어 따로 나눴어요." },
+    viewPositioning: { noFold: true, intro: "가격 뒤에서 <b>누가 얼마나 사 두었나</b>를 보는 탭이에요. 자료가 매주 수요일에만 바뀌어 따로 나눴어요." },
   };
   const cardIn = (g, t) => g.cards.some((c) => t === c || t.startsWith(c));
   function groupIndex(cfg, t) {
@@ -76,10 +80,40 @@
     const html = `<p><b>📖 이 탭은</b> ${cfg.intro}${cfg.foot ? ` ${cfg.foot}` : ""}</p>`;
     if (box._h !== html) { box._h = html; box.innerHTML = html; }
   }
+  // 읽는 법 접기(2026-11-18 가시성 정비): 카드 바로 아래 붙은 회색 설명(p.foot-note)을 카드 끝 '읽는 법 ▸' 하나로 모은다.
+  // 화면 코드는 id 로 설명을 채우므로 옮겨도 그대로 갱신된다. 매크로(2026-11-11 사용자: 모두 펼쳐 보이게)와 포지셔닝은 제외.
+  function notes(m, cfg) {
+    if (!cfg || cfg.noFold) return;
+    m.querySelectorAll("section.card").forEach((sec) => {
+      if (sec.classList.contains("guide")) return;
+      const ps = [...sec.querySelectorAll(":scope > p.foot-note")];
+      if (!ps.length) return;
+      let d = sec.querySelector(":scope > details.nf");
+      if (!d) { d = document.createElement("details"); d.className = "nf"; d.innerHTML = "<summary>읽는 법 · 자세한 설명</summary>"; sec.appendChild(d); }
+      ps.forEach((x) => d.appendChild(x));
+      if (d !== sec.lastElementChild) sec.appendChild(d);
+    });
+  }
+  // 긴 카드 줄이기(휴대폰): 1,900px 넘는 카드는 앞부분만 보이고 '전체 보기'로 편다. 편 카드는 그대로 둔다.
+  function clips(m, cfg) {
+    const small = innerWidth < 640;
+    m.querySelectorAll("section.card").forEach((sec) => {
+      const skip = sec.dataset.clipOpen || sec.classList.contains("cf-shut") || !cfg || cfg.noFold || cfg.board;
+      const want = !skip && small && sec.scrollHeight > 1900;
+      sec.classList.toggle("clipped", want);
+      let b = sec.querySelector(":scope > .clip-more");
+      if (want && !b) {
+        b = document.createElement("button"); b.type = "button"; b.className = "clip-more"; b.textContent = "전체 보기 ▾";
+        b.addEventListener("click", () => { sec.dataset.clipOpen = "1"; sec.classList.toggle("clipped", false); b.hidden = true; });
+        sec.appendChild(b);
+      }
+      if (b) b.hidden = !want;
+    });
+  }
   // 묶음 띠: 묶음의 첫 카드 바로 위에 '① 이름 — 이유' 한 줄. 카드가 다른 그릇(격자 order)에 있어도 그 카드의 order 를 따라간다.
   function bands(m, cfg) {
     const want = new Map();
-    if (cfg && cfg.groups) for (const x of items) if (x.g >= 0 && !want.has(x.g)) want.set(x.g, x.el);
+    if (cfg && cfg.groups && !cfg.noBands) for (const x of items) if (x.g >= 0 && !want.has(x.g)) want.set(x.g, x.el);
     m.querySelectorAll(".grp-band").forEach((b) => { if (want.get(+b.dataset.g) !== b.nextElementSibling) b.remove(); });
     for (const [gi, el] of want) {
       if (el.previousElementSibling?.classList.contains("grp-band")) continue;
@@ -111,7 +145,7 @@
       items.forEach((x, i) => { x.g = groupIndex(cfg, x.t); x.o = i; });
       items.sort((a, b) => (a.g < 0 ? 99 : a.g) - (b.g < 0 ? 99 : b.g) || a.o - b.o);
     }
-    if (m) { guideBox(m, cfg); bands(m, cfg); }
+    if (m) { guideBox(m, cfg); bands(m, cfg); notes(m, cfg); clips(m, cfg); }
     nav.hidden = items.length < 3;
     if (!nav.hidden) {
       // 끝에 '모두 펼치기/모두 접기': 지금 탭의 접을 수 있는 카드를 한 번에(2026-11-13)
@@ -119,7 +153,7 @@
       const anyShut = foldable.some((s) => s.classList.contains("cf-shut"));
       const gs = cfg && cfg.groups;
       nav.classList.toggle("grouped", !!gs);
-      nav.innerHTML = (gs ? gs.map((g, gi) => items.some((x) => x.g === gi) ? `<button type="button" data-g="${gi}" title="${esc(g.why.replace(/<[^>]+>/g, ""))}">${g.no} ${esc(g.name)}</button>` : "").join("")
+      nav.innerHTML = (gs ? gs.map((g, gi) => items.some((x) => x.g === gi) ? `<button type="button" data-g="${gi}" title="${esc(g.why.replace(/<[^>]+>/g, ""))}">${g.no ? g.no + " " : ""}${esc(g.name)}</button>` : "").join("")
         : items.map((x, i) => `<button type="button" data-i="${i}">${esc(x.t)}</button>`).join(""))
         + (foldable.length > 1 ? `<button type="button" class="sn-all">${anyShut ? "모두 펼치기 ▾" : "모두 접기 ▴"}</button>` : "");
       nav.querySelector(".sn-all")?.addEventListener("click", () => { foldable.forEach((s) => setShut(s, !anyShut)); build(); });
