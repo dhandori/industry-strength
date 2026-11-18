@@ -1,7 +1,7 @@
 """워치리스트 종목의 1년 일봉을 야후 파이낸스에서 받아 페이지용 자료로 만든다.
 
 사용법: python scripts/watchlist_fetch.py config/watchlist_tabs.json 출력폴더 [이전자료폴더]
-- 종목마다 2년 치를 받아 EMA 20/50/100/200을 계산하고 최근 1년만 저장한다.
+- 종목마다 2년 치를 받아 EMA 20/50/200을 계산하고 최근 1년만 저장한다.
 - 아직 장이 끝나지 않은 오늘 봉은 뺀다(종가 기준).
 - 받지 못한 종목은 이전자료폴더에 있던 어제 자료를 그대로 쓴다.
 """
@@ -14,7 +14,7 @@ import time
 import requests
 
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
-EMAS = (20, 50, 100, 200)
+EMAS = (20, 50, 200)
 HOSTS = ("query1.finance.yahoo.com", "query2.finance.yahoo.com")
 
 
