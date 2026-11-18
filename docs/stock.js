@@ -264,7 +264,7 @@
     if (m) {
       const sg = STAGE[m.stage] || ["", ""];
       if (m.stage) stat.push(["추세 단계", `<span class="stage ${sg[0]}">${esc(stageText(m.stage))}</span>`, sg[1]]);
-      if (m.rs_rating != null) stat.push(["RS 지수 (1~99)", `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}">${m.rs_rating}</b>`, "1년 수익률을 시장 안 모든 종목과 비교한 백분위. 80 이상이면 주도주 후보예요."]);
+      if (m.rs_rating != null) stat.push(["RS 지수 (1~99)", `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}">${m.rs_rating}</b>`, "1년 수익률(최근 3개월에 가장 큰 무게)을 시장 안 모든 종목과 비교한 등수예요. 위 RS 상자의 시장 기준선보다 높으면 주도주 후보예요."]);
       if (m.atr_pct != null) stat.push(["ATR(14일) 평균 변동폭", `<b>${m.atr == null ? "" : money(m.atr) + " "}(${m.atr_pct.toFixed(1)}%)</b>`, `최근 14거래일 동안 하루에 보통 ${m.atr_pct.toFixed(1)}% 움직였어요(고가−저가, 전날 종가와의 갭 포함). 손절 폭·목표가를 잡는 기준으로 써요.`]);
       // 손절 기준 두 가지: −8% 한도(미너비니 최대 손절)와 2×ATR(그 종목의 보통 흔들림 밖). 종가를 매수가로 가정.
       if (m.close != null && m.close > 0) {
@@ -380,6 +380,7 @@
     $("#skBody", box).innerHTML = `
       ${badges.length ? `<div class="sk-bds">${badges.join("")}</div>` : ""}
       ${lines.length ? `<div class="sk-sum">${lines.map((l) => `<p>${l}</p>`).join("")}</div>` : ""}
+      ${m && window.__rsbox ? window.__rsbox.html({ d, kind: "stock", b2: !!m.rs_b2, score: m.rs_rating, up: m.rs_up, who: "이 종목" }) : ""}
       ${m && m.path ? `<p class="sk-path">무엇을 하는 회사인가: ${esc(m.path)}</p>` : ""}
       <section class="sk-sec" id="skChartSec">
         <div class="sk-ch-head"><h4>📈 주가 차트</h4><div class="seg small" id="skRange" role="group" aria-label="차트 기간">${RANGES.map(([k, t]) => `<button type="button" data-r="${k}" aria-pressed="${k === range}">${t}</button>`).join("")}</div></div>
