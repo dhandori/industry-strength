@@ -144,10 +144,10 @@ jobs:
             gh workflow run "$wf" --ref main && echo "$wf 깨움"
           done
 
-      # 워치리스트 차트(docs/watchlist/)는 자료가 다른 가지에 있어 위 검사로는 못 본다. 예약으로 돈 갱신 끝에서 한 번 깨운다.
+      # 워치리스트 차트(docs/watchlist/)는 자료가 다른 가지에 있어 위 검사로는 못 본다. 아침 미국장 마감 뒤 갱신(06:50·07:30·08:30 KST) 끝에서만 깨운다.
       # 이미 오늘 자료가 있으면 그 작업이 10초 안에 스스로 끝난다.
       - name: 워치리스트 차트 깨우기
-        if: always() && github.event_name == 'schedule'
+        if: always() && (github.event.schedule == '50 21 * * 1-5' || github.event.schedule == '30 22 * * 1-5' || github.event.schedule == '30 23 * * 1-5')
         continue-on-error: true
         timeout-minutes: 2
         env:

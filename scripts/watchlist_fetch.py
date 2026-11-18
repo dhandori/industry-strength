@@ -15,7 +15,7 @@ import requests
 
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36"}
 EMAS = (20, 50, 200)
-# 추세 딱지(정배열·스테이지2)를 붙이지 않는 항목: 변동성지수, 금리, 달러인덱스, 환율(=X)
+# 추세 딱지(정배열·크로스)를 붙이지 않는 항목: 변동성지수, 금리, 달러인덱스, 환율(=X)
 NO_TREND = {"^VIX", "2YY=F", "^TNX", "^TYX", "DX-Y.NYB"}
 HOSTS = ("query1.finance.yahoo.com", "query2.finance.yahoo.com")
 
@@ -48,22 +48,12 @@ def ema(values, span):
     return out
 
 
-def sma(values, n, back=0):
-    end = len(values) - back
-    return sum(values[end - n:end]) / n if end >= n else None
-
-
 def trend_flags(sym, closes, emas, hi, lo):
-    """정배열: 종가 > EMA20 > EMA50 > EMA200 (차트에 그린 선 기준).
-    스테이지2: 미너비니 추세 템플릿(단순이평 기준, RS 조건 제외) 8가지를 모두 충족.
-      종가 > 50일선 > 150일선 > 200일선, 200일선이 한 달(21거래일) 전보다 높음,
-      52주 최저 종가보다 30% 이상 위, 52주 최고 종가에서 25% 이내."""
+    """정배열: 종가 > EMA20 > EMA50 > EMA200 (차트에 그린 선 기준)."""
     if sym in NO_TREND or sym.endswith("=X"):
         return {}
     c = closes[-1]
     al = c > emas[20][-1] > emas[50][-1] > emas[200][-1]
-    s50, s150, s200, s200p = sma(closes, 50), sma(closes, 150), sma(closes, 200), sma(closes, 200, 21)
-    s2 = bool(s200p and c > s50 > s150 > s200 and s200 > s200p and c >= lo * 1.30 and c >= hi * 0.75)
     # 골든·데드크로스(차트에 그린 EMA50과 EMA200 기준)
     #  발생: 최근 5거래일 안에 EMA50이 EMA200을 위로(gc) 또는 아래로(dc) 넘었다.
     #  임박: 아직 안 넘었지만 두 선의 간격이 EMA200의 1.5% 이내이고 5거래일 전보다 좁혀지고 있다(gs·ds).
@@ -80,7 +70,7 @@ def trend_flags(sym, closes, emas, hi, lo):
             x = "gs"
         elif d0 > 0 and near and d0 < d5:
             x = "ds"
-    return {"al": al, "s2": s2, "x": x}
+    return {"al": al, "x": x}
 
 
 def digits(price):
@@ -123,7 +113,7 @@ def build(item, raw, now):
     win = closes[start:]
     hi, lo = max(win), min(win)
     return {
-        "y": item["y"], "n": item["n"], "b": item.get("b", ""), "k": item.get("k", ""), "tv": item.get("tv", ""), "dg": dg,
+        "y": item["y"], "n": item["n"], "b": item.get("b", ""), "k": item.get("k", ""), "dg": dg,
         "d": [d.strftime("%y%m%d") for d in days[start:]],
         "o": rd([r[1] for r in rows]), "h": rd([r[2] for r in rows]),
         "l": rd([r[3] for r in rows]), "c": rd(closes),

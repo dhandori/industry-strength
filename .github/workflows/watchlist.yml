@@ -34,20 +34,47 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
+      # 오늘 06:10 KST 뒤에 실패 없이 갱신한 자료가 있으면 내려받기·설치 없이 여기서 끝낸다(실행 시간 몇 초).
+      - name: 최신 여부 확인
+        id: chk
+        env:
+          FORCE: ${{ (github.event_name == 'push' || inputs.force) && '1' || '0' }}
+        run: |
+          skip=false
+          if [ "$FORCE" != "1" ]; then
+            skip=$(curl -fsS -m 20 "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/watchlist-data/meta.json?t=$(date +%s)" | python3 -c "
+          import sys, json, datetime as dt
+          try:
+              m = json.load(sys.stdin)
+              kst = dt.timezone(dt.timedelta(hours=9)); now = dt.datetime.now(kst)
+              done = dt.datetime.strptime(m['updated'], '%Y-%m-%d %H:%M').replace(tzinfo=kst)
+              print('true' if done >= now.replace(hour=6, minute=10, second=0, microsecond=0) and not m.get('failed') else 'false')
+          except Exception:
+              print('false')
+          " || echo false)
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+          echo "건너뜀: $skip"
+
       - uses: actions/checkout@v4
+        if: steps.chk.outputs.skip != 'true'
 
       - uses: actions/setup-python@v5
+        if: steps.chk.outputs.skip != 'true'
         with:
           python-version: "3.12"
 
       - name: 패키지 설치
+        if: steps.chk.outputs.skip != 'true'
         run: pip install "requests>=2.31"
 
       - name: 어제 자료 가져오기 (받지 못한 종목 대비)
+        if: steps.chk.outputs.skip != 'true'
         continue-on-error: true
         run: git clone --depth 1 --branch watchlist-data "https://github.com/${GITHUB_REPOSITORY}" prev
 
       - name: 일봉 수집·계산
+        if: steps.chk.outputs.skip != 'true'
         env:
           FORCE: ${{ (github.event_name == 'push' || inputs.force) && '1' || '0' }}
         run: |
@@ -55,6 +82,7 @@ jobs:
           python scripts/watchlist_fetch.py config/watchlist_tabs.json out prev
 
       - name: 자료 올리기 (덮어쓰기)
+        if: steps.chk.outputs.skip != 'true'
         run: |
           if [ ! -f out/meta.json ]; then echo "새 자료 없음"; exit 0; fi
           cd out
