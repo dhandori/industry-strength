@@ -401,6 +401,9 @@
       + `<span><i class="ai-wal-lgest"></i>자동 추정(참고)</span>`;
     return `<section class="card ai-o-wal">
       <div class="card-head wrap"><h2>Anthropic vs OpenAI 지출 점유율 <span class="sub">OpenRouter · 주간 · 두 회사 지출만 더해 100%</span></h2></div>
+      <div class="ai-wal-why"><b>이 탭의 다른 그래프와 무엇이 다른가요?</b>
+        <p>위 <b>매출 런레이트</b>와 아래 <b>분기 실적</b>은 회사 전체 매출입니다. 구독·기업 계약·클라우드 판매가 모두 들어가고, 새 보도가 날 때만 점이 늘어납니다. 이 카드는 개발자들이 OpenRouter API에서 두 회사 모델에 쓴 돈을 주마다 나눈 몫입니다. 새 모델이 나오면 그 주에 바로 움직이므로, 매출보다 먼저 경쟁 판도의 변화를 보여 줍니다.</p>
+        <p>아래 <b>오픈웨이트 vs 클로즈드</b>의 지출 비중은 Vercel 자료입니다. 모든 회사 모델을 오픈웨이트와 클로즈드로 나눈 것이라, 두 회사만 맞대는 이 카드와 자료원도 기준도 다릅니다. 그 카드의 <b>회사별 토큰 점유율</b>은 돈이 아니라 사용량이고, 다른 회사까지 모두 더한 전체에 대한 몫입니다. 이 카드 아래쪽 합산 토큰은 두 회사 사용량만 더해, 위 지출 몫과 나란히 비교하게 했습니다.</p></div>
       <div class="ai-oc">
         <div class="ai-ock wal"><span>지출 점유율 (${md(L.week)} 주, 공식)</span><b><span style="color:var(--ai-a)">Anthropic ${Math.round(aL)}%</span> : <span style="color:var(--ai-o)">OpenAI ${Math.round(100 - aL)}%</span></b><small>${esc(D.meta.published || "")}${chg(dA)}</small></div>
         <div class="ai-ock wal"><span>OpenAI 고점과 지금</span><b>${Math.round(100 - D.aSum(pk))}% → ${Math.round(100 - aL)}%</b><small>${md(pk.week)} 주가 고점이었고, 그 뒤 ${Math.round((100 - D.aSum(pk)) - (100 - aL))}%p 내려왔어요.</small></div>

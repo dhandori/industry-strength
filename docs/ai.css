@@ -236,3 +236,5 @@ tr.ai-sup td { color: var(--muted); } tr.ai-sup td b { text-decoration: line-thr
 .ai-ock.wal { border-left-color: var(--ai-a); }
 .ai-ock.wal > b { font-size: 19px; }
 .ai-ock.wal small b { font-size: inherit; }
+.ai-wal-why { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; background: var(--surface-2); border-left: 3px solid var(--ai-a); font-size: 13.5px; line-height: 1.6; }
+.ai-wal-why p { margin: 6px 0 0; }
