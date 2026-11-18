@@ -7,9 +7,9 @@
 <meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=7d8255858a">
+<link rel="stylesheet" href="style.css?v=90ca5eb9cb">
 <link rel="stylesheet" href="macro.css?v=84bb2d63a0">
-<link rel="stylesheet" href="ai.css?v=01deacce02">
+<link rel="stylesheet" href="ai.css?v=2eb2217727">
 <link rel="stylesheet" href="pairs.css?v=8cf2a99974">
 <link rel="stylesheet" href="positioning.css?v=597b0f6c19">
 <link rel="stylesheet" href="supply.css?v=06f9327ff0">
@@ -324,23 +324,6 @@
     <p class="foot-note">막대가 5일 평균선보다 높으면 신고가가 늘어나는 중이고, 낮으면 줄어드는 중이에요.</p>
   </section>
 
-  <section class="card" aria-labelledby="hxd-h">
-    <div class="card-head wrap">
-      <h2 id="hxd-h">날짜별 신고가 종목</h2>
-      <div class="filters">
-        <div class="seg small" id="hxMode" aria-label="보기 방식">
-          <button data-mode="group" aria-pressed="true">업종별 묶음</button>
-          <button data-mode="table" aria-pressed="false">표로 보기</button>
-        </div>
-        <input id="hxSearch" class="hx-search" type="search" placeholder="종목·업종 찾기" aria-label="종목·업종 찾기">
-      </div>
-    </div>
-    <div class="dchips" id="hxDays"></div>
-    <p class="hx-daysum" id="hxDaySum"></p>
-    <div id="hxList"></div>
-    <p class="foot-note">🔁 N일째는 N일 연속 신고가라는 뜻이고, 🆕는 기록 기간 안에서 처음 신고가를 낸 종목이에요. 종목 이름을 누르면 TradingView 차트가 열려요. ‘강도판: ○○’을 누르면 산업 강도 탭에서 그 산업의 상세 화면이 열려요.</p>
-  </section>
-
   <section class="card" aria-labelledby="hxs-h">
     <div class="card-head wrap">
       <h2 id="hxs-h">최근 신고가가 자주 나온 업종 <span class="sub">업종별 52주 신고가 횟수 · 최근 5거래일과 그 전 5거래일 비교 · 열 제목을 누르면 정렬돼요</span></h2>
@@ -362,6 +345,23 @@
     <div class="heat-wrap"><div id="hxHeat" class="heat hx-heat"></div></div>
     <button class="toggle" id="hxHeatMore" style="margin-top:10px" hidden></button>
     <p class="foot-note">칸 안 숫자는 그날 그 업종에서 나온 신고가 종목 수예요. 한 줄에 색이 며칠 이어지면 그 업종에서 신고가가 꾸준히 나오고 있다는 뜻이에요. 맨 오른쪽 테두리 칸이 가장 최근 거래일이에요.</p>
+  </section>
+
+  <section class="card" aria-labelledby="hxd-h">
+    <div class="card-head wrap">
+      <h2 id="hxd-h">날짜별 신고가 종목</h2>
+      <div class="filters">
+        <div class="seg small" id="hxMode" aria-label="보기 방식">
+          <button data-mode="group" aria-pressed="true">업종별 묶음</button>
+          <button data-mode="table" aria-pressed="false">표로 보기</button>
+        </div>
+        <input id="hxSearch" class="hx-search" type="search" placeholder="종목·업종 찾기" aria-label="종목·업종 찾기">
+      </div>
+    </div>
+    <div class="dchips" id="hxDays"></div>
+    <p class="hx-daysum" id="hxDaySum"></p>
+    <div id="hxList"></div>
+    <p class="foot-note">🔁 N일째는 N일 연속 신고가라는 뜻이고, 🆕는 기록 기간 안에서 처음 신고가를 낸 종목이에요. 종목 이름을 누르면 TradingView 차트가 열려요. ‘강도판: ○○’을 누르면 산업 강도 탭에서 그 산업의 상세 화면이 열려요.</p>
   </section>
 
   <section class="card" aria-labelledby="hxf-h" data-fold="closed">
@@ -441,10 +441,6 @@
     <div class="drawer-body">
       <div class="d-stats" id="dStats"></div>
       <div class="d-tags" id="dTags"></div>
-      <div id="dRs"></div>
-      <h4>RS선 <span class="sub">바구니 지수 ÷ 시장 지수, 기간 시작=100 · 선이 오르면 시장보다 강해지는 중 · 코스닥(나스닥) 종목이 절반 넘으면 코스닥150(나스닥100)과 비교</span></h4>
-      <div class="chart-legend" id="lgRs"></div>
-      <div id="cRs" class="chart sm"></div>
       <h4>구성 종목 <span class="sub">같은 비중 · 열 제목을 누르면 정렬</span></h4>
       <div class="mem-wrap" id="dMembers"></div>
       <section id="dSupply" class="d-supply" hidden>
@@ -468,6 +464,9 @@
       <div id="cPrice" class="chart"></div>
       <div class="bench-cap" id="capBench"></div>
       <div id="cBench" class="chart sm"></div>
+      <h4>RS선 <span class="sub">시장 지수 대비, 기간 시작=100 · 코스닥(나스닥) 종목이 절반 넘으면 코스닥150(나스닥100)과 비교</span></h4>
+      <div class="chart-legend" id="lgRs"></div>
+      <div id="cRs" class="chart sm"></div>
       <h4>종합 순위 추이 <span class="sub">위쪽일수록 1등</span></h4>
       <div id="cRank" class="chart sm"></div>
     </div>
@@ -489,22 +488,22 @@
 <script src="links.js?v=41cf324f28"></script>
 <script src="refresh.js?v=33361a4426"></script>
 <script src="flow.js?v=581438d5b9"></script>
-<script src="rsbox.js?v=d06443204b"></script>
+<script src="rsbox.js?v=ab1e29650e"></script>
 <script src="stock.js?v=85b9788ae2"></script>
 <script src="supply.js?v=8fb1618209"></script>
-<script src="app.js?v=db22806ac9"></script>
+<script src="app.js?v=3e0220b6a5"></script>
 <script src="sectorflow.js?v=864daa9d87"></script>
 <script src="highs.js?v=4f8ee979e3"></script>
 <script src="econ.js?v=ef21cef610"></script>
 <script src="putcall.js?v=87d7013de6"></script>
 <script src="krfng.js?v=edd9fcf61c"></script>
 <script src="macro.js?v=49f08e8cbc"></script>
-<script src="ai.js?v=aa7385d6f5"></script>
+<script src="ai.js?v=4d10178239"></script>
 <script src="infra.js?v=3ba9e2dd2b"></script>
 <script src="chips.js?v=a01e11b906"></script>
 <script src="pairs.js?v=6a8bea343c"></script>
 <script src="positioning.js?v=55f8483303"></script>
 <script src="tabtimes.js?v=df77f06358"></script>
-<script src="ui.js?v=26307f3b0e"></script>
+<script src="ui.js?v=f0aa77d6a8"></script>
 </body>
 </html>

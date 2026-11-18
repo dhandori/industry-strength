@@ -321,6 +321,100 @@
       <p class="foot-note"><b>월 성장률</b>은 곡선이 얼마나 가파르게 휘는지예요. 금액이 계속 늘어도 이 값이 내려가면 성장이 둔화하는 중이에요. <b>월 증가액</b>은 한 달에 실제로 몇 달러씩 붙는지예요. 회사가 커지면 성장률이 내려가도 증가액은 늘 수 있어서 둘을 같이 봐야 해요. 각 점은 그 보도 날짜 기준 <b>직전 3개월</b>(보도 사이는 꾸준한 비율 성장으로 보간)의 평균 속도이고, 옅은 띠는 보도와 보도 사이 구간의 속도예요. ‘가속·둔화’는 약 3개월 전 점과 비교해 월 성장률이 1.5%p 이상(또는 20% 이상) 달라졌을 때만 붙여요. 보도 날짜가 듬성듬성해서 최근 점 하나로 판단하지 말고 흐름을 보세요.</p>`;
   }
 
+  // ---------- 1-2) 두 회사 지출 점유율 + 합산 토큰 (2026-11-18 사용자 요청: OpenRouter 'OpenAI vs Anthropic wallet share' 그래프와 총합산)
+  // 막대 = OpenRouter 공개 그래프에서 옮긴 공식값(config/openrouter_wallet_official.json). 흐린 점선 = 정가×토큰 자동 추정(캐시 할인을 못 넣어 Anthropic이 높게 나옴, 참고).
+  // 아래 = OpenRouter가 공개하는 두 회사 주간 토큰을 쌓은 막대라 꼭대기(합계)가 주마다 달라진다.
+  const WAL_COL = { o_s61: "#4b2fa3", o_sol: "#6d50c8", o_luna: "#9077df", o_astra: "#bcaaf3", o_old: "#7d7896",
+    a_old: "#9a6a4b", a_haiku: "#f6cf85", a_sonnet: "#f2a65a", a_opus: "#e8772c", a_fable: "#c2410c" };
+  const walCol = (k) => WAL_COL[k] || (k.startsWith("a_") ? "var(--ai-a)" : "var(--ai-o)");
+  const walInk = (k) => (["o_astra", "a_haiku", "a_sonnet"].includes(k) ? "#2a2015" : "#fff");
+  const walCo = (k) => (k.startsWith("a_") ? "Anthropic" : "OpenAI");
+  function walData(or, narrow) {
+    const sp = or.spend || {}, off = sp.official || null, offW = off ? off.weeks || [] : [], est = sp.weeks || [];
+    const ws = [...new Set([...offW.map((w) => w.week), ...est.map((w) => w.week)])].sort().slice(narrow ? -14 : -30);
+    const aSum = (w) => Object.entries(w).filter(([k]) => k.startsWith("a_")).reduce((t, [, v]) => t + v, 0);
+    return { ws, off: Object.fromEntries(offW.map((w) => [w.week, w])), est: Object.fromEntries(est.map((w) => [w.week, w])),
+      groups: off ? off.groups || [] : [], offW, aSum, meta: off };
+  }
+  function walletChart(or, W) {
+    const D = walData(or, W < 520), n = D.ws.length;
+    if (!n || !D.offW.length) return "";
+    const H = Math.round(Math.max(250, Math.min(340, W * 0.55))), P = { l: 38, r: 10, t: 10, b: 26 };
+    const bw = (W - P.l - P.r) / n, X = (i) => P.l + bw * (i + 0.5), Y = (v) => P.t + (1 - v / 100) * (H - P.t - P.b), rw = Math.max(3, bw * 0.84);
+    let g = "", b = "";
+    for (const v of [0, 25, 50, 75, 100]) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(v) + 4}" text-anchor="end" class="ai-tk">${v}%</text>`;
+    D.ws.forEach((wk, i) => {
+      const w = D.off[wk];
+      if (!w) return;
+      const a = D.aSum(w);
+      let acc = 0;
+      for (const gr of D.groups) {
+        const v = w[gr.k];
+        if (!v) continue;
+        const y1 = Y(acc), y0 = Y(acc + v), h = y1 - y0;
+        b += `<rect x="${(X(i) - rw / 2).toFixed(1)}" y="${y0.toFixed(1)}" width="${rw.toFixed(1)}" height="${h.toFixed(1)}" fill="${walCol(gr.k)}" ${tipAttr(`${md(wk)} 주 · ${gr.name} ${pct(v)} · ${walCo(gr.k)} 합계 ${pct(walCo(gr.k) === "Anthropic" ? a : 100 - a)} (OpenRouter 공식)`)}/>`;
+        if (h >= 15 && rw >= 22 && v >= 5) b += `<text x="${X(i).toFixed(1)}" y="${(y0 + h / 2 + 4).toFixed(1)}" text-anchor="middle" class="ai-wl" fill="${walInk(gr.k)}">${Math.round(v)}</text>`;
+        acc += v;
+      }
+    });
+    b += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(50)}" y2="${Y(50)}" class="ai-wal-mid"/>`;
+    // 자동 추정(참고): OpenAI 몫 위 경계(= 100 - Anthropic 비중)에 흐린 점선
+    const ep = D.ws.map((wk, i) => D.est[wk] && [i, 100 - D.est[wk].a_share, D.est[wk]]).filter(Boolean);
+    if (ep.length >= 2) b += `<polyline fill="none" class="ai-wal-est" points="${ep.map(([i, v]) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ")}"/>`;
+    for (const [i, v, e] of ep) b += `<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="4" class="ai-wal-ept${e.partial ? " part" : ""}" ${tipAttr(`${md(e.week)} 주${e.partial ? `(진행 중, ${e.days}일)` : ""} · 자동 추정(정가×토큰, 참고) Anthropic ${pct(e.a_share)} · OpenAI ${pct(100 - e.a_share)} · ${e.method === "est" ? "주간 토큰 기록으로 거꾸로 계산" : `하루 자료 ${e.days}일`} · 캐시 할인을 못 넣어 Anthropic이 높게 나와요`)}/>`;
+    const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor((W - P.l - P.r) / 44))));
+    for (let i = n - 1; i >= 0; i -= every) g += `<text x="${X(i).toFixed(1)}" y="${H - 8}" text-anchor="${i === n - 1 ? "end" : "middle"}" class="ai-tk">${md(D.ws[i])}</text>`;
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="OpenRouter Anthropic 대 OpenAI 주간 지출 점유율">${g}${b}</svg>`;
+  }
+  function walTokChart(or, W) {
+    const D = walData(or, W < 520), wk = Object.fromEntries((or.weeks || []).map((w) => [w.week, w]));
+    const ws = D.ws.filter((x) => wk[x]), n = ws.length;
+    if (n < 2) return "";
+    const rows = ws.map((x) => ({ week: x, a: wk[x].authors.anthropic || 0, o: wk[x].authors.openai || 0, partial: wk[x].partial }));
+    const H = Math.round(Math.max(200, Math.min(270, W * 0.42))), P = { l: 44, r: 10, t: 18, b: 26 };
+    const vmax = Math.max(...rows.map((r) => (r.a + r.o) / 1e12)), step = vmax > 40 ? 10 : vmax > 20 ? 5 : vmax > 8 ? 2 : 1, ymax = Math.ceil(vmax / step) * step || 1;
+    const bw = (W - P.l - P.r) / n, X = (i) => P.l + bw * (i + 0.5), Y = (v) => P.t + (1 - v / ymax) * (H - P.t - P.b), rw = Math.max(3, bw * 0.84);
+    let g = "", b = "";
+    for (let v = 0; v <= ymax + 1e-9; v += step) g += `<line x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}" class="ai-grid"/><text x="${P.l - 6}" y="${Y(v) + 4}" text-anchor="end" class="ai-tk">${v}조</text>`;
+    rows.forEach((r, i) => {
+      const o = r.o / 1e12, a = r.a / 1e12, t = a + o, op = r.partial ? ` opacity=".4"` : "";
+      const tip = tipAttr(`${md(r.week)} 주${r.partial ? "(진행 중)" : ""} · 두 회사 합계 ${t.toFixed(1)}조 토큰 = Anthropic ${a.toFixed(1)}조(${pct(t ? a / t * 100 : null)}) + OpenAI ${o.toFixed(1)}조`);
+      b += `<rect x="${(X(i) - rw / 2).toFixed(1)}" y="${Y(o).toFixed(1)}" width="${rw.toFixed(1)}" height="${(Y(0) - Y(o)).toFixed(1)}" fill="var(--ai-o)"${op} ${tip}/>`;
+      b += `<rect x="${(X(i) - rw / 2).toFixed(1)}" y="${Y(t).toFixed(1)}" width="${rw.toFixed(1)}" height="${(Y(o) - Y(t)).toFixed(1)}" fill="var(--ai-a)"${op} ${tip}/>`;
+      if (rw >= 24 || i === n - 1 || (r.partial && i === n - 2)) b += `<text x="${X(i).toFixed(1)}" y="${(Y(t) - 4).toFixed(1)}" text-anchor="${i === n - 1 && rw < 24 ? "end" : "middle"}" class="ai-wl tot">${t.toFixed(t >= 10 ? 0 : 1)}</text>`;
+    });
+    const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor((W - P.l - P.r) / 44))));
+    for (let i = n - 1; i >= 0; i -= every) g += `<text x="${X(i).toFixed(1)}" y="${H - 8}" text-anchor="${i === n - 1 ? "end" : "middle"}" class="ai-tk">${md(rows[i].week)}</text>`;
+    return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" class="ai-svg" role="img" aria-label="Anthropic·OpenAI 주간 토큰 합산">${g}${b}</svg>`;
+  }
+  function walletCard(or) {
+    const D = walData(or, false);
+    if (!D.offW.length) return "";
+    const L = D.offW.at(-1), Pv = D.offW.at(-2), aL = D.aSum(L), dA = Pv ? aL - D.aSum(Pv) : null;
+    const pk = D.offW.reduce((m, w) => (100 - D.aSum(w) > 100 - D.aSum(m) ? w : m), D.offW[0]);
+    const tw = (or.weeks || []).find((w) => w.week === L.week), tA = tw ? tw.authors.anthropic / ((tw.authors.anthropic || 0) + (tw.authors.openai || 0)) * 100 : null;
+    const eL = (or.spend && or.spend.weeks || []).at(-1);
+    const chg = (d) => d == null ? "" : ` · 전주보다 Anthropic <b class="${d >= 0 ? "up" : "down"}">${d >= 0 ? "▲" : "▼"}${Math.abs(d).toFixed(1)}%p</b>`;
+    const legend = [...D.groups].reverse().map((g) => `<span><i style="background:${walCol(g.k)}"></i>${esc(g.name)}</span>`).join("")
+      + `<span><i class="ai-wal-lgest"></i>자동 추정(참고)</span>`;
+    return `<section class="card ai-o-wal">
+      <div class="card-head wrap"><h2>Anthropic vs OpenAI 지출 점유율 <span class="sub">OpenRouter · 주간 · 두 회사 지출만 더해 100%</span></h2></div>
+      <div class="ai-wal-why"><b>다른 카드와 다른 점</b> ① 묶음의 매출은 회사 전체 실적이라 몇 주에 한 번 바뀌어요. 이 카드는 OpenRouter API에서 두 회사 모델에 쓴 돈의 몫이라, 새 모델이 나오면 그 주에 바로 움직여요. 바로 아래 오픈웨이트 vs 클로즈드는 Vercel 자료로 모든 회사를 나눈 것이라 기준이 달라요.</div>
+      <div class="ai-oc">
+        <div class="ai-ock wal"><span>지출 점유율 (${md(L.week)} 주, 공식)</span><b><span style="color:var(--ai-a)">Anthropic ${Math.round(aL)}%</span> : <span style="color:var(--ai-o)">OpenAI ${Math.round(100 - aL)}%</span></b><small>${esc(D.meta.published || "")}${chg(dA)}</small></div>
+        <div class="ai-ock wal"><span>OpenAI 고점과 지금</span><b>${Math.round(100 - D.aSum(pk))}% → ${Math.round(100 - aL)}%</b><small>${md(pk.week)} 주가 고점이었고, 그 뒤 ${Math.round((100 - D.aSum(pk)) - (100 - aL))}%p 내려왔어요.</small></div>
+        ${tA != null ? `<div class="ai-ock wal"><span>같은 주 토큰 점유율</span><b>Anthropic ${Math.round(tA)}%</b><small>지출 몫(${Math.round(aL)}%)보다 작아요. Claude 토큰이 더 비싸서예요.</small></div>` : ""}
+      </div>
+      <div class="chart-legend ai-wal-leg">${legend}</div>
+      <div id="aiWal"></div>
+      <p class="foot-note">막대 하나가 한 주예요. 아래 보라가 OpenAI, 위 주황이 Anthropic이고 점선이 50%예요. 막대 값은 <a href="${esc(D.meta.url)}" target="_blank" rel="noopener">OpenRouter</a> 공개 그래프에서 옮겼어요(숫자 없는 칸은 ±1~2%p). <b>흐린 점선</b>은 토큰×정가로 매일 낸 자동 추정인데, 캐시 할인이 빠져 Anthropic이 10~20%p 높게 나와요. 방향만 보세요${eL ? `(최근 ${md(eL.week)} 주 Anthropic ${pct(eL.a_share, 0)})` : ""}.</p>
+      <h3 class="ai-h3">두 회사 합산 토큰 <span class="sub">OpenRouter 공개 주간 토큰 · 막대 높이 = 두 회사 합계(조 토큰)</span></h3>
+      <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i style="background:var(--ai-other);opacity:.5"></i>흐린 막대 = 진행 중인 주</span></div>
+      <div id="aiWalTok"></div>
+      <p class="foot-note">위 그래프는 늘 100%라 몫만 보여요. 이 그래프는 실제 사용량(OpenRouter 실측)이라 꼭대기 숫자로 총량 변화를 봐요.</p>
+    </section>`;
+  }
+
   // ---------- 1-1b) 두 회사 분기 매출(나란한 막대) + 합계 (2026-11-11 사용자: OpenAI 분기 실적과 Anthropic 합산)
   function quarterChart(Q, W) {
     const A = Q.companies.Anthropic?.rows || [], O = Q.companies.OpenAI?.rows || [];
@@ -809,6 +903,7 @@
         ${others ? `<h3 class="ai-h3">다른 AI 회사 최근 매출</h3><div class="ai-chips">${others}</div>` : ""}
         <p class="foot-note">자료: <a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI, ‘Data on AI companies’</a>(CC BY 4.0). 언론 보도·회사 발표를 모은 표라 <b>새 보도가 날 때만</b> 점이 늘어요(최근엔 2~4주에 한 번). <b>속 빈 점과 점선</b>은 회사가 투자자에게 밝힌 연말 목표로 실제 실적이 아니에요. <b>마름모</b>는 Epoch에 아직 없는 새 기사 숫자(자동 판독)예요. 점에 손가락·마우스를 대면 원문 요약이 보여요. 런레이트 = 최근 한 달 매출 × 12, ARR = 반복 매출 연환산.</p>
       </section>
+      ${walletCard(or)}
       ${quarterCard(rv.quarterly, d.warnings, rv)}
       ${rcHtml}
       <section class="card ai-o-oc">
@@ -859,6 +954,7 @@
     $("#aiOpen").innerHTML = openChart(or, vc, width($("#aiOpen")));
     $("#aiWeek").innerHTML = weekChart(or, vc, width($("#aiWeek")));
     if ($("#aiPrice")) $("#aiPrice").innerHTML = priceChart(d.silicon, width($("#aiPrice")));
+    if ($("#aiWal")) { $("#aiWal").innerHTML = walletChart(or, width($("#aiWal"))); $("#aiWalTok").innerHTML = walTokChart(or, width($("#aiWalTok"))); }
     if ($("#aiQ")) $("#aiQ").innerHTML = quarterChart(rv.quarterly, width($("#aiQ")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);

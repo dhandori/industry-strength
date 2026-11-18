@@ -3,11 +3,60 @@
    - RS 점수(1~99)와 '시장 RS 기준선'(지수를 같은 잣대에 넣었을 때의 점수, {시장}.json 의 rs_base)을 한 막대에 그린다.
    - RS선(종목·산업 ÷ 지수)이 50일 평균 위인지로 최근 흐름을 더한다.
    - 'RS가 왜 중요한가요?' 풀이는 접어 둔다.
-   기준선 자료가 아직 없는 날(배포 직후)에는 막대에 점수만 그리고 기준선 문장은 빼고 보여 준다. */
+   기준선 자료가 아직 없는 날(배포 직후)에는 막대에 점수만 그리고 기준선 문장은 빼고 보여 준다.
+   공용 파일(index.html·style.css)과 충돌하지 않도록 모양(CSS)과 서랍 안 자리(#dRs)는 이 파일이 직접 만든다. */
 (function () {
   "use strict";
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
   const isNum = (v) => typeof v === "number" && isFinite(v);
+
+  // 모양: style.css 대신 여기서 한 번만 넣는다.
+  const CSS = `
+.rs-box { margin: 12px 0; padding: 12px 14px; border: 1px solid var(--line); border-left: 4px solid var(--muted); border-radius: 12px; background: var(--surface); }
+.rs-box.good { border-left-color: var(--good); }
+.rs-box.mid { border-left-color: #d99a00; }
+.rs-box.weak { border-left-color: var(--down); }
+.rs-box h4 { margin: 0 0 6px; font-size: 15px; }
+.rs-verdict { margin: 0 0 10px; font-size: 15px; line-height: 1.55; font-weight: 600; }
+.rsg { position: relative; margin: 4px 6px 6px; }
+.rsg-track { position: relative; height: 10px; border-radius: 6px; background: var(--accent-soft); }
+.rsg-weak { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 6px 0 0 6px; background: var(--surface-2); }
+.rsg-base { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; background: var(--ink-2); }
+.rsg-dot { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); box-shadow: 0 0 0 1px var(--accent); }
+.rs-box.good .rsg-dot { background: var(--good); box-shadow: 0 0 0 1px var(--good); }
+.rs-box.weak .rsg-dot { background: var(--down); box-shadow: 0 0 0 1px var(--down); }
+.rsg-lab { position: relative; height: 18px; font-size: 12px; color: var(--ink-2); }
+.rsg-lab span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.rsg-lab span.me { font-weight: 700; color: var(--ink); font-size: 13px; }
+.rsg-lab.low span { color: var(--muted); }
+.rsg-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.rs-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 8px; }
+.rs-facts div { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; display: grid; gap: 2px; }
+.rs-facts em { font-style: normal; font-size: 11.5px; color: var(--muted); }
+.rs-facts b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.rs-facts small { font-size: 11.5px; color: var(--ink-2); }
+.rs-why { margin-top: 10px; }
+.rs-why summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--accent); }
+.rs-why p { margin: 8px 0 0; font-size: 14px; line-height: 1.65; color: var(--ink-2); }
+.rs-why p b { color: var(--ink); }
+`;
+  (function addStyle() {
+    if (document.getElementById("rsbox-style")) return;
+    const st = document.createElement("style"); st.id = "rsbox-style"; st.textContent = CSS; document.head.append(st);
+  })();
+
+  // 산업 서랍 안 자리: 꼬리표(#dTags) 바로 아래에 상자 자리를 만들고, 서랍 아래쪽 RS선 차트(제목·범례·차트)를 그 밑으로 올린다.
+  function drawerSlot() {
+    let slot = document.getElementById("dRs");
+    const tags = document.getElementById("dTags");
+    if (!slot && tags) {
+      slot = document.createElement("div"); slot.id = "dRs"; tags.after(slot);
+      const lg = document.getElementById("lgRs"), ch = document.getElementById("cRs");
+      const h = lg && lg.previousElementSibling && lg.previousElementSibling.tagName === "H4" ? lg.previousElementSibling : null;
+      if (lg && ch) { let at = slot; [h, lg, ch].filter(Boolean).forEach((e) => { at.after(e); at = e; }); }
+    }
+    return slot;
+  }
 
   // d: {시장}.json, b2: 두 번째 지수와 비교하는지, kind: "stock" | "industry"
   function baseOf(d, kind, b2) {
@@ -79,5 +128,5 @@
     </section>`;
   }
 
-  window.__rsbox = { html, baseOf };
+  window.__rsbox = { html, baseOf, drawerSlot };
 })();
