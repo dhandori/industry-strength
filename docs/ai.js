@@ -6,7 +6,10 @@
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const st = { data: null, loading: null };
+  const st = { data: null, loading: null, infra: null, more: new Set() };
+  // '자세히 보기' 접기(2026-11-18 가시성 정비): 카드마다 결론 한 줄과 대표 그래프만 보이고 나머지는 접는다. 연 상태는 다시 그려도 유지.
+  const more = (key, label, html) => `<details class="ai-more" data-more="${key}"${st.more.has(key) ? " open" : ""}><summary>${label}</summary><div class="ai-more-b">${html}</div></details>`;
+  const lead = (html) => `<p class="ai-lead">${html}</p>`;
   const md = (s) => { const [y, m, d] = s.split("-"); return `${+m}/${+d}`; };
   const ymd = (s) => { const [y, m, d] = s.split("-"); return `${y.slice(2)}.${+m}.${+d}`; };
   const won = (usd) => usd >= 1e12 ? `${(usd / 1e12).toFixed(2).replace(/\.?0+$/, "")}조 달러` : `${Math.round(usd / 1e8).toLocaleString()}억 달러`;
@@ -24,6 +27,8 @@
     const box = $("#aiBody");
     if (!st.data || force) {
       if (!st.loading || force) st.loading = fetch("data/ai_market.json?v=" + Date.now(), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
+      // '한눈에' 판의 설비투자 칸용(인프라 카드 자료를 읽기만 한다. 실패해도 그 칸만 빈다)
+      fetch("data/ai_infra.json?v=" + Date.now(), { cache: "no-store" }).then((r) => (r.ok ? r.json() : null)).then((j) => { st.infra = j; if (j && st.data && !$("#viewAi").hidden) render(); }).catch(() => {});
       try { st.data = await st.loading; } catch (e) { st.loading = null; $("#aiMeta").textContent = "AI 시장 자료를 불러오지 못했어요. 잠시 후 새로고침해 주세요."; box.innerHTML = ""; return; }
     }
     render();
@@ -321,6 +326,49 @@
       <p class="foot-note"><b>월 성장률</b>은 곡선이 얼마나 가파르게 휘는지예요. 금액이 계속 늘어도 이 값이 내려가면 성장이 둔화하는 중이에요. <b>월 증가액</b>은 한 달에 실제로 몇 달러씩 붙는지예요. 회사가 커지면 성장률이 내려가도 증가액은 늘 수 있어서 둘을 같이 봐야 해요. 각 점은 그 보도 날짜 기준 <b>직전 3개월</b>(보도 사이는 꾸준한 비율 성장으로 보간)의 평균 속도이고, 옅은 띠는 보도와 보도 사이 구간의 속도예요. ‘가속·둔화’는 약 3개월 전 점과 비교해 월 성장률이 1.5%p 이상(또는 20% 이상) 달라졌을 때만 붙여요. 보도 날짜가 듬성듬성해서 최근 점 하나로 판단하지 말고 흐름을 보세요.</p>`;
   }
 
+  // ---------- 0) AI 시장 한눈에 (2026-11-18 가시성 정비): 묶음마다 칸 하나 — 큰 숫자, 작은 추세선, 상태 딱지. 누르면 그 묶음으로.
+  function spark(vals, c) {
+    const v = vals.filter((x) => x != null && isFinite(x));
+    if (v.length < 2) return "";
+    const lo = Math.min(...v), hi = Math.max(...v), r = hi - lo || 1;
+    const pts = v.map((x, i) => `${((i / (v.length - 1)) * 100).toFixed(1)},${(25 - ((x - lo) / r) * 21).toFixed(1)}`).join(" ");
+    const [lx, ly] = pts.split(" ").at(-1).split(",");
+    return `<svg class="bd-sp" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/><circle cx="${lx}" cy="${ly}" r="2.6" fill="${c}" vector-effect="non-scaling-stroke"/></svg>`;
+  }
+  function boardCard(d, rv, or, x) {
+    const pc = (v) => (v == null ? "–" : `${v > 0 ? "+" : ""}${v.toFixed(0)}%`);
+    const tile = (g, k, big, sub, vis, chip, cls) => `<button type="button" class="bd-t" data-grp="${g}"><span class="bd-k">${k}</span><b class="bd-v">${big}</b><span class="bd-d">${sub}</span>${vis || ""}${chip ? `<span class="bd-chip ${cls || ""}">${chip}</span>` : ""}</button>`;
+    const out = [];
+    // ① 버는 돈: 두 회사 분기 매출 합계
+    const C = (rv.quarterly && rv.quarterly.combined) || [], c = C.at(-1);
+    if (c) out.push(tile(0, "① 버는 돈 · 분기 매출", won(c.usd), `${esc(c.q.slice(2).replace("Q", "년 "))}분기 두 회사 · 전분기보다 <b class="${(c.qoq ?? 0) >= 0 ? "up" : "down"}">${pc(c.qoq)}</b>`,
+      spark(C.slice(-6).map((r) => r.usd), "var(--ai-a)"), x.sr ? `성장 속도 ${x.sr.verdict}` : "", x.sr ? x.sr.cls : ""));
+    // ② 흘러가는 곳: 빅테크 설비투자(인프라 자료)
+    const tot = ((st.infra && st.infra.capex && st.infra.capex.total) || []), nMax = Math.max(0, ...tot.map((t) => t.n || 0));
+    const T = tot.filter((t) => t.n === nMax), t = T.at(-1);
+    if (t) {
+      const y = T.find((u) => u.q === String(+t.q.slice(0, 4) - 1) + t.q.slice(4)), yoy = y ? (t.usd / y.usd - 1) * 100 : null;
+      out.push(tile(1, "② 흘러가는 곳 · 설비투자", won(t.usd), `${esc(t.q.slice(2).replace("Q", "년 "))}분기 빅테크 ${nMax}사 · 1년 전보다 <b class="${(yoy ?? 0) >= 0 ? "up" : "down"}">${pc(yoy)}</b>`,
+        spark(T.slice(-8).map((u) => u.usd), "var(--ink)"), yoy == null ? "" : yoy >= 50 ? "투자 급증" : yoy >= 10 ? "투자 증가" : yoy >= 0 ? "투자 보합" : "투자 감소", yoy == null ? "" : yoy >= 10 ? "up" : yoy >= 0 ? "" : "down"));
+    }
+    // ③ 모델 경쟁: 두 회사 지출 점유율(공식)
+    const W = ((or.spend || {}).official || {}).weeks || [], L = W.at(-1);
+    if (L) {
+      const a = Object.entries(L).filter(([k]) => k.startsWith("a_")).reduce((s, [, v]) => s + v, 0);
+      let n = 0; for (let i = W.length - 1; i >= 0; i--) { const ai = Object.entries(W[i]).filter(([k]) => k.startsWith("a_")).reduce((s, [, v]) => s + v, 0); if ((ai > 50) === (a > 50)) n++; else break; }
+      out.push(tile(2, "③ 모델 경쟁 · 지출 점유율", `<span style="color:var(--ai-a)">${Math.round(a)}</span> : <span style="color:var(--ai-o)">${Math.round(100 - a)}</span>`, `${md(L.week)} 주 · Anthropic : OpenAI`,
+        `<span class="bd-bar"><i style="width:${a}%;background:var(--ai-a)"></i><i style="width:${100 - a}%;background:var(--ai-o)"></i></span>`, `${a > 50 ? "Anthropic" : "OpenAI"} 우세 ${n}주째`, ""));
+    }
+    // ③ 모델 경쟁: 싼 모델로 얼마나 옮겨 가나
+    if (x.openNow != null) {
+      const est = (or.open_est || []).filter((e) => !e.partial && e.open_pct != null).slice(-12);
+      out.push(tile(2, "③ 모델 경쟁 · 오픈웨이트", `${Math.round(x.openNow)}%`, `토큰 비중${x.cNow ? ` · 돈은 ${Math.round(x.cNow.v)}%만` : ""}`,
+        spark(est.map((e) => e.open_pct), "var(--ai-open)"), x.mult || x.siM ? `클로즈드가 ${(x.mult || x.siM.now).toFixed(1)}배 비쌈` : "", ""));
+    }
+    if (!out.length) return "";
+    return `<section class="card ai-board"><div class="bd-h"><b>AI 시장 한눈에</b><span>버는 돈 → 그 돈이 가는 곳 → 누가 이기나 순서예요. 칸을 누르면 그 묶음으로 가요.</span></div><div class="bd-grid">${out.join("")}</div></section>`;
+  }
+
   // ---------- 1-2) 두 회사 지출 점유율 + 합산 토큰 (2026-11-18 사용자 요청: OpenRouter 'OpenAI vs Anthropic wallet share' 그래프와 총합산)
   // 막대 = OpenRouter 공개 그래프에서 옮긴 공식값(config/openrouter_wallet_official.json). 흐린 점선 = 정가×토큰 자동 추정(캐시 할인을 못 넣어 Anthropic이 높게 나옴, 참고).
   // 아래 = OpenRouter가 공개하는 두 회사 주간 토큰을 쌓은 막대라 꼭대기(합계)가 주마다 달라진다.
@@ -348,12 +396,13 @@
       if (!w) return;
       const a = D.aSum(w);
       let acc = 0;
-      for (const gr of D.groups) {
-        const v = w[gr.k];
+      const simple = W < 520, segs = simple ? [{ k: "_o", name: "OpenAI", v: 100 - a }, { k: "_a", name: "Anthropic", v: a }] : D.groups.map((g) => ({ ...g, v: w[g.k] }));
+      for (const gr of segs) {
+        const v = gr.v;
         if (!v) continue;
         const y1 = Y(acc), y0 = Y(acc + v), h = y1 - y0;
-        b += `<rect x="${(X(i) - rw / 2).toFixed(1)}" y="${y0.toFixed(1)}" width="${rw.toFixed(1)}" height="${h.toFixed(1)}" fill="${walCol(gr.k)}" ${tipAttr(`${md(wk)} 주 · ${gr.name} ${pct(v)} · ${walCo(gr.k)} 합계 ${pct(walCo(gr.k) === "Anthropic" ? a : 100 - a)} (OpenRouter 공식)`)}/>`;
-        if (h >= 15 && rw >= 22 && v >= 5) b += `<text x="${X(i).toFixed(1)}" y="${(y0 + h / 2 + 4).toFixed(1)}" text-anchor="middle" class="ai-wl" fill="${walInk(gr.k)}">${Math.round(v)}</text>`;
+        b += `<rect x="${(X(i) - rw / 2).toFixed(1)}" y="${y0.toFixed(1)}" width="${rw.toFixed(1)}" height="${h.toFixed(1)}" fill="${gr.k === "_o" ? "var(--ai-o)" : gr.k === "_a" ? "var(--ai-a)" : walCol(gr.k)}" ${tipAttr(`${md(wk)} 주 · ${gr.name} ${pct(v)} · ${walCo(gr.k)} 합계 ${pct(walCo(gr.k) === "Anthropic" ? a : 100 - a)} (OpenRouter 공식)`)}/>`;
+        if (h >= 15 && rw >= (simple ? 16 : 22) && v >= 5) b += `<text x="${X(i).toFixed(1)}" y="${(y0 + h / 2 + 4).toFixed(1)}" text-anchor="middle" class="ai-wl" fill="${gr.k.startsWith("_") ? "#fff" : walInk(gr.k)}">${Math.round(v)}</text>`;
         acc += v;
       }
     });
@@ -398,20 +447,23 @@
     const legend = [...D.groups].reverse().map((g) => `<span><i style="background:${walCol(g.k)}"></i>${esc(g.name)}</span>`).join("")
       + `<span><i class="ai-wal-lgest"></i>자동 추정(참고)</span>`;
     return `<section class="card ai-o-wal">
-      <div class="card-head wrap"><h2>Anthropic vs OpenAI 지출 점유율 <span class="sub">OpenRouter · 주간 · 두 회사 지출만 더해 100%</span></h2></div>
-      <div class="ai-wal-why"><b>다른 카드와 다른 점</b> ① 묶음의 매출은 회사 전체 실적이라 몇 주에 한 번 바뀌어요. 이 카드는 OpenRouter API에서 두 회사 모델에 쓴 돈의 몫이라, 새 모델이 나오면 그 주에 바로 움직여요. 바로 아래 오픈웨이트 vs 클로즈드는 Vercel 자료로 모든 회사를 나눈 것이라 기준이 달라요.</div>
+      <div class="card-head wrap"><h2>지출 점유율 <span class="sub">Anthropic vs OpenAI · OpenRouter 주간 · 두 회사 지출만 더해 100%</span></h2></div>
+      ${lead(`${md(L.week)} 주 두 회사 지출은 <b style="color:var(--ai-a)">Anthropic ${Math.round(aL)}%</b> : <b style="color:var(--ai-o)">OpenAI ${Math.round(100 - aL)}%</b>예요.${100 - D.aSum(pk) > 50 ? ` ${md(pk.week)} 주에 OpenAI가 ${Math.round(100 - D.aSum(pk))}%까지 앞섰다가 뒤집혔어요.` : ""}`)}
+      <div class="chart-legend ai-wal-leg wl-full">${legend}</div>
+      <div class="chart-legend ai-wal-leg wl-simple"><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i class="ai-wal-lgest"></i>자동 추정(참고)</span></div>
+      <div id="aiWal"></div>
+      <h3 class="ai-h3">두 회사 합산 토큰 <span class="sub">OpenRouter 공개 주간 토큰 · 막대 높이 = 두 회사 합계(조 토큰)</span></h3>
+      <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i style="background:var(--ai-other);opacity:.5"></i>흐린 막대 = 진행 중인 주</span></div>
+      <div id="aiWalTok"></div>
+      <p class="foot-note">위 그래프는 늘 100%라 몫만 보여요. 이 그래프는 실제 사용량(OpenRouter 실측)이라 꼭대기 숫자로 총량 변화를 봐요.</p>
+      ${more("wal", "자세히 보기 · 모델별 구성, 다른 카드와 다른 점, 숫자의 출처", `      <div class="ai-wal-why"><b>다른 카드와 다른 점</b> ① 묶음의 매출은 회사 전체 실적이라 몇 주에 한 번 바뀌어요. 이 카드는 OpenRouter API에서 두 회사 모델에 쓴 돈의 몫이라, 새 모델이 나오면 그 주에 바로 움직여요. 바로 아래 오픈웨이트 vs 클로즈드는 Vercel 자료로 모든 회사를 나눈 것이라 기준이 달라요.</div>
       <div class="ai-oc">
         <div class="ai-ock wal"><span>지출 점유율 (${md(L.week)} 주, 공식)</span><b><span style="color:var(--ai-a)">Anthropic ${Math.round(aL)}%</span> : <span style="color:var(--ai-o)">OpenAI ${Math.round(100 - aL)}%</span></b><small>${esc(D.meta.published || "")}${chg(dA)}</small></div>
         <div class="ai-ock wal"><span>OpenAI 고점과 지금</span><b>${Math.round(100 - D.aSum(pk))}% → ${Math.round(100 - aL)}%</b><small>${md(pk.week)} 주가 고점이었고, 그 뒤 ${Math.round((100 - D.aSum(pk)) - (100 - aL))}%p 내려왔어요.</small></div>
         ${tA != null ? `<div class="ai-ock wal"><span>같은 주 토큰 점유율</span><b>Anthropic ${Math.round(tA)}%</b><small>지출 몫(${Math.round(aL)}%)보다 작아요. Claude 토큰이 더 비싸서예요.</small></div>` : ""}
       </div>
-      <div class="chart-legend ai-wal-leg">${legend}</div>
-      <div id="aiWal"></div>
       <p class="foot-note">막대 하나가 한 주예요. 아래 보라가 OpenAI, 위 주황이 Anthropic이고 점선이 50%예요. 막대 값은 <a href="${esc(D.meta.url)}" target="_blank" rel="noopener">OpenRouter</a> 공개 그래프에서 옮겼어요(숫자 없는 칸은 ±1~2%p). <b>흐린 점선</b>은 토큰×정가로 매일 낸 자동 추정인데, 캐시 할인이 빠져 Anthropic이 10~20%p 높게 나와요. 방향만 보세요${eL ? `(최근 ${md(eL.week)} 주 Anthropic ${pct(eL.a_share, 0)})` : ""}.</p>
-      <h3 class="ai-h3">두 회사 합산 토큰 <span class="sub">OpenRouter 공개 주간 토큰 · 막대 높이 = 두 회사 합계(조 토큰)</span></h3>
-      <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i style="background:var(--ai-other);opacity:.5"></i>흐린 막대 = 진행 중인 주</span></div>
-      <div id="aiWalTok"></div>
-      <p class="foot-note">위 그래프는 늘 100%라 몫만 보여요. 이 그래프는 실제 사용량(OpenRouter 실측)이라 꼭대기 숫자로 총량 변화를 봐요.</p>
+<p class="foot-note wl-simple">휴대폰에서는 회사 두 색으로만 그렸어요. 모델별 구성은 넓은 화면에서 보여요.</p>`)}
     </section>`;
   }
 
@@ -479,16 +531,16 @@
     const rowsT = allQ.map((q) => { const x = CB[q]; return `<tr><td>${esc(q)}</td><td class="num">${cell(RA[q])}</td><td class="num">${cell(RO[q])}</td><td class="num">${x ? `<b>${won(x.usd)}</b>` : "–"}</td><td class="num">${x ? pc(x.qoq) : "–"}</td><td class="num">${x ? `${x.a_share.toFixed(0)} : ${(100 - x.a_share).toFixed(0)}` : "–"}</td></tr>`; }).join("");
     const gap = (warns || []).filter((w) => w.kind === "gap");
     return `<section class="card ai-o-q">
-      <div class="card-head wrap"><h2>AI 연구소 분기 실적 <span class="sub">Anthropic·OpenAI 분기 매출과 두 회사 합계</span></h2></div>
+      <div class="card-head wrap"><h2>분기 실적 <span class="sub">Anthropic·OpenAI 분기 매출과 두 회사 합계</span></h2></div>
       ${gap.length ? `<div class="ai-warn aq-gap"><b>⚠️ 보도는 잡혔는데 표에 못 넣은 실적</b><ul>${gap.map((w) => `<li>${esc(w.msg)}</li>`).join("")}</ul></div>` : ""}
-      ${c ? `<div class="aq-sum"><span>${esc(c.q)} 두 회사 합계</span><b>${won(c.usd)}</b><em>전분기 대비 ${pc(c.qoq)} · Anthropic ${c.a_share.toFixed(0)}% · OpenAI ${(100 - c.a_share).toFixed(0)}%</em></div>` : ""}
+      ${c ? lead(`${esc(c.q.slice(-1))}분기 두 회사 매출은 <b>${won(c.usd)}</b>로 전분기보다 <b class="${(c.qoq ?? 0) >= 0 ? "up" : "down"}">${pc(c.qoq)}</b> 늘었어요. ${c.a_share >= 50 ? `<b style="color:var(--ai-a)">Anthropic이 ${c.a_share.toFixed(0)}%</b>로 앞서요.` : `<b style="color:var(--ai-o)">OpenAI가 ${(100 - c.a_share).toFixed(0)}%</b>로 앞서요.`}`) : ""}
       <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i style="background:var(--ink);height:3px"></i>두 회사 합계(참고)</span></div>
       <div id="aiQ"></div>
-      <div class="aq-cos">${box("OpenAI")}${box("Anthropic")}</div>
+      ${more("q", "자세히 보기 · 회사별 실적 내용, S-1 공시, 분기별 표", `<div class="aq-cos">${box("OpenAI")}${box("Anthropic")}</div>
       ${s1Box((rv.filings || {}).Anthropic)}
       ${newsQ(rv, Q)}
       ${rowsT ? `<h3 class="ai-h3">분기별 매출과 합계 <span class="sub">작은 글씨 = 전분기 대비 · 비중 = Anthropic : OpenAI · 합계는 두 회사 값이 다 있는 분기만</span></h3><div class="ai-tw"><table class="mem-table ai-rep"><thead><tr><th>분기</th><th class="num">Anthropic</th><th class="num">OpenAI</th><th class="num">합계</th><th class="num">합계 전분기 대비</th><th class="num">비중</th></tr></thead><tbody>${rowsT}</tbody></table></div>` : ""}
-      <p class="foot-note">막대 아래 두 숫자는 회사별 전분기 대비 증가율(왼쪽 Anthropic, 오른쪽 OpenAI)이에요. 값은 S-1 공시가 있으면 공시, 없으면 여러 매체가 같이 보도한 숫자예요(‘확인된 보도’는 사람이 출처를 확인해 넣은 값, ‘기사 자동 판독’은 매일 구글 뉴스에서 읽은 값). <b>합계는 참고용</b>이에요. Anthropic은 클라우드 파트너 판매 <b>총액</b>, OpenAI는 <b>자기 몫</b>만 매출로 잡아서 그대로 더하면 Anthropic 쪽이 커 보여요. 매일 09:20·18:20 KST에 확인해 새 분기 실적 보도가 나오면 이 표와 텔레그램 알림에 반영돼요. 보도가 잡혔는데 표에 못 넣으면 맨 위에 경고가 떠요.</p>
+      <p class="foot-note">막대 아래 두 숫자는 회사별 전분기 대비 증가율(왼쪽 Anthropic, 오른쪽 OpenAI)이에요. 값은 S-1 공시가 있으면 공시, 없으면 여러 매체가 같이 보도한 숫자예요(‘확인된 보도’는 사람이 출처를 확인해 넣은 값, ‘기사 자동 판독’은 매일 구글 뉴스에서 읽은 값). <b>합계는 참고용</b>이에요. Anthropic은 클라우드 파트너 판매 <b>총액</b>, OpenAI는 <b>자기 몫</b>만 매출로 잡아서 그대로 더하면 Anthropic 쪽이 커 보여요. 매일 09:20·18:20 KST에 확인해 새 분기 실적 보도가 나오면 이 표와 텔레그램 알림에 반영돼요. 보도가 잡혔는데 표에 못 넣으면 맨 위에 경고가 떠요.</p>`)}
     </section>`;
   }
 
@@ -565,7 +617,7 @@
     ]],
   ];
   function glossary() {
-    return `<section class="card ai-gloss" id="aiGlossCard">
+    return `<section class="card ai-gloss" id="aiGlossCard" data-fold="closed">
       <div class="card-head wrap"><h2>용어 풀이 <span class="sub">AI 시장 탭에 나오는 말 · 계산법</span></h2></div>
       <div class="guide-body ai-gl">${GLOSS.map(([g, xs]) => `<div><h3 class="ai-h3">${g}</h3><dl>${xs.map(([t, d]) => `<div><dt>${t}</dt><dd>${d}</dd></div>`).join("")}</dl></div>`).join("")}</div>
     </section>`;
@@ -877,22 +929,25 @@
       const rs = (rc.risers || []).slice(0, RISE_COL.length), drops = droppedOut(rc);
       const tag = (c) => `<span class="ai-tag ${c}">${{ open: "오픈", closed: "클로즈드", unknown: "미분류" }[c] || "미분류"}</span>`;
       const chips = rs.map((r, i) => `<div class="ai-riser" style="--rc:${RISE_COL[i]}"><b>${esc(r.name)}</b>${tag(r.cls)}<span class="ai-rmove">${r.was ? r.was + "위" : "9위 밖"} → <b>${r.now}위</b></span><span class="ai-rpct">${r.pct_was != null ? pct(r.pct_was) + " → " : ""}${pct(r.pct)}</span></div>`).join("");
+      const top1 = rs[0];
       rcHtml = `<section class="card ai-o-rank">
         <div class="card-head wrap"><h2>누가 치고 올라오나 <span class="sub">OpenRouter 상위 모델 순위 · 최근 ${Math.min(RANK_WEEKS, fw.length)}주</span></h2></div>
+        ${top1 ? lead(`최근 ${rc.back}주 사이 가장 많이 오른 모델은 <b>${esc(top1.name)}</b>예요. ${top1.was ? top1.was + "위" : "9위 밖"}에서 <b>${top1.now}위</b>로 올라왔어요.`) : ""}
         <div id="aiRank"></div>
         <h3 class="ai-h3">${md(baseW.week)} 주 → ${md(lastW.week)} 주(${rc.back}주 사이) 순위가 오른 모델</h3>
         ${chips ? `<div class="ai-risers">${chips}</div>` : `<p class="none">4주 전보다 순위가 오른 모델이 없어요.</p>`}
-        ${drops.length ? `<p class="ai-drops"><b>밀려난 모델</b> ${drops.map((x) => `${esc((rc.info[x.slug] || {}).name || x.slug)} <span>(${md(x.week)} 주 ${x.rank}위 → 밖)</span>`).join(" · ")}</p>` : ""}
-        <p class="foot-note">OpenRouter가 주마다 공개하는 <b>상위 9개 모델</b>의 순위예요(10위부터는 ‘기타’로 묶여 공개되지 않아서 맨 아래 ‘밖’ 줄로 그렸어요). <b>색 굵은 선</b> = ${rc.back}주 전보다 순위가 오른 모델, 회색 선 = 지금 상위 9개 중 나머지, 점선 = 최근 ${rc.back}주 사이 상위 9개에서 밀려난 모델. 무료판(무료)은 OpenRouter가 따로 세서 따로 보여요. 점에 손가락·마우스를 대면 그 주 비중이 보여요.</p>
+        ${more("rank", "자세히 보기 · 밀려난 모델과 읽는 법", `${drops.length ? `<p class="ai-drops"><b>밀려난 모델</b> ${drops.map((x) => `${esc((rc.info[x.slug] || {}).name || x.slug)} <span>(${md(x.week)} 주 ${x.rank}위 → 밖)</span>`).join(" · ")}</p>` : ""}
+        <p class="foot-note">OpenRouter가 주마다 공개하는 <b>상위 9개 모델</b>의 순위예요(10위부터는 ‘기타’로 묶여 공개되지 않아서 맨 아래 ‘밖’ 줄로 그렸어요). <b>색 굵은 선</b> = ${rc.back}주 전보다 순위가 오른 모델, 회색 선 = 지금 상위 9개 중 나머지, 점선 = 최근 ${rc.back}주 사이 상위 9개에서 밀려난 모델. 무료판(무료)은 OpenRouter가 따로 세서 따로 보여요. 점에 손가락·마우스를 대면 그 주 비중이 보여요.</p>`)}
       </section>`;
     }
 
     box.innerHTML = `
-      <section class="tiles ai-tiles">${tiles}</section>
+      ${boardCard(d, rv, or, { openNow, dOpen, cNow, mult, siM, sr })}
       <section class="card ai-o-rev">
-        <div class="card-head wrap"><h2>AI 연구소 매출 런레이트 <span class="sub">연환산 매출 · 보도 시점 기준 점</span></h2></div>
+        <div class="card-head wrap"><h2>매출 런레이트 <span class="sub">연환산 매출 · 보도 시점 기준 점</span></h2></div>
+        ${A && O ? lead(`지금 속도로 1년을 벌면 <b style="color:var(--ai-a)">Anthropic ${won(A.usd)}</b>, <b style="color:var(--ai-o)">OpenAI ${won(O.usd)}</b>예요.${sr ? ` 두 회사를 합친 성장 속도는 월 ${sr.L.pct.toFixed(1)}%로 <span class="ai-sv ${sr.cls}">${sr.verdict}</span>예요.` : ""}`) : ""}
         <div id="aiRev"></div>
-        <h3 class="ai-h3">두 회사 합산 (Anthropic + OpenAI) <span class="sub">위 = 금액 · 아래 = 기울기(한 달 증가액·월 성장률) · 보도 사이 값은 보간</span></h3>
+        ${more("rev", "자세히 보기 · 합산·성장 속도 그래프, 보도 표", `<h3 class="ai-h3">두 회사 합산 (Anthropic + OpenAI) <span class="sub">위 = 금액 · 아래 = 기울기(한 달 증가액·월 성장률) · 보도 사이 값은 보간</span></h3>
         <div id="aiSum"></div>
         <h3 class="ai-h3">회사별 성장 속도 (기울기) <span class="sub">직전 3개월 평균 · 성장 둔화·가속 확인용 · 두 회사 합계는 위 합산 그래프에</span></h3>
         <div id="aiSlope"></div>
@@ -901,26 +956,27 @@
         <div class="ai-tw"><table class="mem-table ai-rep"><thead><tr><th>기준일</th><th>회사</th><th class="num">연환산 매출</th><th>종류</th><th>출처·신뢰도</th><th>원문</th></tr></thead><tbody>${allRows}</tbody></table></div>
         <p class="foot-note">‘기사 자동 판독’ 줄은 구글 뉴스 기사 제목의 금액을 하루 두 번 자동으로 읽은 값이라 <b>미검증</b>이에요. 같은 숫자를 두 곳 이상 쓰거나 주요 매체가 쓴 것만 남겼고, 정정 기사가 나온 숫자는 줄을 그었어요. 이 줄의 날짜는 실적 시점이 아니라 보도일이에요. Epoch AI가 같은 숫자(5% 이내, 30일 이내)를 이미 정리했으면 기사 줄은 빼서 한 번만 보여요.</p>
         ${others ? `<h3 class="ai-h3">다른 AI 회사 최근 매출</h3><div class="ai-chips">${others}</div>` : ""}
-        <p class="foot-note">자료: <a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI, ‘Data on AI companies’</a>(CC BY 4.0). 언론 보도·회사 발표를 모은 표라 <b>새 보도가 날 때만</b> 점이 늘어요(최근엔 2~4주에 한 번). <b>속 빈 점과 점선</b>은 회사가 투자자에게 밝힌 연말 목표로 실제 실적이 아니에요. <b>마름모</b>는 Epoch에 아직 없는 새 기사 숫자(자동 판독)예요. 점에 손가락·마우스를 대면 원문 요약이 보여요. 런레이트 = 최근 한 달 매출 × 12, ARR = 반복 매출 연환산.</p>
+        <p class="foot-note">자료: <a href="https://epoch.ai/data/ai-companies" target="_blank" rel="noopener">Epoch AI, ‘Data on AI companies’</a>(CC BY 4.0). 언론 보도·회사 발표를 모은 표라 <b>새 보도가 날 때만</b> 점이 늘어요(최근엔 2~4주에 한 번). <b>속 빈 점과 점선</b>은 회사가 투자자에게 밝힌 연말 목표로 실제 실적이 아니에요. <b>마름모</b>는 Epoch에 아직 없는 새 기사 숫자(자동 판독)예요. 점에 손가락·마우스를 대면 원문 요약이 보여요. 런레이트 = 최근 한 달 매출 × 12, ARR = 반복 매출 연환산.</p>`)}
       </section>
       ${walletCard(or)}
       ${quarterCard(rv.quarterly, d.warnings, rv)}
       ${rcHtml}
       <section class="card ai-o-oc">
         <div class="card-head wrap"><h2>오픈웨이트 vs 클로즈드 <span class="sub">토큰 비중은 OpenRouter, 지출 비중은 Vercel 기준</span></h2></div>
+        ${openNow != null ? lead(`토큰은 <b>오픈웨이트가 ${Math.round(openNow)}%</b>를 쓰지만${cNow ? `, 돈은 <b>클로즈드로 ${Math.round(100 - cNow.v)}%</b>가 가요` : ""}.${mult || siM ? ` 클로즈드 모델이 토큰당 ${(mult || siM.now).toFixed(1)}배 비싸서예요.` : ""}`) : ""}
         <div class="ai-oc">
           <div class="ai-ock"><span>오픈웨이트 토큰 비중</span><b>${pct(openNow)}</b><small>OpenRouter · ${lt.week ? md(lt.week) + " 주" : ""}${dOpen != null ? " · 전주보다 " + chg(dOpen) : ""}</small></div>
           <div class="ai-ock"><span>오픈웨이트 지출 비중</span><b>${cNow ? pct(cNow.v) : "–"}</b><small>${cNow ? `Vercel · ${md(cNow.week)} 주${cNow.partial ? "(진행 중)" : ""} ${cNow.n}일 평균${dCost != null ? " · 전주보다 " + chg(dCost) : ""}` : "자료 없음"}</small></div>
           ${mult || siM ? `<div class="ai-ock alt"><span>토큰당 가격 (클로즈드 ÷ 오픈웨이트)</span><b>클로즈드가 ${(mult || siM.now).toFixed(1)}배</b><small>${mult ? `Vercel ${md(cNow.week)} 주 실제 지출 기준` : ""}${mult && siM ? " · " : ""}${siM ? `Silicon Data 지수 ${siM.now.toFixed(1)}배(${md(siM.date)}${siM.old ? `, ${siM.days}일 전 ${siM.old.toFixed(1)}배` : ""})` : ""}</small></div>` : ""}
         </div>
+        <h3 class="ai-h3">최근 16주 <span class="sub">주간 · 매주 월요일 마감</span></h3>
+        <div class="chart-legend"><span class="ai-lg open"><i></i>오픈웨이트</span><span class="ai-lg closed"><i></i>클로즈드</span></div>
+        <div id="aiWeek"></div>
+        ${more("oc", "자세히 보기 · 월별 그래프, 가격 지수, 상위 모델, 회사별 점유율", `<p class="foot-note">주마다 오픈웨이트(아래 청록)와 클로즈드(위 남색)가 나눠 가진 비중이에요. 위 줄은 토큰(OpenRouter), 아래 줄은 지출(Vercel 그 주 평균)이에요. 찬 점은 모델별 실측값, 점선 동그라미는 아직 끝나지 않은 이번 주예요.</p>
         <h3 class="ai-h3">월별 오픈웨이트 비중</h3>
         <div class="chart-legend"><span><i style="background:var(--ai-open)"></i>토큰 비중(막대, OpenRouter)</span><span><i style="background:var(--ink);height:3px"></i>지출 비중(선, Vercel)</span></div>
         <div id="aiOpen"></div>
         <p class="foot-note">두 값 모두 오픈웨이트와 클로즈드 모델의 몫만 더해 100%로 놓고, 그중 오픈웨이트가 차지한 비율이에요(미분류는 뺌). 막대는 그달 OpenRouter 주간 값의 평균, 선은 그달 Vercel 하루 값의 평균이에요. 흐린 막대와 속 빈 점은 아직 끝나지 않은 이번 달이에요. Vercel 자료는 2026년 9월 중순부터 쌓여서 선은 그때부터 그려져요. 그래프에 손가락이나 마우스를 대면 그달 두 값이 함께 보여요.</p>
-        <h3 class="ai-h3">최근 16주 <span class="sub">주간 · 매주 월요일 마감</span></h3>
-        <div class="chart-legend"><span class="ai-lg open"><i></i>오픈웨이트</span><span class="ai-lg closed"><i></i>클로즈드</span></div>
-        <div id="aiWeek"></div>
-        <p class="foot-note">주마다 오픈웨이트(아래 청록)와 클로즈드(위 남색)가 나눠 가진 비중이에요. 위 줄은 토큰(OpenRouter), 아래 줄은 지출(Vercel 그 주 평균)이에요. 찬 점은 모델별 실측값, 점선 동그라미는 아직 끝나지 않은 이번 주예요.</p>
         ${priceBox(d.silicon)}
         <div class="ai-two">
           <div><h3 class="ai-h3">토큰 비중 상위 모델 <span class="sub">OpenRouter · ${lt.week ? md(lt.week) + " 주" : ""}</span></h3>
@@ -931,7 +987,7 @@
         ${lw ? `<h3 class="ai-h3">회사별 토큰 점유율 <span class="sub">${md(lw.week)} 주 · 전체 ${(lw.total / 1e12).toFixed(0)}조 토큰</span></h3>
         <div class="ai-bar">${bar}</div><div class="ai-legend">${legend}</div>` : ""}
         <p class="foot-note"><b>읽는 법</b>: 오픈웨이트 모델은 값이 싸서 토큰 비중은 높아도 지출 비중은 낮아요. 클로즈드 모델은 그 반대예요. 오른쪽 목록은 하루 튐에 순위가 뒤집히지 않게 최근 7일 평균으로 줄 세웠고(그날 10위 밖이면 0으로 셈), 이름 옆의 ‘토큰 비중’도 같은 7일 Vercel 평균이에요. 회사별 막대는 그 회사 토큰의 절반 이상이 오픈웨이트면 청록, 아니면 남색, 기타·미분류는 회색이에요. 막대에 손가락이나 마우스를 대면 그 회사의 오픈웨이트 비율이 보여요.</p>
-        <p class="foot-note">자료: 토큰 비중은 <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter Rankings</a>(모든 모델, 주간), 지출 비중은 <a href="https://vercel.com/ai-gateway/leaderboards" target="_blank" rel="noopener">Vercel AI Gateway</a>예요. 지출 비중을 공개하는 곳은 Vercel뿐이고, 매일 상위 10개 모델만 공개해서 한 주 평균을 썼어요. 분류된 몫이 30%가 안 되는 날은 뺐어요. 두 곳 모두 API로 쓰인 양이라 시장 전체가 아니라 <b>개발자들이 어떤 모델을 고르는지</b>를 보여 줘요. 오픈웨이트 여부는 Hugging Face에 가중치가 공개돼 있는지로 판단했어요(OpenRouter 미분류 ${pct(lt.pct && lt.pct.unknown)}).</p>
+        <p class="foot-note">자료: 토큰 비중은 <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter Rankings</a>(모든 모델, 주간), 지출 비중은 <a href="https://vercel.com/ai-gateway/leaderboards" target="_blank" rel="noopener">Vercel AI Gateway</a>예요. 지출 비중을 공개하는 곳은 Vercel뿐이고, 매일 상위 10개 모델만 공개해서 한 주 평균을 썼어요. 분류된 몫이 30%가 안 되는 날은 뺐어요. 두 곳 모두 API로 쓰인 양이라 시장 전체가 아니라 <b>개발자들이 어떤 모델을 고르는지</b>를 보여 줘요. 오픈웨이트 여부는 Hugging Face에 가중치가 공개돼 있는지로 판단했어요(OpenRouter 미분류 ${pct(lt.pct && lt.pct.unknown)}).</p>`)}
       </section>
       <section class="card ai-src" data-fold="closed">
         <div class="card-head"><h2>출처와 갱신 주기</h2></div>
@@ -958,8 +1014,17 @@
     if ($("#aiQ")) $("#aiQ").innerHTML = quarterChart(rv.quarterly, width($("#aiQ")));
     if ($("#aiRank")) $("#aiRank").innerHTML = rankChart(or.rank_chart, width($("#aiRank")));
     bindTip(box);
-    if (!box._aim) { box._aim = true; box.addEventListener("click", (e) => {
+    if (!box._aim) { box._aim = true;
+      box.addEventListener("toggle", (e) => {
+        const dt = e.target; if (!dt.matches || !dt.matches(".ai-more")) return;
+        const k = dt.dataset.more; if (dt.open === st.more.has(k)) return;   // 다시 그릴 때 생기는 toggle 은 무시
+        if (dt.open) st.more.add(k); else st.more.delete(k);
+        render();   // 접혀 있던 그래프는 폭 0으로 그려졌으니 펼칠 때 다시 그린다
+      }, true);
+      box.addEventListener("click", (e) => {
       if (!st.data) return;
+      const bt = e.target.closest("[data-grp]");
+      if (bt) { window.__secnav?.goGroup(+bt.dataset.grp); return; }
       const sm = e.target.closest("[data-aisum]");
       if (sm) { SUM.mode = sm.dataset.aisum; $("#aiSum").innerHTML = sumChart(SUM.rv, width($("#aiSum")), SLOPE.sd); return; }
       const sl = e.target.closest("[data-aislope]");
