@@ -27,9 +27,16 @@ main{max-width:720px;margin:0 auto;padding:8px 8px 60px}
 h2{font-size:15px;margin:18px 6px 8px;scroll-margin-top:150px}
 h2 small{color:var(--sub);font-weight:400;margin-left:6px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 10px 6px;margin-bottom:10px}
-.hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.hd{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"nm px" "biz biz" "bd bd";column-gap:10px;align-items:baseline}
+.hd .nm{grid-area:nm}.hd .px{grid-area:px}.hd .biz{grid-area:biz}.hd .bd{grid-area:bd}
+@media (min-width:700px){
+ .hd{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"nm biz px" "bd bd bd";column-gap:18px}
+ .hd .biz{align-self:center;font-size:13.5px;line-height:1.4;margin:0}
+}
 .nm{font-size:16px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nm small{font-size:11px;font-weight:400;color:var(--sub);margin-left:5px}
+.nm em{font-style:normal;font-size:11px;font-weight:600;color:#374151;background:#eef0f3;border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.biz{word-break:keep-all;font-size:12.5px;color:#4b5563;margin:1px 0 0;line-height:1.35}
 .px{flex:none;font-size:15px;font-variant-numeric:tabular-nums}
 .px i{font-style:normal;font-size:13px;margin-left:5px}
 .up{color:var(--up)}.dn{color:var(--dn)}
@@ -37,6 +44,10 @@ h2 small{color:var(--sub);font-weight:400;margin-left:6px}
 .bd span{font-size:13px;padding:3px 8px;border-radius:7px;font-variant-numeric:tabular-nums}
 .bh{background:#fdecec;color:#b71c1c}.bl{background:#e3f5ee;color:#0b6b50}
 .st{background:#fff4d6;color:#8a5a00}
+.bd .s2{background:var(--up);color:#fff;font-weight:600}
+.bd .xg{background:#e3f5ee;color:#0b6b50;box-shadow:inset 0 0 0 1px #0b6b50;font-weight:600}
+.bd .xd{background:#fdecec;color:#b71c1c;box-shadow:inset 0 0 0 1px #b71c1c;font-weight:600}
+.bd .al{background:#fff;color:var(--up);box-shadow:inset 0 0 0 1px var(--up);font-weight:600}
 canvas{display:block;width:100%;height:300px}
 .lg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);padding:2px 2px 2px}
 .lg b{font-weight:600;margin-left:6px}
@@ -156,17 +167,20 @@ function draw(cv, it){
   g.strokeStyle = "#e3e5ea"; g.strokeRect(0.5, padT + 0.5, pW - 1, H - xH - padT - 1);
 }
 
+const CROSS = {gc:["xg","골든크로스 발생"], gs:["xg","골든크로스 임박"], dc:["xd","데드크로스 발생"], ds:["xd","데드크로스 임박"]};
 function card(it, idx){
   const cls = it.chg >= 0 ? "up" : "dn", ld = it.d[it.d.length - 1];
   const el = document.createElement("div"); el.className = "card";
   el.innerHTML =
-    `<div class="hd"><div class="nm"></div><div class="px">${fmt(it.c[it.c.length-1], it.dg)}<i class="${cls}">${sign(it.chg,1)}</i></div></div>` +
-    `<div class="bd"><span class="bh">52주 고점 대비 ${sign(it.ph,1)}</span><span class="bl">52주 저점 대비 ${sign(it.pl,1)}</span>${it.stale ? '<span class="st">갱신 실패, 이전 자료</span>' : ""}</div>` +
+    `<div class="hd"><div class="nm"></div><div class="px">${fmt(it.c[it.c.length-1], it.dg)}<i class="${cls}">${sign(it.chg,1)}</i></div>` +
+    `<div class="biz"></div><div class="bd">${it.s2 ? '<span class="s2">스테이지2</span>' : ""}${it.al ? '<span class="al">정배열</span>' : ""}${CROSS[it.x] ? `<span class="${CROSS[it.x][0]}">${CROSS[it.x][1]}</span>` : ""}<span class="bh">52주 고점 대비 ${sign(it.ph,1)}</span><span class="bl">52주 저점 대비 ${sign(it.pl,1)}</span>${it.stale ? '<span class="st">갱신 실패, 이전 자료</span>' : ""}</div></div>` +
     `<canvas data-i="${idx}"></canvas>` +
     `<div class="lg"><span>EMA${EMA.map(([k,c]) => `<b style="color:${c}">${k}</b>`).join("")}</span><span>${+ld.slice(2,4)}/${+ld.slice(4,6)} 종가 기준</span></div>`;
   const nm = el.querySelector(".nm");
   nm.textContent = it.n;
   const sm = document.createElement("small"); sm.textContent = it.y; nm.appendChild(sm);
+  if (it.k){ const em = document.createElement("em"); em.textContent = it.k; nm.appendChild(em); }
+  const bz = el.querySelector(".biz"); if (it.b) bz.textContent = it.b; else bz.remove();
   return el;
 }
 
