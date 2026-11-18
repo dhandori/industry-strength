@@ -23,6 +23,75 @@
   const label = (h) => { const c = h.cloneNode(true); c.querySelectorAll(".sub, button, .help, select, input").forEach((x) => x.remove()); return c.textContent.replace(/\s+/g, " ").trim(); };
   let items = [], active = -1;
 
+  // ---------- 탭 안내와 메뉴 묶음 (2026-11-18 사용자 요청: '메뉴가 많은데 처음 보는 사람도 분류 이유를 알게')
+  // 탭마다 맨 위에 '이 탭은 무엇을 보고, 카드를 왜 이렇게 나눴는지' 안내 상자를 두고, 칩 줄에는 묶음 이름을 붙인다.
+  // cards 는 카드 제목(h2, 부제 뺀 글자)의 앞부분. 어느 묶음에도 없는 카드는 rest:true 묶음으로 간다.
+  // 카드 제목을 바꾸면 여기도 같이 바꾼다. 화면 순서도 이 묶음 순서와 같게 맞춰 두었다(index.html·ai.css).
+  const TAB_GUIDE = {
+    viewStrength: { intro: "산업(같은 일을 하는 회사 바구니)의 힘을 순위로 매겨 <b>지금 돈이 어느 산업으로 가는지</b> 보는 탭이에요. 52주 신고가 탭이 종목 하나하나의 결과라면, 이 탭은 산업 단위의 흐름이에요. 위에서 아래로 갈수록 넓은 그림에서 좁은 그림(시장 → 산업 → 종목)으로 내려가요.",
+      groups: [
+        { no: "①", name: "오늘 한눈에", why: "가장 먼저 볼 곳이에요. 오늘 새로 생긴 신호와 큰 업종(섹터)별 움직임만 모았어요.", cards: ["오늘의 신호", "섹터 워치", "업종 탐색"] },
+        { no: "②", name: "돈의 흐름", why: "큰 분류끼리 힘이 어디서 어디로 옮겨 가는지, 그리고 강세가 몇몇 산업에만 몰렸는지 넓게 퍼졌는지 봐요.", cards: ["산업 흐름", "큰 분류별 확산", "산업 폭", "상승 추세 종목 비중"] },
+        { no: "③", name: "산업 순위", why: "세부 산업 하나하나의 순위와, 그 순위가 며칠째 이어지는지 확인해요. 고를 산업을 정하는 단계예요.", cards: ["세부 산업 순위", "순위 흐름"] },
+        { no: "④", name: "종목 고르기", why: "고른 산업 안에서 실제로 강한 종목과, 외국인·기관이 사 모으는 종목을 찾아요.", cards: ["RS 강한 종목", "외국인·기관 보유 변화"] },
+      ], foot: "맨 아래 <b>읽는 법</b>을 펼치면 점수 계산 방법과 용어 풀이가 있어요." },
+    viewHighs: { intro: "52주 신고가(최근 1년 중 가장 높은 값)를 낸 종목만 모아 보는 탭이에요. 신고가는 추세가 가장 강한 종목이 남기는 흔적이라, 산업 강도 탭이 ‘어느 산업’을 보여 준다면 이 탭은 ‘그 안의 어떤 종목이 실제로 뚫고 올라갔는지’를 보여 줘요. 시장 → 업종 → 종목 순서로 좁혀 가요.",
+      groups: [
+        { no: "①", name: "시장 전체", why: "신고가 종목 수가 늘면 시장이 넓게 강하다는 뜻이에요. 지금이 공격할 때인지 먼저 봐요.", cards: ["신고가 종목 수 추이"] },
+        { no: "②", name: "업종", why: "신고가가 어느 업종에 몰려 나오는지, 며칠째 이어지는지 봐요. 한 업종에서 여럿이 같이 나오면 업종 전체가 오르는 중이에요.", cards: ["최근 신고가가 자주 나온 업종", "업종별 신고가 달력"] },
+        { no: "③", name: "종목 명단", why: "실제 종목 이름이에요. 날짜별 명단과, 기록 기간 내내 신고가를 자주 낸 단골 종목을 따로 보여 줘요.", cards: ["날짜별 신고가 종목", "신고가가 자주 나온 종목"] },
+      ], foot: "업종 이름은 산업 강도 탭과 기준이 달라요. 맨 아래 <b>기준</b>을 펼치면 대상 종목과 업종 붙이는 법이 있어요." },
+    viewMacro: { intro: "개별 산업이 아니라 <b>시장 전체의 날씨</b>(위험도·경기·금리·심리·빚투)를 보는 탭이에요. 다른 탭에서 고른 종목을 얼마나 과감하게 살지, 현금을 얼마나 둘지 정할 때 써요. 위에서 아래로 <b>종합 위험도 → 경기(미국: 고통지수·물가·고용·국채 금리) → 시장 지표(신용·유동성·변동성·투자 심리) → 빚투</b> 순서예요. 맨 위 종합 단계가 결론이고, 아래 지표들은 그 근거라서 이렇게 나눴어요.",
+      foot: "맨 아래 <b>판정 방법 자세히 보기</b>에 단계를 매기는 기준이 있어요." },
+    viewAi: { intro: "AI라는 한 주제를 <b>돈의 흐름 순서</b>로 따라가는 탭이에요(세계 공통이라 미국에서만 보여요). 모델 회사가 얼마나 버는지 → 그 돈이 데이터센터와 칩으로 어떻게 흘러가는지 → 어떤 모델이 이기고 있는지 순서로 나눴어요. 앞쪽은 몇 주에 한 번 바뀌는 느린 숫자, 뒤쪽은 매주 바뀌는 빠른 숫자예요.",
+      groups: [
+        { no: "①", name: "버는 돈", why: "AI 붐의 바탕이에요. OpenAI·Anthropic이 실제로 얼마나 벌고, 얼마나 빨리 늘고 있는지 봐요. 새 보도가 날 때만 바뀌어요.", cards: ["AI 연구소 분기 실적", "AI 연구소 매출 런레이트"] },
+        { no: "②", name: "흘러가는 곳", why: "번 돈과 투자금이 데이터센터·서버·칩으로 얼마나 가는지 봐요. 반도체·전력 주식과 바로 이어지는 부분이에요.", cards: ["AI 인프라 수요", "반도체 가격"] },
+        { no: "③", name: "모델 경쟁", why: "개발자들이 어떤 회사·어떤 모델에 돈과 토큰을 쓰는지 봐요. 새 모델이 나오면 그 주에 바로 움직여, 매출보다 먼저 판도 변화를 알려 줘요.", cards: ["Anthropic vs OpenAI 지출 점유율", "오픈웨이트 vs 클로즈드", "누가 치고 올라오나"] },
+        { no: "④", name: "참고", why: "숫자의 출처·갱신 주기와 어려운 말 풀이예요.", cards: ["출처와 갱신 주기", "용어 풀이"] },
+      ] },
+    viewPairs: { intro: "두 종목(또는 ETF)을 짝지어 <b>어느 쪽이 더 강한지</b> 비교하는 탭이에요. 하나만 보면 시장 전체 등락에 묻히는 신호를, 짝을 지어 나누면 ‘시장 대신 무엇이 앞서는지’로 걸러 낼 수 있어요.",
+      groups: [
+        { no: "①", name: "오늘", why: "오늘 상대 강도가 크게 움직인 짝만 먼저 모았어요.", cards: ["오늘 눈여겨볼 페어"] },
+        { no: "②", name: "주제별", why: "같은 질문(예: AI 흐름이 이어지나, 지금 시장 국면은 어떤가)에 답하는 짝끼리 묶었어요.", cards: [], rest: true },
+      ] },
+    viewPositioning: { intro: "가격 차트가 아니라 <b>가격 뒤의 돈</b>, 곧 누가 얼마나 사 두었는지를 보는 탭이에요. 추세를 따르는 펀드(CTA)가 팔고 있는지, 헤지펀드·자산운용사의 선물 포지션이 지난 3년 중 어디쯤인지, 펀드매니저 설문이 무엇을 말하는지를 봐요. 자료가 <b>매주 수요일 한 번</b>만 바뀌어 매일 바뀌는 다른 탭과 나눴어요. 위에서 아래로 결론 → 투자자별 근거 → 자세한 풀이 순서예요." },
+  };
+  const gget = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+  const gset = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+  const cardIn = (g, t) => g.cards.some((c) => t === c || t.startsWith(c));
+  function groupIndex(cfg, t) {
+    const i = cfg.groups.findIndex((g) => cardIn(g, t));
+    return i >= 0 ? i : cfg.groups.findIndex((g) => g.rest);
+  }
+  function guideBox(m, cfg) {
+    if (!cfg) return;
+    let box = m.querySelector(":scope > .tab-guide");
+    if (!box) {
+      box = document.createElement("section");
+      box.className = "tab-guide";
+      const anchor = m.querySelector(":scope > .ai-meta, :scope > .mx-meta, :scope > .pr-meta, :scope > .hx-meta");
+      const first = m.querySelector(":scope > section.card, :scope > div.two-col");
+      if (m.id === "viewStrength" || m.id === "viewHighs") (first ? m.insertBefore(box, first) : m.appendChild(box));
+      else if (anchor) anchor.after(box);
+      else m.prepend(box);
+      box.addEventListener("toggle", (e) => { if (e.target.matches("details")) gset("tguide:" + m.id, e.target.open ? "open" : "shut"); }, true);
+      box.addEventListener("click", (e) => { const b = e.target.closest("[data-jump]"); if (b) { const i = items.findIndex((x) => x.t === b.dataset.jump); if (i >= 0) go(i); } });
+    }
+    const open = gget("tguide:" + m.id) !== "shut";
+    const used = new Set();
+    const rows = (cfg.groups || []).map((g, gi) => {
+      const mine = items.filter((x) => x.g === gi);
+      mine.forEach((x) => used.add(x.t));
+      const list = mine.length ? mine.map((x) => `<button type="button" class="lnk" data-jump="${esc(x.t)}">${esc(x.t)}</button>`).join(" · ") : "";
+      return `<li><b>${g.no} ${esc(g.name)}</b> ${g.why}${list ? `<span class="tg-cards">${list}</span>` : ""}</li>`;
+    }).join("");
+    const html = `<details${open ? " open" : ""}><summary><span class="tg-t">📖 이 탭은 이렇게 보세요</span></summary>
+      <p>${cfg.intro}</p>${rows ? `<ol class="tg-list">${rows}</ol>` : ""}${cfg.foot ? `<p class="tg-foot">${cfg.foot}</p>` : ""}
+      ${rows ? `<p class="tg-foot">위쪽 칩 줄의 <b>①②③</b>도 같은 묶음이에요. 카드 이름을 누르면 그 카드로 가요.</p>` : ""}</details>`;
+    if (box._h !== html) { box._h = html; box.innerHTML = html; }
+  }
+
   function setHeaderVar() {
     document.documentElement.style.setProperty("--hdr-h", top.offsetHeight + "px");
     document.documentElement.style.setProperty("--nav-h", (nav.hidden ? 0 : nav.offsetHeight) + "px");
@@ -36,46 +105,57 @@
     }).filter((x) => !seen.has(x.el) && seen.add(x.el))
       // 매크로 탭은 CSS order 로 화면 순서가 코드 순서와 다르다 → 화면 위치 순으로
       .sort((a, b) => a.el.getBoundingClientRect().top - b.el.getBoundingClientRect().top) : [];
+    const cfg = m ? TAB_GUIDE[m.id] : null;
+    if (cfg && cfg.groups) {
+      items.forEach((x, i) => { x.g = groupIndex(cfg, x.t); x.o = i; });
+      items.sort((a, b) => (a.g < 0 ? 99 : a.g) - (b.g < 0 ? 99 : b.g) || a.o - b.o);
+    }
+    if (m) guideBox(m, cfg);
     nav.hidden = items.length < 3;
     if (!nav.hidden) {
       // 끝에 '모두 펼치기/모두 접기': 지금 탭의 접을 수 있는 카드를 한 번에(2026-11-13)
       const foldable = [...m.querySelectorAll("section.card")].filter((s) => s.querySelector(":scope > .card-head > .cf-btn"));
       const anyShut = foldable.some((s) => s.classList.contains("cf-shut"));
-      nav.innerHTML = items.map((x, i) => `<button type="button" data-i="${i}">${esc(x.t)}</button>`).join("")
+      const gs = cfg && cfg.groups;
+      nav.innerHTML = items.map((x, i) => {
+        const g = gs && x.g >= 0 && (i === 0 || items[i - 1].g !== x.g) ? gs[x.g] : null;
+        return (g ? `<span class="sn-grp" title="${esc(g.why.replace(/<[^>]+>/g, ""))}">${g.no} ${esc(g.name)}</span>` : "") + `<button type="button" data-i="${i}">${esc(x.t)}</button>`;
+      }).join("")
         + (foldable.length > 1 ? `<button type="button" class="sn-all">${anyShut ? "모두 펼치기 ▾" : "모두 접기 ▴"}</button>` : "");
       nav.querySelector(".sn-all")?.addEventListener("click", () => { foldable.forEach((s) => setShut(s, !anyShut)); build(); });
-      nav.querySelectorAll("button[data-i]").forEach((b) => b.addEventListener("click", () => {
-        const i = +b.dataset.i, x = items[i];
-        if (!x) return;
-        // 접힌 카드로 가면 펼쳐서 보여 준다
-        if (x.el.classList?.contains("cf-shut")) setShut(x.el, false);
-        // 휴대폰에서 아래로 갈 땐 머리가 접히므로 칩 줄 높이만큼만 띄운다
-        const r = x.el.getBoundingClientRect(), down = r.top > 0;
-        const small = innerWidth < 640;
-        const off = (small && down ? nav.offsetHeight : top.offsetHeight) + 10;
-        if (small) top.classList.toggle("folded", down);
-        hold = Date.now() + 900;
-        mark(i);
-        scrollTo({ top: scrollY + r.top - off, behavior: "smooth" });
-      }));
+      nav.querySelectorAll("button[data-i]").forEach((b) => b.addEventListener("click", () => go(+b.dataset.i)));
     }
     active = -1;
     setHeaderVar();
     spy();
+  }
+  function go(i) {
+    const x = items[i];
+    if (!x) return;
+    // 접힌 카드로 가면 펼쳐서 보여 준다
+    if (x.el.classList?.contains("cf-shut")) setShut(x.el, false);
+    // 휴대폰에서 아래로 갈 땐 머리가 접히므로 칩 줄 높이만큼만 띄운다
+    const r = x.el.getBoundingClientRect(), down = r.top > 0;
+    const small = innerWidth < 640;
+    const off = (small && down ? nav.offsetHeight : top.offsetHeight) + 10;
+    if (small) top.classList.toggle("folded", down);
+    hold = Date.now() + 900;
+    mark(i);
+    scrollTo({ top: scrollY + r.top - off, behavior: "smooth" });
   }
   // 읽는 중인 카드: 머리 아래 선을 지난 마지막 카드
   let hold = 0;
   function spy() {
     if (nav.hidden || Date.now() < hold) return;
     const line = top.getBoundingClientRect().bottom + 24;
-    let k = 0;
-    items.forEach((x, i) => { if (x.el.getBoundingClientRect().top <= line) k = i; });
+    let k = 0, best = -Infinity;
+    items.forEach((x, i) => { const t = x.el.getBoundingClientRect().top; if (t <= line && t > best) { best = t; k = i; } });
     mark(k);
   }
   function mark(k) {
     if (k === active) return;
     active = k;
-    const bs = nav.querySelectorAll("button");
+    const bs = nav.querySelectorAll("button[data-i]");
     bs.forEach((b, i) => b.classList.toggle("on", i === k));
     const b = bs[k];
     if (b) nav.scrollTo({ left: b.offsetLeft - nav.clientWidth / 2 + b.offsetWidth / 2, behavior: "smooth" });
@@ -129,7 +209,7 @@
   let t;
   const later = () => { clearTimeout(t); t = setTimeout(() => { folds(); build(); }, 250); };
   // 새로 그려진 카드는 그 자리에서 바로 접힘 상태를 입힌다(잠깐 펼쳐졌다 접히며 화면이 튀던 것, 2026-11-13).
-  const mo = new MutationObserver((recs) => { if (recs.some((r) => r.type === "attributes" || [...r.addedNodes].some((n) => n.nodeType === 1 && (n.matches?.(SEL) || n.querySelector?.(SEL))))) { folds(); later(); } });
+  const mo = new MutationObserver((recs) => { const m = mainNow(); if (m && TAB_GUIDE[m.id] && !m.querySelector(":scope > .tab-guide")) later(); if (recs.some((r) => r.type === "attributes" || [...r.addedNodes].some((n) => n.nodeType === 1 && (n.matches?.(SEL) || n.querySelector?.(SEL))))) { folds(); later(); } });
   // 다른 화면 코드가 접힌 카드를 펼칠 때(바로가기 등)
   window.__cfold = { open: (sec) => { if (sec && sec.classList.contains("cf-shut")) setShut(sec, false); } };
   document.querySelectorAll("main").forEach((m) => mo.observe(m, { attributes: true, attributeFilter: ["hidden"], childList: true, subtree: true }));

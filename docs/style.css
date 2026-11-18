@@ -912,3 +912,20 @@ section.card.cf-shut > .card-head .filters, section.card.cf-shut > .card-head .s
   .sm-cols span:nth-child(3) { display: none; }
   .sm-verdict { font-size: 14px; }
 }
+
+/* 탭 안내와 메뉴 묶음 (2026-11-18): ui.js 의 TAB_GUIDE */
+.sec-nav .sn-grp { flex: 0 0 auto; align-self: center; font-size: 11.5px; font-weight: 800; color: var(--accent); white-space: nowrap; padding: 0 1px 0 10px; cursor: help; }
+.sec-nav .sn-grp:first-child { padding-left: 0; }
+.tab-guide { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 12px; padding: 10px 14px; font-size: 13.5px; line-height: 1.65; color: var(--ink-2); }
+.tab-guide summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; font-weight: 800; color: var(--ink); font-size: 14.5px; }
+.tab-guide summary::-webkit-details-marker { display: none; }
+.tab-guide summary::after { content: "펼치기 ▾"; margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted); }
+.tab-guide details[open] summary::after { content: "접기 ▴"; }
+.tab-guide p { margin: 8px 0 0; }
+.tab-guide .tg-list { margin: 8px 0 0; padding-left: 0; list-style: none; display: grid; gap: 8px; }
+.tab-guide .tg-list li { background: var(--surface-2); border-radius: 9px; padding: 8px 10px; }
+.tab-guide .tg-list b { color: var(--ink); }
+.tab-guide .tg-cards { display: block; margin-top: 3px; font-size: 12.5px; }
+.tab-guide .tg-cards .lnk { font-size: 12.5px; }
+.tab-guide .tg-foot { font-size: 12.5px; color: var(--muted); }
+#viewAi > .tab-guide { order: 0; }
