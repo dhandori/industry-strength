@@ -15,11 +15,12 @@ header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px 
 .top b{font-size:17px}
 .top span{font-size:12px;color:var(--sub)}
 .top span.old{color:var(--dn);font-weight:600}
-.row{display:flex;gap:6px;overflow-x:auto;padding:6px 12px;scrollbar-width:none}
+.row{display:flex;gap:7px;overflow-x:auto;padding:5px 12px;scrollbar-width:none}
 .row::-webkit-scrollbar{display:none}
-.row button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:14px;padding:7px 12px;border-radius:999px}
+.row{touch-action:pan-x;overscroll-behavior:contain}
+.row button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:14px;padding:9px 14px;border-radius:999px;touch-action:manipulation;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;cursor:pointer}
 #tabs button.on{background:var(--text);color:#fff;border-color:var(--text)}
-#secs button{font-size:13px;padding:5px 10px;color:var(--sub)}
+#secs button{font-size:14px;padding:9px 13px;color:var(--sub)}
 #secs button.on{background:#2962ff;border-color:#2962ff;color:#fff;font-weight:600}
 main{max-width:720px;margin:0 auto;padding:8px 8px 60px}
 h2{font-size:15px;margin:18px 6px 8px;scroll-margin-top:150px}
@@ -59,7 +60,7 @@ const store = {
   get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
   set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
 };
-let META = null, CUR = null, ITEMS = [], io = null, HEADS = [], SPY = -1, LOCK = false;
+let META = null, CUR = null, ITEMS = [], io = null, HEADS = [], SPY = -1, LOCK = false, ROWBUSY = 0;
 
 function fmt(v, dg){ return v.toLocaleString("en-US",{minimumFractionDigits:dg,maximumFractionDigits:dg}); }
 function sign(v, d){ return (v > 0 ? "+" : "") + v.toFixed(d) + "%"; }
@@ -174,8 +175,12 @@ function light(cur){
   SPY = cur;
   const row = $("secs");
   [...row.children].forEach((b, i) => b.classList.toggle("on", i === cur));
+  // 버튼 줄은 켜진 버튼이 화면 밖에 있을 때만, 그리고 손가락이 버튼 줄을 만지고 있지 않을 때만 옮긴다.
+  // (버튼 줄이 손가락 밑에서 움직이면 누르려던 버튼이 빗나간다.)
   const b = row.children[cur];
-  if (b) row.scrollTo({left: b.offsetLeft - (row.clientWidth - b.offsetWidth) / 2, behavior: "smooth"});
+  if (!b || Date.now() < ROWBUSY) return;
+  const l = b.offsetLeft - row.scrollLeft, r = l + b.offsetWidth;
+  if (l < 8 || r > row.clientWidth - 8) row.scrollLeft = b.offsetLeft - (row.clientWidth - b.offsetWidth) / 2;
 }
 function spy(){
   if (!HEADS.length || LOCK) return;
@@ -210,7 +215,7 @@ async function openTab(id, restore){
     main.appendChild(h); HEADS.push(h);
     const b = document.createElement("button"); b.textContent = s.name;
     b.onclick = () => {
-      LOCK = true; light(si);
+      LOCK = true; ROWBUSY = Date.now() + 2500; light(si);
       window.scrollTo(0, h.getBoundingClientRect().top + window.scrollY - document.querySelector("header").offsetHeight - 10);
     };
     $("secs").appendChild(b);
@@ -232,6 +237,9 @@ window.addEventListener("resize", () => {
   clearTimeout(rz);
   rz = setTimeout(() => document.querySelectorAll("canvas").forEach(cv => { if (cv.width && cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }), 200);
 });
+
+// 버튼 줄을 만지는 동안과 그 뒤 2.5초는 버튼 줄을 자동으로 옮기지 않는다.
+["touchstart","touchmove","pointerdown","wheel"].forEach(ev => $("secs").addEventListener(ev, () => { ROWBUSY = Date.now() + 2500; }, {passive: true}));
 
 (async () => {
   try { META = await (await fetch(DATA + "meta.json?t=" + Date.now())).json(); }
