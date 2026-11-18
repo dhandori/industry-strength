@@ -177,6 +177,13 @@
     box.innerHTML = `<section class="card in-card">
       <div class="card-head wrap"><h2>AI 인프라 수요 <span class="sub">토큰 총량, 지출, GPU 단가</span></h2></div>
       <p class="ai-meta">갱신 ${esc(d.updated_at)} · 매일 09:40·12:40 KST 자동 수집${bad.length ? ` · <b class="ai-bad">이번 수집 실패: ${bad.join(", ")} (지난 값 표시)</b>` : ""}</p>
+      ${cLast ? `<p class="ai-lead">빅테크 5사가 ${cLast.q.slice(2, 4)}년 ${cLast.q.slice(-1)}분기 데이터센터·서버에 <b>${bn(cLast.usd)}</b>를 썼어요${cYoY != null ? `. 1년 전보다 <b class="${cYoY >= 0 ? "up" : "down"}">${sgn(cYoY)}%</b>예요` : ""}.${mult ? ` OpenRouter를 거친 토큰은 ${weeksSpan}주 전의 <b>${mult.toFixed(1)}배</b>로 늘었어요.` : ""}</p>` : ""}
+      <h3 class="ai-h3">빅테크 설비투자 <span class="sub">아마존, 구글, 마이크로소프트, 메타, 오라클 · 분기별 현금 지출</span></h3>
+      <div class="cp-ctl"><div class="chart-legend">${CO.map(([, n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join("")}<span><i style="background:var(--ink);height:3px"></i>4분기 이동평균(합계)</span></div>
+        <div class="cp-tabs">${[["3y", "3년"], ["5y", "5년"], ["all", "전체"]].map(([k, t]) => `<button class="toggle" aria-pressed="${st.crange === k}" data-cr="${k}">${t}</button>`).join("")}</div></div>
+      <div id="inCap"></div>
+      <p class="cp-sub">${ann ? `최근 4개 분기를 더하면 <b>${dol(ann)}</b>예요. ` : ""}데이터센터, 서버, GPU를 사는 데 쓴 돈이라 AI 칩 수요를 가장 직접 보여 줘요.</p>
+      <details class="ai-more" data-more="infra"${st.more ? " open" : ""}><summary>자세히 보기 · 숫자 요약, 토큰 총량, 회사별 표, 지출 추정, GPU 임대료</summary><div class="ai-more-b">
       <div class="tiles ai-tiles">
         ${last ? tile("지난주 토큰 (OpenRouter)", tok(last.total), `${ymd(last.week)} 주${mult ? ` · ${weeksSpan}주 전의 <b class="up">${mult.toFixed(1)}배</b>` : ""}`) : ""}
         ${y52 ? tile("최근 52주 합계", tok(y52.sum), `${ymd(y52.from)} 주 ~ ${ymd(last.week)} 주 · 1년 규모`) : ""}
@@ -191,11 +198,6 @@
       <p class="cp-sub">${prev4 && last ? `4주 전(${ymd(prev4.week)} 주 ${tok(prev4.total)})보다 <b class="${last.total >= prev4.total ? "up" : "down"}">${sgn((last.total / prev4.total - 1) * 100)}%</b>예요. ` : ""}로그 눈금을 켜면 같은 배수로 늘어난 구간이 같은 높이로 보여서, 증가 속도가 빨라지는지 느려지는지 읽기 쉬워요.</p>
       <p class="foot-note">OpenRouter는 여러 AI 모델을 한 창구에서 파는 중개 서비스라, 여기 숫자는 시장 전체가 아니라 그중 한 조각이에요. 오픈AI·구글·앤트로픽이 자기 API로 직접 판 양은 빠져 있고, 값싼 중국 모델 비중이 높아요. 그래도 같은 기준으로 매주 재기 때문에 수요가 늘어나는 속도를 보기에는 좋은 지표예요. 1조는 10<sup>12</sup>, 1경은 10<sup>16</sup>이에요.</p>
 
-      <h3 class="ai-h3">빅테크 설비투자 <span class="sub">아마존, 구글, 마이크로소프트, 메타, 오라클 · 분기별 현금 지출</span></h3>
-      <div class="cp-ctl"><div class="chart-legend">${CO.map(([, n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join("")}<span><i style="background:var(--ink);height:3px"></i>4분기 이동평균(합계)</span></div>
-        <div class="cp-tabs">${[["3y", "3년"], ["5y", "5년"], ["all", "전체"]].map(([k, t]) => `<button class="toggle" aria-pressed="${st.crange === k}" data-cr="${k}">${t}</button>`).join("")}</div></div>
-      <div id="inCap"></div>
-      <p class="cp-sub">${ann ? `최근 4개 분기를 더하면 <b>${dol(ann)}</b>예요. ` : ""}데이터센터, 서버, GPU를 사는 데 쓴 돈이라 AI 칩 수요를 가장 직접 보여 줘요.</p>
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>회사</th><th>최근 분기</th><th class="num">설비투자</th><th class="num">1년 전 대비</th><th class="num">최근 4분기 합</th><th>공시일</th></tr></thead><tbody>${cTbl}</tbody></table></div>
       <p class="foot-note">SEC에 낸 분기·연간 보고서의 현금흐름표 '유형자산 취득' 금액이에요(아마존은 '생산 자산 취득'). 분기 보고서는 연초부터 쌓인 값이라 앞 분기를 빼서 분기 값을 구했어요. 마이크로소프트와 오라클은 회계연도가 달라서 분기 끝 날짜에 가장 가까운 달력 분기로 맞췄어요. 리스로 빌린 데이터센터는 이 금액에 들어가지 않아서 실제 투자 규모는 더 커요.</p>
 
@@ -212,11 +214,13 @@
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>GPU</th><th class="num">시장 중앙값</th><th class="num">중간 50% 범위</th><th class="num">빌릴 수 있는 수</th><th class="num">RunPod 정가</th><th class="num">RunPod 커뮤니티</th>${gd.length > 1 ? `<th class="num">기록 시작 대비</th>` : ""}</tr></thead><tbody>${gRows}</tbody></table></div>
       <p class="foot-note">시장 중앙값은 Vast.ai 공개 마켓에서 지금 빌릴 수 있는 매물의 1장당 값을 GPU 수로 가중해 가운데 값을 잡은 거예요. 개인과 소형 업체가 내놓은 매물이 많아 대형 클라우드 정가보다 싸게 나와요. 빌릴 수 있는 수가 줄면서 값이 오르면 공급이 빠듯하다는 신호예요. RunPod 정가는 회사가 공개한 정찰가라 자주 바뀌지 않지만, 바뀌면 가격 인상이 확정됐다는 뜻이에요. 참고로 공개 보도 기준 H100 1년 계약가는 2025년 10월 시간당 1.70달러에서 2026년 3월 2.35달러로 약 40% 올랐어요(SemiAnalysis).</p>
       <p class="foot-note">자료: <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter</a>(CC BY 4.0), <a href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC EDGAR</a>, <a href="https://vast.ai/" target="_blank" rel="noopener">Vast.ai</a>, <a href="https://www.runpod.io/pricing" target="_blank" rel="noopener">RunPod</a>. 투자 판단의 참고 자료예요.</p>
+      </div></details>
     </section>`;
     if (tw.length) $("#inTok").innerHTML = barChart(tCats, W($("#inTok")), { line: tLine, log: st.tlog, fmt: tok, aria: "OpenRouter 주간 토큰 총량" });
     if (cShow.length) $("#inCap").innerHTML = barChart(cCats, W($("#inCap")), { line: cShow.map((t) => c4map[t.q]), lineDash: "5 3", fmt: (v) => bn(v), aria: "빅테크 5사 분기 설비투자", sparse: true });
     if ($("#inSpend")) $("#inSpend").innerHTML = barChart(sCats, W($("#inSpend")), { line: ma(sw.map((h) => h.usd), 4), fmt: (v) => `$${Math.round(v / 1e6)}M`, aria: "OpenRouter 주간 지출 추정", H: 220 });
     if (gd.length) $("#inGpu").innerHTML = gpuChart(gd, W($("#inGpu")));
+    box.querySelector('[data-more="infra"]')?.addEventListener("toggle", (e) => { if (e.target.open === !!st.more) return; st.more = e.target.open; render(); });
     box.querySelectorAll("[data-tlog]").forEach((el) => el.addEventListener("click", () => { st.tlog = !st.tlog; render(); }));
     box.querySelectorAll("[data-cr]").forEach((el) => el.addEventListener("click", () => { st.crange = el.dataset.cr; render(); }));
     box.querySelectorAll("[data-gpu]").forEach((el) => el.addEventListener("click", () => { const k = el.dataset.gpu; st.gpuOff.has(k) ? st.gpuOff.delete(k) : st.gpuOff.add(k); render(); }));
