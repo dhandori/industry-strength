@@ -1,4 +1,4 @@
-"""워치리스트 RS 등급 계산 검사: 전체 종목 안에서 1~99로 매기고, 지수·매크로는 빼는지 본다."""
+"""차트북 RS 등급 계산 검사: 전체 종목 안에서 1~99로 매기고, 지수·매크로는 빼는지 본다."""
 import sys
 import unittest
 from pathlib import Path

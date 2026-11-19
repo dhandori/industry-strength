@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#ffffff">
-<title>WAMO 워치리스트 차트</title>
+<title>WAMO 차트북</title>
 <style>
 :root{--bg:#f4f5f7;--card:#fff;--line:#e3e5ea;--soft:#eef0f3;--text:#16181d;--sub:#6b7280;--ink:#374151;--up:#089981;--dn:#f23645;--upbg:#e3f5ee;--dnbg:#fdecec;--rise:#e8313a;--fall:#1d6ae5;--risebg:#fdecec;--fallbg:#e8f0fe;--risetx:#c4161c;--falltx:#1450b8}
 *{box-sizing:border-box}
@@ -153,7 +153,7 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
 <header id="hdr">
   <div id="hide">
     <div class="top">
-      <div class="ttl"><b>WAMO 워치리스트</b><small id="upd"></small></div>
+      <div class="ttl"><b>WAMO 차트북</b><small id="upd"></small></div>
       <button id="vbtn" aria-label="보기 바꾸기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>목록</span></button>
     </div>
     <nav id="tabs"></nav>
@@ -664,7 +664,7 @@ function panel(){
   } else if (PANEL === "sort"){
     const noRs = !all.some(it => it.rs != null), noVol = !all.some(it => it.m.vr != null);
     const now = document.createElement("div"); now.className = "now";
-    now.innerHTML = EFF === "base" ? "지금: <b>기본 순서</b> (워치리스트에 넣은 순서)" : `지금: <b>${SORT[EFF].g === "기간 수익률" ? SORT[EFF].name + " 수익률" : SORT[EFF].name}</b> · <b>${ST.d === "asc" ? "낮은 순 ↑" : "높은 순 ↓"}</b>`;
+    now.innerHTML = EFF === "base" ? "지금: <b>기본 순서</b> (트레이딩뷰 워치리스트에 넣은 순서)" : `지금: <b>${SORT[EFF].g === "기간 수익률" ? SORT[EFF].name + " 수익률" : SORT[EFF].name}</b> · <b>${ST.d === "asc" ? "낮은 순 ↑" : "높은 순 ↓"}</b>`;
     pn.appendChild(now);
     let w = null, g = null;
     const NOTE = {"기간 수익률": "그 기간 전 종가 대비", "강도": "RS는 전체 종목 안의 1~99 등급, 거래량은 오늘 ÷ 20일 평균", "52주 위치": "52주 최저 0% ~ 최고 100% 사이 어디쯤인가"};
