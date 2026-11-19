@@ -152,6 +152,17 @@ def main():
                 pg.click("#logb")
                 look("기본", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
                              "Micron", "삼성전자", "Sony"])
+                # 끝까지 내리면 '맨 위로' 단추가 나오고, 마지막 탭(ai)의 끝에는 '처음 탭으로' 단추가 있다
+                pg.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                pg.wait_for_timeout(300)
+                if not pg.is_visible("#totop"):
+                    problems.append(f"{label} 끝까지 내려도 맨 위로 단추가 안 보임")
+                if not pg.inner_text("#next").startswith("처음 탭으로: 매크로"):
+                    problems.append(f"{label} 마지막 탭 끝 단추 글자 '{pg.inner_text('#next')}'")
+                pg.click("#totop")
+                pg.wait_for_timeout(600)
+                if pg.evaluate("window.scrollY") > 2 or pg.is_visible("#totop"):
+                    problems.append(f"{label} 맨 위로 단추를 눌러도 맨 위로 안 감")
                 # 걸러 보기: 정배열 AND RS 80 이상 AND (한국 OR 미국)
                 pg.click("#fbtn")
                 for t in ("정배열", "RS 80 이상", "한국", "미국"):
@@ -208,6 +219,14 @@ def main():
                 if "RS" in pg.inner_text("#sbtn"):
                     problems.append(f"{label} 매크로: 정렬 단추에 RS가 남음")
                 pg.screenshot(path=str(SHOTS / f"watchlist-{label}.png"))
+                # 매크로 탭 끝의 '다음 탭' 단추를 누르면 다음 탭(ai)이 맨 위부터 열린다
+                if not pg.inner_text("#next").startswith("다음 탭: AI반도체"):
+                    problems.append(f"{label} 매크로 탭 끝 단추 글자 '{pg.inner_text('#next')}'")
+                pg.click("#next")
+                pg.wait_for_selector("#tabs button[data-id=ai].on")
+                pg.wait_for_timeout(300)
+                if pg.evaluate("window.scrollY") > 2:
+                    problems.append(f"{label} 다음 탭이 맨 위부터 열리지 않음")
                 problems += [f"{label}: {e}" for e in errors]
                 pg.close()
             b.close()
