@@ -64,7 +64,7 @@ button, select { font: inherit; color: inherit; }
 /* 작은 글씨 바닥: small·sup 은 브라우저 기본이 0.83배라 12~13px 글 안에서 11px 아래로 내려간다 */
 small, sup, sub { font-size: max(11px, 0.85em); }
 .brand h1 { font-size: 19px; font-weight: 750; }
-/* 짝 화면(와모 추세체크판)으로 가는 링크 */
+/* 짝 화면(WAMO 레이더)으로 가는 링크 */
 .brand h1 .xlink { margin-left: 8px; font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; vertical-align: 2px; }
 .brand h1 .xlink:hover, .brand h1 .xlink:focus-visible { color: var(--accent); }
 .meta { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
