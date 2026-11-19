@@ -156,6 +156,23 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
 #prog{position:fixed;right:3px;width:3px;border-radius:3px;background:rgba(107,114,128,.16);pointer-events:none;z-index:3;display:none}
 #prog i{position:absolute;left:0;width:3px;border-radius:3px;background:rgba(8,153,129,.6)}
 #prog b{position:absolute;right:7px;transform:translateY(-50%);font-size:10.5px;font-weight:600;color:#4b5563;background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:8px;padding:1px 6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* 종목 검색: 화면 전체를 덮는 창. 결과를 누르면 그 탭의 카드로 간다 */
+#srch{position:fixed;inset:0;z-index:7;background:var(--card);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+#srch[hidden]{display:none}
+.sbx{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);max-width:1100px;width:100%;margin:0 auto}
+.sbx svg{width:20px;height:20px;flex:none;stroke:var(--sub);fill:none;stroke-width:2;stroke-linecap:round}
+#sq{flex:1;min-width:0;border:0;outline:0;font-size:17px;background:none;color:var(--text);padding:6px 0}
+#sx{border:0;background:var(--soft);border-radius:8px;padding:7px 12px;font-size:14px;color:var(--ink)}
+#sres{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;max-width:1100px;width:100%;margin:0 auto}
+#sres button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--soft);background:none;padding:11px 16px}
+#sres button:active,#sres button.on{background:var(--pul)}
+#sres b{font-size:15.5px;color:var(--text)}
+#sres b small{font-size:12.5px;font-weight:500;color:var(--sub);margin-left:6px}
+#sres span{display:block;font-size:12.5px;color:var(--sub);margin-top:2px}
+#sres em{font-style:normal;color:var(--pud);font-weight:600}
+#sres p{padding:30px 16px;text-align:center;color:var(--sub);font-size:14px;line-height:1.6;margin:0}
+.card.hit,.tr.hit{animation:hit 2.2s ease}
+@keyframes hit{0%,40%{box-shadow:0 0 0 3px var(--pu);background:var(--pul)}100%{box-shadow:0 0 0 0 transparent}}
 #msg{padding:40px 16px;text-align:center;color:var(--sub);font-size:14px;line-height:1.6}
 /* 탭 끝의 '다음 탭' 단추와 오른쪽 아래 '맨 위로' 단추: 아래로 다 본 뒤 다음 큰 섹터로 바로 넘어가게 */
 #next{display:block;width:100%;margin:18px 0 4px;padding:15px 12px;border:1.5px solid var(--up);border-radius:12px;background:var(--upbg);color:var(--up);font-size:15.5px;font-weight:700}
@@ -170,7 +187,8 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
   <div id="hide">
     <div class="top">
       <div class="ttl"><b>와모 차트북</b><small id="upd"></small></div>
-      <button id="vbtn" aria-label="보기 바꾸기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>목록</span></button>
+      <div class="ic"><button id="qbtn" aria-label="종목 검색" hidden><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span>검색</span></button>
+      <button id="vbtn" aria-label="보기 바꾸기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>목록</span></button></div>
     </div>
     <nav id="tabs"></nav>
   </div>
@@ -186,6 +204,12 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
   <div id="panel" hidden></div>
 </header>
 <div id="dim" hidden></div>
+<div id="srch" hidden>
+  <div class="sbx"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+    <input id="sq" type="search" placeholder="티커·영문·한글·딱지로 찾기" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+    <button id="sx">닫기</button></div>
+  <div id="sres"></div>
+</div>
 <div id="prog"><i></i><b></b></div>
 <button id="totop" aria-label="맨 위로" title="맨 위로"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <main id="main"><div id="msg">불러오는 중입니다.</div></main>
@@ -411,7 +435,7 @@ const CROSS = {gc:["xg","골든크로스 발생"], gs:["xg","골든크로스 임
 function span(cls, txt){ const s = document.createElement("span"); if (cls) s.className = cls; s.textContent = txt; return s; }
 function card(it, idx, rank){
   const ld = it.d[it.d.length - 1], sk = SORT[EFF], pd = /\.(KS|KQ|T)$/.test(it.y) ? 0 : it.dg;
-  const el = document.createElement("div"); el.className = "card";
+  const el = document.createElement("div"); el.className = "card"; el.dataset.y = it.y;
   el.innerHTML =
     `<div class="hd"><div class="nr"><div class="nm"></div><div class="px">${fmt(lastOf(it.c), pd)}<i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></div></div>` +
     `<div class="biz"></div><div class="bd"></div></div>` +
@@ -450,7 +474,7 @@ function tableHead(){
   return th;
 }
 function tableRow(it, idx, rank){
-  const r = document.createElement("div"); r.className = "tr it";
+  const r = document.createElement("div"); r.className = "tr it"; r.dataset.y = it.y;
   const n = document.createElement("div"); n.className = "n";
   const b = document.createElement("b"); b.textContent = it.n; n.appendChild(b);
   const sm = document.createElement("small");
@@ -749,6 +773,73 @@ $("fbtn").onclick = () => openPanel("flt");
 $("sbtn").onclick = () => openPanel("sort");
 $("vbtn").onclick = () => { ST.v = ST.v === "list" ? "chart" : "list"; save(); render(false); };
 $("dim").onclick = () => openPanel(PANEL);
+// ── 종목 검색: meta.json 의 색인(모든 탭)에서 티커·영문·한글·별칭·딱지로 찾는다. 한글 초성(ㅅㅅㅈㅈ)도 된다 ──
+const CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+const norm = v => (v || "").toLowerCase().replace(/[\s.\-·&,'()^/=]/g, "");
+const cho = v => [...(v || "")].map(c => { const k = c.charCodeAt(0) - 0xac00; return k >= 0 && k < 11172 ? CHO[Math.floor(k / 588)] : c; }).join("");
+let SIDX = null, SHIT = [], SSEL = 0;
+function sindex(){
+  if (SIDX) return SIDX;
+  SIDX = (META.index || []).map(([y, n, kn, al, t, tab, sec]) => {
+    const base = y.replace(/\.[A-Z]+$/, "");
+    const words = [y, base, n, kn, ...(al ? al.split("|") : []), ...(t ? t.split(" · ") : [])].filter(Boolean);
+    return {y, n, kn, al, t, tab, sec, base: norm(base), keys: words.map(norm), ch: words.map(w => norm(cho(w)))};
+  });
+  return SIDX;
+}
+function sfind(q){
+  const nq = norm(q); if (!nq) return [];
+  const onlyCho = /^[ㄱ-ㅎ]+$/.test(nq);
+  const out = [];
+  sindex().forEach(e => {
+    let sc = 9;
+    if (e.base === nq || norm(e.y) === nq) sc = 0;
+    else e.keys.forEach((k, i) => { if (k.startsWith(nq)) sc = Math.min(sc, i < 4 ? 1 : 3); else if (k.includes(nq)) sc = Math.min(sc, i < 4 ? 2 : 4); });
+    if (sc === 9 && onlyCho) e.ch.forEach(k => { if (k.startsWith(nq)) sc = Math.min(sc, 5); else if (k.includes(nq)) sc = Math.min(sc, 6); });
+    if (sc < 9) out.push([sc, e]);
+  });
+  return out.sort((a, b) => a[0] - b[0]).slice(0, 40).map(x => x[1]);
+}
+function sdraw(){
+  const q = $("sq").value, box = $("sres"); box.innerHTML = "";
+  SHIT = sfind(q); SSEL = 0;
+  if (!q.trim()){ box.innerHTML = '<p>티커(NVDA, 000660), 영문(nvidia), 한글(엔비디아, 하닉), 초성(ㅅㅅㅈㅈ), 딱지(HBM)로 찾을 수 있어요.</p>'; return; }
+  if (!SHIT.length){ box.innerHTML = '<p>찾는 종목이 차트북에 없어요.</p>'; return; }
+  SHIT.forEach((e, i) => {
+    const b = document.createElement("button"); b.classList.toggle("on", i === 0);
+    const nm = document.createElement("b"); nm.textContent = e.kn && e.kn !== e.n ? e.kn : e.n;
+    const sm = document.createElement("small"); sm.textContent = (e.kn && e.kn !== e.n ? e.n + " · " : "") + e.y; nm.appendChild(sm);
+    const ln = document.createElement("span"); ln.textContent = (SHORT[e.tab] || e.tab) + " › " + e.sec + (e.t ? " · " : "");
+    if (e.t){ const em = document.createElement("em"); em.textContent = e.t; ln.appendChild(em); }
+    b.append(nm, ln); b.onclick = () => sgo(e); box.appendChild(b);
+  });
+}
+function sopen(){ $("srch").hidden = false; $("sq").value = ""; sdraw(); setTimeout(() => $("sq").focus(), 30); }
+function sclose(){ $("srch").hidden = true; $("sq").blur(); }
+async function sgo(e){
+  sclose();
+  if (PANEL) openPanel(PANEL);
+  if (CUR !== e.tab || !TAB) await openTab(e.tab, false);
+  const pick = () => [...$("main").querySelectorAll("[data-y]")].find(x => x.dataset.y === e.y);
+  let el = pick();
+  // 걸러 보기·정렬 때문에 안 보이면 조건을 풀고 기본 순서로 다시 그린다
+  if (!el){ reset(); save(); render(false); el = pick(); }
+  if (!el) return;
+  jumpTo(el);
+  el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit");
+}
+$("qbtn").onclick = sopen;
+$("sx").onclick = sclose;
+$("sq").addEventListener("input", sdraw);
+$("sq").addEventListener("keydown", ev => {
+  if (ev.key === "Escape") sclose();
+  else if (ev.key === "Enter" && SHIT.length){ ev.preventDefault(); sgo(SHIT[SSEL]); }
+  else if ((ev.key === "ArrowDown" || ev.key === "ArrowUp") && SHIT.length){
+    ev.preventDefault(); SSEL = (SSEL + (ev.key === "ArrowDown" ? 1 : SHIT.length - 1)) % SHIT.length;
+    [...$("sres").children].forEach((b, i) => b.classList.toggle("on", i === SSEL)); $("sres").children[SSEL].scrollIntoView({block: "nearest"});
+  }
+});
+document.addEventListener("keydown", ev => { if (ev.key === "/" && $("srch").hidden && document.activeElement.tagName !== "INPUT"){ ev.preventDefault(); sopen(); } });
 $("totop").onclick = () => { JUMP = Date.now() + 600; setHidden(false); window.scrollTo(0, 0); };
 
 // ── 스크롤: 아래로 내리면 메뉴 윗부분을 접고, 위로 올리면 편다 ──
@@ -776,6 +867,7 @@ window.addEventListener("resize", () => {
 (async () => {
   try { META = await (await fetch(DATA + "meta.json?t=" + Date.now())).json(); }
   catch(e){ $("msg").textContent = "자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요."; return; }
+  $("qbtn").hidden = !(META.index && META.index.length);
   const up = $("upd"); up.textContent = META.updated.slice(5).replace("-", "/") + " KST 갱신";
   const age = (Date.now() - new Date(META.updated.replace(" ", "T") + ":00+09:00")) / 36e5;
   if (age > 80) { up.classList.add("old"); up.textContent += " (오래됨)"; }

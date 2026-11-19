@@ -127,6 +127,14 @@ def build(item, raw, now):
     }
 
 
+def search_index(tabs):
+    """차트북 검색용 색인: 탭을 열지 않아도 모든 종목을 찾게 한다.
+    한 줄 = [야후기호, 이름, 한글 이름, 별칭('|'로 잇기), 딱지(' · '로 잇기), 탭 id, 섹터 이름]."""
+    return [[it["y"], it["n"], it.get("kn", ""), "|".join(it.get("al", [])), " · ".join(it.get("t", [])),
+             tab["id"], sec["name"]]
+            for tab in tabs for sec in tab["sections"] for it in sec["items"]]
+
+
 def is_stock(tab_id, sym):
     """RS 등급을 매길 대상: 지수·매크로 탭이 아니고, 지수(^)·금리·환율·선물(=)이 아닌 종목."""
     return tab_id != "macro" and not sym.startswith("^") and "=" not in sym and sym not in NO_TREND
@@ -241,7 +249,7 @@ def main():
     kst = dt.datetime.now(KST)
     with open(os.path.join(out_dir, "meta.json"), "w", encoding="utf-8") as f:
         json.dump({"updated": kst.strftime("%Y-%m-%d %H:%M"), "tabs": summary,
-                   "total": total, "failed": failed}, f, ensure_ascii=False, indent=1)
+                   "total": total, "failed": failed, "index": search_index(tabs)}, f, ensure_ascii=False, indent=1)
     print(f"완료: {total}개 중 실패 {len(failed)}개")
     # 절반 넘게 실패하면 갱신 실패로 처리해 어제 페이지를 지키게 한다
     if total and len(failed) > total / 2:

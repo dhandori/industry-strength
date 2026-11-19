@@ -77,8 +77,12 @@ def make_data(folder):
                                      item("^IXIC", "나스닥", "", 0.002, 10, vol=False)]}]}
     for d in (macro, ai):
         (folder / f"{d['id']}.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    kn = {"NVDA": ("엔비디아", ""), "000660.KS": ("SK하이닉스", "하닉|하이닉스"), "TSM": ("TSMC", "대만반도체"),
+          "005930.KS": ("삼성전자", "삼전")}
+    index = [[it["y"], it["n"], *kn.get(it["y"], ("", "")), " · ".join(it.get("t", [])), d["id"], sec["name"]]
+             for d in (macro, ai) for sec in d["sections"] for it in sec["items"]]
     meta = {"updated": dt.datetime.now(dt.timezone(dt.timedelta(hours=9))).strftime("%Y-%m-%d %H:%M"),
-            "tabs": [{"id": "macro", "title": macro["title"]}, {"id": "ai", "title": ai["title"]}]}
+            "tabs": [{"id": "macro", "title": macro["title"]}, {"id": "ai", "title": ai["title"]}], "index": index}
     (folder / "meta.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
 
 
@@ -227,6 +231,26 @@ def main():
                 if "RS" in pg.inner_text("#sbtn"):
                     problems.append(f"{label} 매크로: 정렬 단추에 RS가 남음")
                 pg.screenshot(path=str(SHOTS / f"watchlist-{label}.png"))
+                # 종목 검색: 한글·별칭·티커·초성으로 찾고, 누르면 그 탭의 카드로 간다(매크로 탭에서 ai 탭 종목)
+                for q, want in (("엔비디아", "NVDA"), ("하닉", "000660.KS"), ("000660", "000660.KS"),
+                                ("nvidia", "NVDA"), ("ㅅㅅㅈㅈ", "005930.KS"), ("cowos", "TSM")):
+                    pg.click("#qbtn")
+                    pg.fill("#sq", q)
+                    first = pg.inner_text("#sres button >> nth=0") if pg.locator("#sres button").count() else ""
+                    if want not in first:
+                        problems.append(f"{label} 검색 '{q}': 첫 결과 '{first[:40]}' (기대 {want})")
+                    pg.click("#sx")
+                pg.click("#qbtn"); pg.fill("#sq", "엔비디아"); pg.press("#sq", "Enter")
+                pg.wait_for_selector("#tabs button[data-id=ai].on")
+                pg.wait_for_selector(".hit[data-y=NVDA]")
+                top = pg.evaluate("document.querySelector('.hit[data-y=NVDA]').getBoundingClientRect().top")
+                if not (0 <= top < h * 0.5):
+                    problems.append(f"{label} 검색으로 간 카드가 화면 위쪽에 없음(top {top})")
+                pg.wait_for_timeout(800)  # 이동 직후 0.6초는 메뉴를 펼치지 않는다
+                pg.evaluate("window.scrollTo(0, 0)")
+                pg.wait_for_timeout(400)
+                pg.click("#tabs button[data-id=macro]")
+                pg.wait_for_timeout(400)
                 # 매크로 탭 끝의 '다음 탭' 단추를 누르면 다음 탭(ai)이 맨 위부터 열린다
                 if not pg.inner_text("#next").startswith("다음 탭: AI반도체"):
                     problems.append(f"{label} 매크로 탭 끝 단추 글자 '{pg.inner_text('#next')}'")
