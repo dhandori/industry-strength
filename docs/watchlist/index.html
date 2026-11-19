@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#ffffff">
 <title>WAMO 워치리스트 차트</title>
 <style>
-:root{--bg:#f4f5f7;--card:#fff;--line:#e3e5ea;--soft:#eef0f3;--text:#16181d;--sub:#6b7280;--ink:#374151;--up:#089981;--dn:#f23645;--upbg:#e3f5ee;--dnbg:#fdecec}
+:root{--bg:#f4f5f7;--card:#fff;--line:#e3e5ea;--soft:#eef0f3;--text:#16181d;--sub:#6b7280;--ink:#374151;--up:#089981;--dn:#f23645;--upbg:#e3f5ee;--dnbg:#fdecec;--rise:#e8313a;--fall:#1d6ae5;--risebg:#fdecec;--fallbg:#e8f0fe;--risetx:#c4161c;--falltx:#1450b8}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;-webkit-text-size-adjust:100%}
 button{font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
@@ -100,15 +100,16 @@ h2 small{color:var(--sub);font-weight:400;margin-left:6px}
 .biz{word-break:keep-all;font-size:12.5px;color:#4b5563;margin:2px 0 0;line-height:1.35}
 .px{font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{display:inline-block;font-style:normal;font-size:13px;font-weight:700;border-radius:7px;padding:2px 7px;margin-left:6px;font-variant-numeric:tabular-nums}
-.pill.up{background:var(--upbg);color:#0b6b50}.pill.dn{background:var(--dnbg);color:#b71c1c}
-.up{color:var(--up)}.dn{color:var(--dn)}
+/* 가격 오르내림은 한국식: 오르면 빨강, 내리면 파랑 */
+.pill.up{background:var(--risebg);color:var(--risetx)}.pill.dn{background:var(--fallbg);color:var(--falltx)}
+.up{color:var(--rise)}.dn{color:var(--fall)}
 .bd{display:flex;gap:5px;margin:7px 0 0;flex-wrap:wrap}
 .bd:empty{display:none}
 .bd span{font-size:12.5px;padding:3px 8px;border-radius:7px;font-variant-numeric:tabular-nums;background:var(--soft);color:var(--ink)}
 .bd .sk{background:#fff4d6;color:#7a4f00;font-weight:700;box-shadow:inset 0 0 0 1px #e7c26a}
 .bd .al{background:var(--up);color:#fff;font-weight:600}
-.bd .xg{background:var(--upbg);color:#0b6b50;box-shadow:inset 0 0 0 1px #0b6b50;font-weight:600}
-.bd .xd{background:var(--dnbg);color:#b71c1c;box-shadow:inset 0 0 0 1px #b71c1c;font-weight:600}
+.bd .xg{background:var(--risebg);color:var(--risetx);box-shadow:inset 0 0 0 1px var(--risetx);font-weight:600}
+.bd .xd{background:var(--fallbg);color:var(--falltx);box-shadow:inset 0 0 0 1px var(--falltx);font-weight:600}
 .bd .rh{background:#e7f0ff;color:#1d4ed8;font-weight:600}
 .bd .vh{background:#f3e8ff;color:#6b21a8;font-weight:600}
 .bd .st{background:#fff4d6;color:#8a5a00}
@@ -168,8 +169,9 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
 <div id="prog"><i></i><b></b></div>
 <main id="main"><div id="msg">불러오는 중입니다.</div></main>
 <script>
-const EMA = [["20","#f23645"],["50","#ff9800"],["200","#2962ff"]];
-const UP = "#089981", DN = "#f23645";
+// 한국식: 양봉 빨강, 음봉 파랑. 이동평균선은 봉과 섞이지 않게 주황·초록·보라
+const EMA = [["20","#f08c00"],["50","#2f9e44"],["200","#7048e8"]];
+const UP = "#e8313a", DN = "#1d6ae5", UPW = "#c4161c", DNW = "#1450b8";
 // 자료는 같은 저장소의 watchlist-data 가지에 매일 덮어쓴다(기록이 쌓이지 않게). 내 컴퓨터 시험 때만 옆 폴더를 읽는다.
 const LOCAL = ["localhost","127.0.0.1"].includes(location.hostname);
 const DATA = LOCAL ? "data/" : "https://raw.githubusercontent.com/dhandori/industry-strength/watchlist-data/";
@@ -258,7 +260,7 @@ function draw(cv, it0){
   const snap = x => (Math.round(x * dpr) + (Math.round(dpr) % 2 ? 0.5 : 0)) * dp;
   for (let i = 0; i < n; i++){
     const up = it.c[i] >= it.o[i], x = snap(X(i));
-    g.strokeStyle = up ? "#05705d" : "#c8102e"; g.lineWidth = lw;
+    g.strokeStyle = up ? UPW : DNW; g.lineWidth = lw;
     g.beginPath(); g.moveTo(x, Y(it.h[i])); g.lineTo(x, Y(it.l[i])); g.stroke();
     g.fillStyle = up ? UP : DN;
     const y1 = Y(Math.max(it.o[i], it.c[i])), y2 = Y(Math.min(it.o[i], it.c[i]));
@@ -267,7 +269,7 @@ function draw(cv, it0){
 
   // 점선 바로 안쪽 왼쪽에 '52주 고점 −x%'(선 아래), '52주 저점 +x%'(선 위). 흰 바탕을 깔아 봉과 겹쳐도 읽히게.
   g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textAlign = "left"; g.textBaseline = "middle";
-  [[it.hi, "52주 고점 " + sign(it.ph, 1), 9, "#b71c1c"], [it.lo, "52주 저점 " + sign(it.pl, 1), -9, "#0b6b50"]].forEach(([v, t, dy, col]) => {
+  [[it.hi, "52주 고점 " + sign(it.ph, 1), 9, DNW], [it.lo, "52주 저점 " + sign(it.pl, 1), -9, UPW]].forEach(([v, t, dy, col]) => {
     const y = Math.max(padT + 8, Math.min(padT + pH - 8, Math.round(Y(v)) + dy)), w = g.measureText(t).width;
     g.fillStyle = "rgba(255,255,255,.85)"; g.fillRect(3, y - 7, w + 8, 14);
     g.fillStyle = col; g.fillText(t, 7, y);
