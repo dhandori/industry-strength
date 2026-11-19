@@ -4,6 +4,7 @@
 - 종목마다 2년 치를 받아 EMA 20/50/200을 계산하고 최근 1년만 저장한다.
 - 아직 장이 끝나지 않은 오늘 봉은 뺀다(종가 기준).
 - 받지 못한 종목은 이전자료폴더에 있던 어제 자료를 그대로 쓴다.
+- RS 등급(rs, 1~99): 지수·매크로 탭과 지수·금리·환율을 뺀 전체 종목 안에서 매긴 상대강도 순위.
 """
 import datetime as dt
 import json
@@ -126,6 +127,37 @@ def build(item, raw, now):
     }
 
 
+def is_stock(tab_id, sym):
+    """RS 등급을 매길 대상: 지수·매크로 탭이 아니고, 지수(^)·금리·환율·선물(=)이 아닌 종목."""
+    return tab_id != "macro" and not sym.startswith("^") and "=" not in sym and sym not in NO_TREND
+
+
+def rs_score(closes):
+    """IBD 방식 가중 수익률: 3개월 40%, 6·9·12개월 각 20%. 저장된 1년 치 종가로 계산한다."""
+    n = len(closes)
+    if n < 64:
+        return None
+    ret = lambda k: closes[-1] / closes[max(0, n - 1 - k)] - 1
+    return 0.4 * ret(63) + 0.2 * ret(126) + 0.2 * ret(189) + 0.2 * ret(n - 1)
+
+
+def add_rs(tabs_out):
+    """종목마다 rs(1~99)를 붙인다. 점수가 높을수록 99에 가깝다. 대상이 아닌 항목은 rs 칸을 지운다."""
+    scored = []
+    for tab_id, sections in tabs_out:
+        for s in sections:
+            for it in s["items"]:
+                it.pop("rs", None)
+                sc = rs_score(it["c"]) if is_stock(tab_id, it["y"]) else None
+                if sc is not None:
+                    scored.append((sc, it))
+    scored.sort(key=lambda x: x[0])
+    n = len(scored)
+    for i, (_, it) in enumerate(scored):
+        it["rs"] = 99 if n == 1 else 1 + round(98 * i / (n - 1))
+    return n
+
+
 KST = dt.timezone(dt.timedelta(hours=9))
 
 
@@ -172,7 +204,7 @@ def main():
     tabs = json.load(open(tabs_path, encoding="utf-8"))
     session = requests.Session()
     now = int(time.time())
-    failed, summary, total = [], [], 0
+    failed, summary, total, tabs_out = [], [], 0, []
     for tab in tabs:
         prev = {}
         if prev_dir:
@@ -196,6 +228,10 @@ def main():
                     print("실패", item["y"], e, file=sys.stderr)
                 time.sleep(0.25)
             sections.append({"name": sec["name"], "items": items})
+        tabs_out.append((tab["id"], sections))
+    # RS 등급은 모든 탭을 다 받은 뒤 전체 종목 안에서 한 번에 매긴다
+    print("RS 등급 대상", add_rs(tabs_out))
+    for tab, (_, sections) in zip(tabs, tabs_out):
         with open(os.path.join(out_dir, f"{tab['id']}.json"), "w", encoding="utf-8") as f:
             json.dump({"id": tab["id"], "title": tab["title"], "sections": sections}, f,
                       ensure_ascii=False, separators=(",", ":"))
