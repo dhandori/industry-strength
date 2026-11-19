@@ -22,10 +22,35 @@ header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px 
 #tabs button{color:var(--up);border-color:var(--up);background:#f1faf7}
 #tabs button.on{background:var(--up);color:#fff;border-color:var(--up);font-weight:600}
 #secs button{font-size:14px;padding:9px 13px;color:var(--up);border-color:var(--up);background:#f1faf7}
-#flt{align-items:center;padding-top:2px;padding-bottom:2px}
-#flt span{flex:none;font-size:12px;color:var(--sub);margin-right:2px}
-#flt button{font-size:13px;padding:6px 11px;color:#374151;border-color:var(--line);background:var(--card)}
-#flt button.on{background:#374151;border-color:#374151;color:#fff;font-weight:600}
+#tool{align-items:center;padding-top:2px;padding-bottom:4px}
+#tool button,#tool select{flex:none;font:inherit;font-size:13px;padding:6px 11px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:#374151}
+#tool select{appearance:none;-webkit-appearance:none;padding-right:24px;max-width:46vw;text-overflow:ellipsis;background:var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E") no-repeat right 10px center}
+#tool #fbtn.on,#tool select.on{background:#374151;border-color:#374151;color:#fff;font-weight:600}
+#tool select.on{background-repeat:no-repeat;background-position:right 10px center;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23fff'/%3E%3C/svg%3E")}
+#tool .chip{background:#eef0f3;border-color:#eef0f3;color:#16181d;padding:6px 10px}
+#tool .chip::after{content:" ✕";color:var(--sub);font-size:11px}
+#cnt{flex:none;font-size:12px;color:var(--sub);margin-left:2px;font-variant-numeric:tabular-nums}
+#panel{border-top:1px solid var(--line);padding:4px 14px 10px;max-height:62vh;overflow-y:auto}
+#panel[hidden]{display:none}
+#panel h3{font-size:12px;font-weight:600;color:var(--sub);margin:10px 0 6px}
+#panel h3 small{font-weight:400;margin-left:4px}
+#panel .wrap{display:flex;flex-wrap:wrap;gap:6px}
+#panel .wrap button{font:inherit;font-size:13.5px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:#374151;touch-action:manipulation;cursor:pointer}
+#panel .wrap button.on{background:#374151;border-color:#374151;color:#fff;font-weight:600}
+#panel .wrap button small{font-size:11px;font-weight:400;margin-left:4px;opacity:.8}
+#panel .foot{display:flex;gap:8px;margin-top:12px}
+#panel .foot button{flex:1;font:inherit;font-size:14px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:#374151;cursor:pointer}
+#panel .foot button.go{flex:2;background:var(--up);border-color:var(--up);color:#fff;font-weight:600}
+.mini{padding:8px 10px 6px;margin-bottom:6px}
+.mini .hd{cursor:pointer}
+.mini .biz,.mini canvas,.mini .lg{display:none}
+.mini .bd{margin:4px 0 0}
+.mini .bd span{font-size:12px;padding:2px 7px}
+.mini:not(.open) .bd .bl{display:none}
+.mini.open .biz{display:block}.mini.open canvas,.mini.open .lg{display:block}
+.mini.open .lg{display:flex}
+.mini .nm::before{content:"▸";display:inline-block;width:14px;color:var(--sub);font-size:12px;font-weight:400}
+.mini.open .nm::before{content:"▾"}
 #secs button small{font-size:11px;font-weight:400;margin-left:5px;opacity:.85}
 #secs button:disabled{opacity:.35}
 #secs button.on{background:var(--up);border-color:var(--up);color:#fff;font-weight:600}
@@ -66,7 +91,8 @@ canvas{display:block;width:100%;height:300px}
 <header>
   <div class="top"><b>WAMO 워치리스트 차트</b><span id="upd"></span></div>
   <div class="row" id="tabs"></div>
-  <div class="row" id="flt"></div>
+  <div class="row" id="tool"><button id="fbtn">걸러 보기</button><span id="chips" style="display:contents"></span><select id="sort" aria-label="정렬"></select><button id="vbtn">목록 보기</button><span id="cnt"></span></div>
+  <div id="panel" hidden></div>
   <div class="row" id="secs"></div>
 </header>
 <div id="prog"><i></i><b></b></div>
@@ -191,6 +217,15 @@ function card(it, idx){
   const sm = document.createElement("small"); sm.textContent = it.y; nm.appendChild(sm);
   if (it.k){ const em = document.createElement("em"); em.textContent = it.k; nm.appendChild(em); }
   const bz = el.querySelector(".biz"); if (it.b) bz.textContent = it.b; else bz.remove();
+  if (ST.v === "list"){
+    el.classList.add("mini");
+    el.querySelector(".hd").onclick = () => {
+      el.classList.toggle("open");
+      const cv = el.querySelector("canvas");
+      if (el.classList.contains("open")){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; }
+      prog();
+    };
+  }
   return el;
 }
 
@@ -207,11 +242,33 @@ function light(cur){
   const l = b.offsetLeft - row.scrollLeft, r = l + b.offsetWidth;
   if (l < 8 || r > row.clientWidth - 8) row.scrollLeft = b.offsetLeft - (row.clientWidth - b.offsetWidth) / 2;
 }
-// 걸러 보기: 조건에 맞는 종목만 남긴다. 섹터 버튼 옆 숫자는 '맞는 종목 수/전체'(전체 보기일 때는 정배열 수).
-const FILTERS = [["all","전체",() => true],["al","정배열",it => it.al],
-  ["g","골든크로스",it => it.x === "gc" || it.x === "gs"],["d","데드크로스",it => it.x === "dc" || it.x === "ds"],
-  ["up","5% 급등",it => it.chg >= 5],["dn","5% 급락",it => it.chg <= -5]];
-let FILTER = "all";
+// 걸러 보기: 조건은 고른 것을 모두 만족(교집합), 국가는 고른 것 가운데 하나(합집합), 둘 사이는 교집합.
+// 넷째 칸은 함께 켤 수 없는 반대 조건이다. 섹터 버튼 옆 숫자는 '맞는 종목 수/전체'(아무것도 안 걸었을 때는 정배열 수).
+const lastOf = a => a[a.length - 1];
+const CONDS = [
+  ["al","정배열",it => it.al],
+  ["g","골든크로스",it => it.x === "gc" || it.x === "gs","d"],["d","데드크로스",it => it.x === "dc" || it.x === "ds","g"],
+  ["a2","200일선 위",it => lastOf(it.c) > lastOf(it.e["200"]),"b2"],["b2","200일선 아래",it => lastOf(it.c) <= lastOf(it.e["200"]),"a2"],
+  ["hi","52주 고점 5% 이내",it => it.ph >= -5],
+  ["up","5% 급등",it => it.chg >= 5,"dn"],["dn","5% 급락",it => it.chg <= -5,"up"]];
+const COND = Object.fromEntries(CONDS.map(c => [c[0], c]));
+const KORDER = ["미국","한국","중국","일본","대만","기타"];
+const kgroup = k => !k ? "" : k === "홍콩" ? "중국" : KORDER.includes(k) ? k : "기타";
+const SORTS = [["base","기본 순서"],["chg-","등락률 높은 순",(a,b) => b.chg - a.chg],["chg+","등락률 낮은 순",(a,b) => a.chg - b.chg],
+  ["ph","52주 고점 가까운 순",(a,b) => b.ph - a.ph],["pl","52주 저점 대비 많이 오른 순",(a,b) => b.pl - a.pl]];
+// c: 조건, k: 국가, s: 정렬, v: chart|list, g: sec(섹터별)|all(탭 전체 한 줄)
+let ST = {c: [], k: [], s: "base", v: "chart", g: "sec"};
+try { Object.assign(ST, JSON.parse(store.get("wl.st") || "{}")); } catch(e){}
+ST.c = (ST.c || []).filter(c => COND[c]); ST.k = (ST.k || []).filter(k => KORDER.includes(k));
+if (!SORTS.some(x => x[0] === ST.s)) ST.s = "base";
+{ const old = store.get("wl.flt"); if (old && COND[old] && !store.get("wl.st")) ST.c = [old]; }
+const save = () => store.set("wl.st", JSON.stringify(ST));
+const hasK = data => data.sections.some(s => s.items.some(it => it.k));
+const active = data => ST.c.length + (hasK(data) ? ST.k.length : 0);
+function tester(data){
+  const useK = hasK(data) && ST.k.length;
+  return it => ST.c.every(c => COND[c][2](it)) && (!useK || ST.k.includes(kgroup(it.k)));
+}
 // 오른쪽 가는 막대: 지금 보는 섹터를 어디까지 봤는지(막대 전체 = 섹터 하나, 옆 숫자 = 몇 번째 종목/섹터 종목 수).
 function prog(){
   const bar = $("prog");
@@ -256,6 +313,7 @@ async function openTab(id, restore){
   if (CUR !== id) return;
   TAB = data;
   render(restore);
+  if (!$("panel").hidden) panel(TAB);
 }
 
 function render(restore){
@@ -264,21 +322,26 @@ function render(restore){
   if (io) io.disconnect();
   io = new IntersectionObserver(es => es.forEach(e => {
     const cv = e.target;
+    if (!cv.clientWidth) return;
     if (e.isIntersecting){ if (!cv.width || cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }
     else { cv.width = 0; cv.height = 0; }
   }), {rootMargin: "700px 0px"});
   main.innerHTML = ""; $("secs").innerHTML = ""; ITEMS = []; HEADS = []; HIDX = []; SCARDS = []; SPY = -1; LOCK = false;
-  const test = FILTERS.find(f => f[0] === FILTER)[2], cnt = FILTER === "all" ? (it => it.al) : test;
-  let shown = 0;
-  data.sections.forEach((s, si) => {
+  const any = active(data) > 0, test = tester(data), cnt = any ? test : (it => it.al);
+  const sorter = (SORTS.find(x => x[0] === ST.s) || [])[2];
+  const secs = ST.g === "all" ? [{name: "탭 전체", items: data.sections.flatMap(s => s.items)}] : data.sections;
+  let shown = 0, total = 0;
+  secs.forEach((s, si) => {
     const list = s.items.filter(test), n = s.items.filter(cnt).length;
+    total += s.items.length;
+    if (sorter) list.sort(sorter);
     const b = document.createElement("button"); b.textContent = s.name;
     const bs = document.createElement("small"); bs.textContent = n + "/" + s.items.length; b.appendChild(bs);
     $("secs").appendChild(b);
     if (!list.length){ b.disabled = true; return; }
     const h = document.createElement("h2"); h.id = "s" + si; h.textContent = s.name;
     const c = document.createElement("small");
-    c.textContent = FILTER === "all" ? s.items.length + "개, 정배열 " + n + "개" : list.length + "개 (전체 " + s.items.length + "개)";
+    c.textContent = !any ? s.items.length + "개, 정배열 " + n + "개" : list.length + "개 (전체 " + s.items.length + "개)";
     h.appendChild(c);
     main.appendChild(h); HEADS.push(h); HIDX.push(si); SCARDS.push([]);
     b.onclick = () => {
@@ -288,10 +351,56 @@ function render(restore){
     list.forEach(it => { ITEMS.push(it); const el = card(it, ITEMS.length - 1); main.appendChild(el); SCARDS[SCARDS.length - 1].push(el); shown++; });
   });
   if (!shown) $("prog").style.display = "none";
-  if (!shown) main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.</div>';
+  if (!shown) main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.<br>걸러 보기 조건을 줄이거나 다른 탭을 열어 보세요.</div>';
+  tools(data, shown, total);
   main.querySelectorAll("canvas").forEach(cv => io.observe(cv));
   window.scrollTo(0, restore ? +(store.get("wl.y." + id) || 0) : 0);
   spy();
+}
+
+function apply(){ save(); render(false); if (!$("panel").hidden) panel(TAB); }
+function tools(data, shown, total){
+  const n = active(data);
+  $("fbtn").textContent = n ? "걸러 보기 " + n + " · " + shown + "종목" : "걸러 보기"; $("fbtn").classList.toggle("on", n > 0);
+  $("sort").value = ST.s; $("sort").classList.toggle("on", ST.s !== "base" || ST.g === "all");
+  $("vbtn").textContent = ST.v === "list" ? "차트 보기" : "목록 보기";
+  const ch = $("chips"); ch.innerHTML = "";
+  const chip = (txt, off) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = txt; b.onclick = () => { off(); apply(); }; ch.appendChild(b); };
+  ST.c.forEach(c => chip(COND[c][1], () => { ST.c = ST.c.filter(x => x !== c); }));
+  if (hasK(data)) ST.k.forEach(k => chip(k, () => { ST.k = ST.k.filter(x => x !== k); }));
+  if (ST.g === "all") chip("탭 전체 한 줄", () => { ST.g = "sec"; });
+  $("cnt").textContent = n ? "전체 " + total : total + "종목";
+}
+function panel(data){
+  const pn = $("panel"); pn.innerHTML = "";
+  if (!data) return;
+  const group = (title, note) => { const h = document.createElement("h3"); h.textContent = title; if (note){ const sm = document.createElement("small"); sm.textContent = note; h.appendChild(sm); } const w = document.createElement("div"); w.className = "wrap"; pn.append(h, w); return w; };
+  const btn = (w, txt, on, fn, num) => { const b = document.createElement("button"); b.textContent = txt; if (num != null){ const sm = document.createElement("small"); sm.textContent = num; b.appendChild(sm); } b.classList.toggle("on", on); b.onclick = fn; w.appendChild(b); };
+  const all = data.sections.flatMap(s => s.items);
+  // 버튼 옆 숫자: 지금 걸린 다른 조건에 이 버튼을 더했을 때 남는 종목 수
+  const would = st => { const keep = ST; ST = st; const t = tester(data), m = all.filter(t).length; ST = keep; return m; };
+  const wc = group("조건", "고른 것을 모두 만족");
+  CONDS.forEach(([k, name, , opp]) => {
+    const on = ST.c.includes(k);
+    const next = on ? ST.c.filter(x => x !== k) : ST.c.filter(x => x !== opp).concat(k);
+    btn(wc, name, on, () => { ST.c = next; apply(); }, on ? null : would({...ST, c: next}));
+  });
+  if (hasK(data)){
+    const wk = group("국가", "고른 것 가운데 하나");
+    KORDER.forEach(k => {
+      const tot = all.filter(it => kgroup(it.k) === k).length; if (!tot) return;
+      const on = ST.k.includes(k);
+      btn(wk, k, on, () => { ST.k = on ? ST.k.filter(x => x !== k) : ST.k.concat(k); apply(); }, tot);
+    });
+  }
+  const wg = group("묶음");
+  btn(wg, "섹터별", ST.g !== "all", () => { ST.g = "sec"; apply(); });
+  btn(wg, "탭 전체 한 줄로", ST.g === "all", () => { ST.g = "all"; apply(); });
+  const ft = document.createElement("div"); ft.className = "foot";
+  const rs = document.createElement("button"); rs.textContent = "초기화"; rs.onclick = () => { ST.c = []; ST.k = []; ST.g = "sec"; ST.s = "base"; apply(); };
+  const go = document.createElement("button"); go.className = "go"; go.textContent = "닫기 · " + all.filter(tester(data)).length + "종목 보기";
+  go.onclick = () => { pn.hidden = true; prog(); window.scrollTo(0, 0); };
+  ft.append(rs, go); pn.appendChild(ft);
 }
 
 let tick = 0, spyTick = 0;
@@ -320,17 +429,11 @@ window.addEventListener("resize", () => {
     b.onclick = () => openTab(t.id, false);
     $("tabs").appendChild(b);
   });
-  const fl = $("flt"), lab = document.createElement("span"); lab.textContent = "걸러 보기"; fl.appendChild(lab);
-  const sf = store.get("wl.flt"); if (FILTERS.some(f => f[0] === sf)) FILTER = sf;
-  FILTERS.forEach(([k, name]) => {
-    const b = document.createElement("button"); b.textContent = name; b.classList.toggle("on", k === FILTER);
-    b.onclick = () => {
-      FILTER = k; store.set("wl.flt", k);
-      [...fl.querySelectorAll("button")].forEach(x => x.classList.toggle("on", x === b));
-      render(false);
-    };
-    fl.appendChild(b);
-  });
+  const so = $("sort");
+  SORTS.forEach(([k, name]) => { const o = document.createElement("option"); o.value = k; o.textContent = name; so.appendChild(o); });
+  so.onchange = () => { ST.s = so.value; save(); render(false); };
+  $("fbtn").onclick = () => { $("panel").hidden = !$("panel").hidden; if (!$("panel").hidden) panel(TAB); prog(); };
+  $("vbtn").onclick = () => { ST.v = ST.v === "list" ? "chart" : "list"; save(); render(false); };
   const saved = store.get("wl.tab");
   openTab(META.tabs.some(t => t.id === saved) ? saved : META.tabs[0].id, true);
 })();
