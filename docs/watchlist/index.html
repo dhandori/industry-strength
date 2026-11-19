@@ -26,6 +26,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 .ic button i:empty{display:none}
 #tabs{display:flex;padding:0 4px;border-bottom:1px solid var(--soft);max-width:1100px;margin:0 auto}
 #tabs button{flex:1 1 0;min-width:0;border:0;background:none;color:var(--sub);font-size:14px;padding:8px 2px 7px;border-bottom:2.5px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tabs button{letter-spacing:-.5px}
+@media (max-width:520px){ #tabs button{font-size:13px;padding-left:0;padding-right:0} }
+@media (max-width:375px){ #tabs button{font-size:12px} #tabs button[data-id=all]{padding:8px 6px 7px} }
+#tabs button[data-id=all]{flex:0 0 auto;padding:8px 9px 7px}
 #tabs button.on{color:var(--up);font-weight:700;border-color:var(--up)}
 /* 조작 줄: 걸러보기·정렬 단추 + 걸린 조건 칩 + 모두 지우기 + 결과 수. 메뉴를 접어도 남는다 */
 #bar{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:8px 12px 2px;scrollbar-width:none;max-width:1100px;margin:0 auto}
@@ -67,6 +71,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 #panel h3 small{font-size:11.5px;font-weight:400;color:var(--sub);margin-left:6px}
 #panel .now{margin:10px 0 0;padding:8px 10px;border-radius:9px;background:var(--soft);font-size:12.5px;color:var(--ink)}
 #panel .now b{color:var(--text)}
+#panel .now small{display:block;margin-top:4px;font-size:12px;color:var(--sub);line-height:1.45}
+#panel .defs{margin:14px 0 0;padding:9px 11px;border-radius:9px;background:var(--pul);font-size:12.5px;color:var(--ink);line-height:1.5}
+#panel .defs p{margin:0 0 6px}#panel .defs p:last-child{margin:0}
+#panel .defs b{color:var(--pud)}
 #panel .wrap{display:flex;flex-wrap:wrap;gap:6px}
 #panel .wrap button{font-size:13.5px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink)}
 #panel .wrap button.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
@@ -229,7 +237,10 @@ const store = {
   set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
 };
 // 탭 이름은 휴대폰 한 줄에 다섯 개가 들어가게 줄여 쓴다(전체 이름은 섹터 판 제목에 나온다)
-const SHORT = {macro:"매크로", ai:"AI반도체", sw:"SW인프라", fin:"금융소비", ind:"산업에너지"};
+const SHORT = {macro:"매크로", ai:"AI반도체", sw:"SW인프라", fin:"금융소비", ind:"산업에너지", all:"전체"};
+// '전체' 탭: 지수·매크로를 뺀 모든 탭을 한 화면에 모아 걸러 보기·정렬을 한 번에 건다(섹터 이름 앞에 탭 이름)
+const ALL = {id: "all", title: "전체 종목 (매크로 제외)"};
+const tabTitle = id => id === "all" ? ALL.title : (META.tabs.find(t => t.id === id) || {}).title;
 let META = null, CUR = null, TAB = null, ITEMS = [], io = null, HEADS = [], HIDX = [], SCARDS = [], SPY = -1, LOCK = false, ROWBUSY = 0;
 
 function fmt(v, dg){ return v.toLocaleString("en-US",{minimumFractionDigits:dg,maximumFractionDigits:dg}); }
@@ -401,6 +412,29 @@ const CONDS = [
   ["v2","거래량 2배 이상",it => it.m.vr >= 2],
   ["up","5% 급등",it => it.chg >= 5,"dn"],["dn","5% 급락",it => it.chg <= -5,"up"]];
 const COND = Object.fromEntries(CONDS.map(c => [c[0], c]));
+// 걸러 보기·정렬 기준의 정의(판에서 누르면 아래 상자에 나온다). 계산은 이 페이지와 scripts/watchlist_fetch.py 와 같다
+const DEF = {
+  al: "오늘 종가 > 20일 지수이동평균(EMA20) > EMA50 > EMA200. 차트의 세 선이 위에서부터 차례로 놓인 상승 추세입니다.",
+  g: "EMA50이 EMA200을 최근 5거래일 안에 위로 넘었거나(발생), 아직 아래지만 두 선 간격이 EMA200의 1.5% 이내로 좁혀지는 중(임박)입니다.",
+  d: "EMA50이 EMA200을 최근 5거래일 안에 아래로 넘었거나(발생), 아직 위지만 두 선 간격이 EMA200의 1.5% 이내로 좁혀지는 중(임박)입니다.",
+  a2: "오늘 종가가 EMA200보다 높습니다.",
+  b2: "오늘 종가가 EMA200 이하입니다.",
+  hi: "오늘 종가가 최근 1년 최고 종가에서 5% 안쪽에 있습니다.",
+  rs8: "RS 등급 80 이상(차트북 전체 주식 중 상위 약 20%). RS 등급은 3개월 수익률 40% + 6·9·12개월 수익률 각 20%를 더한 점수를 지수·매크로를 뺀 전체 종목 안에서 1~99로 매긴 값입니다.",
+  ia: "같은 하부섹터 3종목 이상이 함께 강한 묶음입니다. 최근 7거래일 또는 30거래일 기준 ① 수익률 중간값 플러스 ② 상장 시장 지수(코스피·코스닥·S&P500·닛케이 등) 대비 초과수익 중간값 플러스 ③ 오른 종목 60% 이상 ④ 시장보다 더 오른 종목 60% 이상 ⑤ 추세선 위 종목 60% 이상(7일은 EMA20, 30일은 EMA50) 가운데 ①②를 포함해 4개 이상이면 액션입니다.",
+  v2: "오늘 거래량이 직전 20거래일 평균 거래량의 2배 이상입니다.",
+  up: "오늘 종가가 직전 거래일 종가보다 5% 이상 올랐습니다.",
+  dn: "오늘 종가가 직전 거래일 종가보다 5% 이상 내렸습니다.",
+  base: "섹터 안에서 같은 하부섹터끼리 모아 둔 순서입니다(트레이딩뷰 워치리스트 순서와 같음).",
+  chg: "오늘 종가 ÷ 직전 거래일 종가 − 1.",
+  r1w: "오늘 종가 ÷ 5거래일 전 종가 − 1.",
+  r1m: "오늘 종가 ÷ 21거래일 전 종가 − 1.",
+  r3m: "오늘 종가 ÷ 63거래일 전 종가 − 1.",
+  r6m: "오늘 종가 ÷ 126거래일 전 종가 − 1.",
+  r1y: "오늘 종가 ÷ 1년 전(차트 첫날) 종가 − 1.",
+  rs: "3개월 수익률 40% + 6·9·12개월 수익률 각 20%를 더한 점수를 지수·매크로를 뺀 차트북 전체 종목 안에서 1~99 등급으로 매긴 값입니다. 99가 가장 강합니다.",
+  vr: "오늘 거래량 ÷ 직전 20거래일 평균 거래량. 2배면 평소의 두 배가 거래됐다는 뜻입니다.",
+  pos: "(오늘 종가 − 52주 최저 종가) ÷ (52주 최고 − 최저). 0%는 1년 최저, 100%는 1년 최고 자리입니다."};
 const KORDER = ["미국","한국","중국","일본","대만","기타"];
 const kgroup = k => !k ? "" : k === "홍콩" ? "중국" : KORDER.includes(k) ? k : "기타";
 
@@ -568,7 +602,15 @@ async function openTab(id, restore){
   [...$("tabs").children].forEach(b => b.classList.toggle("on", b.dataset.id === id));
   const main = $("main"); main.innerHTML = '<div id="msg">불러오는 중입니다.</div>'; $("secs").innerHTML = "";
   let data;
-  try { data = await (await fetch(`${DATA}${id}.json?t=${encodeURIComponent(META.updated)}`)).json(); }
+  const get = async t => (await fetch(`${DATA}${t}.json?t=${encodeURIComponent(META.updated)}`)).json();
+  try {
+    if (id === "all"){
+      const ids = META.tabs.map(t => t.id).filter(t => t !== "macro");
+      main.innerHTML = `<div id="msg">${ids.length}개 탭을 모두 불러오는 중입니다.<br>처음 한 번은 몇 초 걸립니다.</div>`;
+      const ds = await Promise.all(ids.map(get));
+      data = {id: "all", title: ALL.title, sections: ds.flatMap(d => d.sections.map(s => ({...s, name: (SHORT[d.id] || d.id) + " › " + s.name})))};
+    } else data = await get(id);
+  }
   catch(e){ main.innerHTML = '<div id="msg">자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.</div>'; return; }
   if (CUR !== id) return;
   data.sections.forEach(s => s.items.forEach(metrics));
@@ -655,7 +697,7 @@ let SECINFO = [], EFF = "base";
 
 // 탭 맨 끝의 '다음 탭' 단추. 마지막 탭에서는 처음 탭으로 돌아간다.
 function nextBtn(){
-  const ts = META.tabs, i = ts.findIndex(t => t.id === CUR), last = i === ts.length - 1, nx = ts[last ? 0 : i + 1];
+  const ts = META.tabs, i = ts.findIndex(t => t.id === CUR), last = i === ts.length - 1 || i < 0, nx = ts[last ? 0 : i + 1];
   const b = document.createElement("button"); b.id = "next";
   b.textContent = (last ? "처음 탭으로: " : "다음 탭: ") + (SHORT[nx.id] || nx.title) + " →";
   const sm = document.createElement("small"); sm.textContent = nx.title; b.appendChild(sm);
@@ -730,6 +772,10 @@ function panel(){
         btn(wk, k, on, () => { ST.k = on ? ST.k.filter(x => x !== k) : ST.k.concat(k); apply(); }, tot);
       });
     }
+    const df = document.createElement("div"); df.className = "defs";
+    if (ST.c.length) ST.c.forEach(c => { const p = document.createElement("p"); const b = document.createElement("b"); b.textContent = COND[c][1]; p.append(b, " " + DEF[c]); df.appendChild(p); });
+    else df.textContent = "조건을 누르면 그 기준의 정의가 여기에 나옵니다.";
+    pn.appendChild(df);
     const ft = document.createElement("div"); ft.className = "foot";
     const rs = document.createElement("button"); rs.textContent = "↺ 조건 초기화"; rs.disabled = !active(data); rs.onclick = () => { ST.c = []; ST.k = []; apply(); };
     const go = document.createElement("button"); go.className = "go"; go.textContent = "닫기 · " + all.filter(tester(data)).length + "종목 보기";
@@ -739,6 +785,8 @@ function panel(){
     const noRs = !all.some(it => it.rs != null), noVol = !all.some(it => it.m.vr != null);
     const now = document.createElement("div"); now.className = "now";
     now.innerHTML = EFF === "base" ? "지금: <b>기본 순서</b> (트레이딩뷰 워치리스트에 넣은 순서)" : `지금: <b>${SORT[EFF].g === "기간 수익률" ? SORT[EFF].name + " 수익률" : SORT[EFF].name}</b> · <b>${ST.d === "asc" ? "낮은 순 ↑" : "높은 순 ↓"}</b>`;
+    const nd = document.createElement("small"); nd.textContent = DEF[EFF] + (EFF !== "base" ? " 값이 없는 종목은 맨 뒤로 가고, 같은 회사가 두 곳에 상장돼 있으면 하나만 남깁니다." : "");
+    now.appendChild(nd);
     pn.appendChild(now);
     let w = null, g = null;
     const NOTE = {"기간 수익률": "그 기간 전 종가 대비", "강도": "RS는 전체 종목 안의 1~99 등급, 거래량은 오늘 ÷ 20일 평균", "52주 위치": "52주 최저 0% ~ 최고 100% 사이 어디쯤인가"};
@@ -760,7 +808,7 @@ function panel(){
     ft.append(rs, go); pn.appendChild(ft);
   } else if (PANEL === "grid"){
     const any = active(data) > 0;
-    const h = document.createElement("h3"); h.textContent = (META.tabs.find(t => t.id === CUR) || {}).title;
+    const h = document.createElement("h3"); h.textContent = tabTitle(CUR);
     const hs = document.createElement("small"); hs.textContent = "섹터별 정배열 종목 수 / 전체, 1개월 평균 수익률 · 초록이 짙을수록 정배열 비율이 높습니다"; h.appendChild(hs); pn.appendChild(h);
     const gr = document.createElement("div"); gr.className = "grid"; pn.appendChild(gr);
     SECINFO.forEach((s, si) => {
@@ -877,14 +925,14 @@ window.addEventListener("resize", () => {
   const up = $("upd"); up.textContent = META.updated.slice(5).replace("-", "/") + " KST 갱신";
   const age = (Date.now() - new Date(META.updated.replace(" ", "T") + ":00+09:00")) / 36e5;
   if (age > 80) { up.classList.add("old"); up.textContent += " (오래됨)"; }
-  META.tabs.forEach(t => {
+  [...META.tabs, ALL].forEach(t => {
     const b = document.createElement("button"); b.dataset.id = t.id; b.textContent = SHORT[t.id] || t.title; b.title = t.title;
     b.onclick = () => { if (PANEL) openPanel(PANEL); openTab(t.id, false); };
     $("tabs").appendChild(b);
   });
   pad();
   const saved = store.get("wl.tab");
-  openTab(META.tabs.some(t => t.id === saved) ? saved : META.tabs[0].id, true);
+  openTab(saved === "all" || META.tabs.some(t => t.id === saved) ? saved : META.tabs[0].id, true);
 })();
 </script>
 </body>

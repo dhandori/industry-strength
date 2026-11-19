@@ -174,6 +174,13 @@ def main():
                 pg.click("#panel .foot .go")
                 look("인더스트리 액션", ["NVIDIA", "Intel"])
                 pg.click("#bar .clr")
+                # 켠 조건의 정의가 걸러 보기 판에 나온다
+                pg.click("#fbtn")
+                pg.locator("#panel .wrap button", has_text="정배열").first.click()
+                if "EMA20" not in pg.inner_text("#panel .defs"):
+                    problems.append(f"{label} 정배열 정의가 안 보임")
+                pg.click("#panel .foot button >> nth=0")
+                pg.click("#panel .foot .go")
                 # 끝까지 내리면 '맨 위로' 단추가 나오고, 마지막 탭(ai)의 끝에는 '처음 탭으로' 단추가 있다
                 pg.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 pg.wait_for_timeout(300)
@@ -259,6 +266,22 @@ def main():
                 pg.wait_for_timeout(800)  # 이동 직후 0.6초는 메뉴를 펼치지 않는다
                 pg.evaluate("window.scrollTo(0, 0)")
                 pg.wait_for_timeout(400)
+                pg.click("#tabs button[data-id=macro]")
+                pg.wait_for_timeout(400)
+                # 전체 탭: 매크로를 뺀 모든 탭 종목을 '탭 › 섹터' 이름으로 한 화면에
+                pg.click("#tabs button[data-id=all]")
+                pg.wait_for_selector("main > h2")
+                heads = pg.evaluate("[...document.querySelectorAll('main > h2')].map(h => h.firstChild.textContent)")
+                if heads != ["AI반도체 › 반도체", "AI반도체 › 메모리"]:
+                    problems.append(f"{label} 전체 탭 섹터 {heads}")
+                pg.click("#sbtn")
+                pg.click("#panel .wrap button:text-is('1개월')")
+                if "21거래일" not in pg.inner_text("#panel .now"):
+                    problems.append(f"{label} 1개월 정렬 정의가 안 보임")
+                pg.click("#panel .foot button >> nth=0")
+                pg.click("#panel .foot .go")
+                pg.evaluate("window.scrollTo(0, 0)")
+                pg.wait_for_timeout(300)
                 pg.click("#tabs button[data-id=macro]")
                 pg.wait_for_timeout(400)
                 # 매크로 탭 끝의 '다음 탭' 단추를 누르면 다음 탭(ai)이 맨 위부터 열린다
