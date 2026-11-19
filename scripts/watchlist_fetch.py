@@ -6,6 +6,7 @@
 - 받지 못한 종목은 이전자료폴더에 있던 어제 자료를 그대로 쓴다.
 - RS 등급(rs, 1~99): 지수·매크로 탭과 지수·금리·환율을 뺀 전체 종목 안에서 매긴 상대강도 순위.
 """
+import statistics
 import datetime as dt
 import json
 import os
@@ -166,6 +167,63 @@ def add_rs(tabs_out):
     return n
 
 
+# ── 인더스트리 액션: 같은 하부섹터(첫 딱지) 종목이 함께 강한지 본다(옛 와모 '섹터액션' 규칙) ──
+# 상장 시장별 비교 지수(매크로 탭에 있는 것)
+BENCH = {"KS": "^KS11", "KQ": "^KQ11", "T": "^N225", "TW": "^TWII", "TWO": "^TWII", "HK": "^HSI",
+         "SS": "000001.SS", "SZ": "000001.SS"}
+IA_WINDOWS = (7, 30)  # 거래일
+
+
+def bench_of(sym):
+    return BENCH.get(sym.rsplit(".", 1)[1], "^GSPC") if "." in sym else "^GSPC"
+
+
+def ret_pct(closes, w):
+    return (closes[-1] / closes[-1 - w] - 1) * 100 if len(closes) > w and closes[-1 - w] else None
+
+
+def ia_window(members, bench, w):
+    """한 기간의 다섯 항목. 묶음이 3종목 이상이고, 수익률·시장 대비 중간값이 모두 플러스이며 4개 이상 채우면 액션."""
+    ema = "20" if w == 7 else "50"
+    rows = []
+    for it in members:
+        r, b = ret_pct(it["c"], w), ret_pct(bench.get(bench_of(it["y"])) or [], w)
+        if r is None or b is None:
+            continue
+        rows.append((r, r - b, it["c"][-1] > it["e"][ema][-1]))
+    if len(rows) < 3:
+        return None
+    pct = lambda xs: sum(xs) / len(xs) * 100
+    med_r, med_x = statistics.median(x[0] for x in rows), statistics.median(x[1] for x in rows)
+    crit = [med_r > 0, med_x > 0, pct([x[0] > 0 for x in rows]) >= 60,
+            pct([x[1] > 0 for x in rows]) >= 60, pct([x[2] for x in rows]) >= 60]
+    n = sum(crit)
+    return {"w": w, "n": n, "r": round(med_r, 1), "x": round(med_x, 1), "ok": bool(crit[0] and crit[1] and n >= 4)}
+
+
+def add_ia(tabs_out):
+    """하부섹터 묶음마다 7·30거래일 액션을 보고, 액션인 묶음의 종목에 ia = {w: [기간], n: 최대 충족 수} 를 붙인다."""
+    bench = {it["y"]: it["c"] for tab_id, sections in tabs_out for s in sections for it in s["items"]
+             if it["y"] in BENCH.values() or it["y"] == "^GSPC"}
+    found = 0
+    for tab_id, sections in tabs_out:
+        for s in sections:
+            groups = {}
+            for it in s["items"]:
+                it.pop("ia", None)
+                if is_stock(tab_id, it["y"]) and it.get("t"):
+                    groups.setdefault(it["t"][0], []).append(it)
+            for members in groups.values():
+                res = [r for r in (ia_window(members, bench, w) for w in IA_WINDOWS) if r]
+                hit = [r for r in res if r["ok"]]
+                if not hit:
+                    continue
+                found += 1
+                for it in members:
+                    it["ia"] = {"w": [r["w"] for r in hit], "n": max(r["n"] for r in hit)}
+    return found
+
+
 KST = dt.timezone(dt.timedelta(hours=9))
 
 
@@ -240,6 +298,7 @@ def main():
         tabs_out.append((tab["id"], sections))
     # RS 등급은 모든 탭을 다 받은 뒤 전체 종목 안에서 한 번에 매긴다
     print("RS 등급 대상", add_rs(tabs_out))
+    print("인더스트리 액션 묶음", add_ia(tabs_out))
     for tab, (_, sections) in zip(tabs, tabs_out):
         with open(os.path.join(out_dir, f"{tab['id']}.json"), "w", encoding="utf-8") as f:
             json.dump({"id": tab["id"], "title": tab["title"], "sections": sections}, f,

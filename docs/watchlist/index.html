@@ -110,6 +110,9 @@ main > h2 small{font-size:12.5px;font-weight:500}
 /* 하부섹터 소제목: 연보라 알약 */
 .sub{display:inline-flex;align-items:center;gap:7px;background:var(--pul);color:var(--pud);border-radius:999px;padding:6px 14px;margin:16px 0 8px 2px;font-size:14px;font-weight:800}
 .sub small{color:var(--pu);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.bd .ia{background:#ede9fe;color:#5b21b6;font-weight:700}
+.sub i{font-style:normal;font-size:11.5px;font-weight:800;color:#fff;background:#7c3aed;border-radius:999px;padding:2px 8px}
+.sub.act{background:#ddd6fe}
 .tbl .sub{display:flex;width:max-content;margin:8px 10px 6px}
 .px{font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{display:inline-block;font-style:normal;font-size:13px;font-weight:700;border-radius:7px;padding:2px 7px;margin-left:6px;font-variant-numeric:tabular-nums}
@@ -394,6 +397,7 @@ const CONDS = [
   ["a2","200일선 위",it => lastOf(it.c) > lastOf(it.e["200"]),"b2"],["b2","200일선 아래",it => lastOf(it.c) <= lastOf(it.e["200"]),"a2"],
   ["hi","52주 고점 5% 이내",it => it.ph >= -5],
   ["rs8","RS 80 이상",it => it.rs >= 80],
+  ["ia","인더스트리 액션",it => !!it.ia],
   ["v2","거래량 2배 이상",it => it.m.vr >= 2],
   ["up","5% 급등",it => it.chg >= 5,"dn"],["dn","5% 급락",it => it.chg <= -5,"up"]];
 const COND = Object.fromEntries(CONDS.map(c => [c[0], c]));
@@ -453,6 +457,7 @@ function card(it, idx, rank){
   const bd = el.querySelector(".bd");
   // 정렬 중이면 그 기준 값을 맨 앞에 노랗게(오늘 등락률은 가격 옆에 이미 있으니 뺀다)
   if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it)));
+  if (it.ia) bd.appendChild(span("ia", "인더스트리 액션 " + it.ia.w.map(w => w + "일").join("·")));
   if (it.al) bd.appendChild(span("al", "정배열"));
   if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1]));
   if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 ? "rh" : "", "RS " + it.rs));
@@ -626,6 +631,7 @@ function render(restore){
       if (subs && g && g !== lastSub && Object.keys(cnt).length > 1){
         const sh = document.createElement("div"); sh.className = "sub"; sh.textContent = g;
         const k = document.createElement("small"); k.textContent = cnt[g]; sh.appendChild(k);
+        if (it.ia){ sh.classList.add("act"); const a = document.createElement("i"); a.textContent = "액션 " + it.ia.w.map(w => w + "일").join("·"); sh.appendChild(a); }
         box.appendChild(sh);
       }
       lastSub = g;
@@ -711,7 +717,7 @@ function panel(){
     const would = st => { const keep = ST; ST = st; const t = tester(data), m = all.filter(t).length; ST = keep; return m; };
     const wc = group("조건", "고른 것을 모두 만족");
     CONDS.forEach(([k, name, f, opp]) => {
-      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "v2")) return;
+      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "v2" || k === "ia")) return;
       const on = ST.c.includes(k);
       const next = on ? ST.c.filter(x => x !== k) : ST.c.filter(x => x !== opp).concat(k);
       btn(wc, name, on, () => { ST.c = next; apply(); }, on ? null : would({...ST, c: next}));

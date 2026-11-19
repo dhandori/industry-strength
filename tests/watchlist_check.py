@@ -42,7 +42,7 @@ def ema(xs, span):
     return out
 
 
-def item(y, n, k, drift, seed, rs=None, al=False, vol=True, t=None):
+def item(y, n, k, drift, seed, rs=None, al=False, vol=True, t=None, ia=None):
     c = series(seed, drift)
     day0 = dt.date(2025, 11, 19)
     it = {"y": y, "n": n, "b": n + " 사업 설명", "k": k, "dg": 2,
@@ -57,6 +57,8 @@ def item(y, n, k, drift, seed, rs=None, al=False, vol=True, t=None):
         it["rs"] = rs
     if t:
         it["t"] = t
+    if ia:
+        it["ia"] = ia
     return it
 
 
@@ -64,8 +66,8 @@ def make_data(folder):
     ai = {"id": "ai", "title": "② AI 반도체·하드웨어", "sections": [
         {"name": "반도체", "items": [
             item("TSM", "Taiwan Semiconductor", "대만", 0.004, 1, rs=95, al=True, t=["파운드리", "CoWoS"]),
-            item("NVDA", "NVIDIA", "미국", 0.003, 2, rs=90, al=True, t=["프로세서", "GPU"]),
-            item("INTC", "Intel", "미국", -0.002, 3, rs=20, t=["프로세서"]),
+            item("NVDA", "NVIDIA", "미국", 0.003, 2, rs=90, al=True, t=["프로세서", "GPU"], ia={"w": [7], "n": 4}),
+            item("INTC", "Intel", "미국", -0.002, 3, rs=20, t=["프로세서"], ia={"w": [7], "n": 4}),
             item("000660.KS", "SK하이닉스", "한국", 0.005, 4, rs=97, al=True),
             item("2330.TW", "Taiwan Semiconductor", "대만", 0.004, 5, rs=94, al=True)]},
         {"name": "메모리", "items": [
@@ -164,6 +166,14 @@ def main():
                 subs = pg.evaluate("[...document.querySelectorAll('main > .sub')].map(e => e.firstChild.textContent)")
                 if subs != ["파운드리", "프로세서"]:
                     problems.append(f"{label} 묶음 소제목 {subs} (기대 ['파운드리', '프로세서'])")
+                # 인더스트리 액션: 묶음 알약에 '액션' 표시, 걸러 보기로 그 묶음만
+                if "액션 7일" not in pg.inner_text("main > .sub.act"):
+                    problems.append(f"{label} 액션 묶음 알약 표시 없음")
+                pg.click("#fbtn")
+                pg.locator("#panel .wrap button", has_text="인더스트리 액션").first.click()
+                pg.click("#panel .foot .go")
+                look("인더스트리 액션", ["NVIDIA", "Intel"])
+                pg.click("#bar .clr")
                 # 끝까지 내리면 '맨 위로' 단추가 나오고, 마지막 탭(ai)의 끝에는 '처음 탭으로' 단추가 있다
                 pg.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 pg.wait_for_timeout(300)
