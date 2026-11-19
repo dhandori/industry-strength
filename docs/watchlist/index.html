@@ -83,12 +83,12 @@ h2{font-size:15px;margin:18px 6px 8px}
 h2 small{color:var(--sub);font-weight:400;margin-left:6px}
 /* 카드 */
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 10px 6px;margin-bottom:10px}
-.hd{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"nm px" "biz biz" "bd bd" "rng rng";column-gap:10px;align-items:center}
-.hd .nm{grid-area:nm}.hd .px{grid-area:px}.hd .biz{grid-area:biz}.hd .bd{grid-area:bd}.hd .rng{grid-area:rng}
-@media (min-width:700px){
- .hd{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"nm biz px" "bd bd bd" "rng rng rng";column-gap:18px}
- .hd .biz{font-size:13.5px;line-height:1.4;margin:0}
-}
+.hd{display:block}
+/* 첫 줄: 종목명 바로 오른쪽에 가격·오늘 등락률(이름이 길면 이름만 줄임표로 줄인다), 둘째 줄: 사업 설명 */
+.nr{display:flex;align-items:baseline;gap:10px;min-width:0}
+.nr .nm{flex:0 1 auto}
+.nr .px{flex:none}
+@media (min-width:700px){ .hd .biz{font-size:13.5px;line-height:1.4} }
 .nm{font-size:16px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nm small{font-size:11px;font-weight:400;color:var(--sub);margin-left:5px}
 .nm em{font-style:normal;font-size:11px;font-weight:600;color:var(--ink);background:var(--soft);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:2px}
@@ -109,10 +109,6 @@ h2 small{color:var(--sub);font-weight:400;margin-left:6px}
 .bd .vh{background:#f3e8ff;color:#6b21a8;font-weight:600}
 .bd .st{background:#fff4d6;color:#8a5a00}
 /* 52주 범위 막대: 왼쪽 끝이 52주 최저 종가, 오른쪽 끝이 최고 종가, 점이 지금 */
-.rng{display:flex;align-items:center;gap:8px;margin:8px 0 2px;font-size:11.5px;color:var(--sub);font-variant-numeric:tabular-nums;white-space:nowrap}
-.rng .bar{position:relative;flex:1;height:6px;border-radius:3px;background:linear-gradient(90deg,#fde2e2,#eef0f3 50%,#d9f2ea)}
-.rng .bar b{position:absolute;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border-radius:50%;background:var(--ink);border:2px solid #fff;box-shadow:0 0 0 1px var(--ink)}
-.rng .lo b,.rng .hi b{font-weight:600;color:var(--text)}
 canvas{display:block;width:100%;height:300px;margin-top:4px}
 @media (min-width:900px){ canvas{height:345px} }  /* 태블릿·PC: 카드 크기를 사용자가 그린 사각형에 맞춤 */
 .lg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);padding:2px 2px 2px}
@@ -254,6 +250,14 @@ function draw(cv, it){
     g.stroke();
   });
 
+  // 점선 바로 안쪽 왼쪽에 '52주 고점 −x%'(선 아래), '52주 저점 +x%'(선 위). 흰 바탕을 깔아 봉과 겹쳐도 읽히게.
+  g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textAlign = "left"; g.textBaseline = "middle";
+  [[it.hi, "52주 고점 " + sign(it.ph, 1), 9, "#b71c1c"], [it.lo, "52주 저점 " + sign(it.pl, 1), -9, "#0b6b50"]].forEach(([v, t, dy, col]) => {
+    const y = Math.round(Y(v)) + dy, w = g.measureText(t).width;
+    g.fillStyle = "rgba(255,255,255,.85)"; g.fillRect(3, y - 7, w + 8, 14);
+    g.fillStyle = col; g.fillText(t, 7, y);
+  });
+  g.font = "11px -apple-system,BlinkMacSystemFont,sans-serif";
   // 마지막 종가 표시
   const last = it.c[n-1], ly = Math.max(padT + 8, Math.min(padT + pH - 8, Y(last)));
   g.fillStyle = it.chg >= 0 ? UP : DN; g.fillRect(pW + 1, ly - 9, axW - 2, 18);
@@ -354,9 +358,8 @@ function card(it, idx, rank){
   const ld = it.d[it.d.length - 1], sk = SORT[EFF], pd = /\.(KS|KQ|T)$/.test(it.y) ? 0 : it.dg;
   const el = document.createElement("div"); el.className = "card";
   el.innerHTML =
-    `<div class="hd"><div class="nm"></div><div class="px">${fmt(lastOf(it.c), pd)}<i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></div>` +
-    `<div class="biz"></div><div class="bd"></div>` +
-    `<div class="rng"><span class="lo">저점 <b>${sign(it.pl,1)}</b></span><span class="bar"><b style="left:${Math.max(0, Math.min(100, it.m.pos))}%"></b></span><span class="hi">고점 <b>${sign(it.ph,1)}</b></span></div></div>` +
+    `<div class="hd"><div class="nr"><div class="nm"></div><div class="px">${fmt(lastOf(it.c), pd)}<i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></div></div>` +
+    `<div class="biz"></div><div class="bd"></div></div>` +
     `<canvas data-i="${idx}"></canvas>` +
     `<div class="lg"><span>EMA${EMA.map(([k,c]) => `<b style="color:${c}">${k}</b>`).join("")}</span><span>${+ld.slice(2,4)}/${+ld.slice(4,6)} 종가 기준</span></div>`;
   const nm = el.querySelector(".nm");
