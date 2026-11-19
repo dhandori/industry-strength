@@ -101,6 +101,13 @@ h2 small{color:var(--sub);font-weight:400;margin-left:6px}
 .nm em{font-style:normal;font-size:11px;font-weight:600;color:var(--ink);background:var(--soft);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:2px}
 .nm .rk{display:inline-block;min-width:24px;font-size:12px;font-weight:700;color:#fff;background:var(--ink);border-radius:6px;padding:1px 5px;margin-right:6px;text-align:center;vertical-align:2px}
 .biz{word-break:keep-all;font-size:12.5px;color:#4b5563;margin:2px 0 0;line-height:1.35}
+/* 하부섹터 딱지(설명 앞)와 섹터 안 묶음 소제목 */
+.biz .tg{display:inline;font-weight:700;color:var(--up);margin-right:5px}
+.tr .tg{color:var(--up);font-weight:600}
+.sub{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--up);margin:14px 6px 6px}
+.sub::after{content:"";flex:1;height:1px;background:var(--line)}
+.sub small{font-weight:500;color:var(--sub)}
+.tbl .sub{margin:0;padding:8px 10px 4px;border-top:1px solid var(--soft)}
 .px{font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{display:inline-block;font-style:normal;font-size:13px;font-weight:700;border-radius:7px;padding:2px 7px;margin-left:6px;font-variant-numeric:tabular-nums}
 /* 가격 오르내림은 한국식: 오르면 빨강, 내리면 파랑 */
@@ -412,7 +419,10 @@ function card(it, idx, rank){
   nm.appendChild(document.createTextNode(it.n));
   const sm = document.createElement("small"); sm.textContent = it.y; nm.appendChild(sm);
   if (it.k){ const em = document.createElement("em"); em.textContent = it.k; nm.appendChild(em); }
-  const bz = el.querySelector(".biz"); if (it.b) bz.textContent = it.b; else bz.remove();
+  const bz = el.querySelector(".biz");
+  if (it.t && it.t.length) bz.appendChild(span("tg", it.t.join(" · ")));
+  if (it.b) bz.appendChild(document.createTextNode(it.b));
+  if (!bz.childNodes.length) bz.remove();
   const bd = el.querySelector(".bd");
   // 정렬 중이면 그 기준 값을 맨 앞에 노랗게(오늘 등락률은 가격 옆에 이미 있으니 뺀다)
   if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it)));
@@ -442,7 +452,9 @@ function tableRow(it, idx, rank){
   const b = document.createElement("b"); b.textContent = it.n; n.appendChild(b);
   const sm = document.createElement("small");
   if (rank){ const i = document.createElement("i"); i.textContent = rank; sm.appendChild(i); }
-  sm.appendChild(document.createTextNode(it.y + (it.k ? " · " + it.k : ""))); n.appendChild(sm);
+  sm.appendChild(document.createTextNode(it.y + (it.k ? " · " + it.k : "")));
+  if (it.t && it.t.length) sm.appendChild(span("tg", " · " + it.t.join(" · ")));
+  n.appendChild(sm);
   r.appendChild(n);
   r.insertAdjacentHTML("beforeend",
     `<span><i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></span>` +
@@ -578,7 +590,18 @@ function render(restore){
     b.onclick = () => { LOCK = true; ROWBUSY = Date.now() + 2500; light(si); jumpTo(h); };
     let box = main;
     if (ST.v === "list"){ box = document.createElement("div"); box.className = "tbl"; box.appendChild(tableHead()); main.appendChild(box); }
+    // 기본 순서로 섹터별로 볼 때는 같은 하부섹터(첫 딱지)끼리 모여 있으므로 묶음마다 작은 소제목을 단다
+    const subs = !sk.key && ST.g !== "all", cnt = {};
+    if (subs) list.forEach(it => { const g = (it.t || [])[0]; if (g) cnt[g] = (cnt[g] || 0) + 1; });
+    let lastSub = null;
     list.forEach((it, i) => {
+      const g = (it.t || [])[0];
+      if (subs && g && g !== lastSub && Object.keys(cnt).length > 1){
+        const sh = document.createElement("div"); sh.className = "sub"; sh.textContent = g;
+        const k = document.createElement("small"); k.textContent = cnt[g]; sh.appendChild(k);
+        box.appendChild(sh);
+      }
+      lastSub = g;
       ITEMS.push(it);
       const rank = sk.key ? i + 1 : 0;
       const el = ST.v === "list" ? tableRow(it, ITEMS.length - 1, rank) : card(it, ITEMS.length - 1, rank);

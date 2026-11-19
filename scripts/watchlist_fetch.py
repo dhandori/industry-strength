@@ -114,7 +114,7 @@ def build(item, raw, now):
     win = closes[start:]
     hi, lo = max(win), min(win)
     return {
-        "y": item["y"], "n": item["n"], "b": item.get("b", ""), "k": item.get("k", ""), "dg": dg,
+        "y": item["y"], "n": item["n"], "b": item.get("b", ""), "t": item.get("t", []), "k": item.get("k", ""), "dg": dg,
         "d": [d.strftime("%y%m%d") for d in days[start:]],
         "o": rd([r[1] for r in rows]), "h": rd([r[2] for r in rows]),
         "l": rd([r[3] for r in rows]), "c": rd(closes),
@@ -224,6 +224,7 @@ def main():
                     if item["y"] in prev:
                         old = prev[item["y"]]
                         old["stale"] = True
+                        old.update({k: item.get(k, d) for k, d in (("n", ""), ("b", ""), ("t", []), ("k", ""))})
                         items.append(old)
                     print("실패", item["y"], e, file=sys.stderr)
                 time.sleep(0.25)
