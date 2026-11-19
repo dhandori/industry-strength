@@ -203,7 +203,9 @@ function draw(cv, it){
   let lo = Math.min(...it.l), hi = Math.max(...it.h);
   EMA.forEach(([k]) => it.e[k].forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
   const pad = (hi - lo) * 0.04 || 1; lo -= pad; hi += pad;
-  const X = i => (i + 0.5) * pW / n, Y = v => padT + (hi - v) / (hi - lo) * pH;
+  // 마지막 봉 오른쪽에 봉 5개 폭만큼 빈칸을 둬서 오늘 봉이 가격 눈금 칸에 붙지 않게 한다
+  const slots = n + 5, sw = pW / slots;
+  const X = i => (i + 0.5) * sw, Y = v => padT + (hi - v) / (hi - lo) * pH;
   g.font = "11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textBaseline = "middle";
 
   // 격자와 가격 눈금
@@ -217,7 +219,7 @@ function draw(cv, it){
   let lastLabelX = -99;
   for (let i = 1; i < n; i++){
     if (it.d[i].slice(2,4) !== it.d[i-1].slice(2,4)){
-      const x = Math.round(X(i) - pW/n/2) + 0.5;
+      const x = Math.round(X(i) - sw/2) + 0.5;
       g.strokeStyle = "#eef0f3"; g.beginPath(); g.moveTo(x, padT); g.lineTo(x, H - xH); g.stroke();
       if (x - lastLabelX > 21 && x < pW - 8){
         const m = +it.d[i].slice(2,4);
@@ -234,7 +236,7 @@ function draw(cv, it){
   g.setLineDash([]);
 
   // 일봉
-  const bw = Math.max(1, Math.min(7, pW / n * 0.7));
+  const bw = Math.max(1, Math.min(7, sw * 0.7));
   for (let i = 0; i < n; i++){
     const up = it.c[i] >= it.o[i], x = X(i);
     g.strokeStyle = g.fillStyle = up ? UP : DN; g.lineWidth = 1;
