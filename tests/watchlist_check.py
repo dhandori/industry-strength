@@ -4,6 +4,7 @@
 - 스크립트 오류·가로 넘침·undefined/NaN 같은 깨진 값이 없는지
 - 걸러 보기: 조건 둘(교집합)과 국가 둘(합집합)을 함께 걸면 맞는 종목만 남는지
 - 정렬: 1개월 수익률 순서가 맞는지, 같은 회사 두 상장(미국·대만)이 미국 하나만 남는지
+- 낮은 순 정렬, '모두 지우기' 한 번에 처음 상태로 돌아가는지
 - 표 보기에서 줄을 누르면 차트가 펼쳐지는지, 매크로 탭(RS 없음)에서 RS 정렬이 기본 순서로 바뀌는지
 
   python tests/watchlist_check.py
@@ -142,9 +143,17 @@ def main():
                     pg.locator("#panel .wrap button", has_text=t).first.click()
                 pg.click("#panel .foot .go")
                 look("걸러 보기", ["NVIDIA", "SK하이닉스"])
-                pg.click("#fbtn")
-                pg.click("#panel .foot button:has-text('초기화')")
+                if pg.inner_text("#secs button[data-s='0'] small") != "2":
+                    problems.append(f"{label} 걸러 보기: 섹터 버튼 숫자가 화면 종목 수와 다름")
+                # 모두 지우기: 정렬까지 걸었다가 한 번에 처음으로
+                pg.click("#sbtn")
+                pg.click("#panel .wrap button:text-is('RS 등급')")
                 pg.click("#panel .foot .go")
+                pg.click("#bar .clr")
+                look("모두 지우기", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
+                                  "Micron", "삼성전자", "Sony"])
+                if pg.locator("#bar .clr").count() or pg.locator("#chips .chip").count():
+                    problems.append(f"{label} 모두 지우기 뒤에도 칩이 남음")
                 # 정렬: 1개월 수익률. 같은 회사(TSM·2330.TW)는 미국 상장 하나만
                 pg.click("#sbtn")
                 pg.click("#panel .wrap button:text-is('1개월')")
@@ -161,6 +170,13 @@ def main():
                 r = look("표 보기")
                 if r["rows"] != 7:
                     problems.append(f"{label} 표 보기: 줄 {r['rows']}개 (기대 7)")
+                # 이미 1개월 순이므로 칸 제목을 한 번 더 누르면 낮은 순으로 뒤집힌다
+                pg.click(".tr.th button:text-is('1개월') >> nth=0")
+                vals = pg.evaluate("""() => [...document.querySelectorAll('.tbl')[0].querySelectorAll('.tr.it')].map(r => parseFloat(r.children[2].textContent))""")
+                if vals != sorted(vals):
+                    problems.append(f"{label} 낮은 순 정렬 틀림 {vals}")
+                if "↑" not in pg.inner_text("#sbtn"):
+                    problems.append(f"{label} 정렬 단추에 낮은 순 표시 없음")
                 pg.click(".tr.it >> nth=0")
                 if not pg.evaluate("(() => { const c = document.querySelector('.tbl .card canvas'); return c && c.width > 0; })()"):
                     problems.append(f"{label} 표 보기: 줄을 눌러도 차트가 안 그려짐")
@@ -174,8 +190,8 @@ def main():
                 pg.click("#tabs button[data-id=macro]")
                 pg.wait_for_timeout(500)
                 look("매크로 RS", ["S&P 500", "나스닥"])
-                if "RS" in pg.inner_text("#chips"):
-                    problems.append(f"{label} 매크로: RS 정렬 칩이 남음")
+                if "RS" in pg.inner_text("#sbtn"):
+                    problems.append(f"{label} 매크로: 정렬 단추에 RS가 남음")
                 pg.screenshot(path=str(SHOTS / f"watchlist-{label}.png"))
                 problems += [f"{label}: {e}" for e in errors]
                 pg.close()

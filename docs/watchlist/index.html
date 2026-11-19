@@ -18,8 +18,8 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 .ttl small{font-size:11px;color:var(--sub)}
 .ttl small.old{color:var(--dn);font-weight:600}
 .ic{display:flex;gap:2px}
-.ic button{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;width:52px;padding:5px 0 4px;border:0;border-radius:10px;background:none;color:#4b5563;font-size:10.5px}
-.ic button svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ic button,#vbtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;width:52px;padding:5px 0 4px;border:0;border-radius:10px;background:none;color:#4b5563;font-size:10.5px}
+.ic button svg,#vbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ic button.on{background:var(--ink);color:#fff}
 .ic button.open{background:var(--soft)}
 .ic button i{position:absolute;top:2px;right:7px;min-width:15px;height:15px;border-radius:8px;background:var(--dn);color:#fff;font-style:normal;font-size:10px;font-weight:700;line-height:15px;text-align:center;padding:0 3px}
@@ -27,16 +27,28 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 #tabs{display:flex;padding:0 4px;border-bottom:1px solid var(--soft);max-width:1100px;margin:0 auto}
 #tabs button{flex:1 1 0;min-width:0;border:0;background:none;color:var(--sub);font-size:14px;padding:8px 2px 7px;border-bottom:2.5px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #tabs button.on{color:var(--up);font-weight:700;border-color:var(--up)}
-#chips{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:7px 12px 0;scrollbar-width:none;max-width:1100px;margin:0 auto}
+/* 조작 줄: 걸러보기·정렬 단추 + 걸린 조건 칩 + 모두 지우기 + 결과 수. 메뉴를 접어도 남는다 */
+#bar{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:8px 12px 2px;scrollbar-width:none;max-width:1100px;margin:0 auto}
+#bar::-webkit-scrollbar{display:none}
+#bar .tb{flex:none;display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);border-radius:10px;font-size:14px;font-weight:600;padding:7px 11px}
+#bar .tb svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#bar .tb.on{background:var(--ink);color:#fff}
+#bar .tb.open{box-shadow:0 0 0 3px rgba(55,65,81,.18)}
+#bar .tb b{font-weight:700;color:#fff;background:var(--dn);border-radius:8px;font-size:11px;min-width:17px;padding:1px 5px;text-align:center}
+#bar .tb b:empty{display:none}
+#chips{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:6px 12px 0;scrollbar-width:none;max-width:1100px;margin:0 auto}
 #chips::-webkit-scrollbar{display:none}
 #chips[hidden]{display:none}
-#chips button{flex:none;border:0;background:var(--soft);border-radius:999px;font-size:12.5px;padding:5px 10px;color:var(--text)}
-#chips button::after{content:" ✕";color:var(--sub);font-size:11px}
-#chips em{flex:none;font-style:normal;font-size:12px;color:var(--sub);margin-left:auto;padding-left:6px}
+#chips small{flex:none;font-size:11.5px;color:var(--sub)}
+#chips .chip,#bar .chip{flex:none;border:0;background:#e8f1ff;color:#1e3a8a;border-radius:999px;font-size:12.5px;font-weight:600;padding:6px 10px}
+#chips .chip::after,#bar .chip::after{content:" ✕";color:#64748b;font-size:11px;font-weight:400}
+#bar .clr{flex:none;border:1.5px solid #f2a7a7;background:#fff5f5;color:#b91c1c;border-radius:10px;font-size:13.5px;font-weight:600;padding:7px 10px}
+#bar #cnt{flex:none;font-style:normal;font-size:12px;color:var(--sub);margin-left:auto;padding-left:6px;white-space:nowrap}
+#bar #cnt b{color:var(--text)}
 .row{display:flex;gap:6px;overflow-x:auto;padding:7px 12px;scrollbar-width:none;touch-action:pan-x;overscroll-behavior:contain;max-width:1100px;margin:0 auto}
 .row::-webkit-scrollbar{display:none}
 #secs button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;padding:7px 12px;border-radius:999px;white-space:nowrap;user-select:none;-webkit-user-select:none}
-#secs button small{font-size:11px;font-weight:600;color:var(--up);margin-left:4px}
+#secs button small{font-size:11px;font-weight:400;color:var(--sub);margin-left:4px}
 #secs button.on{background:var(--up);border-color:var(--up);color:#fff;font-weight:600}
 #secs button.on small{color:#fff}
 #secs button:disabled{opacity:.35}
@@ -44,13 +56,17 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* 펼침 판(걸러 보기·정렬·섹터 전체) */
 #panel{border-top:1px solid var(--soft);padding:2px 14px 12px;max-height:64vh;overflow-y:auto;max-width:1100px;margin:0 auto}
 #panel[hidden]{display:none}
-#panel h3{font-size:12.5px;font-weight:600;color:var(--sub);margin:12px 0 7px}
-#panel h3 small{font-weight:400;margin-left:5px}
+#panel h3{font-size:13.5px;font-weight:700;color:var(--text);margin:14px 0 7px}
+#panel h3 small{font-size:11.5px;font-weight:400;color:var(--sub);margin-left:6px}
+#panel .now{margin:10px 0 0;padding:8px 10px;border-radius:9px;background:var(--soft);font-size:12.5px;color:var(--ink)}
+#panel .now b{color:var(--text)}
 #panel .wrap{display:flex;flex-wrap:wrap;gap:6px}
 #panel .wrap button{font-size:13.5px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink)}
 #panel .wrap button.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+#panel .wrap button.on::before{content:"✓ "}
+#panel .wrap button:disabled{opacity:.4}
 #panel .wrap button small{font-size:11px;margin-left:4px;opacity:.75}
-#panel .foot{display:flex;gap:8px;margin-top:14px}
+#panel .foot{display:flex;gap:8px;margin-top:16px;position:sticky;bottom:-12px;box-shadow:0 -6px 10px -6px rgba(0,0,0,.08);background:var(--card);padding:8px 0 12px;border-top:1px solid var(--soft)}
 #panel .foot button{flex:1;font-size:14px;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
 #panel .foot button.go{flex:2;background:var(--up);border-color:var(--up);color:#fff;font-weight:600}
 #panel .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}
@@ -108,7 +124,8 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
 .tr.th button{border:0;background:none;color:inherit;font-size:inherit;padding:0;text-align:right}
 .tr.th button:first-child{text-align:left}
 .tr.th button.on{color:var(--text);font-weight:700}
-.tr.th button.on::after{content:" ▾"}
+.tr.th button.on::after{content:" ↓"}
+.tr.th button.on.asc::after{content:" ↑"}
 .tr.it{cursor:pointer}
 .tr .n{min-width:0}
 .tr .n b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -132,13 +149,14 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
   <div id="hide">
     <div class="top">
       <div class="ttl"><b>WAMO 워치리스트</b><small id="upd"></small></div>
-      <div class="ic">
-        <button id="fbtn" aria-label="걸러 보기"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg>걸러보기<i></i></button>
-        <button id="sbtn" aria-label="정렬"><svg viewBox="0 0 24 24"><path d="M8 4v16M8 20l-3-3M8 20l3-3M16 20V4M16 4l-3 3M16 4l3 3"/></svg><span>정렬</span></button>
-        <button id="vbtn" aria-label="보기 바꾸기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>목록</span></button>
-      </div>
+      <button id="vbtn" aria-label="보기 바꾸기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>목록</span></button>
     </div>
     <nav id="tabs"></nav>
+  </div>
+  <div id="bar">
+    <button id="fbtn" class="tb"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg><span>걸러보기</span><b></b></button>
+    <button id="sbtn" class="tb"><svg viewBox="0 0 24 24"><path d="M8 4v16M8 20l-3-3M8 20l3-3M16 20V4M16 4l-3 3M16 4l3 3"/></svg><span>정렬</span></button>
+    <span id="clrw" style="display:contents"></span><em id="cnt"></em>
   </div>
   <div id="chips" hidden></div>
   <div class="row" id="secs"></div>
@@ -272,8 +290,7 @@ const pct = v => (v > 0 ? "+" : "") + v.toFixed(1) + "%";
 // 정렬 기준. key 가 클수록 앞. val 은 카드·표에 보일 값. 값이 없는 종목은 맨 뒤로 간다.
 const SORTS = [
   {id:"base", g:"", name:"기본 순서"},
-  {id:"chg", g:"오늘", name:"등락률 높은 순", lab:"오늘", key:it => it.chg, val:it => pct(it.chg)},
-  {id:"chgr", g:"오늘", name:"등락률 낮은 순", lab:"오늘", key:it => -it.chg, val:it => pct(it.chg)},
+  {id:"chg", g:"오늘", name:"오늘 등락률", lab:"오늘", key:it => it.chg, val:it => pct(it.chg)},
   {id:"r1w", g:"기간 수익률", name:"1주", lab:"1주", key:it => it.m.r1w, val:it => pct(it.m.r1w)},
   {id:"r1m", g:"기간 수익률", name:"1개월", lab:"1개월", key:it => it.m.r1m, val:it => pct(it.m.r1m)},
   {id:"r3m", g:"기간 수익률", name:"3개월", lab:"3개월", key:it => it.m.r3m, val:it => pct(it.m.r3m)},
@@ -281,8 +298,7 @@ const SORTS = [
   {id:"r1y", g:"기간 수익률", name:"1년", lab:"1년", key:it => it.m.r1y, val:it => pct(it.m.r1y)},
   {id:"rs", g:"강도", name:"RS 등급", lab:"RS", key:it => it.rs, val:it => String(it.rs)},
   {id:"vr", g:"강도", name:"거래량 배수", lab:"거래량", key:it => it.m.vr, val:it => it.m.vr.toFixed(1) + "배"},
-  {id:"pos", g:"52주 위치", name:"고점에 가까운 순", lab:"52주 위치", key:it => it.m.pos, val:it => Math.round(it.m.pos) + "%"},
-  {id:"posr", g:"52주 위치", name:"저점에 가까운 순", lab:"52주 위치", key:it => -it.m.pos, val:it => Math.round(it.m.pos) + "%"}];
+  {id:"pos", g:"52주 위치", name:"52주 범위 위치", lab:"52주", key:it => it.m.pos, val:it => Math.round(it.m.pos) + "%"}];
 const SORT = Object.fromEntries(SORTS.map(x => [x.id, x]));
 const has = (x, it) => { const v = x.key(it); return v != null && isFinite(v); };
 
@@ -300,10 +316,11 @@ const COND = Object.fromEntries(CONDS.map(c => [c[0], c]));
 const KORDER = ["미국","한국","중국","일본","대만","기타"];
 const kgroup = k => !k ? "" : k === "홍콩" ? "중국" : KORDER.includes(k) ? k : "기타";
 
-// c: 조건, k: 국가, s: 정렬, v: chart|list, g: sec(섹터별)|all(탭 전체 한 줄)
-let ST = {c: [], k: [], s: "base", v: "chart", g: "sec"};
+// c: 조건, k: 국가, s: 정렬 기준, d: desc(높은 순)|asc(낮은 순), v: chart|list, g: sec(섹터별)|all(탭 전체 한 줄)
+let ST = {c: [], k: [], s: "base", d: "desc", v: "chart", g: "sec"};
 try { Object.assign(ST, JSON.parse(store.get("wl.st") || "{}")); } catch(e){}
-ST.s = ({"chg-":"chg","chg+":"chgr","ph":"pos","pl":"base"})[ST.s] || ST.s;
+{ const mv = {"chg-":["chg","desc"],"chg+":["chg","asc"],"chgr":["chg","asc"],"ph":["pos","desc"],"posr":["pos","asc"],"pl":["base","desc"]}[ST.s]; if (mv) [ST.s, ST.d] = mv; }
+if (ST.d !== "asc") ST.d = "desc";
 if (!SORT[ST.s]) ST.s = "base";
 ST.c = (ST.c || []).filter(c => COND[c]); ST.k = (ST.k || []).filter(k => KORDER.includes(k));
 { const old = store.get("wl.flt"); if (old && COND[old] && !store.get("wl.st")) ST.c = [old]; }
@@ -331,10 +348,10 @@ function dupSet(data){
 const CROSS = {gc:["xg","골든크로스 발생"], gs:["xg","골든크로스 임박"], dc:["xd","데드크로스 발생"], ds:["xd","데드크로스 임박"]};
 function span(cls, txt){ const s = document.createElement("span"); if (cls) s.className = cls; s.textContent = txt; return s; }
 function card(it, idx, rank){
-  const ld = it.d[it.d.length - 1], sk = SORT[EFF];
+  const ld = it.d[it.d.length - 1], sk = SORT[EFF], pd = /\.(KS|KQ|T)$/.test(it.y) ? 0 : it.dg;
   const el = document.createElement("div"); el.className = "card";
   el.innerHTML =
-    `<div class="hd"><div class="nm"></div><div class="px">${fmt(lastOf(it.c), it.dg)}<i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></div>` +
+    `<div class="hd"><div class="nm"></div><div class="px">${fmt(lastOf(it.c), pd)}<i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></div>` +
     `<div class="biz"></div><div class="bd"></div>` +
     `<div class="rng"><span class="lo">저점 <b>${sign(it.pl,1)}</b></span><span class="bar"><b style="left:${Math.max(0, Math.min(100, it.m.pos))}%"></b></span><span class="hi">고점 <b>${sign(it.ph,1)}</b></span></div></div>` +
     `<canvas data-i="${idx}"></canvas>` +
@@ -347,7 +364,7 @@ function card(it, idx, rank){
   const bz = el.querySelector(".biz"); if (it.b) bz.textContent = it.b; else bz.remove();
   const bd = el.querySelector(".bd");
   // 정렬 중이면 그 기준 값을 맨 앞에 노랗게(오늘 등락률은 가격 옆에 이미 있으니 뺀다)
-  if (sk.key && sk.id !== "chg" && sk.id !== "chgr" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it)));
+  if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it)));
   if (it.al) bd.appendChild(span("al", "정배열"));
   if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1]));
   if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 ? "rh" : "", "RS " + it.rs));
@@ -361,9 +378,9 @@ const COLS = [["종목","base"],["오늘","chg"],["1개월","r1m"],["52주","pos
 function tableHead(){
   const th = document.createElement("div"); th.className = "tr th";
   COLS.forEach(([t, id]) => {
-    const b = document.createElement("button"); b.textContent = t; b.classList.toggle("on", ST.s === id && id !== "base");
-    b.onclick = e => { e.stopPropagation(); ST.s = id; save(); render(false); };
-    b.classList.toggle("on", EFF === id && id !== "base");
+    const b = document.createElement("button"); b.textContent = t;
+    b.onclick = e => { e.stopPropagation(); if (EFF === id && id !== "base") ST.d = ST.d === "asc" ? "desc" : "asc"; else { ST.s = id; ST.d = "desc"; } save(); render(false); };
+    b.classList.toggle("on", EFF === id && id !== "base"); b.classList.toggle("asc", ST.d === "asc");
     th.appendChild(b);
   });
   return th;
@@ -476,7 +493,7 @@ function render(restore){
     else { cv.width = 0; cv.height = 0; }
   }), {rootMargin: "700px 0px"});
   main.innerHTML = ""; ITEMS = []; HEADS = []; HIDX = []; SCARDS = []; SPY = -1; LOCK = false;
-  const any = active(data) > 0, test = tester(data), cnt = any ? test : (it => it.al);
+  const any = active(data) > 0, test = tester(data);
   // 이 탭 자료에 없는 기준(매크로 탭의 RS·거래량 등)으로 정렬돼 있으면 기본 순서로 보여 준다
   let sk = SORT[ST.s];
   if (sk.key && !data.sections.some(s => s.items.some(it => has(sk, it)))) sk = SORT.base;
@@ -492,11 +509,12 @@ function render(restore){
   secs.forEach((s, si) => {
     const base = s.items.filter(keep);
     let list = base.filter(test);
-    const n = base.filter(cnt).length;
+    const n = base.filter(it => it.al).length;
     total += base.length;
-    if (sk.key) list = list.filter(it => has(sk, it)).sort((a, b) => sk.key(b) - sk.key(a)).concat(list.filter(it => !has(sk, it)));
+    const dir = ST.d === "asc" ? 1 : -1;
+    if (sk.key) list = list.filter(it => has(sk, it)).sort((a, b) => dir * (sk.key(a) - sk.key(b))).concat(list.filter(it => !has(sk, it)));
     const b = document.createElement("button"); b.dataset.s = si; b.textContent = s.name;
-    const bs = document.createElement("small"); bs.textContent = n + "/" + base.length; b.appendChild(bs);
+    const bs = document.createElement("small"); bs.textContent = list.length; b.appendChild(bs);
     row.appendChild(b);
     const r1m = base.map(it => it.m.r1m).filter(v => v != null);
     SECINFO.push({name: s.name, n, tot: base.length, hit: list.length, r1m: r1m.length ? r1m.reduce((a, c) => a + c, 0) / r1m.length : null, h: null});
@@ -530,22 +548,28 @@ let SECINFO = [], EFF = "base";
 // ── 도구 단추와 걸린 조건 칩 ──
 function tools(data, shown, total){
   const n = active(data);
-  $("fbtn").classList.toggle("on", n > 0); $("fbtn").querySelector("i").textContent = n || "";
+  $("fbtn").classList.toggle("on", n > 0); $("fbtn").querySelector("b").textContent = n || "";
   const sl = $("sbtn").querySelector("span");
-  sl.textContent = EFF === "base" ? (ST.g === "all" ? "탭 전체" : "정렬") : SORT[EFF].lab;
+  sl.textContent = EFF === "base" ? (ST.g === "all" ? "정렬 · 탭 전체" : "정렬") : "정렬 · " + SORT[EFF].lab + (ST.d === "asc" ? " ↑" : " ↓");
   $("sbtn").classList.toggle("on", EFF !== "base" || ST.g === "all");
   $("vbtn").querySelector("span").textContent = ST.v === "list" ? "차트" : "목록";
   $("vbtn").querySelector("svg").innerHTML = ST.v === "list" ? '<path d="M4 19l5-6 4 3 7-9"/><path d="M4 4v16h16"/>' : '<path d="M4 6h16M4 12h16M4 18h16"/>';
+  // 걸러보기·정렬 바로 옆에 '↺ 초기화'(무엇이든 걸려 있을 때만), 걸린 조건 칩은 그 아래 줄에
+  const add = (box, cls, txt, fn) => { const b = document.createElement("button"); b.className = cls; b.textContent = txt; b.onclick = () => { fn(); apply(); }; box.appendChild(b); };
+  const dirty = n > 0 || EFF !== "base" || ST.g === "all";
+  const cw = $("clrw"); cw.innerHTML = "";
+  if (dirty) add(cw, "clr", "↺ 초기화", reset);
+  $("cnt").innerHTML = n ? `<b>${shown}</b> / ${total}종목` : `${total}종목`;
   const ch = $("chips"); ch.innerHTML = "";
-  const chip = (txt, off) => { const b = document.createElement("button"); b.textContent = txt; b.onclick = () => { off(); apply(); }; ch.appendChild(b); };
-  ST.c.forEach(c => chip(COND[c][1], () => { ST.c = ST.c.filter(x => x !== c); }));
-  if (hasK(data)) ST.k.forEach(k => chip(k, () => { ST.k = ST.k.filter(x => x !== k); }));
-  if (EFF !== "base") chip((SORT[EFF].g === "기간 수익률" ? SORT[EFF].name + " 수익률" : SORT[EFF].name) + " 정렬", () => { ST.s = "base"; });
-  if (ST.g === "all") chip("탭 전체 한 줄", () => { ST.g = "sec"; });
+  ST.c.forEach(c => add(ch, "chip", COND[c][1], () => { ST.c = ST.c.filter(x => x !== c); }));
+  if (hasK(data)) ST.k.forEach(k => add(ch, "chip", k, () => { ST.k = ST.k.filter(x => x !== k); }));
+  if (ST.g === "all") add(ch, "chip", "탭 전체 한 줄", () => { ST.g = "sec"; });
   ch.hidden = !ch.children.length;
-  if (!ch.hidden){ const em = document.createElement("em"); em.textContent = (n ? shown + "종목 / " : "") + "전체 " + total; ch.appendChild(em); }
+  if (!ch.hidden){ const sm = document.createElement("small"); sm.textContent = "누르면 그 조건만 풀립니다"; ch.appendChild(sm); }
 }
 function apply(){ save(); render(false); }
+// 모두 지우기: 조건·국가·정렬·묶음을 처음 상태로(보기 방식 차트/목록은 그대로)
+function reset(){ ST.c = []; ST.k = []; ST.s = "base"; ST.d = "desc"; ST.g = "sec"; }
 
 // ── 펼침 판 ──
 let PANEL = null;
@@ -582,33 +606,43 @@ function panel(){
       });
     }
     const ft = document.createElement("div"); ft.className = "foot";
-    const rs = document.createElement("button"); rs.textContent = "초기화"; rs.onclick = () => { ST.c = []; ST.k = []; apply(); };
+    const rs = document.createElement("button"); rs.textContent = "↺ 조건 초기화"; rs.disabled = !active(data); rs.onclick = () => { ST.c = []; ST.k = []; apply(); };
     const go = document.createElement("button"); go.className = "go"; go.textContent = "닫기 · " + all.filter(tester(data)).length + "종목 보기";
     go.onclick = () => openPanel("flt");
     ft.append(rs, go); pn.appendChild(ft);
   } else if (PANEL === "sort"){
     const noRs = !all.some(it => it.rs != null), noVol = !all.some(it => it.m.vr != null);
+    const now = document.createElement("div"); now.className = "now";
+    now.innerHTML = EFF === "base" ? "지금: <b>기본 순서</b> (워치리스트에 넣은 순서)" : `지금: <b>${SORT[EFF].g === "기간 수익률" ? SORT[EFF].name + " 수익률" : SORT[EFF].name}</b> · <b>${ST.d === "asc" ? "낮은 순 ↑" : "높은 순 ↓"}</b>`;
+    pn.appendChild(now);
     let w = null, g = null;
+    const NOTE = {"기간 수익률": "그 기간 전 종가 대비", "강도": "RS는 전체 종목 안의 1~99 등급, 거래량은 오늘 ÷ 20일 평균", "52주 위치": "52주 최저 0% ~ 최고 100% 사이 어디쯤인가"};
     SORTS.forEach(x => {
       if ((x.id === "rs" && noRs) || (x.id === "vr" && noVol)) return;
-      if (x.g !== g){ g = x.g; w = group(g || "순서", g === "기간 수익률" ? "높은 순" : g === "강도" ? "높은 순 · RS는 전체 종목 안의 1~99 등급" : g === "52주 위치" ? "52주 최저~최고 종가 사이 어디쯤인가" : ""); }
-      btn(w, x.name, EFF === x.id, () => { ST.s = x.id; apply(); });
+      if (x.g !== g){ g = x.g; w = group(g || "기준", NOTE[g] || ""); }
+      btn(w, x.name, EFF === x.id, () => { if (ST.s !== x.id) ST.d = "desc"; ST.s = x.id; apply(); });
     });
+    const wd = group("방향");
+    btn(wd, "높은 순 ↓", ST.d !== "asc", () => { ST.d = "desc"; apply(); }).disabled = EFF === "base";
+    btn(wd, "낮은 순 ↑", ST.d === "asc", () => { ST.d = "asc"; apply(); }).disabled = EFF === "base";
     const wg = group("묶음", "탭 전체 한 줄로 보면 섹터를 넘어 순위를 매깁니다");
     btn(wg, "섹터별", ST.g !== "all", () => { ST.g = "sec"; apply(); });
     btn(wg, "탭 전체 한 줄로", ST.g === "all", () => { ST.g = "all"; apply(); });
     const ft = document.createElement("div"); ft.className = "foot";
+    const rs = document.createElement("button"); rs.textContent = "↺ 정렬 초기화"; rs.disabled = EFF === "base" && ST.g !== "all";
+    rs.onclick = () => { ST.s = "base"; ST.d = "desc"; ST.g = "sec"; apply(); };
     const go = document.createElement("button"); go.className = "go"; go.textContent = "닫기"; go.onclick = () => openPanel("sort");
-    ft.appendChild(go); pn.appendChild(ft);
+    ft.append(rs, go); pn.appendChild(ft);
   } else if (PANEL === "grid"){
     const any = active(data) > 0;
-    const h = document.createElement("h3"); h.textContent = (META.tabs.find(t => t.id === CUR) || {}).title + " · 정배열 종목 수 / 전체, 1개월 평균"; pn.appendChild(h);
+    const h = document.createElement("h3"); h.textContent = (META.tabs.find(t => t.id === CUR) || {}).title;
+    const hs = document.createElement("small"); hs.textContent = "섹터별 정배열 종목 수 / 전체, 1개월 평균 수익률 · 초록이 짙을수록 정배열 비율이 높습니다"; h.appendChild(hs); pn.appendChild(h);
     const gr = document.createElement("div"); gr.className = "grid"; pn.appendChild(gr);
     SECINFO.forEach((s, si) => {
       const b = document.createElement("button"), r = s.tot ? s.n / s.tot : 0;
       b.style.background = `rgba(8,153,129,${Math.min(0.55, r * 1.4).toFixed(2)})`;
       const nb = document.createElement("b"); nb.textContent = s.name; b.appendChild(nb);
-      b.insertAdjacentHTML("beforeend", `<span>${any ? "맞는 종목 " + s.hit + " / " + s.tot : "정배열 " + s.n + " / " + s.tot}</span>` +
+      b.insertAdjacentHTML("beforeend", `<span>${any ? "맞는 종목 " + s.hit + " · " : ""}정배열 ${s.n} / ${s.tot}</span>` +
         `<span>1개월 평균 <b class="${s.r1m >= 0 ? "up" : "dn"}" style="display:inline;font-size:12px">${s.r1m == null ? "–" : pct(s.r1m)}</b></span><i><u style="width:${(r * 100).toFixed(0)}%"></u></i>`);
       b.disabled = !s.h;
       b.onclick = () => { openPanel("grid"); LOCK = true; light(si); jumpTo(s.h); };
