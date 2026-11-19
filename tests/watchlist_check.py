@@ -175,6 +175,8 @@ def main():
                 look("인더스트리 액션", ["NVIDIA", "Intel"])
                 pg.click("#bar .clr")
                 # 켠 조건의 정의가 걸러 보기 판에 나온다
+                if pg.evaluate("document.querySelector('#tabs button').dataset.id") != "all":
+                    problems.append(f"{label} 전체 탭이 맨 앞이 아님")
                 pg.click("#fbtn")
                 pg.locator("#panel .wrap button", has_text="정배열").first.click()
                 if "EMA20" not in pg.inner_text("#panel .defs"):

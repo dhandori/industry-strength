@@ -759,7 +759,9 @@ function panel(){
     const would = st => { const keep = ST; ST = st; const t = tester(data), m = all.filter(t).length; ST = keep; return m; };
     const wc = group("조건", "고른 것을 모두 만족");
     CONDS.forEach(([k, name, f, opp]) => {
-      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "v2" || k === "ia")) return;
+      // RS·거래량이 없는 탭(매크로)에서는 그 단추를 숨긴다. 인더스트리 액션은 매크로만 빼고 늘 보인다(0개여도)
+      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "v2")) return;
+      if (k === "ia" && CUR === "macro" && !ST.c.includes(k)) return;
       const on = ST.c.includes(k);
       const next = on ? ST.c.filter(x => x !== k) : ST.c.filter(x => x !== opp).concat(k);
       btn(wc, name, on, () => { ST.c = next; apply(); }, on ? null : would({...ST, c: next}));
@@ -925,7 +927,7 @@ window.addEventListener("resize", () => {
   const up = $("upd"); up.textContent = META.updated.slice(5).replace("-", "/") + " KST 갱신";
   const age = (Date.now() - new Date(META.updated.replace(" ", "T") + ":00+09:00")) / 36e5;
   if (age > 80) { up.classList.add("old"); up.textContent += " (오래됨)"; }
-  [...META.tabs, ALL].forEach(t => {
+  [ALL, ...META.tabs].forEach(t => {
     const b = document.createElement("button"); b.dataset.id = t.id; b.textContent = SHORT[t.id] || t.title; b.title = t.title;
     b.onclick = () => { if (PANEL) openPanel(PANEL); openTab(t.id, false); };
     $("tabs").appendChild(b);
