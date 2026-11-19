@@ -42,7 +42,7 @@ def ema(xs, span):
     return out
 
 
-def item(y, n, k, drift, seed, rs=None, al=False, vol=True):
+def item(y, n, k, drift, seed, rs=None, al=False, vol=True, t=None):
     c = series(seed, drift)
     day0 = dt.date(2025, 11, 19)
     it = {"y": y, "n": n, "b": n + " 사업 설명", "k": k, "dg": 2,
@@ -55,15 +55,17 @@ def item(y, n, k, drift, seed, rs=None, al=False, vol=True):
     it["pl"] = round((c[-1] / it["lo"] - 1) * 100, 1)
     if rs is not None:
         it["rs"] = rs
+    if t:
+        it["t"] = t
     return it
 
 
 def make_data(folder):
     ai = {"id": "ai", "title": "② AI 반도체·하드웨어", "sections": [
         {"name": "반도체", "items": [
-            item("TSM", "Taiwan Semiconductor", "대만", 0.004, 1, rs=95, al=True),
-            item("NVDA", "NVIDIA", "미국", 0.003, 2, rs=90, al=True),
-            item("INTC", "Intel", "미국", -0.002, 3, rs=20),
+            item("TSM", "Taiwan Semiconductor", "대만", 0.004, 1, rs=95, al=True, t=["파운드리", "CoWoS"]),
+            item("NVDA", "NVIDIA", "미국", 0.003, 2, rs=90, al=True, t=["프로세서", "GPU"]),
+            item("INTC", "Intel", "미국", -0.002, 3, rs=20, t=["프로세서"]),
             item("000660.KS", "SK하이닉스", "한국", 0.005, 4, rs=97, al=True),
             item("2330.TW", "Taiwan Semiconductor", "대만", 0.004, 5, rs=94, al=True)]},
         {"name": "메모리", "items": [
@@ -152,6 +154,12 @@ def main():
                 pg.click("#logb")
                 look("기본", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
                              "Micron", "삼성전자", "Sony"])
+                # 하부섹터 딱지는 설명 앞에, 기본 순서에서는 묶음 소제목이 섹터 안에 붙는다
+                if pg.inner_text(".card .biz .tg >> nth=0") != "파운드리 · CoWoS":
+                    problems.append(f"{label} 딱지 글자 '{pg.inner_text('.card .biz .tg >> nth=0')}'")
+                subs = pg.evaluate("[...document.querySelectorAll('main > .sub')].map(e => e.firstChild.textContent)")
+                if subs != ["파운드리", "프로세서"]:
+                    problems.append(f"{label} 묶음 소제목 {subs} (기대 ['파운드리', '프로세서'])")
                 # 끝까지 내리면 '맨 위로' 단추가 나오고, 마지막 탭(ai)의 끝에는 '처음 탭으로' 단추가 있다
                 pg.evaluate("window.scrollTo(0, document.body.scrollHeight)")
                 pg.wait_for_timeout(300)
