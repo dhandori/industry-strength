@@ -46,6 +46,9 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 #bar .seg button{border:0;background:var(--card);color:var(--sub);font-size:13px;padding:7px 9px;border-left:1px solid var(--line)}
 #bar .seg button:first-child{border-left:0}
 #bar .seg button.on{background:var(--soft);color:var(--text);font-weight:700}
+#bar .lg1{flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--sub);border-radius:10px;font-size:13px;padding:7px 10px}
+#bar .lg1.on{border-color:var(--ink);color:var(--text);font-weight:700;background:var(--soft)}
+#bar .lg1.on::before{content:"✓ "}
 #bar .clr{flex:none;border:1.5px solid #f2a7a7;background:#fff5f5;color:#b91c1c;border-radius:10px;font-size:13.5px;font-weight:600;padding:7px 10px}
 #bar #cnt{flex:none;font-style:normal;font-size:12px;color:var(--sub);margin-left:auto;padding-left:6px;white-space:nowrap}
 #bar #cnt b{color:var(--text)}
@@ -159,6 +162,7 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
     <button id="fbtn" class="tb"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg><span>걸러보기</span><b></b></button>
     <button id="sbtn" class="tb"><svg viewBox="0 0 24 24"><path d="M8 4v16M8 20l-3-3M8 20l3-3M16 20V4M16 4l-3 3M16 4l3 3"/></svg><span>정렬</span></button>
     <span id="per" class="seg"></span>
+    <button id="logb" class="lg1" title="로그 축 켜기·끄기">로그</button>
     <span id="clrw" style="display:contents"></span><em id="cnt"></em>
   </div>
   <div id="chips" hidden></div>
@@ -212,17 +216,32 @@ function draw(cv, it0){
   const pH = H - padT - xH - volH - gap, pW = W - axW;
   let lo = Math.min(...it.l), hi = Math.max(...it.h);
   EMA.forEach(([k]) => it.e[k].forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
-  const pad = (hi - lo) * 0.04 || 1; lo -= pad; hi += pad;
+  // 로그 축(기본): 같은 비율의 움직임을 같은 높이로. 0 이하 값이 있으면 그릴 수 없어 선형으로 그린다.
+  const LOG = ST.log !== false && lo > 0;
+  const T = LOG ? Math.log : (v => v), TI = LOG ? Math.exp : (v => v);
+  { const a = T(lo), b = T(hi), pad = (b - a) * 0.04 || (LOG ? 0.01 : 1); lo = TI(a - pad); hi = TI(b + pad); }
+  const tlo = T(lo), thi = T(hi);
   // 마지막 봉 오른쪽에 봉 5개 폭만큼 빈칸을 둬서 오늘 봉이 가격 눈금 칸에 붙지 않게 한다
   const slots = n + 5, sw = pW / slots;
-  const X = i => (i + 0.5) * sw, Y = v => padT + (hi - v) / (hi - lo) * pH;
+  const X = i => (i + 0.5) * sw, Y = v => padT + (thi - T(v)) / (thi - tlo) * pH;
   g.font = "11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textBaseline = "middle";
 
   // 격자와 가격 눈금
-  const {ticks, step} = niceTicks(lo, hi, 5);
-  const tdg = step >= 1 ? 0 : Math.min(4, Math.ceil(-Math.log10(step)) + (String(step/Math.pow(10,Math.floor(Math.log10(step)))).startsWith("2.5") ? 1 : 0));
+  let {ticks, step} = niceTicks(lo, hi, 5);
+  let tdg = step >= 1 ? 0 : Math.min(4, Math.ceil(-Math.log10(step)) + (String(step/Math.pow(10,Math.floor(Math.log10(step)))).startsWith("2.5") ? 1 : 0));
+  if (LOG && hi / lo > 1.6){
+    // 로그 축 눈금: 1·1.2·1.5·2·2.5·3·4·5·6·8 × 10ⁿ 가운데 서로 차트 높이의 1/7 이상 떨어진 것만 위에서부터 고른다
+    const M = [1,1.2,1.5,2,2.5,3,4,5,6,8], cand = [];
+    for (let e = Math.floor(Math.log10(lo)); e <= Math.ceil(Math.log10(hi)); e++) M.forEach(m => { const v = m * Math.pow(10, e); if (v >= lo && v <= hi) cand.push(v); });
+    ticks = []; let ly = -1e9;
+    cand.sort((x, y) => y - x).forEach(v => { const y = Y(v); if (y - ly >= pH / 7){ ticks.push(v); ly = y; } });
+    const mn = Math.min(...ticks); tdg = mn >= 100 ? 0 : mn >= 10 ? 1 : mn >= 1 ? 2 : 3;
+    if (ticks.every(v => Math.abs(v - Math.round(v)) < 1e-9)) tdg = 0;
+  }
   g.strokeStyle = "#eef0f3"; g.lineWidth = 1; g.fillStyle = "#6b7280"; g.textAlign = "left";
-  ticks.forEach(v => { const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(0,y); g.lineTo(pW,y); g.stroke(); g.fillText(fmt(v,tdg), pW + 5, y); });
+  let lastTy = 1e9;
+  ticks.forEach(v => { if (v <= 0 && LOG) return; const y = Math.round(Y(v)) + 0.5; if (Math.abs(lastTy - y) < 16) return; lastTy = y;
+    g.beginPath(); g.moveTo(0,y); g.lineTo(pW,y); g.stroke(); g.fillText(fmt(v,tdg), pW + 5, y); });
 
   // 월 눈금
   g.textAlign = "center"; g.textBaseline = "top";
@@ -341,7 +360,7 @@ const KORDER = ["미국","한국","중국","일본","대만","기타"];
 const kgroup = k => !k ? "" : k === "홍콩" ? "중국" : KORDER.includes(k) ? k : "기타";
 
 // c: 조건, k: 국가, s: 정렬 기준, d: desc(높은 순)|asc(낮은 순), v: chart|list, g: sec(섹터별)|all(탭 전체 한 줄)
-let ST = {c: [], k: [], s: "base", d: "desc", v: "chart", g: "sec", p: ""};
+let ST = {c: [], k: [], s: "base", d: "desc", v: "chart", g: "sec", p: "", log: true};
 try { Object.assign(ST, JSON.parse(store.get("wl.st") || "{}")); } catch(e){}
 { const mv = {"chg-":["chg","desc"],"chg+":["chg","asc"],"chgr":["chg","asc"],"ph":["pos","desc"],"posr":["pos","asc"],"pl":["base","desc"]}[ST.s]; if (mv) [ST.s, ST.d] = mv; }
 if (ST.d !== "asc") ST.d = "desc";
@@ -585,6 +604,8 @@ function tools(data, shown, total){
   const pe = $("per"); pe.innerHTML = "";
   PERIODS.forEach(([k, t]) => { const b = document.createElement("button"); b.textContent = t; b.classList.toggle("on", period() === k);
     b.onclick = () => { ST.p = k; save(); tools(data, shown, total); redraw(); }; pe.appendChild(b); });
+  const lb = $("logb"); lb.classList.toggle("on", ST.log !== false);
+  lb.onclick = () => { ST.log = ST.log === false; save(); lb.classList.toggle("on", ST.log !== false); redraw(); };
   const cw = $("clrw"); cw.innerHTML = "";
   if (dirty) add(cw, "clr", "↺ 초기화", reset);
   $("cnt").innerHTML = n ? `<b>${shown}</b> / ${total}종목` : `${total}종목`;

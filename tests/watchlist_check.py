@@ -143,6 +143,13 @@ def main():
                 if pg.inner_text("#per button.on") != "3개월" or not pg.evaluate("document.querySelector('canvas').width > 0"):
                     problems.append(f"{label} 3개월 단추가 안 먹음")
                 pg.click(f"#per button:text-is('{want}')")
+                # 로그 단추: 처음엔 켜져 있고, 누르면 꺼진다(차트는 계속 그려져야 한다)
+                if "on" not in (pg.get_attribute("#logb", "class") or ""):
+                    problems.append(f"{label} 로그 단추가 처음에 꺼져 있음")
+                pg.click("#logb")
+                if "on" in (pg.get_attribute("#logb", "class") or "") or not pg.evaluate("document.querySelector('canvas').width > 0"):
+                    problems.append(f"{label} 로그 단추를 눌러도 안 바뀜")
+                pg.click("#logb")
                 look("기본", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
                              "Micron", "삼성전자", "Sony"])
                 # 걸러 보기: 정배열 AND RS 80 이상 AND (한국 OR 미국)
