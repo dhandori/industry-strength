@@ -116,14 +116,14 @@ h2 small{color:var(--sub);font-weight:400;margin-left:6px}
 canvas{display:block;width:100%;height:300px;margin-top:4px}
 /* 태블릿·PC: 본문을 화면 폭에 맞추고 차트를 키운다(휴대폰은 그대로) */
 @media (min-width:900px){
- main{max-width:min(1500px, calc(100vw - 100px));padding:12px 20px 60px}
+ main{max-width:min(1350px, calc(100vw - 250px));padding:12px 20px 60px}
  .card{padding:12px 14px 8px}
- canvas{height:440px}
+ canvas{height:400px}
  .tr{grid-template-columns:minmax(0,1fr) 90px 90px 140px 60px;padding:10px 16px}
  .tr .n b{font-size:15px}
  .tr .mb{width:110px;margin-left:auto}
 }
-@media (min-width:1400px){ canvas{height:520px} }
+@media (min-width:1400px){ canvas{height:480px} }
 .lg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);padding:2px 2px 2px}
 .lg b{font-weight:600;margin-left:6px}
 /* 표 형태 목록 보기 */
