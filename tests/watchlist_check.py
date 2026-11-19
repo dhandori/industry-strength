@@ -135,6 +135,14 @@ def main():
                         problems.append(f"{label} {step}: 종목 {r['names']} (기대 {expect})")
                     return r
 
+                # 기간 단추: 처음엔 휴대폰 6개월·PC 1년, 3개월을 누르면 차트를 다시 그린다
+                want = "6개월" if w < 900 else "1년"
+                if pg.inner_text("#per button.on") != want:
+                    problems.append(f"{label} 기간 처음 값 {pg.inner_text('#per button.on')} (기대 {want})")
+                pg.click("#per button:text-is('3개월')")
+                if pg.inner_text("#per button.on") != "3개월" or not pg.evaluate("document.querySelector('canvas').width > 0"):
+                    problems.append(f"{label} 3개월 단추가 안 먹음")
+                pg.click(f"#per button:text-is('{want}')")
                 look("기본", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
                              "Micron", "삼성전자", "Sony"])
                 # 걸러 보기: 정배열 AND RS 80 이상 AND (한국 OR 미국)

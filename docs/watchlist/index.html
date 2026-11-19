@@ -42,6 +42,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 #chips small{flex:none;font-size:11.5px;color:var(--sub)}
 #chips .chip,#bar .chip{flex:none;border:0;background:#e8f1ff;color:#1e3a8a;border-radius:999px;font-size:12.5px;font-weight:600;padding:6px 10px}
 #chips .chip::after,#bar .chip::after{content:" ✕";color:#64748b;font-size:11px;font-weight:400}
+#bar .seg{flex:none;display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+#bar .seg button{border:0;background:var(--card);color:var(--sub);font-size:13px;padding:7px 9px;border-left:1px solid var(--line)}
+#bar .seg button:first-child{border-left:0}
+#bar .seg button.on{background:var(--soft);color:var(--text);font-weight:700}
 #bar .clr{flex:none;border:1.5px solid #f2a7a7;background:#fff5f5;color:#b91c1c;border-radius:10px;font-size:13.5px;font-weight:600;padding:7px 10px}
 #bar #cnt{flex:none;font-style:normal;font-size:12px;color:var(--sub);margin-left:auto;padding-left:6px;white-space:nowrap}
 #bar #cnt b{color:var(--text)}
@@ -153,6 +157,7 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
   <div id="bar">
     <button id="fbtn" class="tb"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg><span>걸러보기</span><b></b></button>
     <button id="sbtn" class="tb"><svg viewBox="0 0 24 24"><path d="M8 4v16M8 20l-3-3M8 20l3-3M16 20V4M16 4l-3 3M16 4l3 3"/></svg><span>정렬</span></button>
+    <span id="per" class="seg"></span>
     <span id="clrw" style="display:contents"></span><em id="cnt"></em>
   </div>
   <div id="chips" hidden></div>
@@ -188,7 +193,13 @@ function niceTicks(lo, hi, n){
   return {ticks: out, step};
 }
 
-function draw(cv, it){
+// 차트 기간: 3m·6m·1y. 받은 자료는 1년 치이고 그중 최근 63·126거래일만 잘라 그린다(봉이 굵어져 꼬리가 잘 보인다).
+const PERIODS = [["3m","3개월",63],["6m","6개월",126],["1y","1년",0]];
+function draw(cv, it0){
+  const K = (PERIODS.find(p => p[0] === period()) || [])[2] || 0;
+  const it = !K || it0.c.length <= K ? it0 : (() => { const cut = a => a.slice(a.length - K);
+    return {...it0, o: cut(it0.o), h: cut(it0.h), l: cut(it0.l), c: cut(it0.c), v: cut(it0.v), d: cut(it0.d),
+            e: Object.fromEntries(Object.entries(it0.e).map(([k, a]) => [k, cut(a)]))}; })();
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
   const W = cv.clientWidth, H = cv.clientHeight;
   cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
@@ -229,31 +240,35 @@ function draw(cv, it){
 
   // 52주 최고·최저 종가 점선
   g.setLineDash([2,3]); g.strokeStyle = "#9aa1ad";
-  [it.hi, it.lo].forEach(v => { const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(0,y); g.lineTo(pW,y); g.stroke(); });
+  [it.hi, it.lo].forEach(v => { if (v < lo || v > hi) return; const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(0,y); g.lineTo(pW,y); g.stroke(); });
   g.setLineDash([]);
 
-  // 일봉
-  const bw = Math.max(1, Math.min(7, sw * 0.7));
-  for (let i = 0; i < n; i++){
-    const up = it.c[i] >= it.o[i], x = X(i);
-    g.strokeStyle = g.fillStyle = up ? UP : DN; g.lineWidth = 1;
-    g.beginPath(); g.moveTo(Math.round(x)+0.5, Y(it.h[i])); g.lineTo(Math.round(x)+0.5, Y(it.l[i])); g.stroke();
-    const y1 = Y(Math.max(it.o[i], it.c[i])), y2 = Y(Math.min(it.o[i], it.c[i]));
-    g.fillRect(x - bw/2, y1, bw, Math.max(1, y2 - y1));
-  }
-
-  // 이동평균선
-  g.lineWidth = 1.4; g.lineJoin = "round";
+  // 이동평균선: 봉 뒤에 조금 옅게(봉 꼬리를 가리지 않게)
+  g.lineWidth = 1.3; g.lineJoin = "round"; g.globalAlpha = 0.8;
   EMA.forEach(([k, col]) => {
     g.strokeStyle = col; g.beginPath();
     it.e[k].forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)));
     g.stroke();
   });
+  g.globalAlpha = 1;
+
+  // 일봉: 꼬리는 화면 픽셀에 맞춰 또렷하게(번지지 않게), 몸통보다 조금 진한 색으로
+  const bw = Math.max(1, Math.min(9, sw * 0.62));
+  const dp = 1 / dpr, lw = Math.max(1, Math.round(dpr)) * dp;
+  const snap = x => (Math.round(x * dpr) + (Math.round(dpr) % 2 ? 0.5 : 0)) * dp;
+  for (let i = 0; i < n; i++){
+    const up = it.c[i] >= it.o[i], x = snap(X(i));
+    g.strokeStyle = up ? "#05705d" : "#c8102e"; g.lineWidth = lw;
+    g.beginPath(); g.moveTo(x, Y(it.h[i])); g.lineTo(x, Y(it.l[i])); g.stroke();
+    g.fillStyle = up ? UP : DN;
+    const y1 = Y(Math.max(it.o[i], it.c[i])), y2 = Y(Math.min(it.o[i], it.c[i]));
+    g.fillRect(x - bw/2, y1, bw, Math.max(lw, y2 - y1));
+  }
 
   // 점선 바로 안쪽 왼쪽에 '52주 고점 −x%'(선 아래), '52주 저점 +x%'(선 위). 흰 바탕을 깔아 봉과 겹쳐도 읽히게.
   g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textAlign = "left"; g.textBaseline = "middle";
   [[it.hi, "52주 고점 " + sign(it.ph, 1), 9, "#b71c1c"], [it.lo, "52주 저점 " + sign(it.pl, 1), -9, "#0b6b50"]].forEach(([v, t, dy, col]) => {
-    const y = Math.round(Y(v)) + dy, w = g.measureText(t).width;
+    const y = Math.max(padT + 8, Math.min(padT + pH - 8, Math.round(Y(v)) + dy)), w = g.measureText(t).width;
     g.fillStyle = "rgba(255,255,255,.85)"; g.fillRect(3, y - 7, w + 8, 14);
     g.fillStyle = col; g.fillText(t, 7, y);
   });
@@ -324,7 +339,7 @@ const KORDER = ["미국","한국","중국","일본","대만","기타"];
 const kgroup = k => !k ? "" : k === "홍콩" ? "중국" : KORDER.includes(k) ? k : "기타";
 
 // c: 조건, k: 국가, s: 정렬 기준, d: desc(높은 순)|asc(낮은 순), v: chart|list, g: sec(섹터별)|all(탭 전체 한 줄)
-let ST = {c: [], k: [], s: "base", d: "desc", v: "chart", g: "sec"};
+let ST = {c: [], k: [], s: "base", d: "desc", v: "chart", g: "sec", p: ""};
 try { Object.assign(ST, JSON.parse(store.get("wl.st") || "{}")); } catch(e){}
 { const mv = {"chg-":["chg","desc"],"chg+":["chg","asc"],"chgr":["chg","asc"],"ph":["pos","desc"],"posr":["pos","asc"],"pl":["base","desc"]}[ST.s]; if (mv) [ST.s, ST.d] = mv; }
 if (ST.d !== "asc") ST.d = "desc";
@@ -332,6 +347,8 @@ if (!SORT[ST.s]) ST.s = "base";
 ST.c = (ST.c || []).filter(c => COND[c]); ST.k = (ST.k || []).filter(k => KORDER.includes(k));
 { const old = store.get("wl.flt"); if (old && COND[old] && !store.get("wl.st")) ST.c = [old]; }
 const save = () => store.set("wl.st", JSON.stringify(ST));
+// 기간을 고른 적이 없으면 휴대폰 6개월, 태블릿·PC 1년
+const period = () => PERIODS.some(p => p[0] === ST.p) ? ST.p : (window.innerWidth < 900 ? "6m" : "1y");
 const hasK = data => data.sections.some(s => s.items.some(it => it.k));
 const active = data => ST.c.length + (hasK(data) ? ST.k.length : 0);
 function tester(data){
@@ -563,6 +580,9 @@ function tools(data, shown, total){
   // 걸러보기·정렬 바로 옆에 '↺ 초기화'(무엇이든 걸려 있을 때만), 걸린 조건 칩은 그 아래 줄에
   const add = (box, cls, txt, fn) => { const b = document.createElement("button"); b.className = cls; b.textContent = txt; b.onclick = () => { fn(); apply(); }; box.appendChild(b); };
   const dirty = n > 0 || EFF !== "base" || ST.g === "all";
+  const pe = $("per"); pe.innerHTML = "";
+  PERIODS.forEach(([k, t]) => { const b = document.createElement("button"); b.textContent = t; b.classList.toggle("on", period() === k);
+    b.onclick = () => { ST.p = k; save(); tools(data, shown, total); redraw(); }; pe.appendChild(b); });
   const cw = $("clrw"); cw.innerHTML = "";
   if (dirty) add(cw, "clr", "↺ 초기화", reset);
   $("cnt").innerHTML = n ? `<b>${shown}</b> / ${total}종목` : `${total}종목`;
@@ -574,6 +594,8 @@ function tools(data, shown, total){
   if (!ch.hidden){ const sm = document.createElement("small"); sm.textContent = "누르면 그 조건만 풀립니다"; ch.appendChild(sm); }
 }
 function apply(){ save(); render(false); }
+// 기간을 바꾸면 지금 그려져 있는 차트만 새 기간으로 다시 그린다(표 보기에서 펼친 차트 포함)
+function redraw(){ document.querySelectorAll("canvas").forEach(cv => { if (cv.width && cv.clientWidth && ITEMS[cv.dataset.i]) draw(cv, ITEMS[cv.dataset.i]); }); }
 // 모두 지우기: 조건·국가·정렬·묶음을 처음 상태로(보기 방식 차트/목록은 그대로)
 function reset(){ ST.c = []; ST.k = []; ST.s = "base"; ST.d = "desc"; ST.g = "sec"; }
 
