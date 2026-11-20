@@ -140,30 +140,74 @@ def is_stock(tab_id, sym):
     return tab_id != "macro" and not sym.startswith("^") and "=" not in sym and sym not in NO_TREND
 
 
-def rs_score(closes):
-    """IBD 방식 가중 수익률: 3개월 40%, 6·9·12개월 각 20%. 저장된 1년 치 종가로 계산한다."""
-    n = len(closes)
-    if n < 64:
+# ── RS 등급: 자기 상장 시장 지수보다 얼마나 강한지 (2026-11-20 사용자 요청으로 바꿈) ──
+# 예전에는 종목 자체 수익률을 차트북 전체에서 줄 세워 나라 장세가 그대로 묻어났다(그날 한국 평균 37, 미국 57).
+# 이제 종목 ÷ 상장 시장 지수(RS선)의 가중 수익률로 매긴다. 비교 지수가 없는 시장(유럽 등)은 매기지 않는다.
+BENCH = {"KS": "^KS11", "KQ": "^KQ11", "T": "^N225", "TW": "^TWII", "TWO": "^TWII", "HK": "^HSI",
+         "SS": "000001.SS", "SZ": "000001.SS"}
+RS_BACK = 20  # RS 변화를 보는 거래일
+
+
+def bench_of(sym):
+    """상장 시장의 비교 지수. 접미사가 없으면 미국(S&P500), 표에 없는 시장이면 None."""
+    return BENCH.get(sym.rsplit(".", 1)[1]) if "." in sym else "^GSPC"
+
+
+def rs_line(it, bench):
+    """종목 종가 ÷ 같은 날(없으면 직전 거래일) 지수 종가. 날짜 칸이 없으면 끝에서부터 맞춘다."""
+    if not bench:
         return None
-    ret = lambda k: closes[-1] / closes[max(0, n - 1 - k)] - 1
+    if it.get("d") and bench.get("d"):
+        out, j = [], -1
+        for d, c in zip(it["d"], it["c"]):
+            while j + 1 < len(bench["d"]) and bench["d"][j + 1] <= d:
+                j += 1
+            out.append(c / bench["c"][j] if j >= 0 and c and bench["c"][j] else None)
+        return out
+    bc = bench["c"][-len(it["c"]):]
+    return [c / b if c and b else None for c, b in zip(it["c"][-len(bc):], bc)]
+
+
+def rs_score(closes):
+    """IBD 방식 가중 수익률: 3개월 40%, 6·9·12개월 각 20%. 저장된 1년 치 값으로 계산한다."""
+    n = len(closes)
+    if n < 64 or not closes[-1]:
+        return None
+    ret = lambda k: closes[-1] / closes[max(0, n - 1 - k)] - 1 if closes[max(0, n - 1 - k)] else 0
     return 0.4 * ret(63) + 0.2 * ret(126) + 0.2 * ret(189) + 0.2 * ret(n - 1)
 
 
+def _grade(pairs):
+    pairs = sorted((p for p in pairs if p[0] is not None), key=lambda x: x[0])
+    n = len(pairs)
+    return {id(it): 99 if n == 1 else 1 + round(98 * i / (n - 1)) for i, (_, it) in enumerate(pairs)}
+
+
 def add_rs(tabs_out):
-    """종목마다 rs(1~99)를 붙인다. 점수가 높을수록 99에 가깝다. 대상이 아닌 항목은 rs 칸을 지운다."""
-    scored = []
+    """종목마다 rs(1~99, 시장 지수 대비 강도), rsd(20거래일 전 등급과의 차이), rsh(RS선이 1년 신고가면 True)를 붙인다.
+    대상이 아닌 항목은 세 칸을 지운다."""
+    bench = {it["y"]: it for tab_id, sections in tabs_out for s in sections for it in s["items"]
+             if it["y"] in BENCH.values() or it["y"] == "^GSPC"}
+    lines = []
     for tab_id, sections in tabs_out:
         for s in sections:
             for it in s["items"]:
-                it.pop("rs", None)
-                sc = rs_score(it["c"]) if is_stock(tab_id, it["y"]) else None
-                if sc is not None:
-                    scored.append((sc, it))
-    scored.sort(key=lambda x: x[0])
-    n = len(scored)
-    for i, (_, it) in enumerate(scored):
-        it["rs"] = 99 if n == 1 else 1 + round(98 * i / (n - 1))
-    return n
+                for k in ("rs", "rsd", "rsh"):
+                    it.pop(k, None)
+                if is_stock(tab_id, it["y"]):
+                    ln = rs_line(it, bench.get(bench_of(it["y"])))
+                    if ln and ln[-1]:
+                        lines.append((ln, it))
+    now = _grade((rs_score(ln), it) for ln, it in lines)
+    old = _grade((rs_score(ln[:-RS_BACK]), it) for ln, it in lines)
+    for ln, it in lines:
+        if id(it) not in now:
+            continue
+        it["rs"] = now[id(it)]
+        if id(it) in old:
+            it["rsd"] = it["rs"] - old[id(it)]
+        it["rsh"] = ln[-1] >= max(x for x in ln if x)
+    return len(now)
 
 
 # ── 인더스트리 액션: 종목이 속한 업종이 시장 흐름판(docs/data/<시장>.json)에서 상위권인지 본다 ──
