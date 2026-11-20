@@ -172,6 +172,13 @@ def main():
                 nv = pg.locator(".card", has_text="NVIDIA").first.inner_text()
                 if "RS 90 ▲12" not in nv or "RS선 신고가" not in nv:
                     problems.append(f"{label} RS 변화·RS선 신고가 딱지 없음")
+                # 딱지에 마우스를 올리면 풀이가 나온다(title)
+                tips = pg.evaluate("""() => { const c = [...document.querySelectorAll('.card')].find(e => e.textContent.includes('NVIDIA'));
+                  return [...c.querySelectorAll('.bd span')].map(s => [s.textContent, s.title]); }""")
+                if not tips or any(not t for _, t in tips):
+                    problems.append(f"{label} 풀이 없는 딱지 {[x for x, t in tips if not t]}")
+                elif not any("AI 가속기" in t and "70개 업종 중 3위" in t for _, t in tips):
+                    problems.append(f"{label} 액션 딱지 풀이에 업종·순위 없음")
                 # 인더스트리 액션: 카드에 흐름판 업종·순위 딱지, 걸러 보기로 그 종목만
                 if "AI 가속기 3위/70 · 새로" not in pg.inner_text("main .bd .ia >> nth=0"):
                     problems.append(f"{label} 액션 딱지 표시 없음")
