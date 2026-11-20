@@ -119,8 +119,6 @@ main > h2 small{font-size:12.5px;font-weight:500}
 .sub{display:inline-flex;align-items:center;gap:7px;background:var(--pul);color:var(--pud);border-radius:999px;padding:6px 14px;margin:16px 0 8px 2px;font-size:14px;font-weight:800}
 .sub small{color:var(--pu);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
 .bd .ia{background:#ede9fe;color:#5b21b6;font-weight:700}
-.sub i{font-style:normal;font-size:11.5px;font-weight:800;color:#fff;background:#7c3aed;border-radius:999px;padding:2px 8px}
-.sub.act{background:#ddd6fe}
 .tbl .sub{display:flex;width:max-content;margin:8px 10px 6px}
 .px{font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{display:inline-block;font-style:normal;font-size:13px;font-weight:700;border-radius:7px;padding:2px 7px;margin-left:6px;font-variant-numeric:tabular-nums}
@@ -421,7 +419,7 @@ const DEF = {
   b2: "오늘 종가가 EMA200 이하입니다.",
   hi: "오늘 종가가 최근 1년 최고 종가에서 5% 안쪽에 있습니다.",
   rs8: "RS 등급 80 이상(차트북 전체 주식 중 상위 약 20%). RS 등급은 3개월 수익률 40% + 6·9·12개월 수익률 각 20%를 더한 점수를 지수·매크로를 뺀 전체 종목 안에서 1~99로 매긴 값입니다.",
-  ia: "같은 하부섹터 3종목 이상이 함께 강한 묶음입니다. 최근 7거래일 또는 30거래일 기준 ① 수익률 중간값 플러스 ② 상장 시장 지수(코스피·코스닥·S&P500·닛케이 등) 대비 초과수익 중간값 플러스 ③ 오른 종목 60% 이상 ④ 시장보다 더 오른 종목 60% 이상 ⑤ 추세선 위 종목 60% 이상(7일은 EMA20, 30일은 EMA50) 가운데 ①②를 포함해 4개 이상이면 액션입니다.",
+  ia: "이 종목이 속한 업종이 시장 흐름판(한국·미국·일본 세부 산업 강도 순위)에서 상위 25% 안에 있습니다. 흐름판은 업종마다 차트북보다 많은 종목으로 5·20·60일 수익률을 비교해 순위를 매깁니다. 딱지에는 업종 이름, 순위, 상위권에 머문 거래일 수가 나오고, 5거래일 이내에 새로 들어왔으면 '새로'가 붙습니다. 흐름판에 없는 종목(중국·대만 전부, 미국 일부)은 판정하지 않습니다.",
   v2: "오늘 거래량이 직전 20거래일 평균 거래량의 2배 이상입니다.",
   up: "오늘 종가가 직전 거래일 종가보다 5% 이상 올랐습니다.",
   dn: "오늘 종가가 직전 거래일 종가보다 5% 이상 내렸습니다.",
@@ -491,7 +489,7 @@ function card(it, idx, rank){
   const bd = el.querySelector(".bd");
   // 정렬 중이면 그 기준 값을 맨 앞에 노랗게(오늘 등락률은 가격 옆에 이미 있으니 뺀다)
   if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it)));
-  if (it.ia) bd.appendChild(span("ia", "인더스트리 액션 " + it.ia.w.map(w => w + "일").join("·")));
+  if (it.ia) bd.appendChild(span("ia", "액션 · " + it.ia.g + " " + it.ia.k + "위/" + it.ia.of + (it.ia.d <= 5 ? " · 새로" : " · " + it.ia.d + "일째")));
   if (it.al) bd.appendChild(span("al", "정배열"));
   if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1]));
   if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 ? "rh" : "", "RS " + it.rs));
@@ -673,7 +671,6 @@ function render(restore){
       if (subs && g && g !== lastSub && Object.keys(cnt).length > 1){
         const sh = document.createElement("div"); sh.className = "sub"; sh.textContent = g;
         const k = document.createElement("small"); k.textContent = cnt[g]; sh.appendChild(k);
-        if (it.ia){ sh.classList.add("act"); const a = document.createElement("i"); a.textContent = "액션 " + it.ia.w.map(w => w + "일").join("·"); sh.appendChild(a); }
         box.appendChild(sh);
       }
       lastSub = g;

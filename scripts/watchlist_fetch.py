@@ -6,7 +6,6 @@
 - 받지 못한 종목은 이전자료폴더에 있던 어제 자료를 그대로 쓴다.
 - RS 등급(rs, 1~99): 지수·매크로 탭과 지수·금리·환율을 뺀 전체 종목 안에서 매긴 상대강도 순위.
 """
-import statistics
 import datetime as dt
 import json
 import os
@@ -167,81 +166,56 @@ def add_rs(tabs_out):
     return n
 
 
-# ── 인더스트리 액션: 같은 하부섹터(첫 딱지) 묶음 가운데 시장보다 뚜렷하게 강한 상위 묶음만 고른다 ──
-# 2026-11-20 사용자 결정으로 옛 '섹터액션' 5항목 규칙(7일 또는 30일, 4개 이상 충족)을 순위 방식으로 바꿨다.
-# 옛 규칙은 지난 8개월 동안 묶음의 평균 48%(날에 따라 24~78%)를 액션으로 잡았고 절반이 1~2일 만에 풀렸다.
-# 상장 시장별 비교 지수(매크로 탭에 있는 것)
-BENCH = {"KS": "^KS11", "KQ": "^KQ11", "T": "^N225", "TW": "^TWII", "TWO": "^TWII", "HK": "^HSI",
-         "SS": "000001.SS", "SZ": "000001.SS"}
-IA_W = 60          # 판정 기간(거래일)
-IA_FAST = 7        # 최근 흐름을 참고로 보여 주는 기간(판정에는 쓰지 않는다)
-IA_TOP = 0.15      # 초과수익 중간값이 전체 묶음의 상위 15% 안
-IA_BREADTH = 0.7   # 시장을 이긴 종목, EMA50 위 종목이 각각 70% 이상
-IA_NEW = 5         # 액션이 된 지 이 거래일 이내면 new 를 붙인다
+# ── 인더스트리 액션: 종목이 속한 업종이 시장 흐름판(docs/data/<시장>.json)에서 상위권인지 본다 ──
+# 2026-11-20 사용자 결정. 옛 방식(차트북에 담은 같은 딱지 종목 3개 이상끼리 비교)은 표본이 적어 흔들렸고,
+# 지난 8개월 동안 묶음의 평균 48%를 액션으로 잡아 가려내지 못했다. 흐름판은 한국·미국·일본 세부 산업을
+# 업종마다 여러 종목으로 계산해 매일 순위를 매긴다. 상위권 = 종합 순위 상위 25%(흐름판의 top).
+# 흐름판에 없는 종목(중국·대만 전부, 미국 일부)은 판정하지 않는다(사용자 결정).
+FLOW_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs", "data")
+FLOW_MARKETS = ("KR", "US", "JP")
+FLOW_MAX_AGE = 7  # 기준일이 이보다 오래된 시장 자료는 쓰지 않는다(일)
+IA_NEW = 5        # 상위권에 든 지 이 거래일 이내면 새로 들어온 것으로 표시
 
 
-def bench_of(sym):
-    return BENCH.get(sym.rsplit(".", 1)[1], "^GSPC") if "." in sym else "^GSPC"
-
-
-def ret_pct(closes, w, off=0):
-    """off 거래일 전을 오늘로 봤을 때의 w거래일 수익률(%)."""
-    i = len(closes) - 1 - off
-    return (closes[i] / closes[i - w] - 1) * 100 if i - w >= 0 and closes[i - w] else None
-
-
-def ia_group(members, bench, off=0):
-    """묶음 하나의 값. x: 60일 시장 대비 초과수익 중간값, f: 7일 초과수익 중간값, 시장을 이긴 종목 수, EMA50 위 종목 수."""
-    rows = []
-    for it in members:
-        b = bench.get(bench_of(it["y"])) or []
-        r, rb = ret_pct(it["c"], IA_W, off), ret_pct(b, IA_W, off)
-        f, fb = ret_pct(it["c"], IA_FAST, off), ret_pct(b, IA_FAST, off)
-        i = len(it["c"]) - 1 - off
-        if r is None or rb is None or len(it["e"]["50"]) <= i:
+def load_flow(flow_dir=FLOW_DIR, today=None):
+    """티커 → [업종 정보] 표. 업종 정보 = {m: 시장, g: 업종 이름, k: 순위, of: 업종 수, d: 상위권 연속 거래일, b: 50일선 위 종목 %}."""
+    today = today or dt.date.today()
+    out = {}
+    for mk in FLOW_MARKETS:
+        try:
+            data = json.load(open(os.path.join(flow_dir, f"{mk}.json"), encoding="utf-8"))
+            if (today - dt.date.fromisoformat(data["basis_date"])).days > FLOW_MAX_AGE:
+                print("흐름판 자료가 오래됨", mk, data["basis_date"], file=sys.stderr)
+                continue
+        except Exception as e:
+            print("흐름판 자료 못 읽음", mk, e, file=sys.stderr)
             continue
-        rows.append((r - rb, f - fb if f is not None and fb is not None else 0.0, it["c"][i] > it["e"]["50"][i]))
-    if len(rows) < 3:
-        return None
-    n = len(rows)
-    return {"x": statistics.median(x[0] for x in rows), "f": statistics.median(x[1] for x in rows),
-            "beat": sum(x[0] > 0 for x in rows), "up": sum(x[2] for x in rows), "n": n}
+        for ind in data["items"]:
+            if not ind.get("top") or ind.get("rank") is None:
+                continue
+            info = {"m": mk, "g": ind["name"], "k": int(ind["rank"]), "of": len(data["items"]),
+                    "d": int(ind.get("streak") or 0)}
+            if ind.get("breadth50") is not None:
+                info["b"] = round(ind["breadth50"])
+            for mem in ind.get("members") or []:
+                if mem.get("ticker"):
+                    out.setdefault(mem["ticker"], []).append(info)
+    return out
 
 
-def ia_scan(groups, bench, off=0):
-    """액션 묶음 {묶음 번호: 값}. 3종목 이상 묶음을 초과수익 순으로 세워 상위 15% 안이고, 초과수익이 플러스이며,
-    시장을 이긴 종목과 EMA50 위 종목이 각각 70% 이상인 묶음만 남긴다. 3종목 묶음은 세 종목이 모두 맞아야 한다."""
-    vals = [(gi, v) for gi, v in ((gi, ia_group(m, bench, off)) for gi, m in enumerate(groups)) if v]
-    vals.sort(key=lambda p: -p[1]["x"])
-    top = vals[:max(1, round(len(vals) * IA_TOP))]
-    return {gi: v for gi, v in top
-            if v["x"] > 0 and v["beat"] >= IA_BREADTH * v["n"] and v["up"] >= IA_BREADTH * v["n"]}
-
-
-def add_ia(tabs_out):
-    """액션 묶음의 종목에 ia = {k: 순위, of: 액션 묶음 수, x: 60일 초과수익 중간값(%p), m: [시장을 이긴 종목 수, 묶음 종목 수],
-    f: 7일 초과수익 중간값(%p), new: 액션이 된 지 며칠째(5거래일 이내일 때만)} 를 붙인다. 묶음은 차트북에 담긴 종목만으로 본다."""
-    bench = {it["y"]: it["c"] for tab_id, sections in tabs_out for s in sections for it in s["items"]
-             if it["y"] in BENCH.values() or it["y"] == "^GSPC"}
-    groups = []
+def add_ia(tabs_out, flow=None):
+    """흐름판 상위권 업종에 든 종목에 ia(업종 정보, 여러 업종이면 순위가 가장 높은 것)를 붙인다. 붙인 종목 수를 돌려준다."""
+    flow = load_flow() if flow is None else flow
+    found = 0
     for tab_id, sections in tabs_out:
         for s in sections:
-            by_tag = {}
             for it in s["items"]:
                 it.pop("ia", None)
-                if is_stock(tab_id, it["y"]) and it.get("t"):
-                    by_tag.setdefault(it["t"][0], []).append(it)
-            groups += list(by_tag.values())
-    now = ia_scan(groups, bench)
-    past = [ia_scan(groups, bench, off) for off in range(1, IA_NEW + 1)]
-    for k, (gi, v) in enumerate(sorted(now.items(), key=lambda p: -p[1]["x"]), 1):
-        ia = {"k": k, "of": len(now), "x": round(v["x"], 1), "m": [v["beat"], v["n"]], "f": round(v["f"], 1)}
-        age = next((off for off, p in enumerate(past, 1) if gi not in p), None)
-        if age:
-            ia["new"] = age
-        for it in groups[gi]:
-            it["ia"] = dict(ia)
-    return len(now)
+                if not is_stock(tab_id, it["y"]) or it["y"] not in flow:
+                    continue
+                it["ia"] = dict(min(flow[it["y"]], key=lambda x: x["k"]))
+                found += 1
+    return found
 
 
 KST = dt.timezone(dt.timedelta(hours=9))
@@ -318,7 +292,7 @@ def main():
         tabs_out.append((tab["id"], sections))
     # RS 등급은 모든 탭을 다 받은 뒤 전체 종목 안에서 한 번에 매긴다
     print("RS 등급 대상", add_rs(tabs_out))
-    print("인더스트리 액션 묶음", add_ia(tabs_out))
+    print("인더스트리 액션 종목", add_ia(tabs_out))
     for tab, (_, sections) in zip(tabs, tabs_out):
         with open(os.path.join(out_dir, f"{tab['id']}.json"), "w", encoding="utf-8") as f:
             json.dump({"id": tab["id"], "title": tab["title"], "sections": sections}, f,

@@ -66,8 +66,8 @@ def make_data(folder):
     ai = {"id": "ai", "title": "② AI 반도체·하드웨어", "sections": [
         {"name": "반도체", "items": [
             item("TSM", "Taiwan Semiconductor", "대만", 0.004, 1, rs=95, al=True, t=["파운드리", "CoWoS"]),
-            item("NVDA", "NVIDIA", "미국", 0.003, 2, rs=90, al=True, t=["프로세서", "GPU"], ia={"w": [7], "n": 4}),
-            item("INTC", "Intel", "미국", -0.002, 3, rs=20, t=["프로세서"], ia={"w": [7], "n": 4}),
+            item("NVDA", "NVIDIA", "미국", 0.003, 2, rs=90, al=True, t=["프로세서", "GPU"], ia={"m": "US", "g": "AI 가속기", "k": 3, "of": 70, "d": 2}),
+            item("INTC", "Intel", "미국", -0.002, 3, rs=20, t=["프로세서"], ia={"m": "US", "g": "AI 가속기", "k": 3, "of": 70, "d": 2}),
             item("000660.KS", "SK하이닉스", "한국", 0.005, 4, rs=97, al=True),
             item("2330.TW", "Taiwan Semiconductor", "대만", 0.004, 5, rs=94, al=True)]},
         {"name": "메모리", "items": [
@@ -166,9 +166,9 @@ def main():
                 subs = pg.evaluate("[...document.querySelectorAll('main > .sub')].map(e => e.firstChild.textContent)")
                 if subs != ["파운드리", "프로세서"]:
                     problems.append(f"{label} 묶음 소제목 {subs} (기대 ['파운드리', '프로세서'])")
-                # 인더스트리 액션: 묶음 알약에 '액션' 표시, 걸러 보기로 그 묶음만
-                if "액션 7일" not in pg.inner_text("main > .sub.act"):
-                    problems.append(f"{label} 액션 묶음 알약 표시 없음")
+                # 인더스트리 액션: 카드에 흐름판 업종·순위 딱지, 걸러 보기로 그 종목만
+                if "AI 가속기 3위/70 · 새로" not in pg.inner_text("main .bd .ia >> nth=0"):
+                    problems.append(f"{label} 액션 딱지 표시 없음")
                 pg.click("#fbtn")
                 pg.locator("#panel .wrap button", has_text="인더스트리 액션").first.click()
                 pg.click("#panel .foot .go")
