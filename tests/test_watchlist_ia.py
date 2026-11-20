@@ -1,50 +1,57 @@
-"""차트북 인더스트리 액션 검사: 같은 하부섹터 3종목 이상이 시장보다 함께 강할 때만 액션으로 본다."""
+"""차트북 인더스트리 액션 검사: 종목이 속한 업종이 시장 흐름판에서 상위권일 때만 액션으로 본다."""
+import datetime as dt
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import watchlist_fetch as wf  # noqa: E402
 
-
-def line(n, start_up, daily):
-    """처음엔 평평하다가 마지막 구간에 하루 daily 씩 움직이는 종가와 같은 길이의 EMA(낮게 둠)."""
-    c = [100.0] * (n - start_up) + [100.0 * (1 + daily) ** (i + 1) for i in range(start_up)]
-    return c
+TODAY = dt.date(2026, 11, 20)
 
 
-def item(y, t, daily, ema_below=True):
-    c = line(260, 40, daily)
-    e = [x * (0.97 if ema_below else 1.03) for x in c]
-    return {"y": y, "t": [t], "c": c, "e": {"20": e, "50": e}}
+def ind(name, rank, top, tickers, streak=3):
+    return {"name": name, "rank": rank, "top": top, "streak": streak, "breadth50": 80.0,
+            "members": [{"ticker": t} for t in tickers]}
+
+
+def write_flow(folder, mk, items, basis="2026-11-20"):
+    Path(folder, f"{mk}.json").write_text(json.dumps({"basis_date": basis, "items": items}), encoding="utf-8")
 
 
 class IaTest(unittest.TestCase):
-    def tabs(self, members, bench_daily=0.0):
-        macro = {"y": "^GSPC", "c": line(260, 40, bench_daily), "e": {}}
-        return [("macro", [{"items": [macro]}]), ("ai", [{"items": members}])]
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        d = self.tmp.name
+        write_flow(d, "US", [ind("AI 가속기", 2, True, ["NVDA", "AMD"], streak=12),
+                             ind("반도체 장비", 5, True, ["AMD"], streak=2),
+                             ind("PC", 40, False, ["HPQ"])])
+        write_flow(d, "KR", [ind("메모리", 1, True, ["000660.KS"])], basis="2026-11-01")  # 오래된 자료
+        self.flow = wf.load_flow(d, TODAY)
 
-    def test_group_moving_together_is_action(self):
-        g = [item(s, "후공정 장비", 0.004) for s in ("AAA", "BBB", "CCC")]
-        other = item("DDD", "전공정 장비", 0.004)
-        self.assertEqual(wf.add_ia(self.tabs(g + [other], bench_daily=0.001)), 1)
-        self.assertEqual([x["ia"]["w"] for x in g], [[7, 30]] * 3)
-        self.assertNotIn("ia", other)  # 한 종목뿐인 묶음은 보지 않는다
+    def tearDown(self):
+        self.tmp.cleanup()
 
-    def test_not_action_when_lagging_market(self):
-        g = [item(s, "후공정 장비", 0.001) for s in ("AAA", "BBB", "CCC")]
-        self.assertEqual(wf.add_ia(self.tabs(g, bench_daily=0.004)), 0)
-        self.assertTrue(all("ia" not in x for x in g))
+    def tabs(self, ys):
+        return [("ai", [{"items": [{"y": y} for y in ys]}])]
 
-    def test_one_leader_is_not_action(self):
-        g = [item("AAA", "로봇", 0.02), item("BBB", "로봇", -0.002), item("CCC", "로봇", -0.002)]
-        self.assertEqual(wf.add_ia(self.tabs(g)), 0)
+    def test_top_industry_member_is_action(self):
+        t = self.tabs(["NVDA", "HPQ", "2330.TW"])
+        self.assertEqual(wf.add_ia(t, self.flow), 1)
+        nv, hp, tw = t[0][1][0]["items"]
+        self.assertEqual((nv["ia"]["g"], nv["ia"]["k"], nv["ia"]["of"], nv["ia"]["d"]), ("AI 가속기", 2, 3, 12))
+        self.assertNotIn("ia", hp)  # 상위권이 아닌 업종
+        self.assertNotIn("ia", tw)  # 흐름판에 없는 종목은 판정하지 않는다
 
-    def test_korean_stock_uses_kospi(self):
-        self.assertEqual(wf.bench_of("005930.KS"), "^KS11")
-        self.assertEqual(wf.bench_of("247540.KQ"), "^KQ11")
-        self.assertEqual(wf.bench_of("NVDA"), "^GSPC")
-        self.assertEqual(wf.bench_of("7203.T"), "^N225")
+    def test_best_ranked_industry_wins(self):
+        t = self.tabs(["AMD"])
+        wf.add_ia(t, self.flow)
+        self.assertEqual(t[0][1][0]["items"][0]["ia"]["g"], "AI 가속기")
+
+    def test_stale_market_is_skipped(self):
+        self.assertNotIn("000660.KS", self.flow)
 
 
 if __name__ == "__main__":
