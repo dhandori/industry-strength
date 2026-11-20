@@ -1,6 +1,6 @@
 {
- "updated_at": "2026-11-21 06:12 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/44818206246",
+ "updated_at": "2026-11-21 06:50 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/44823771756",
  "trigger": "workflow_dispatch",
  "markets": {
   "KR": {
@@ -12,7 +12,7 @@
     "date": "2026-11-20",
     "asked": 358,
     "got": 358,
-    "filled": 336,
+    "filled": 0,
     "fixed": []
    }
   },
@@ -26,10 +26,7 @@
     "asked": 316,
     "got": 314,
     "filled": 0,
-    "fixed": [
-     "ON 60.84→59.48",
-     "EOSE 1.19→1.17"
-    ]
+    "fixed": []
    }
   },
   "JP": {
@@ -41,7 +38,7 @@
     "date": "2026-11-20",
     "asked": 394,
     "got": 394,
-    "filled": 394,
+    "filled": 0,
     "fixed": []
    }
   }
