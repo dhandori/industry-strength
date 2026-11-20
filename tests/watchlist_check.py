@@ -55,6 +55,8 @@ def item(y, n, k, drift, seed, rs=None, al=False, vol=True, t=None, ia=None):
     it["pl"] = round((c[-1] / it["lo"] - 1) * 100, 1)
     if rs is not None:
         it["rs"] = rs
+        it["rsd"] = 12 if y == "NVDA" else 0
+        it["rsh"] = y == "NVDA"
     if t:
         it["t"] = t
     if ia:
@@ -166,6 +168,10 @@ def main():
                 subs = pg.evaluate("[...document.querySelectorAll('main > .sub')].map(e => e.firstChild.textContent)")
                 if subs != ["파운드리", "프로세서"]:
                     problems.append(f"{label} 묶음 소제목 {subs} (기대 ['파운드리', '프로세서'])")
+                # RS: 등급 옆 20일 변화(5 이상일 때만)와 RS선 신고가 딱지
+                nv = pg.locator(".card", has_text="NVIDIA").first.inner_text()
+                if "RS 90 ▲12" not in nv or "RS선 신고가" not in nv:
+                    problems.append(f"{label} RS 변화·RS선 신고가 딱지 없음")
                 # 인더스트리 액션: 카드에 흐름판 업종·순위 딱지, 걸러 보기로 그 종목만
                 if "AI 가속기 3위/70 · 새로" not in pg.inner_text("main .bd .ia >> nth=0"):
                     problems.append(f"{label} 액션 딱지 표시 없음")

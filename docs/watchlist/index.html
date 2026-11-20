@@ -383,6 +383,8 @@ function metrics(it){
           pos: it.hi > it.lo ? (last - it.lo) / (it.hi - it.lo) * 100 : 50};
 }
 const pct = v => (v > 0 ? "+" : "") + v.toFixed(1) + "%";
+// RS 등급 옆 20거래일 변화: 5 이상 움직였을 때만 ▲▼ 숫자를 붙인다
+const rsArrow = it => it.rsd >= 5 ? " ▲" + it.rsd : it.rsd <= -5 ? " ▼" + (-it.rsd) : "";
 // 정렬 기준. key 가 클수록 앞. val 은 카드·표에 보일 값. 값이 없는 종목은 맨 뒤로 간다.
 const SORTS = [
   {id:"base", g:"", name:"기본 순서"},
@@ -392,7 +394,8 @@ const SORTS = [
   {id:"r3m", g:"기간 수익률", name:"3개월", lab:"3개월", key:it => it.m.r3m, val:it => pct(it.m.r3m)},
   {id:"r6m", g:"기간 수익률", name:"6개월", lab:"6개월", key:it => it.m.r6m, val:it => pct(it.m.r6m)},
   {id:"r1y", g:"기간 수익률", name:"1년", lab:"1년", key:it => it.m.r1y, val:it => pct(it.m.r1y)},
-  {id:"rs", g:"강도", name:"RS 등급", lab:"RS", key:it => it.rs, val:it => String(it.rs)},
+  {id:"rs", g:"강도", name:"RS 등급", lab:"RS", key:it => it.rs, val:it => String(it.rs) + rsArrow(it)},
+  {id:"rsd", g:"강도", name:"RS 20일 변화", lab:"RS 변화", key:it => it.rsd, val:it => (it.rsd > 0 ? "+" : "") + it.rsd},
   {id:"vr", g:"강도", name:"거래량 배수", lab:"거래량", key:it => it.m.vr, val:it => it.m.vr.toFixed(1) + "배"},
   {id:"pos", g:"52주 위치", name:"52주 범위 위치", lab:"52주", key:it => it.m.pos, val:it => Math.round(it.m.pos) + "%"}];
 const SORT = Object.fromEntries(SORTS.map(x => [x.id, x]));
@@ -406,6 +409,7 @@ const CONDS = [
   ["a2","200일선 위",it => lastOf(it.c) > lastOf(it.e["200"]),"b2"],["b2","200일선 아래",it => lastOf(it.c) <= lastOf(it.e["200"]),"a2"],
   ["hi","52주 고점 5% 이내",it => it.ph >= -5],
   ["rs8","RS 80 이상",it => it.rs >= 80],
+  ["rsh","RS선 신고가",it => !!it.rsh],
   ["ia","인더스트리 액션",it => !!it.ia],
   ["v2","거래량 2배 이상",it => it.m.vr >= 2],
   ["up","5% 급등",it => it.chg >= 5,"dn"],["dn","5% 급락",it => it.chg <= -5,"up"]];
@@ -418,7 +422,8 @@ const DEF = {
   a2: "오늘 종가가 EMA200보다 높습니다.",
   b2: "오늘 종가가 EMA200 이하입니다.",
   hi: "오늘 종가가 최근 1년 최고 종가에서 5% 안쪽에 있습니다.",
-  rs8: "RS 등급 80 이상(차트북 전체 주식 중 상위 약 20%). RS 등급은 3개월 수익률 40% + 6·9·12개월 수익률 각 20%를 더한 점수를 지수·매크로를 뺀 전체 종목 안에서 1~99로 매긴 값입니다.",
+  rs8: "RS 등급 80 이상(차트북 전체 주식 중 상위 약 20%). RS 등급은 종목이 자기 상장 시장 지수(코스피·코스닥·S&P500·닛케이·가권·항셍·상하이)보다 얼마나 강했는지를 1~99로 매긴 값이라, 나라 장세와 상관없이 비교할 수 있습니다.",
+  rsh: "RS선(종목 종가 ÷ 상장 시장 지수)이 오늘 지난 1년 중 가장 높습니다. 주가가 신고가가 아니어도 시장보다 강한 흐름이 새로 확인된 것이라, 주도주가 될 종목이 먼저 보이는 경우가 많습니다.",
   ia: "이 종목이 속한 업종이 시장 흐름판(한국·미국·일본 세부 산업 강도 순위)에서 상위 25% 안에 있습니다. 흐름판은 업종마다 차트북보다 많은 종목으로 5·20·60일 수익률을 비교해 순위를 매깁니다. 딱지에는 업종 이름, 순위, 상위권에 머문 거래일 수가 나오고, 5거래일 이내에 새로 들어왔으면 '새로'가 붙습니다. 흐름판에 없는 종목(중국·대만 전부, 미국 일부)은 판정하지 않습니다.",
   v2: "오늘 거래량이 직전 20거래일 평균 거래량의 2배 이상입니다.",
   up: "오늘 종가가 직전 거래일 종가보다 5% 이상 올랐습니다.",
@@ -430,7 +435,8 @@ const DEF = {
   r3m: "오늘 종가 ÷ 63거래일 전 종가 − 1.",
   r6m: "오늘 종가 ÷ 126거래일 전 종가 − 1.",
   r1y: "오늘 종가 ÷ 1년 전(차트 첫날) 종가 − 1.",
-  rs: "3개월 수익률 40% + 6·9·12개월 수익률 각 20%를 더한 점수를 지수·매크로를 뺀 차트북 전체 종목 안에서 1~99 등급으로 매긴 값입니다. 99가 가장 강합니다.",
+  rs: "종목이 자기 상장 시장 지수보다 얼마나 강했는지를 차트북 전체 종목 안에서 1~99 등급으로 매긴 값입니다. 99가 가장 강합니다. RS선(종목 ÷ 지수)의 3개월 변화 40% + 6·9·12개월 변화 각 20%로 점수를 냅니다. 옆의 ▲▼ 숫자는 20거래일 전 등급과의 차이입니다.",
+  rsd: "RS 등급이 20거래일 전보다 얼마나 올랐는지(내렸는지)입니다. 크게 오른 종목은 최근 시장보다 강해지기 시작한 종목입니다.",
   vr: "오늘 거래량 ÷ 직전 20거래일 평균 거래량. 2배면 평소의 두 배가 거래됐다는 뜻입니다.",
   pos: "(오늘 종가 − 52주 최저 종가) ÷ (52주 최고 − 최저). 0%는 1년 최저, 100%는 1년 최고 자리입니다."};
 const KORDER = ["미국","한국","중국","일본","대만","기타"];
@@ -492,7 +498,8 @@ function card(it, idx, rank){
   if (it.ia) bd.appendChild(span("ia", "액션 · " + it.ia.g + " " + it.ia.k + "위/" + it.ia.of + (it.ia.d <= 5 ? " · 새로" : " · " + it.ia.d + "일째")));
   if (it.al) bd.appendChild(span("al", "정배열"));
   if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1]));
-  if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 ? "rh" : "", "RS " + it.rs));
+  if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 ? "rh" : "", "RS " + it.rs + rsArrow(it)));
+  if (it.rsh) bd.appendChild(span("rh", "RS선 신고가"));
   if (it.m.vr >= 2 && EFF !== "vr") bd.appendChild(span("vh", "거래량 " + it.m.vr.toFixed(1) + "배"));
   if (it.stale) bd.appendChild(span("st", "갱신 실패, 이전 자료"));
   return el;
@@ -524,7 +531,7 @@ function tableRow(it, idx, rank){
     `<span><i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></span>` +
     `<span class="s ${it.m.r1m >= 0 ? "up" : "dn"}">${it.m.r1m == null ? "–" : pct(it.m.r1m)}</span>` +
     `<span>${Math.round(it.m.pos)}%<i class="mb"><u style="left:calc(${Math.max(0, Math.min(100, it.m.pos))}% - 1px)"></u></i></span>` +
-    `<span class="s">${it.rs == null ? "–" : it.rs}</span>`);
+    `<span class="s">${it.rs == null ? "–" : it.rs + rsArrow(it)}</span>`);
   r.onclick = () => {
     const nx = r.nextElementSibling;
     if (nx && nx.classList.contains("card")){ nx.remove(); r.classList.remove("open"); prog(); return; }
@@ -757,7 +764,7 @@ function panel(){
     const wc = group("조건", "고른 것을 모두 만족");
     CONDS.forEach(([k, name, f, opp]) => {
       // RS·거래량이 없는 탭(매크로)에서는 그 단추를 숨긴다. 인더스트리 액션은 매크로만 빼고 늘 보인다(0개여도)
-      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "v2")) return;
+      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "rsh" || k === "v2")) return;
       if (k === "ia" && CUR === "macro" && !ST.c.includes(k)) return;
       const on = ST.c.includes(k);
       const next = on ? ST.c.filter(x => x !== k) : ST.c.filter(x => x !== opp).concat(k);
@@ -790,7 +797,7 @@ function panel(){
     let w = null, g = null;
     const NOTE = {"기간 수익률": "그 기간 전 종가 대비", "강도": "RS는 전체 종목 안의 1~99 등급, 거래량은 오늘 ÷ 20일 평균", "52주 위치": "52주 최저 0% ~ 최고 100% 사이 어디쯤인가"};
     SORTS.forEach(x => {
-      if ((x.id === "rs" && noRs) || (x.id === "vr" && noVol)) return;
+      if (((x.id === "rs" || x.id === "rsd") && noRs) || (x.id === "vr" && noVol)) return;
       if (x.g !== g){ g = x.g; w = group(g || "기준", NOTE[g] || ""); }
       btn(w, x.name, EFF === x.id, () => { if (ST.s !== x.id) ST.d = "desc"; ST.s = x.id; apply(); });
     });
