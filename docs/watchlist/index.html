@@ -119,6 +119,7 @@ main > h2 small{font-size:12.5px;font-weight:500}
 .sub{display:inline-flex;align-items:center;gap:7px;background:var(--pul);color:var(--pud);border-radius:999px;padding:6px 14px;margin:16px 0 8px 2px;font-size:14px;font-weight:800}
 .sub small{color:var(--pu);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
 .bd .ia{background:#ede9fe;color:#5b21b6;font-weight:700}
+.bd span[title],.biz .tg[title],.tr .s[title]{cursor:help}
 .tbl .sub{display:flex;width:max-content;margin:8px 10px 6px}
 .px{font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{display:inline-block;font-style:normal;font-size:13px;font-weight:700;border-radius:7px;padding:2px 7px;margin-left:6px;font-variant-numeric:tabular-nums}
@@ -474,7 +475,17 @@ function dupSet(data){
 
 // ── 카드 ──
 const CROSS = {gc:["xg","골든크로스 발생"], gs:["xg","골든크로스 임박"], dc:["xd","데드크로스 발생"], ds:["xd","데드크로스 임박"]};
-function span(cls, txt){ const s = document.createElement("span"); if (cls) s.className = cls; s.textContent = txt; return s; }
+function span(cls, txt, tip){ const s = document.createElement("span"); if (cls) s.className = cls; s.textContent = txt; if (tip) s.title = tip; return s; }
+// 딱지에 마우스를 올리면 나오는 풀이(값이 들어간 문장 + 기준 정의)
+const MKT = {KR: "한국", US: "미국", JP: "일본"};
+const TIP = {
+  ia: it => `${MKT[it.ia.m] || it.ia.m} 시장 흐름판에서 '${it.ia.g}' 업종이 ${it.ia.of}개 업종 중 ${it.ia.k}위로 상위 25% 안에 있습니다. ` +
+    (it.ia.d <= 5 ? `상위권에 든 지 ${it.ia.d}거래일째로 새로 들어왔습니다.` : `상위권에 ${it.ia.d}거래일째 머물러 있습니다.`) +
+    (it.ia.b != null ? ` 이 업종 종목의 ${it.ia.b}%가 50일선 위에 있습니다.` : "") + "\n\n" + DEF.ia,
+  rs: it => `RS ${it.rs}: 상장 시장 지수보다 강한 정도가 차트북 주식 중 상위 ${Math.max(1, 100 - it.rs)}% 안쪽입니다.` +
+    (it.rsd != null ? ` 20거래일 전에는 ${it.rs - it.rsd}였습니다(${it.rsd > 0 ? "+" : ""}${it.rsd}).` : "") + "\n\n" + DEF.rs,
+  vr: it => `오늘 거래량이 직전 20거래일 평균의 ${it.m.vr.toFixed(1)}배입니다. 평소보다 거래가 몰렸다는 뜻입니다.`,
+};
 function card(it, idx, rank){
   const ld = it.d[it.d.length - 1], sk = SORT[EFF], pd = /\.(KS|KQ|T)$/.test(it.y) ? 0 : it.dg;
   const el = document.createElement("div"); el.className = "card"; el.dataset.y = it.y;
@@ -489,19 +500,19 @@ function card(it, idx, rank){
   const sm = document.createElement("small"); sm.textContent = it.y; nm.appendChild(sm);
   if (it.k){ const em = document.createElement("em"); em.textContent = it.k; nm.appendChild(em); }
   const bz = el.querySelector(".biz");
-  if (it.t && it.t.length) bz.appendChild(span("tg", it.t.join(" · ")));
+  if (it.t && it.t.length) bz.appendChild(span("tg", it.t.join(" · "), "하부섹터 딱지입니다. 첫 딱지가 같은 종목끼리 섹터 안에서 한 묶음으로 모입니다."));
   if (it.b) bz.appendChild(document.createTextNode(it.b));
   if (!bz.childNodes.length) bz.remove();
   const bd = el.querySelector(".bd");
   // 정렬 중이면 그 기준 값을 맨 앞에 노랗게(오늘 등락률은 가격 옆에 이미 있으니 뺀다)
-  if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it)));
-  if (it.ia) bd.appendChild(span("ia", "액션 · " + it.ia.g + " " + it.ia.k + "위/" + it.ia.of + (it.ia.d <= 5 ? " · 새로" : " · " + it.ia.d + "일째")));
-  if (it.al) bd.appendChild(span("al", "정배열"));
-  if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1]));
-  if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 ? "rh" : "", "RS " + it.rs + rsArrow(it)));
-  if (it.rsh) bd.appendChild(span("rh", "RS선 신고가"));
-  if (it.m.vr >= 2 && EFF !== "vr") bd.appendChild(span("vh", "거래량 " + it.m.vr.toFixed(1) + "배"));
-  if (it.stale) bd.appendChild(span("st", "갱신 실패, 이전 자료"));
+  if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it), "지금 정렬 기준인 " + sk.name + " 값입니다.\n\n" + (DEF[sk.id] || "")));
+  if (it.ia) bd.appendChild(span("ia", "액션 · " + it.ia.g + " " + it.ia.k + "위/" + it.ia.of + (it.ia.d <= 5 ? " · 새로" : " · " + it.ia.d + "일째"), TIP.ia(it)));
+  if (it.al) bd.appendChild(span("al", "정배열", DEF.al));
+  if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1], DEF[it.x[0] === "g" ? "g" : "d"]));
+  if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 ? "rh" : "", "RS " + it.rs + rsArrow(it), TIP.rs(it)));
+  if (it.rsh) bd.appendChild(span("rh", "RS선 신고가", DEF.rsh));
+  if (it.m.vr >= 2 && EFF !== "vr") bd.appendChild(span("vh", "거래량 " + it.m.vr.toFixed(1) + "배", TIP.vr(it)));
+  if (it.stale) bd.appendChild(span("st", "갱신 실패, 이전 자료", "이번 갱신 때 이 종목의 일봉을 받지 못해 직전 회차 자료를 그대로 보여 줍니다."));
   return el;
 }
 
@@ -511,6 +522,7 @@ function tableHead(){
   const th = document.createElement("div"); th.className = "tr th";
   COLS.forEach(([t, id]) => {
     const b = document.createElement("button"); b.textContent = t;
+    if (DEF[id]) b.title = DEF[id];
     b.onclick = e => { e.stopPropagation(); if (EFF === id && id !== "base") ST.d = ST.d === "asc" ? "desc" : "asc"; else { ST.s = id; ST.d = "desc"; } save(); render(false); };
     b.classList.toggle("on", EFF === id && id !== "base"); b.classList.toggle("asc", ST.d === "asc");
     th.appendChild(b);
@@ -532,6 +544,7 @@ function tableRow(it, idx, rank){
     `<span class="s ${it.m.r1m >= 0 ? "up" : "dn"}">${it.m.r1m == null ? "–" : pct(it.m.r1m)}</span>` +
     `<span>${Math.round(it.m.pos)}%<i class="mb"><u style="left:calc(${Math.max(0, Math.min(100, it.m.pos))}% - 1px)"></u></i></span>` +
     `<span class="s">${it.rs == null ? "–" : it.rs + rsArrow(it)}</span>`);
+  if (it.rs != null) r.lastElementChild.title = TIP.rs(it);
   r.onclick = () => {
     const nx = r.nextElementSibling;
     if (nx && nx.classList.contains("card")){ nx.remove(); r.classList.remove("open"); prog(); return; }
