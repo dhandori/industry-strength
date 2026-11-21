@@ -764,7 +764,9 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
         return {**meta, "close": r(c), "chg1": r((b.iloc[-1] / b.iloc[-2] - 1) * 100),
                 "ret5": r((b.iloc[-1] / b.iloc[-6] - 1) * 100), "ret20": r((b.iloc[-1] / b.iloc[-21] - 1) * 100),
                 "ret60": r((b.iloc[-1] / b.iloc[-61] - 1) * 100),
-                "above50": bool(c > m50.iloc[-1]), "above200": bool(c > m200.iloc[-1]), "ma200_up": up, "regime": reg}
+                "above50": bool(c > m50.iloc[-1]), "above200": bool(c > m200.iloc[-1]), "ma200_up": up, "regime": reg,
+                # 200일선 이격도(%): 종가가 200일선보다 얼마나 위·아래인지. 판정에는 쓰지 않는 보조자료.
+                "gap200": r((c / m200.iloc[-1] - 1) * 100)}
 
     b_ma50 = bench.rolling(50).mean()
     b_ma200 = bench.rolling(200).mean()
