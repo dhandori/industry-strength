@@ -345,7 +345,8 @@ def main():
                         items.append(old)
                     print("실패", item["y"], e, file=sys.stderr)
                 time.sleep(0.25)
-            sections.append({"name": sec["name"], "items": items})
+            # 하부섹터 묶음 정의(딱지 첫 단어 → 한두 문장). 화면의 '묶음 정의 보기' 표에 쓴다(2026-11-21)
+            sections.append({"name": sec["name"], "items": items, **({"groups": sec["groups"]} if sec.get("groups") else {})})
         tabs_out.append((tab["id"], sections))
     # RS 등급은 모든 탭을 다 받은 뒤 전체 종목 안에서 한 번에 매긴다
     print("RS 등급 대상", add_rs(tabs_out))
