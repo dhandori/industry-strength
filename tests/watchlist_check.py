@@ -258,6 +258,39 @@ def main():
                                   "Micron", "삼성전자", "Sony"])
                 if pg.locator("#bar .clr").count() or pg.locator("#chips .chip").count():
                     problems.append(f"{label} 모두 지우기 뒤에도 칩이 남음")
+                # 추세 정렬: 미너비니 점수 높은 순(노란 딱지 'n/8'), 변동성 수축은 처음 누르면 낮은 순
+                pg.click("#sbtn")
+                pg.click("#panel .wrap button:text-is('추세 점수(미너비니)')")
+                pg.click("#panel .foot .go")
+                r = look("추세 점수 정렬")
+                tts = pg.evaluate("""() => [...document.querySelectorAll('.card .sk')].map(s => parseInt(s.textContent.replace('추세 ', '')))""")
+                if not tts or tts[:4] != sorted(tts[:4], reverse=True):
+                    problems.append(f"{label} 추세 점수 정렬 순서 {tts}")
+                pg.click("#sbtn")
+                pg.click("#panel .wrap button:text-is('변동성 수축')")
+                if "낮은 순" not in pg.inner_text("#panel .now"):
+                    problems.append(f"{label} 변동성 수축이 낮은 순으로 열리지 않음")
+                for name in ("52주 고점 대비", "50일선 이격도", "매집 비율", "정배열 며칠째", "신고가 후 며칠"):
+                    pg.click(f"#panel .wrap button:text-is('{name}')")
+                    look(name)
+                pg.click("#panel .wrap button:text-is('추세 점수(미너비니)')")
+                pg.click("#panel .foot .go")
+                # 추세 점수 딱지를 누르면 조건별 ✓/✗ 풀이 상자가 뜬다(휴대폰용)
+                pg.click(".card .sk >> nth=0")
+                if not pg.is_visible("#tip") or "✓" not in pg.inner_text("#tip") and "✗" not in pg.inner_text("#tip"):
+                    problems.append(f"{label} 추세 딱지를 눌러도 조건 풀이가 안 뜸")
+                pg.click("main > h2 >> nth=0")
+                if pg.is_visible("#tip"):
+                    problems.append(f"{label} 풀이 상자가 안 닫힘")
+                pg.click("#bar .clr")
+                # 걸러 보기에 '미너비니 템플릿'(8조건 모두)이 있고, 정의에 8조건이 나온다
+                pg.click("#fbtn")
+                pg.locator("#panel .wrap button", has_text="미너비니 템플릿").first.click()
+                if "150일선" not in pg.inner_text("#panel .defs"):
+                    problems.append(f"{label} 미너비니 템플릿 정의가 안 보임")
+                look("미너비니 템플릿")
+                pg.click("#panel .foot button >> nth=0")
+                pg.click("#panel .foot .go")
                 # 정렬: 1개월 수익률. 같은 회사(TSM·2330.TW)는 미국 상장 하나만
                 pg.click("#sbtn")
                 pg.click("#panel .wrap button:text-is('1개월')")
