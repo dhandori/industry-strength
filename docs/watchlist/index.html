@@ -67,6 +67,20 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* '▦ 전체' 옆: 이 탭의 하부섹터 묶음을 한 번에 접기·펼치기(모두 접혀 있으면 진한 보라) */
 #secs #cbtn{background:var(--pul);border-color:var(--pu);color:var(--pud);font-weight:700}
 #secs #cbtn.shut{background:var(--pud);border-color:var(--pud);color:#fff}
+/* RS선 보는 법: 탭 맨 위에 접어 두는 안내 상자 */
+.guide{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:4px 0 6px;font-size:13.5px;line-height:1.6;color:var(--ink)}
+.guide summary{cursor:pointer;padding:10px 14px;font-weight:800;color:var(--pud);list-style:none}
+.guide summary::-webkit-details-marker{display:none}
+.guide summary::after{content:" ▾";color:var(--pu)}
+.guide[open] summary::after{content:" ▴"}
+.guide summary small{font-weight:500;color:var(--sub);margin-left:6px;font-size:12px}
+.guide .gb{padding:0 14px 12px}
+.guide p{margin:8px 0}
+.guide p.one{background:var(--pul);border-radius:8px;padding:8px 10px;margin-top:2px}
+.guide b{color:var(--text)}
+.guide table{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}
+.guide td{border-top:1px solid var(--soft);padding:5px 4px;vertical-align:top}
+.guide td:first-child{font-weight:700;color:var(--text);width:46%}
 /* 섹터 제목 줄 오른쪽 동그란 단추: 그 섹터 묶음 접기(▴)·펼치기(▾). 오른쪽 진행 표시와 안 겹치게 안쪽에 */
 main > h2{position:relative;padding-right:92px}
 main > h2 .sfold{position:absolute;right:44px;top:-4px;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--pu);background:var(--card);color:var(--pud);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -416,15 +430,17 @@ function drawRs(g, it0, it, rl, X, n, pW, top, rsH, rgap){
   const Y = v => top + (b - v) / (b - a) * rsH;
   g.strokeStyle = "#e3e5ea"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, top - rgap / 2 + 0.5); g.lineTo(pW, top - rgap / 2 + 0.5); g.stroke();
   if (best <= b){ g.setLineDash([2,3]); g.strokeStyle = "#93a3c4"; const y = Math.round(Y(best)) + 0.5; g.beginPath(); g.moveTo(0, y); g.lineTo(pW, y); g.stroke(); g.setLineDash([]); }
+  // 칸 이름은 선보다 먼저 쓴다(바탕 없이). 선이 글씨 위로 지나가 1~2월 선이 가려지지 않게(2026-11-21 사용자 지적)
+  // 글씨가 들어갈 왼쪽 앞부분(칸 폭의 35%)에서 선이 위쪽에 있으면 글씨를 칸 아래쪽에 쓴다
+  const head = rl.slice(0, Math.max(1, Math.round(rl.length * 0.35))).filter(v => v != null);
+  const low = head.length && Math.max(...head) > a + (b - a) * 0.55;
+  g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textAlign = "left"; g.textBaseline = low ? "bottom" : "top";
+  g.fillStyle = "#6b7280"; g.fillText("RS선 · " + (it0.rb || "시장 지수") + " 대비", 7, low ? top + rsH - 2 : top + 2);
   g.strokeStyle = RSC; g.lineWidth = 1.4; g.lineJoin = "round"; g.beginPath();
   let on = false;
   rl.forEach((v, i) => { if (v == null){ on = false; return; } on ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)); on = true; });
   g.stroke();
   if (it0.rsh && rl[n - 1] != null){ g.fillStyle = RSC; g.beginPath(); g.arc(X(n - 1), Y(rl[n - 1]), 3.2, 0, Math.PI * 2); g.fill(); }
-  g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
-  const lab = "RS선 · " + (it0.rb || "시장 지수") + " 대비", w = g.measureText(lab).width;
-  g.fillStyle = "rgba(255,255,255,.85)"; g.fillRect(3, top + 1, w + 8, 14);
-  g.fillStyle = "#4b5563"; g.fillText(lab, 7, top + 2);
   if (it0.rs != null){
     g.font = "700 12px -apple-system,BlinkMacSystemFont,sans-serif"; g.fillStyle = it0.rs >= 80 ? RSC : "#4b5563";
     g.fillText("RS " + it0.rs, pW + 5, top + 2);
@@ -832,6 +848,7 @@ function render(restore){
     else { cv.width = 0; cv.height = 0; }
   }), {rootMargin: "700px 0px"});
   main.innerHTML = ""; ITEMS = []; HEADS = []; HIDX = []; SCARDS = []; SPY = -1; LOCK = false;
+  if (id !== "macro") main.appendChild(guide());
   const any = active(data) > 0, test = tester(data);
   // 이 탭 자료에 없는 기준(매크로 탭의 RS·거래량 등)으로 정렬돼 있으면 기본 순서로 보여 준다
   let sk = SORT[ST.s];
@@ -918,6 +935,35 @@ function render(restore){
   spy();
 }
 let SECINFO = [], EFF = "base", ALLHEADS = [];
+// RS선 보는 법(2026-11-21 사용자 요청). 매크로 탭을 뺀 탭 맨 위에 접어 두고, 펼침 여부는 브라우저에 기억한다.
+const GUIDE_RS = `<summary>📈 RS선 보는 법<small>차트 아래 파란 선</small></summary><div class="gb">
+<p class="one"><b>한 줄 요약: 파란 선이 올라가면 시장보다 강한 종목, 내려가면 약한 종목입니다.</b></p>
+<p><b>① RS선이란</b><br>이 종목 주가를 시장 지수로 나눈 선입니다. 시장과 비교한 성적표라고 보면 됩니다.<br>
+예) 주가 +10%, 지수 +5% → 시장보다 잘했으니 선이 오릅니다.<br>
+예) 주가 −3%, 지수 −8% → 주가는 빠졌지만 시장보다 덜 빠졌으니 선이 오릅니다.<br>
+예) 주가 +2%, 지수 +6% → 주가는 올랐지만 시장보다 덜 올랐으니 선이 내립니다.</p>
+<p><b>② 차트에서 볼 것 3가지</b><br>
+· <b>선의 방향</b>: 오르는 중인지, 내리는 중인지. 선의 높이 숫자는 신경 쓰지 않아도 됩니다.<br>
+· <b>점선</b>: 지난 1년 동안 선이 가장 높았던 자리입니다. 선이 점선에 가까울수록 강합니다.<br>
+· <b>파란 점</b>: 오늘 선이 점선을 넘었다는 표시(RS선 신고가)입니다.</p>
+<p><b>③ 오른쪽 숫자 'RS 85 ▲7'</b><br>
+· <b>85</b>: 차트북 종목 100개를 줄 세우면 85개보다 강하다는 뜻입니다. 99가 가장 강합니다.<br>
+· <b>▲7</b>: 한 달(20거래일) 전보다 7 올랐다는 뜻입니다. ▼는 내려간 것입니다.</p>
+<p><b>④ 이렇게 읽으면 됩니다</b></p>
+<table>
+<tr><td>주가도 신고가, RS선도 신고가(파란 점)</td><td>가장 좋은 모양. 주도주일 가능성이 큽니다.</td></tr>
+<tr><td>주가는 아직 고점 아래인데 RS선이 먼저 신고가</td><td>곧 주도주가 될 수 있는 좋은 신호입니다.</td></tr>
+<tr><td>주가는 오르는데 RS선은 내려감</td><td>시장 덕에 오른 것뿐이라 약한 종목입니다.</td></tr>
+<tr><td>주가는 빠지는데 RS선은 버티거나 오름</td><td>하락장에서 잘 버틴 종목입니다. 반등 때 앞장설 후보입니다.</td></tr>
+</table>
+<p><b>⑤ 무엇과 비교하나</b><br>주식이 상장된 시장의 지수와 비교합니다. 미국 주식은 S&amp;P500, 코스피·코스닥 주식은 각 지수, 일본은 닛케이225, 중국은 상하이종합, 대만은 가권, 홍콩은 항셍입니다. TSMC·SAP처럼 미국에 상장된 외국 회사도 달러로 거래되니 S&amp;P500과 비교합니다. 유럽 상장 종목은 비교할 지수가 없어 RS가 없습니다.</p>
+</div>`;
+function guide(){
+  const d = document.createElement("details"); d.className = "guide"; d.innerHTML = GUIDE_RS;
+  d.open = store.get("wl.guide") === "1";
+  d.addEventListener("toggle", () => { store.set("wl.guide", d.open ? "1" : "0"); pad(); prog(); });
+  return d;
+}
 function foldLab(){
   const cb = $("cbtn"); if (!cb) return;
   cb.hidden = !ALLHEADS.length;

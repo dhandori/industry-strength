@@ -165,6 +165,13 @@ def main():
                 pg.click("#logb")
                 look("기본", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
                              "Micron", "삼성전자", "Sony"])
+                # RS선 보는 법: 탭 맨 위에 접혀 있고, 누르면 펼쳐진다
+                if pg.evaluate("document.querySelector('main > details.guide').open"):
+                    problems.append(f"{label} RS선 보는 법이 처음부터 펼쳐져 있음")
+                pg.click("main > details.guide summary")
+                if "S&P500" not in pg.inner_text("main > details.guide"):
+                    problems.append(f"{label} RS선 보는 법을 눌러도 안 펼쳐짐")
+                pg.click("main > details.guide summary")
                 # 하부섹터 딱지는 설명 앞에, 기본 순서에서는 묶음 소제목이 섹터 안에 붙는다
                 if pg.inner_text(".card .biz .tg >> nth=0") != "파운드리 · CoWoS":
                     problems.append(f"{label} 딱지 글자 '{pg.inner_text('.card .biz .tg >> nth=0')}'")
