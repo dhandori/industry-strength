@@ -67,6 +67,11 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* '▦ 전체' 옆: 이 탭의 하부섹터 묶음을 한 번에 접기·펼치기(모두 접혀 있으면 진한 보라) */
 #secs #cbtn{background:var(--pul);border-color:var(--pu);color:var(--pud);font-weight:700}
 #secs #cbtn.shut{background:var(--pud);border-color:var(--pud);color:#fff}
+/* 섹터 제목 줄 오른쪽 동그란 단추: 그 섹터 묶음 접기(▴)·펼치기(▾). 오른쪽 진행 표시와 안 겹치게 안쪽에 */
+main > h2{position:relative;padding-right:92px}
+main > h2 .sfold{position:absolute;right:44px;top:-4px;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--pu);background:var(--card);color:var(--pud);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+main > h2 .sfold svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+main > h2 .sfold.shut{background:var(--pud);border-color:var(--pud);color:#fff}
 /* 펼침 판(걸러 보기·정렬·섹터 전체) */
 #panel{border-top:1px solid var(--soft);padding:2px 14px 12px;max-height:64vh;overflow-y:auto;max-width:1100px;margin:0 auto}
 #panel[hidden]{display:none}
@@ -697,6 +702,7 @@ function setShut(sh, shut){
   grp.hidden = shut; sh.classList.toggle("shut", shut);
   shut ? SHUT.add(sh.dataset.k) : SHUT.delete(sh.dataset.k);
   store.set("wl.shut", JSON.stringify([...SHUT]));
+  if (sh.lab) sh.lab();
   foldLab();
   // 펼친 묶음의 차트는 화면에 들어올 때 다시 그리게 관찰을 새로 건다
   if (!shut && io) grp.querySelectorAll("canvas").forEach(cv => { io.unobserve(cv); io.observe(cv); });
@@ -886,6 +892,19 @@ function render(restore){
       grp.appendChild(el); SCARDS[SCARDS.length - 1].push(el); shown++;
     });
     ALLHEADS.push(...heads);
+    // 섹터 제목 줄 오른쪽: 이 섹터의 묶음만 한꺼번에 접기·펼치기
+    if (heads.length){
+      const fb = document.createElement("button"); fb.className = "sfold";
+      const lab = () => {
+        const all = heads.every(x => x.classList.contains("shut"));
+        // 펼친 섹터는 위 꺾쇠(누르면 접힘), 접힌 섹터는 아래 꺾쇠(누르면 펼침)
+        fb.innerHTML = `<svg viewBox="0 0 24 24"><path d="${all ? "M6 9l6 6 6-6" : "M6 15l6-6 6 6"}"/></svg>`; fb.classList.toggle("shut", all);
+        fb.title = all ? "이 섹터 묶음 모두 펼치기" : "이 섹터 묶음 모두 접기"; fb.setAttribute("aria-label", fb.title);
+      };
+      fb.onclick = e => { e.stopPropagation(); const shut = !heads.every(x => x.classList.contains("shut")); heads.forEach(x => setShut(x, shut)); };
+      heads.forEach(x => { x.lab = lab; });
+      lab(); h.appendChild(fb);
+    }
   });
   foldLab();
   if (!shown){ $("prog").style.display = "none"; main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.<br>걸러 보기 조건을 줄이거나 다른 탭을 열어 보세요.</div>'; }

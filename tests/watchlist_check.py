@@ -183,6 +183,13 @@ def main():
                 pg.click("main > .sub >> nth=1")
                 if pg.evaluate(vis) != n0:
                     problems.append(f"{label} 묶음 펼치기가 안 됨")
+                # 섹터 제목 줄 오른쪽 동그란 단추: 그 섹터의 묶음만 접고(▴→▾, 진한 보라) 펼친다
+                pg.click("main > h2 .sfold >> nth=0")
+                if pg.evaluate(vis) != n0 - 5 or "shut" not in (pg.get_attribute("main > h2 .sfold >> nth=0", "class") or ""):
+                    problems.append(f"{label} 섹터 접기 단추: 카드 {pg.evaluate(vis)} (기대 {n0 - 5})")
+                pg.click("main > h2 .sfold >> nth=0")
+                if pg.evaluate(vis) != n0 or "shut" in (pg.get_attribute("main > h2 .sfold >> nth=0", "class") or ""):
+                    problems.append(f"{label} 섹터 펼치기 단추가 안 됨")
                 # 섹터 줄 '▦ 전체' 옆 '⊟ 묶음 접기': 탭의 모든 묶음을 한 번에 접고 펼친다
                 pg.click("#cbtn")
                 if pg.evaluate(vis) != n0 - 5 or pg.inner_text("#cbtn") != "⊞ 묶음 펼치기":
