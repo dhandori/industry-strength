@@ -254,7 +254,7 @@
     const tone = s2 / Math.max(1, d.items.length) >= 0.3 ? "up" : s2 / Math.max(1, d.items.length) <= 0.1 ? "down" : "";
     // 카드 4장은 같은 틀(이름표 → 큰 숫자 → 비교 한 줄)로 맞춘다. 긴 설명은 ? 도움말로 뺐다(2026-11-16 배치 정리).
     const n = Math.max(1, d.items.length);
-    const regHelp = "지수가 50일·200일선 위인지만 본 판정이에요. ‘이격’은 종가가 200일선보다 몇 % 위·아래인지로, 판정에는 넣지 않은 참고 숫자예요." + (state.market === "JP" ? "" : " 분산일·거래량·신고가 수까지 합친 판정은 레이더 ‘시장 날씨’에 있어서 서로 다를 수 있어요.");
+    const regHelp = "지수가 50일·200일선 위인지만 본 판정이에요. ‘이격’은 종가가 200일선보다 몇 % 위·아래인지로, 판정에는 넣지 않은 참고 숫자예요. 지수마다 평소 벌어지는 크기가 달라 지난 1년 범위와 함께 보여 줘요." + (state.market === "JP" ? "" : " 분산일·거래량·신고가 수까지 합친 판정은 레이더 ‘시장 날씨’에 있어서 서로 다를 수 있어요.");
     const help = (t, label) => `<button class="help" type="button" aria-label="${label} 뜻" data-help="${esc(t)}">?</button>`;
     $("#tiles").innerHTML = `
       <div class="tile tile-main"><div class="k">상승 추세 산업</div>
@@ -263,7 +263,7 @@
         <div class="d">상승 전환 시도 ${s2t}개까지 합치면 ${s2 + s2t}개</div></div>
       <div class="tile"><div class="k">시장 국면${help(regHelp, "시장 국면")}${state.market === "JP" ? "" : `<a class="tile-link" href="https://dhandori.github.io/wamo-choochoo-dashboard/radar.html?market=${state.market}&tab=trend">레이더 날씨 ↗</a>`}</div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span>${reg(x)}</div>
-        <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}${x.gap200 != null ? ` · 이격 <b class="ret ${cls(x.gap200)}">${fmtPct(x.gap200)}</b>` : ""}</div>`).join("")}</div>
+        <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}${x.gap200 != null ? ` · 이격 <b class="ret ${cls(x.gap200)}">${fmtPct(x.gap200)}</b>` : ""}</div>${x.gap200_lo != null && x.gap200_pct != null ? `<div class="d">${gapRangeText(x.gap200_lo, x.gap200_hi, x.gap200_pct, x.gap200_days)}</div>` : ""}`).join("")}</div>
       <div class="tile"><div class="k">지수 20일 수익률</div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span><span class="ret ${cls(x.ret20)} idx-v">${fmtPct(x.ret20)}</span></div>
         <div class="d">5일 ${fmtPct(x.ret5)} · 60일 ${fmtPct(x.ret60)}</div>`).join("")}</div>
@@ -877,17 +877,28 @@
   }
 
   // 200일선 이격도(보조자료): 바구니 지수 종가가 200일선보다 몇 % 위·아래인지. 차트 시리즈가 온 뒤에 채운다.
-  function gap200Text(S, id) {
-    const s = S && S.items && S.items[id];
-    if (!s || !s.close || !s.ma200) return "–";
-    for (let k = s.close.length - 1; k >= 0; k--) if (s.close[k] != null) return s.ma200[k] ? fmtPct((s.close[k] / s.ma200[k] - 1) * 100) : "–";
-    return "–";
+  // 바구니마다 평소 벌어지는 크기가 달라, 지난 1년(시리즈 260거래일) 범위 안에서 지금 자리를 함께 적는다.
+  function gapRangeText(lo, hi, p, days) {
+    const r1 = (v) => Math.round(v * 10) / 10 || 0;
+    const where = p >= 90 ? " 과거와 견줘 많이 벌어진 편이에요." : p <= 10 ? " 과거와 견줘 많이 눌린 편이에요." : "";
+    return `${days >= 250 ? "지난 1년" : `최근 ${days}거래일`} 범위 ${fmtPct(r1(lo))} ~ ${fmtPct(r1(hi))} · 이 기간의 ${Math.round(p)}% 날보다 지금이 높아요.${where}`;
   }
+  function gap200Of(S, id) {
+    const s = S && S.items && S.items[id];
+    if (!s || !s.close || !s.ma200) return null;
+    const g = [];
+    for (let k = 0; k < s.close.length; k++) if (s.close[k] != null && s.ma200[k]) g.push((s.close[k] / s.ma200[k] - 1) * 100);
+    if (!g.length || s.close[s.close.length - 1] == null) return null;
+    const cur = g[g.length - 1], past = g.slice(-252, -1), w = g.slice(-252);
+    return { cur, range: past.length >= 19 ? gapRangeText(Math.min(...w), Math.max(...w), past.filter((v) => v < cur).length / past.length * 100, w.length) : "" };
+  }
+  function gap200Text(S, id) { const g = gap200Of(S, id); return g ? fmtPct(g.cur) : "–"; }
 
   function drawDetail(it) {
     const d = state.data[state.market];
     const S = state.series[state.market];
-    const g200 = $('#dStats [data-stat="gap200"] .v'); if (g200) g200.textContent = gap200Text(S, it.id);
+    const g200 = $('#dStats [data-stat="gap200"]'), gp = gap200Of(S, it.id);
+    if (g200 && gp) { $(".v", g200).textContent = fmtPct(gp.cur); if (gp.range && !$(".sub", g200)) g200.insertAdjacentHTML("beforeend", `<div class="k sub">${esc(gp.range)}</div>`); }
     const s = S.items[it.id];
     const dates = S.dates;
     const panel = $(".drawer-panel");
