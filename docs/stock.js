@@ -560,11 +560,18 @@
     // 3) 추세 점검 (미너비니 추세 템플릿)
     const ck = $("#skChecks", box);
     if (ck) {
+      // 200일선 이격도는 종목마다 평소 크기가 달라, 지난 252거래일 범위 안에서 지금 자리를 덧붙인다.
+      const gap200Range = (cc, m, last) => {
+        const g = []; for (let k = Math.max(0, last - 251); k <= last; k++) if (cc[k] != null && m[k]) g.push((cc[k] / m[k] - 1) * 100);
+        if (g.length < 20 || cc[last] == null || !m[last]) return "";
+        const cur = g[g.length - 1], past = g.slice(0, -1), r1 = (v) => Math.round(v * 10) / 10 || 0;
+        return ` · ${g.length >= 250 ? "지난 1년" : `최근 ${g.length}거래일`} 범위 ${pct(r1(Math.min(...g)))} ~ ${pct(r1(Math.max(...g)))} 가운데 ${Math.round(past.filter((v) => v < cur).length / past.length * 100)}% 날보다 높아요`;
+      };
       const x = c[L], a50 = ma[50][L], a150 = ma[150][L], a200 = ma[200][L], a200p = L >= 20 ? ma[200][L - 20] : null;
       const w = c.slice(Math.max(0, L - 251), L + 1).filter((y) => y != null);
       const hi = Math.max(...w), lo = Math.min(...w);
       const T = [
-        ["가격이 150일·200일선 위", a150 != null && a200 != null ? x > a150 && x > a200 : null, a200 ? `200일선 대비 ${pct((x / a200 - 1) * 100)}` : ""],
+        ["가격이 150일·200일선 위", a150 != null && a200 != null ? x > a150 && x > a200 : null, a200 ? `200일선 대비 ${pct((x / a200 - 1) * 100)}${gap200Range(c, ma[200], L)}` : ""],
         ["150일선이 200일선 위", a150 != null && a200 != null ? a150 > a200 : null, ""],
         ["200일선이 한 달 전보다 위", a200 != null && a200p != null ? a200 > a200p : null, a200 && a200p ? `20거래일 새 ${pct((a200 / a200p - 1) * 100, 2)}` : ""],
         ["50일선이 150일·200일선 위", a50 != null && a150 != null && a200 != null ? a50 > a150 && a50 > a200 : null, ""],

@@ -750,6 +750,13 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
           "top_half": g["top_half"], "stage2": g["stage2"]} for g in groups.values()),
         key=lambda x: -(x["score"] or 0))
 
+    def gap200_range(b: pd.Series, m200: pd.Series) -> dict:
+        g = ((b / m200 - 1) * 100).dropna().iloc[-252:]
+        if len(g) < 20:
+            return {}
+        return {"gap200_lo": r(g.min()), "gap200_hi": r(g.max()),
+                "gap200_pct": r((g.iloc[:-1] < g.iloc[-1]).mean() * 100, 0), "gap200_days": int(len(g))}
+
     def index_info(b: pd.Series, meta: dict) -> dict:
         b = b.dropna()
         m50, m200 = b.rolling(50).mean(), b.rolling(200).mean()
@@ -764,7 +771,10 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
         return {**meta, "close": r(c), "chg1": r((b.iloc[-1] / b.iloc[-2] - 1) * 100),
                 "ret5": r((b.iloc[-1] / b.iloc[-6] - 1) * 100), "ret20": r((b.iloc[-1] / b.iloc[-21] - 1) * 100),
                 "ret60": r((b.iloc[-1] / b.iloc[-61] - 1) * 100),
-                "above50": bool(c > m50.iloc[-1]), "above200": bool(c > m200.iloc[-1]), "ma200_up": up, "regime": reg}
+                "above50": bool(c > m50.iloc[-1]), "above200": bool(c > m200.iloc[-1]), "ma200_up": up, "regime": reg,
+                # 200일선 이격도(%): 종가가 200일선보다 얼마나 위·아래인지. 판정에는 쓰지 않는 보조자료.
+                # 지수마다 평소 벌어지는 크기가 달라, 지난 252거래일 범위와 그 기간에 오늘보다 낮았던 날의 비율을 함께 낸다.
+                "gap200": r((c / m200.iloc[-1] - 1) * 100), **gap200_range(b, m200)}
 
     b_ma50 = bench.rolling(50).mean()
     b_ma200 = bench.rolling(200).mean()
