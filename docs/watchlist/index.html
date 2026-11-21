@@ -67,6 +67,19 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* '▦ 전체' 옆: 이 탭의 하부섹터 묶음을 한 번에 접기·펼치기(모두 접혀 있으면 진한 보라) */
 #secs #cbtn{background:var(--pul);border-color:var(--pu);color:var(--pud);font-weight:700}
 #secs #cbtn.shut{background:var(--pud);border-color:var(--pud);color:#fff}
+/* RS선 보는 법: 탭 맨 위에 접어 두는 안내 상자 */
+.guide{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:4px 0 6px;font-size:13.5px;line-height:1.6;color:var(--ink)}
+.guide summary{cursor:pointer;padding:10px 14px;font-weight:800;color:var(--pud);list-style:none}
+.guide summary::-webkit-details-marker{display:none}
+.guide summary::after{content:" ▾";color:var(--pu)}
+.guide[open] summary::after{content:" ▴"}
+.guide summary small{font-weight:500;color:var(--sub);margin-left:6px;font-size:12px}
+.guide .gb{padding:0 14px 12px}
+.guide p{margin:6px 0}
+.guide b{color:var(--text)}
+.guide table{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}
+.guide td{border-top:1px solid var(--soft);padding:5px 4px;vertical-align:top}
+.guide td:first-child{font-weight:700;color:var(--text);width:46%}
 /* 섹터 제목 줄 오른쪽 동그란 단추: 그 섹터 묶음 접기(▴)·펼치기(▾). 오른쪽 진행 표시와 안 겹치게 안쪽에 */
 main > h2{position:relative;padding-right:92px}
 main > h2 .sfold{position:absolute;right:44px;top:-4px;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--pu);background:var(--card);color:var(--pud);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -832,6 +845,7 @@ function render(restore){
     else { cv.width = 0; cv.height = 0; }
   }), {rootMargin: "700px 0px"});
   main.innerHTML = ""; ITEMS = []; HEADS = []; HIDX = []; SCARDS = []; SPY = -1; LOCK = false;
+  if (id !== "macro") main.appendChild(guide());
   const any = active(data) > 0, test = tester(data);
   // 이 탭 자료에 없는 기준(매크로 탭의 RS·거래량 등)으로 정렬돼 있으면 기본 순서로 보여 준다
   let sk = SORT[ST.s];
@@ -918,6 +932,25 @@ function render(restore){
   spy();
 }
 let SECINFO = [], EFF = "base", ALLHEADS = [];
+// RS선 보는 법(2026-11-21 사용자 요청). 매크로 탭을 뺀 탭 맨 위에 접어 두고, 펼침 여부는 브라우저에 기억한다.
+const GUIDE_RS = `<summary>📈 RS선 보는 법<small>차트 아래 파란 선</small></summary><div class="gb">
+<p><b>RS선 = 이 종목 주가 ÷ 상장 시장 지수.</b> 선의 높이 자체에는 뜻이 없고, <b>방향</b>과 <b>점선(1년 최고)까지 거리</b>만 봅니다.</p>
+<p>선이 오르면 그 기간 시장보다 잘한 것입니다. 주가가 빠져도 시장보다 덜 빠지면 오릅니다. 선이 내리면 시장보다 못한 것입니다. 주가가 올라도 시장보다 덜 오르면 내립니다.</p>
+<p><b>점선</b>은 1년 중 RS선이 가장 높았던 자리, <b>파란 점</b>은 오늘 RS선이 그 자리를 넘은 신고가입니다. 오른쪽 <b>RS 85 ▲7</b>은 차트북 전체 주식 중 등급(1~99, 99가 가장 강함)과 20거래일 전보다 오른 단계입니다.</p>
+<table>
+<tr><td>주가 신고가 + RS선 신고가(파란 점)</td><td>가장 강한 주도주 모양</td></tr>
+<tr><td>주가는 고점 아래인데 RS선이 먼저 신고가</td><td>주도주가 되기 전에 자주 보이는 앞선 신호</td></tr>
+<tr><td>주가는 오르는데 RS선은 내림</td><td>시장 따라 오른 것뿐이라 약한 종목</td></tr>
+<tr><td>주가는 빠지는데 RS선은 버티거나 오름</td><td>하락장에서 덜 빠진 종목. 반등 때 주도주 후보</td></tr>
+</table>
+<p><b>비교 지수</b>는 주식이 상장된 시장의 지수입니다. 미국(NYSE·NASDAQ) S&amp;P500, 코스피·코스닥은 각 지수, 일본 닛케이225, 중국 상하이종합(선전 상장도 같음), 대만 가권, 홍콩 항셍. 미국에 상장된 외국 회사(TSMC·SAP·노보노디스크 등)는 달러로 거래되는 미국 주식이라 S&amp;P500과 비교합니다. 유럽 상장 종목은 비교 지수가 없어 RS가 없습니다.</p>
+</div>`;
+function guide(){
+  const d = document.createElement("details"); d.className = "guide"; d.innerHTML = GUIDE_RS;
+  d.open = store.get("wl.guide") === "1";
+  d.addEventListener("toggle", () => { store.set("wl.guide", d.open ? "1" : "0"); pad(); prog(); });
+  return d;
+}
 function foldLab(){
   const cb = $("cbtn"); if (!cb) return;
   cb.hidden = !ALLHEADS.length;
