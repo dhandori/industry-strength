@@ -91,6 +91,14 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 #panel .grid button i{display:block;height:4px;border-radius:2px;background:var(--soft);margin-top:6px;overflow:hidden}
 #panel .grid button i u{display:block;height:100%;background:var(--up)}
 #panel .grid button:disabled{opacity:.4}
+/* 하부섹터 순위 */
+#panel .gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:5px}
+#panel .gl button{display:grid;grid-template-columns:20px minmax(0,1fr);column-gap:6px;text-align:left;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:var(--card);color:var(--text)}
+#panel .gl button i{font-style:normal;font-weight:800;color:var(--pud);font-variant-numeric:tabular-nums;grid-row:span 2}
+#panel .gl button b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#panel .gl button b small{font-size:11px;font-weight:400;color:var(--sub);margin-left:5px}
+#panel .gl button span{font-size:12px;color:#4b5563;font-variant-numeric:tabular-nums}
+#panel .gl.weak button{background:var(--soft);color:var(--sub)}
 #dim{position:fixed;inset:0;background:rgba(22,24,29,.28);z-index:4}
 #dim[hidden]{display:none}
 main{max-width:970px;margin:0 auto;padding:8px 8px 60px}
@@ -121,6 +129,16 @@ main > h2 small{font-size:12.5px;font-weight:500}
 .bd .ia{background:#ede9fe;color:#5b21b6;font-weight:700}
 .bd span[title],.biz .tg[title],.tr .s[title]{cursor:help}
 .tbl .sub{display:flex;width:max-content;margin:8px 10px 6px}
+/* 하부섹터 요약 줄: 누르면 그 묶음을 접고 편다 */
+.sub{cursor:pointer;user-select:none;flex-wrap:wrap;max-width:100%}
+.sub .st{font-size:12px;font-weight:600;color:var(--ink)}
+.sub .st b{font-weight:700}
+.sub::after{content:"▾";font-size:11px;color:var(--pu)}
+.sub.shut::after{content:"▸"}
+.sub.hit{animation:hit 2.2s ease}
+main > h2 .fold{float:right;border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:8px;font-size:12px;font-weight:600;padding:3px 9px;margin-top:4px}
+.tr .s svg{display:block;width:40px;height:11px;margin:3px 0 0 auto;overflow:visible}
+.tr>span.s:last-child{white-space:nowrap;font-size:12.5px}
 .px{font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pill{display:inline-block;font-style:normal;font-size:13px;font-weight:700;border-radius:7px;padding:2px 7px;margin-left:6px;font-variant-numeric:tabular-nums}
 /* 가격 오르내림은 한국식: 오르면 빨강, 내리면 파랑 */
@@ -138,12 +156,15 @@ main > h2 small{font-size:12.5px;font-weight:500}
 .bd .st{background:#fff4d6;color:#8a5a00}
 /* 52주 범위 막대: 왼쪽 끝이 52주 최저 종가, 오른쪽 끝이 최고 종가, 점이 지금 */
 canvas{display:block;width:100%;height:300px;margin-top:4px}
-@media (min-width:900px){ canvas{height:345px} }  /* 태블릿·PC: 카드 크기를 사용자가 그린 사각형에 맞춤 */
+@media (min-width:900px){ canvas{height:345px} }
+/* RS선 칸이 붙는 차트는 그만큼 키운다 */
+canvas.rl{height:352px}
+@media (min-width:900px){ canvas.rl{height:397px} }  /* 태블릿·PC: 카드 크기를 사용자가 그린 사각형에 맞춤 */
 .lg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);padding:2px 2px 2px}
 .lg b{font-weight:600;margin-left:6px}
 /* 표 형태 목록 보기 */
 .tbl{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:6px}
-.tr{display:grid;grid-template-columns:minmax(0,1fr) 62px 58px 44px 34px;align-items:center;column-gap:6px;padding:9px 10px;border-top:1px solid var(--soft);font-variant-numeric:tabular-nums;font-size:13px}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 62px 58px 44px 46px;align-items:center;column-gap:6px;padding:9px 10px;border-top:1px solid var(--soft);font-variant-numeric:tabular-nums;font-size:13px}
 .tr:first-child{border-top:0}
 .tr.th{background:#f8f9fb;color:var(--sub);font-size:11.5px;padding:7px 10px;position:static}
 .tr.th button{border:0;background:none;color:inherit;font-size:inherit;padding:0;text-align:right}
@@ -176,6 +197,7 @@ canvas{display:block;width:100%;height:300px;margin-top:4px}
 #sres{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;max-width:1100px;width:100%;margin:0 auto}
 #sres button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--soft);background:none;padding:11px 16px}
 #sres button:active,#sres button.on{background:var(--pul)}
+#sres button.grp > b{color:var(--pud)}
 #sres b{font-size:15.5px;color:var(--text)}
 #sres b small{font-size:12.5px;font-weight:500;color:var(--sub);margin-left:6px}
 #sres span{display:block;font-size:12.5px;color:var(--sub);margin-top:2px}
@@ -259,7 +281,7 @@ function draw(cv, it0){
   const K = (PERIODS.find(p => p[0] === period()) || [])[2] || 0;
   const it = !K || it0.c.length <= K ? it0 : (() => { const cut = a => a.slice(a.length - K);
     return {...it0, o: cut(it0.o), h: cut(it0.h), l: cut(it0.l), c: cut(it0.c), v: cut(it0.v), d: cut(it0.d),
-            e: Object.fromEntries(Object.entries(it0.e).map(([k, a]) => [k, cut(a)]))}; })();
+            e: Object.fromEntries(Object.entries(it0.e).map(([k, a]) => [k, cut(a)])), rl: it0.rl && cut(it0.rl)}; })();
   const dpr = Math.min(window.devicePixelRatio || 1, 3);
   const W = cv.clientWidth, H = cv.clientHeight;
   cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
@@ -267,7 +289,9 @@ function draw(cv, it0){
   const n = it.c.length, hasVol = it.v.some(v => v > 0);
   const axW = 50, padT = 6, xH = 18;
   const volH = hasVol ? 46 : 0, gap = hasVol ? 6 : 0;
-  const pH = H - padT - xH - volH - gap, pW = W - axW;
+  // RS선 칸(종목 ÷ 상장 시장 지수): 거래량 아래 44px
+  const rl = it.rl && it.rl.some(v => v != null) ? it.rl : null, rsH = rl ? 44 : 0, rgap = rl ? 8 : 0;
+  const pH = H - padT - xH - volH - gap - rsH - rgap, pW = W - axW;
   let lo = Math.min(...it.l), hi = Math.max(...it.h);
   EMA.forEach(([k]) => it.e[k].forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
   // 로그 축(기본): 같은 비율의 움직임을 같은 높이로. 0 이하 값이 있으면 그릴 수 없어 선형으로 그린다.
@@ -367,7 +391,34 @@ function draw(cv, it0){
     g.globalAlpha = 1; g.fillStyle = "#6b7280"; g.textAlign = "left"; g.textBaseline = "top";
     g.fillText("거래량", pW + 5, top + 2);
   }
+  if (rl) drawRs(g, it0, it, rl, X, n, pW, padT + pH + gap + volH + rgap, rsH, rgap);
   g.strokeStyle = "#e3e5ea"; g.strokeRect(0.5, padT + 0.5, pW - 1, H - xH - padT - 1);
+}
+// RS선 칸: 선이 오르면 시장보다 강해지는 중. 점선은 1년 중 RS선 최고 자리, 파란 점은 오늘이 그 신고가일 때.
+const RSC = "#1d4ed8";
+function drawRs(g, it0, it, rl, X, n, pW, top, rsH, rgap){
+  const vals = rl.filter(v => v != null), best = Math.max(...it0.rl.filter(v => v != null));
+  let a = Math.min(...vals), b = Math.max(...vals);
+  const pad = (b - a) * 0.1 || 1; a -= pad; b += pad;
+  const Y = v => top + (b - v) / (b - a) * rsH;
+  g.strokeStyle = "#e3e5ea"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, top - rgap / 2 + 0.5); g.lineTo(pW, top - rgap / 2 + 0.5); g.stroke();
+  if (best <= b){ g.setLineDash([2,3]); g.strokeStyle = "#93a3c4"; const y = Math.round(Y(best)) + 0.5; g.beginPath(); g.moveTo(0, y); g.lineTo(pW, y); g.stroke(); g.setLineDash([]); }
+  g.strokeStyle = RSC; g.lineWidth = 1.4; g.lineJoin = "round"; g.beginPath();
+  let on = false;
+  rl.forEach((v, i) => { if (v == null){ on = false; return; } on ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)); on = true; });
+  g.stroke();
+  if (it0.rsh && rl[n - 1] != null){ g.fillStyle = RSC; g.beginPath(); g.arc(X(n - 1), Y(rl[n - 1]), 3.2, 0, Math.PI * 2); g.fill(); }
+  g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textAlign = "left"; g.textBaseline = "top";
+  const lab = "RS선 · " + (it0.rb || "시장 지수") + " 대비", w = g.measureText(lab).width;
+  g.fillStyle = "rgba(255,255,255,.85)"; g.fillRect(3, top + 1, w + 8, 14);
+  g.fillStyle = "#4b5563"; g.fillText(lab, 7, top + 2);
+  if (it0.rs != null){
+    g.font = "700 12px -apple-system,BlinkMacSystemFont,sans-serif"; g.fillStyle = it0.rs >= 80 ? RSC : "#4b5563";
+    g.fillText("RS " + it0.rs, pW + 5, top + 2);
+    const ar = rsArrow(it0).trim();
+    if (ar){ g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.fillStyle = it0.rsd > 0 ? UPW : DNW; g.fillText(ar, pW + 5, top + 18); }
+  }
+  g.font = "11px -apple-system,BlinkMacSystemFont,sans-serif";
 }
 
 // ── 종목별 계산값: 기간 수익률, 거래량 배수, 52주 범위 위치 ──
@@ -492,7 +543,7 @@ function card(it, idx, rank){
   el.innerHTML =
     `<div class="hd"><div class="nr"><div class="nm"></div><div class="px">${fmt(lastOf(it.c), pd)}<i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></div></div>` +
     `<div class="biz"></div><div class="bd"></div></div>` +
-    `<canvas data-i="${idx}"></canvas>` +
+    `<canvas data-i="${idx}"${it.rl ? ' class="rl"' : ""}></canvas>` +
     `<div class="lg"><span>EMA${EMA.map(([k,c]) => `<b style="color:${c}">${k}</b>`).join("")}</span><span>${+ld.slice(2,4)}/${+ld.slice(4,6)} 종가 기준</span></div>`;
   const nm = el.querySelector(".nm");
   if (rank) nm.appendChild(span("rk", rank));
@@ -509,8 +560,10 @@ function card(it, idx, rank){
   if (it.ia) bd.appendChild(span("ia", "액션 · " + it.ia.g + " " + it.ia.k + "위/" + it.ia.of + (it.ia.d <= 5 ? " · 새로" : " · " + it.ia.d + "일째"), TIP.ia(it)));
   if (it.al) bd.appendChild(span("al", "정배열", DEF.al));
   if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1], DEF[it.x[0] === "g" ? "g" : "d"]));
-  if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 ? "rh" : "", "RS " + it.rs + rsArrow(it), TIP.rs(it)));
-  if (it.rsh) bd.appendChild(span("rh", "RS선 신고가", DEF.rsh));
+  // RS 등급·20일 변화·RS선 신고가를 딱지 하나로(RS로 정렬 중이면 등급은 노란 딱지에 있으니 신고가만)
+  if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 || it.rsh ? "rh" : "", "RS " + it.rs + rsArrow(it) + (it.rsh ? " · 신고가" : ""),
+    TIP.rs(it) + (it.rsh ? "\n\nRS선 신고가: " + DEF.rsh : "")));
+  else if (it.rsh) bd.appendChild(span("rh", "RS선 신고가", DEF.rsh));
   if (it.m.vr >= 2 && EFF !== "vr") bd.appendChild(span("vh", "거래량 " + it.m.vr.toFixed(1) + "배", TIP.vr(it)));
   if (it.stale) bd.appendChild(span("st", "갱신 실패, 이전 자료", "이번 갱신 때 이 종목의 일봉을 받지 못해 직전 회차 자료를 그대로 보여 줍니다."));
   return el;
@@ -543,7 +596,7 @@ function tableRow(it, idx, rank){
     `<span><i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></span>` +
     `<span class="s ${it.m.r1m >= 0 ? "up" : "dn"}">${it.m.r1m == null ? "–" : pct(it.m.r1m)}</span>` +
     `<span>${Math.round(it.m.pos)}%<i class="mb"><u style="left:calc(${Math.max(0, Math.min(100, it.m.pos))}% - 1px)"></u></i></span>` +
-    `<span class="s">${it.rs == null ? "–" : it.rs + rsArrow(it)}</span>`);
+    `<span class="s">${it.rs == null ? "–" : it.rs + rsArrow(it)}${spark(it)}</span>`);
   if (it.rs != null) r.lastElementChild.title = TIP.rs(it);
   r.onclick = () => {
     const nx = r.nextElementSibling;
@@ -552,6 +605,72 @@ function tableRow(it, idx, rank){
     const cv = el.querySelector("canvas"); draw(cv, it); cv.dataset.w = cv.clientWidth; prog();
   };
   return r;
+}
+
+// 표의 RS 칸 아래 작은 선: 최근 63거래일 RS선(오르면 시장보다 강해지는 중)
+function spark(it){
+  const v = (it.rl || []).slice(-63).filter(x => x != null);
+  if (v.length < 10) return "";
+  const lo = Math.min(...v), hi = Math.max(...v), r = hi - lo || 1;
+  const pts = v.map((x, i) => (i / (v.length - 1) * 34).toFixed(1) + "," + (10 - (x - lo) / r * 10).toFixed(1)).join(" ");
+  return `<svg viewBox="0 0 34 11"><polyline points="${pts}" fill="none" stroke="${it.rs >= 80 ? RSC : "#8a93a3"}" stroke-width="1.3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+
+// ── 하부섹터 묶음: 요약 줄을 누르면 접고 편다(처음엔 펼침, 접은 묶음은 브라우저에 기억) ──
+let SHUT = new Set();
+try { SHUT = new Set(JSON.parse(store.get("wl.shut") || "[]")); } catch(e){}
+function grpStat(mem){
+  const r = mem.map(x => x.m.r1m).filter(v => v != null);
+  return {n: mem.length, al: mem.filter(x => x.al).length, r1m: r.length ? r.reduce((a, c) => a + c, 0) / r.length : null};
+}
+function subHead(sec, g, mem){
+  const st = grpStat(mem), sh = document.createElement("div"); sh.className = "sub";
+  sh.dataset.sec = sec; sh.dataset.g = g; sh.dataset.k = CUR + "|" + sec + "|" + g;
+  sh.appendChild(document.createTextNode(g));
+  const k = document.createElement("small"); k.textContent = st.n; sh.appendChild(k);
+  const t = document.createElement("span"); t.className = "st";
+  t.innerHTML = `정배열 ${st.al}` + (st.r1m == null ? "" : ` · 1개월 <b class="${st.r1m >= 0 ? "up" : "dn"}">${pct(st.r1m)}</b>`);
+  sh.appendChild(t);
+  sh.title = "누르면 이 묶음을 접거나 펼칩니다.";
+  return sh;
+}
+function setShut(sh, shut){
+  const grp = sh.nextElementSibling;
+  grp.hidden = shut; sh.classList.toggle("shut", shut);
+  shut ? SHUT.add(sh.dataset.k) : SHUT.delete(sh.dataset.k);
+  store.set("wl.shut", JSON.stringify([...SHUT]));
+  // 펼친 묶음의 차트는 화면에 들어올 때 다시 그리게 관찰을 새로 건다
+  if (!shut && io) grp.querySelectorAll("canvas").forEach(cv => { io.unobserve(cv); io.observe(cv); });
+  prog();
+}
+// 하부섹터 묶음으로 가서 펼친다(액션판·검색에서 씀). 걸러 보기·정렬 중이면 묶음이 없으니 먼저 처음 상태로.
+function goGroup(sec, g){
+  if (EFF !== "base" || ST.g === "all" || active(TAB) > 0){ reset(); save(); render(false); }
+  const sh = [...$("main").querySelectorAll(".sub")].find(x => x.dataset.sec === sec && x.dataset.g === g);
+  const si = TAB.sections.findIndex(s => s.name === sec);
+  const tgt = sh || (SECINFO[si] && SECINFO[si].h);
+  if (!tgt) return;
+  if (sh && sh.classList.contains("shut")) setShut(sh, false);
+  LOCK = true; if (si >= 0) light(si);
+  jumpTo(tgt);
+  if (sh){ sh.classList.remove("hit"); void sh.offsetWidth; sh.classList.add("hit"); }
+}
+// 탭 안 하부섹터 묶음별 정배열 수(오늘·20거래일 전)와 1개월 평균. 3종목 미만 묶음은 뺀다.
+function alAt(it, back){
+  const j = it.c.length - 1 - back, e = it.e;
+  return j >= 0 && it.c[j] > e["20"][j] && e["20"][j] > e["50"][j] && e["50"][j] > e["200"][j];
+}
+function groupStats(data){
+  const out = [];
+  data.sections.forEach(s => {
+    const by = {};
+    s.items.forEach(it => { const g = (it.t || [])[0]; if (g) (by[g] = by[g] || []).push(it); });
+    Object.entries(by).forEach(([g, mem]) => {
+      if (mem.length < 3) return;
+      out.push({sec: s.name, g, ...grpStat(mem), al20: mem.filter(it => alAt(it, 20)).length});
+    });
+  });
+  return out;
 }
 
 // ── 상단 메뉴 위치 계산 ──
@@ -599,7 +718,7 @@ function prog(){
   bar.style.display = "block"; bar.style.top = trackTop + "px"; bar.style.height = trackH + "px";
   const th = bar.firstChild, lb = bar.lastChild;
   th.style.top = y + "px"; th.style.height = thumbH + "px";
-  const cards = SCARDS[cur]; let k = 1;
+  const cards = SCARDS[cur].filter(c => c.offsetParent); let k = 1;
   for (let i = 0; i < cards.length; i++){ if (cards[i].getBoundingClientRect().top <= hh + viewH * 0.45) k = i + 1; else break; }
   lb.textContent = k + "/" + cards.length; lb.style.top = (y + thumbH / 2) + "px";
 }
@@ -683,22 +802,33 @@ function render(restore){
     let box = main;
     if (ST.v === "list"){ box = document.createElement("div"); box.className = "tbl"; box.appendChild(tableHead()); main.appendChild(box); }
     // 기본 순서로 섹터별로 볼 때는 같은 하부섹터(첫 딱지)끼리 모여 있으므로 묶음마다 작은 소제목을 단다
+    // 묶음 요약 줄(종목 수·정배열 수·1개월 평균)을 누르면 그 묶음을 접고 편다
     const subs = !sk.key && ST.g !== "all", cnt = {};
-    if (subs) list.forEach(it => { const g = (it.t || [])[0]; if (g) cnt[g] = (cnt[g] || 0) + 1; });
-    let lastSub = null;
+    if (subs) list.forEach(it => { const g = (it.t || [])[0]; if (g) (cnt[g] = cnt[g] || []).push(it); });
+    const multi = subs && Object.keys(cnt).length > 1, heads = [];
+    let lastSub = null, grp = box;
     list.forEach((it, i) => {
       const g = (it.t || [])[0];
-      if (subs && g && g !== lastSub && Object.keys(cnt).length > 1){
-        const sh = document.createElement("div"); sh.className = "sub"; sh.textContent = g;
-        const k = document.createElement("small"); k.textContent = cnt[g]; sh.appendChild(k);
-        box.appendChild(sh);
+      if (multi && g && g !== lastSub){
+        const sh = subHead(s.name, g, cnt[g]); box.appendChild(sh);
+        grp = document.createElement("div"); grp.className = "grp"; box.appendChild(grp);
+        if (SHUT.has(sh.dataset.k)){ grp.hidden = true; sh.classList.add("shut"); }
+        sh.onclick = () => setShut(sh, !sh.classList.contains("shut"));
+        heads.push(sh);
       }
       lastSub = g;
       ITEMS.push(it);
       const rank = sk.key ? i + 1 : 0;
       const el = ST.v === "list" ? tableRow(it, ITEMS.length - 1, rank) : card(it, ITEMS.length - 1, rank);
-      box.appendChild(el); SCARDS[SCARDS.length - 1].push(el); shown++;
+      grp.appendChild(el); SCARDS[SCARDS.length - 1].push(el); shown++;
     });
+    // 섹터 제목 오른쪽: 이 섹터의 묶음을 한꺼번에 접기·펼치기
+    if (heads.length){
+      const fb = document.createElement("button"); fb.className = "fold";
+      const lab = () => { fb.textContent = heads.every(x => x.classList.contains("shut")) ? "모두 펼치기" : "모두 접기"; };
+      fb.onclick = () => { const shut = !heads.every(x => x.classList.contains("shut")); heads.forEach(x => setShut(x, shut)); lab(); };
+      lab(); h.appendChild(fb);
+    }
   });
   if (!shown){ $("prog").style.display = "none"; main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.<br>걸러 보기 조건을 줄이거나 다른 탭을 열어 보세요.</div>'; }
   main.appendChild(nextBtn());
@@ -840,6 +970,32 @@ function panel(){
       b.onclick = () => { openPanel("grid"); LOCK = true; light(si); jumpTo(s.h); };
       gr.appendChild(b);
     });
+    // 하부섹터 순위: 강한 묶음, 새로 강해지는 묶음, 약한 묶음(3종목 이상 묶음만)
+    const G = CUR === "macro" ? [] : groupStats(data);
+    if (G.length){
+      const ratio = x => x.al / x.n, up = x => (x.al - x.al20) / x.n, r1 = (x, d) => x.r1m == null ? d : x.r1m;
+      const strong = [...G].sort((a, b) => ratio(b) - ratio(a) || r1(b, -1e9) - r1(a, -1e9)).slice(0, 8);
+      const rising = G.filter(x => x.al > x.al20).sort((a, b) => up(b) - up(a) || r1(b, -1e9) - r1(a, -1e9)).slice(0, 5);
+      const weak = [...G].filter(x => !strong.includes(x)).sort((a, b) => ratio(a) - ratio(b) || r1(a, 1e9) - r1(b, 1e9)).slice(0, 3);
+      const list = (title, note, rows, cls) => {
+        const hh = document.createElement("h3"); hh.textContent = title;
+        const sm = document.createElement("small"); sm.textContent = note; hh.appendChild(sm); pn.appendChild(hh);
+        const box = document.createElement("div"); box.className = "gl" + (cls ? " " + cls : ""); pn.appendChild(box);
+        rows.forEach((x, i) => {
+          const b = document.createElement("button"), d = x.al - x.al20;
+          b.innerHTML = `<i>${i + 1}</i><b></b><span>정배열 ${x.al}/${x.n}` +
+            (x.r1m == null ? "" : ` · 1개월 <em class="${x.r1m >= 0 ? "up" : "dn"}" style="font-style:normal;font-weight:700">${pct(x.r1m)}</em>`) +
+            ` · 20일 전보다 ${d > 0 ? "+" + d : d === 0 ? "같음" : d}</span>`;
+          const nb = b.querySelector("b"); nb.textContent = x.g;
+          const ns = document.createElement("small"); ns.textContent = x.sec; nb.appendChild(ns);
+          b.onclick = () => { openPanel("grid"); goGroup(x.sec, x.g); };
+          box.appendChild(b);
+        });
+      };
+      list("🔥 강한 묶음", "정배열 비율이 높은 하부섹터 · 누르면 그 묶음으로 갑니다", strong);
+      if (rising.length) list("⬆ 새로 강해지는 묶음", "20거래일 전보다 정배열 종목이 가장 많이 는 곳", rising);
+      if (weak.length) list("약한 묶음", "정배열 비율이 가장 낮은 곳", weak, "weak");
+    }
   }
 }
 $("fbtn").onclick = () => openPanel("flt");
@@ -877,9 +1033,17 @@ function sdraw(){
   const q = $("sq").value, box = $("sres"); box.innerHTML = "";
   SHIT = sfind(q); SSEL = 0;
   if (!q.trim()){ box.innerHTML = '<p>티커(NVDA, 000660), 영문(nvidia), 한글(엔비디아, 하닉), 초성(ㅅㅅㅈㅈ), 딱지(HBM)로 찾을 수 있어요.</p>'; return; }
+  SHIT = sgroups(q).concat(SHIT);
   if (!SHIT.length){ box.innerHTML = '<p>찾는 종목이 차트북에 없어요.</p>'; return; }
   SHIT.forEach((e, i) => {
     const b = document.createElement("button"); b.classList.toggle("on", i === 0);
+    if (e.grp){
+      b.className = "grp" + (i === 0 ? " on" : "");
+      const nm = document.createElement("b"); nm.textContent = "묶음 · " + e.g;
+      const sm = document.createElement("small"); sm.textContent = e.n + "종목"; nm.appendChild(sm);
+      const ln = document.createElement("span"); ln.textContent = (SHORT[e.tab] || e.tab) + " › " + e.sec;
+      b.append(nm, ln); b.onclick = () => sgo(e); box.appendChild(b); return;
+    }
     const nm = document.createElement("b"); nm.textContent = e.kn && e.kn !== e.n ? e.kn : e.n;
     const sm = document.createElement("small"); sm.textContent = (e.kn && e.kn !== e.n ? e.n + " · " : "") + e.y; nm.appendChild(sm);
     const ln = document.createElement("span"); ln.textContent = (SHORT[e.tab] || e.tab) + " › " + e.sec + (e.t ? " · " : "");
@@ -887,17 +1051,33 @@ function sdraw(){
     b.append(nm, ln); b.onclick = () => sgo(e); box.appendChild(b);
   });
 }
+// 하부섹터(첫 딱지) 이름이 맞는 묶음. 두 글자 이상일 때만, 3개까지
+function sgroups(q){
+  const nq = norm(q); if (nq.length < 2) return [];
+  const by = {};
+  sindex().forEach(e => {
+    const g = (e.t || "").split(" · ")[0]; if (!g) return;
+    const ng = norm(g); if (!ng.includes(nq)) return;
+    const k = e.tab + "|" + e.sec + "|" + g;
+    (by[k] = by[k] || {grp: true, tab: e.tab, sec: e.sec, g, n: 0, sc: ng.startsWith(nq) ? 0 : 1}).n++;
+  });
+  return Object.values(by).filter(x => x.n >= 2).sort((a, b) => a.sc - b.sc || b.n - a.n).slice(0, 3);
+}
 function sopen(){ $("srch").hidden = false; $("sq").value = ""; sdraw(); setTimeout(() => $("sq").focus(), 30); }
 function sclose(){ $("srch").hidden = true; $("sq").blur(); }
 async function sgo(e){
   sclose();
   if (PANEL) openPanel(PANEL);
   if (CUR !== e.tab || !TAB) await openTab(e.tab, false);
+  if (e.grp){ goGroup(e.sec, e.g); return; }
   const pick = () => [...$("main").querySelectorAll("[data-y]")].find(x => x.dataset.y === e.y);
   let el = pick();
   // 걸러 보기·정렬 때문에 안 보이면 조건을 풀고 기본 순서로 다시 그린다
   if (!el){ reset(); save(); render(false); el = pick(); }
   if (!el) return;
+  // 접힌 묶음 안이면 펼친다
+  const gp = el.closest(".grp");
+  if (gp && gp.hidden) setShut(gp.previousElementSibling, false);
   jumpTo(el);
   el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit");
 }

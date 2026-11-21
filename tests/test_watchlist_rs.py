@@ -26,6 +26,17 @@ class RsTest(unittest.TestCase):
         self.assertFalse(b["rsh"])
         self.assertTrue(all("rs" not in m for m in macro))
 
+    def test_rs_line_stored_for_chart(self):
+        # 화면의 RS선 칸: 첫 값 100, 종가와 같은 길이, 마지막 값은 종목 ÷ 지수의 1년 변화, 비교 지수 이름
+        a, c = item("AAA", 0.5), item("005930.KS", -0.1)
+        tabs, macro = self.tabs([a, c], us=0.2, kr=-0.4)
+        wf.add_rs(tabs)
+        self.assertEqual(len(a["rl"]), len(a["c"]))
+        self.assertEqual(a["rl"][0], 100.0)
+        self.assertAlmostEqual(a["rl"][-1], 100 * 1.5 / 1.2, delta=0.1)
+        self.assertEqual((a["rb"], c["rb"]), ("S&P500", "코스피"))
+        self.assertTrue(all("rl" not in m for m in macro))
+
     def test_change_over_20_days(self):
         # 앞쪽엔 빠지다가 최근 20일 급등한 종목은 등급이 맨 아래에서 맨 위로 오른다
         up = {"y": "UP", "c": [100 - i * 0.13 for i in range(231)] + [70 * 1.03 ** i for i in range(1, 21)]}
@@ -42,9 +53,9 @@ class RsTest(unittest.TestCase):
         self.assertTrue(all("rs" not in x for x in (eu, short, fx)))
 
     def test_stale_rs_removed(self):
-        it = {"y": "^VIX", "c": [1.0] * 100, "rs": 50, "rsd": 3, "rsh": True}
+        it = {"y": "^VIX", "c": [1.0] * 100, "rs": 50, "rsd": 3, "rsh": True, "rl": [100.0], "rb": "S&P500"}
         wf.add_rs([("macro", [{"items": [it]}])])
-        self.assertFalse({"rs", "rsd", "rsh"} & set(it))
+        self.assertFalse({"rs", "rsd", "rsh", "rl", "rb"} & set(it))
 
 
 if __name__ == "__main__":

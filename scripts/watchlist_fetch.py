@@ -146,6 +146,9 @@ def is_stock(tab_id, sym):
 BENCH = {"KS": "^KS11", "KQ": "^KQ11", "T": "^N225", "TW": "^TWII", "TWO": "^TWII", "HK": "^HSI",
          "SS": "000001.SS", "SZ": "000001.SS"}
 RS_BACK = 20  # RS 변화를 보는 거래일
+# 화면의 RS선 칸 제목에 쓰는 비교 지수 이름
+BENCH_NAME = {"^GSPC": "S&P500", "^KS11": "코스피", "^KQ11": "코스닥", "^N225": "닛케이225", "^TWII": "대만 가권",
+              "^HSI": "항셍", "000001.SS": "상하이종합"}
 
 
 def bench_of(sym):
@@ -185,14 +188,15 @@ def _grade(pairs):
 
 def add_rs(tabs_out):
     """종목마다 rs(1~99, 시장 지수 대비 강도), rsd(20거래일 전 등급과의 차이), rsh(RS선이 1년 신고가면 True)를 붙인다.
-    대상이 아닌 항목은 세 칸을 지운다."""
+    화면의 RS선 칸을 위해 rl(RS선, 저장된 첫 값 = 100, 종가와 같은 길이)과 rb(비교 지수 이름)도 붙인다(2026-11-21).
+    대상이 아닌 항목은 이 칸들을 지운다."""
     bench = {it["y"]: it for tab_id, sections in tabs_out for s in sections for it in s["items"]
              if it["y"] in BENCH.values() or it["y"] == "^GSPC"}
     lines = []
     for tab_id, sections in tabs_out:
         for s in sections:
             for it in s["items"]:
-                for k in ("rs", "rsd", "rsh"):
+                for k in ("rs", "rsd", "rsh", "rl", "rb"):
                     it.pop(k, None)
                 if is_stock(tab_id, it["y"]):
                     ln = rs_line(it, bench.get(bench_of(it["y"])))
@@ -207,7 +211,16 @@ def add_rs(tabs_out):
         if id(it) in old:
             it["rsd"] = it["rs"] - old[id(it)]
         it["rsh"] = ln[-1] >= max(x for x in ln if x)
+        it["rl"] = rs_store(ln, len(it["c"]))
+        it["rb"] = BENCH_NAME.get(bench_of(it["y"]), "")
     return len(now)
+
+
+def rs_store(ln, n):
+    """RS선을 화면용으로 줄인다: 첫 값을 100으로 맞춰 소수 한 자리, 종가 수(n)에 맞춰 앞을 빈칸(None)으로 채운다."""
+    base = next(x for x in ln if x)
+    out = [round(x / base * 100, 1) if x else None for x in ln]
+    return [None] * (n - len(out)) + out[-n:]
 
 
 # ── 인더스트리 액션: 종목이 속한 업종이 시장 흐름판(docs/data/<시장>.json)에서 상위권인지 본다 ──
