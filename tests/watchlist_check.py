@@ -57,6 +57,9 @@ def item(y, n, k, drift, seed, rs=None, al=False, vol=True, t=None, ia=None):
         it["rs"] = rs
         it["rsd"] = 12 if y == "NVDA" else 0
         it["rsh"] = y == "NVDA"
+        # 화면의 RS선 칸: 첫 값 100에서 출발해 오르내리는 선
+        it["rl"] = [round(100 * (1 + drift * 0.5) ** i * (1 + 0.02 * math.sin(i / 9 + seed)), 1) for i in range(len(c))]
+        it["rb"] = "S&P500" if k == "미국" else "코스피"
     if t:
         it["t"] = t
     if ia:
@@ -70,7 +73,7 @@ def make_data(folder):
             item("TSM", "Taiwan Semiconductor", "대만", 0.004, 1, rs=95, al=True, t=["파운드리", "CoWoS"]),
             item("NVDA", "NVIDIA", "미국", 0.003, 2, rs=90, al=True, t=["프로세서", "GPU"], ia={"m": "US", "g": "AI 가속기", "k": 3, "of": 70, "d": 2}),
             item("INTC", "Intel", "미국", -0.002, 3, rs=20, t=["프로세서"], ia={"m": "US", "g": "AI 가속기", "k": 3, "of": 70, "d": 2}),
-            item("000660.KS", "SK하이닉스", "한국", 0.005, 4, rs=97, al=True),
+            item("000660.KS", "SK하이닉스", "한국", 0.005, 4, rs=97, al=True, t=["프로세서"]),
             item("2330.TW", "Taiwan Semiconductor", "대만", 0.004, 5, rs=94, al=True)]},
         {"name": "메모리", "items": [
             item("MU", "Micron", "미국", 0.001, 6, rs=60),
@@ -168,10 +171,41 @@ def main():
                 subs = pg.evaluate("[...document.querySelectorAll('main > .sub')].map(e => e.firstChild.textContent)")
                 if subs != ["파운드리", "프로세서"]:
                     problems.append(f"{label} 묶음 소제목 {subs} (기대 ['파운드리', '프로세서'])")
-                # RS: 등급 옆 20일 변화(5 이상일 때만)와 RS선 신고가 딱지
+                # 묶음 요약 줄: 정배열 수가 보이고, 누르면 그 묶음 카드가 숨고 다시 누르면 나온다
+                # (프로세서 묶음 = NVDA·INTC·SK하이닉스 + 딱지 없는 2330.TW 가 앞 묶음에 붙어 4장)
+                vis = "[...document.querySelectorAll('.card')].filter(c => c.offsetParent).length"
+                n0 = pg.evaluate(vis)
+                if "정배열" not in pg.inner_text("main > .sub >> nth=1"):
+                    problems.append(f"{label} 묶음 요약 줄에 정배열 수 없음")
+                pg.click("main > .sub >> nth=1")
+                if pg.evaluate(vis) != n0 - 4:
+                    problems.append(f"{label} 묶음 접기: 카드 {n0}→{pg.evaluate(vis)} (기대 {n0 - 4})")
+                pg.click("main > .sub >> nth=1")
+                if pg.evaluate(vis) != n0:
+                    problems.append(f"{label} 묶음 펼치기가 안 됨")
+                # 섹터 제목의 '모두 접기' 단추
+                pg.click("main > h2 .fold >> nth=0")
+                if pg.evaluate(vis) != n0 - 5 or pg.inner_text("main > h2 .fold >> nth=0") != "모두 펼치기":
+                    problems.append(f"{label} 묶음 모두 접기: 카드 {pg.evaluate(vis)} (기대 {n0 - 5})")
+                pg.click("main > h2 .fold >> nth=0")
+                # 전체 판: 하부섹터 순위가 나오고, 누르면 그 묶음으로 간다
+                pg.click("#gbtn")
+                gl = pg.locator("#panel .gl button")
+                if not gl.count() or "프로세서" not in gl.first.inner_text():
+                    problems.append(f"{label} 하부섹터 순위 없음")
+                else:
+                    gl.first.click()
+                    pg.wait_for_timeout(300)
+                    if not pg.locator("main > .sub.hit").count():
+                        problems.append(f"{label} 하부섹터 순위를 눌러도 묶음으로 안 감")
+                pg.evaluate("window.scrollTo(0, 0)")
+                pg.wait_for_timeout(300)
+                # RS: 등급·20일 변화·RS선 신고가를 딱지 하나로, 차트 아래 RS선 칸(캔버스가 그만큼 높다)
                 nv = pg.locator(".card", has_text="NVIDIA").first.inner_text()
-                if "RS 90 ▲12" not in nv or "RS선 신고가" not in nv:
-                    problems.append(f"{label} RS 변화·RS선 신고가 딱지 없음")
+                if "RS 90 ▲12 · 신고가" not in nv:
+                    problems.append(f"{label} RS 딱지 '{[x for x in nv.split(chr(10)) if 'RS' in x]}'")
+                if "rl" not in (pg.locator(".card[data-y=NVDA] canvas").get_attribute("class") or ""):
+                    problems.append(f"{label} RS선 칸 캔버스 없음")
                 # 딱지에 마우스를 올리면 풀이가 나온다(title)
                 tips = pg.evaluate("""() => { const c = [...document.querySelectorAll('.card')].find(e => e.textContent.includes('NVIDIA'));
                   return [...c.querySelectorAll('.bd span')].map(s => [s.textContent, s.title]); }""")
@@ -238,6 +272,8 @@ def main():
                 # 표 보기와 차트 펼치기
                 pg.click("#vbtn")
                 r = look("표 보기")
+                if not pg.locator(".tr.it .s svg").count():
+                    problems.append(f"{label} 표 보기: RS 작은 선 없음")
                 if r["rows"] != 7:
                     problems.append(f"{label} 표 보기: 줄 {r['rows']}개 (기대 7)")
                 # 이미 1개월 순이므로 칸 제목을 한 번 더 누르면 낮은 순으로 뒤집힌다
@@ -272,6 +308,11 @@ def main():
                     if want not in first:
                         problems.append(f"{label} 검색 '{q}': 첫 결과 '{first[:40]}' (기대 {want})")
                     pg.click("#sx")
+                # 하부섹터 이름으로 찾으면 묶음이 맨 위에 나온다
+                pg.click("#qbtn"); pg.fill("#sq", "프로세")
+                if "묶음 · 프로세서" not in pg.inner_text("#sres button >> nth=0"):
+                    problems.append(f"{label} 묶음 검색 결과 없음")
+                pg.click("#sx")
                 pg.click("#qbtn"); pg.fill("#sq", "엔비디아"); pg.press("#sq", "Enter")
                 pg.wait_for_selector("#tabs button[data-id=ai].on")
                 pg.wait_for_selector(".hit[data-y=NVDA]")
