@@ -183,7 +183,7 @@
       <div class="cp-ctl"><div class="chart-legend">${CO.map(([, n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join("")}<span><i style="background:var(--ink);height:3px"></i>4분기 이동평균(합계)</span></div>
         <div class="cp-tabs">${[["3y", "3년"], ["5y", "5년"], ["all", "전체"]].map(([k, t]) => `<button class="toggle" aria-pressed="${st.crange === k}" data-cr="${k}">${t}</button>`).join("")}</div></div>
       <div id="inCap"></div>
-      <p class="cp-sub">${ann ? `최근 4개 분기를 더하면 <b>${dol(ann)}</b>예요. ` : ""}데이터센터, 서버, GPU를 사는 데 쓴 돈이라 AI 칩 수요를 가장 직접 보여 줘요.</p>
+      <p class="cp-sub">${ann ? `최근 4개 분기를 더하면 <b>${dol(ann)}</b>예요. ` : ""}데이터센터, 서버, GPU를 사는 데 쓴 돈이라 AI 칩 수요가 가장 직접 드러나요.</p>
       <details class="ai-more" data-more="infra"${st.more ? " open" : ""}><summary>자세히 보기 · 숫자 요약, 토큰 총량, 회사별 표, 지출 추정, GPU 임대료</summary><div class="ai-more-b">
       <div class="tiles ai-tiles">
         ${last ? tile("지난주 토큰 (OpenRouter)", tok(last.total), `${ymd(last.week)} 주${mult ? ` · ${weeksSpan}주 전의 <b class="up">${mult.toFixed(1)}배</b>` : ""}`) : ""}
@@ -197,7 +197,7 @@
         <div class="cp-tabs"><button class="toggle" aria-pressed="${st.tlog}" data-tlog="1">로그 눈금</button></div></div>
       <div id="inTok"></div>
       <p class="cp-sub">${prev4 && last ? `4주 전(${ymd(prev4.week)} 주 ${tok(prev4.total)})보다 <b class="${last.total >= prev4.total ? "up" : "down"}">${sgn((last.total / prev4.total - 1) * 100)}%</b>예요. ` : ""}로그 눈금을 켜면 같은 배수로 늘어난 구간이 같은 높이로 보여서, 증가 속도가 빨라지는지 느려지는지 읽기 쉬워요.</p>
-      <p class="foot-note">OpenRouter는 여러 AI 모델을 한 창구에서 파는 중개 서비스라, 여기 숫자는 시장 전체가 아니라 그중 한 조각이에요. 오픈AI·구글·앤트로픽이 자기 API로 직접 판 양은 빠져 있고, 값싼 중국 모델 비중이 높아요. 그래도 같은 기준으로 매주 재기 때문에 수요가 늘어나는 속도를 보기에는 좋은 지표예요. 1조는 10<sup>12</sup>, 1경은 10<sup>16</sup>이에요.</p>
+      <p class="foot-note">OpenRouter는 여러 AI 모델을 한 창구에서 파는 중개 서비스라, 여기 숫자는 시장 전체가 아니라 그중 일부예요. 오픈AI·구글·앤트로픽이 자기 API로 직접 판 양은 빠져 있고, 값싼 중국 모델 비중이 높아요. 그래도 같은 기준으로 매주 재기 때문에 수요가 늘어나는 속도를 보기에는 좋은 지표예요. 1조는 10<sup>12</sup>, 1경은 10<sup>16</sup>이에요.</p>
 
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>회사</th><th>최근 분기</th><th class="num">설비투자</th><th class="num">1년 전 대비</th><th class="num">최근 4분기 합</th><th>공시일</th></tr></thead><tbody>${cTbl}</tbody></table></div>
       <p class="foot-note">SEC에 낸 분기·연간 보고서의 현금흐름표 '유형자산 취득' 금액이에요(아마존은 '생산 자산 취득'). 분기 보고서는 연초부터 쌓인 값이라 앞 분기를 빼서 분기 값을 구했어요. 마이크로소프트와 오라클은 회계연도가 달라서 분기 끝 날짜에 가장 가까운 달력 분기로 맞췄어요. 리스로 빌린 데이터센터는 이 금액에 들어가지 않아서 실제 투자 규모는 더 커요.</p>
@@ -206,7 +206,7 @@
       ${sl.usd ? `<div class="ai-run"><span>${sl.week ? `${ymd(sl.week)} 주` : "최근 7일"} 추정 지출</span><b>${dol(sl.usd)}</b><em>유료 토큰 100만 개당 평균 $${sl.usd_per_m}${sl.approx ? " · 월요일 확정 전 근사값" : ""}</em></div>` : ""}
       ${sw.length > 1 ? `<div id="inSpend"></div>` : `<p class="cp-sub">지출 추정은 2026년 11월 첫 주부터 쌓기 시작했어요. 매주 월요일 09:40에 지난주 값이 한 칸씩 늘어나고, 4주가 모이면 이동평균선도 그려요.</p>`}
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th class="num">#</th><th>모델</th><th class="num">추정 지출</th><th class="num">비중</th><th class="num">토큰</th><th class="num">100만 토큰당</th></tr></thead><tbody>${sTop}</tbody></table></div>
-      <p class="foot-note">OpenRouter는 금액 합계를 공개하지 않아요. 그래서 모델마다 그 주 입력·출력·캐시 토큰에 OpenRouter 정가를 곱해 더했어요. 무료판은 0원으로 쳤고, 대량 할인이나 개인 키(BYOK) 정산 차이는 반영하지 못해서 실제 금액과는 차이가 있어요. 토큰은 값싼 모델이 많이 쓰지만, 돈은 비싼 상위 모델에 몰린다는 점을 같이 보면 좋아요.</p>
+      <p class="foot-note">OpenRouter는 금액 합계를 공개하지 않아요. 그래서 모델마다 그 주 입력·출력·캐시 토큰에 OpenRouter 정가를 곱해 더했어요. 무료판은 0원으로 쳤고, 대량 할인이나 개인 키(BYOK) 정산 차이는 반영하지 못해서 실제 금액과는 차이가 있어요. 토큰은 값싼 모델에서 많이 쓰이지만, 돈은 비싼 상위 모델에 몰려요.</p>
 
       <h3 class="ai-h3">GPU 시간당 임대료 <span class="sub">GPU 1장을 1시간 빌리는 값(달러)</span></h3>
       <div class="cp-lgs">${gBtns}</div>

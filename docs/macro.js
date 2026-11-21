@@ -228,7 +228,7 @@
     const head = { same: ["✅ 두 지표가 같은 방향이에요", "var(--mx5)"], fngMore: ["⚠️ 엇갈려요: 공포탐욕지수가 더 겁먹었어요", "var(--mx2)"], vixMore: ["⚠️ 엇갈려요: VIX가 더 겁먹었어요", "var(--mx2)"] }[kind];
     let body = "";
     if (kind === "same") {
-      body = a >= 3 ? "둘 다 겁먹은 쪽이라 공포 신호가 겹쳐요. 두 지표가 함께 가리킬 때가 신호가 가장 강해요."
+      body = a >= 3 ? "둘 다 겁먹은 쪽이라 공포 신호가 겹쳐요. 두 지표가 같은 쪽을 가리킬 때 신호가 가장 강해요."
         : a <= 1 ? "둘 다 평온한 쪽이라 시장 분위기가 안정적이에요."
         : "둘 다 중간쯤이라 한쪽으로 뚜렷한 신호는 없어요.";
     } else if (kind === "fngMore") {
@@ -255,10 +255,10 @@
       <details class="mx-duo-more"><summary>왜 두 지표는 자주 어긋날까요? (5가지 이유)</summary>
         <ol>
           <li><b>VIX는 공포탐욕지수의 재료 7개 중 하나예요.</b> 비중이 약 14%라서 VIX가 크게 움직여도 나머지 6개가 조용하면 공포탐욕지수는 별로 안 움직여요.</li>
-          <li><b>재는 방식이 달라요.</b> VIX는 그 숫자 자체(절대 수준)이고, 공포탐욕지수는 VIX를 최근 50일 평균과 비교해요. 같은 VIX 20이라도 14에서 올라온 20은 ‘공포’, 30에서 내려온 20은 ‘안심’으로 계산돼요.</li>
+          <li><b>재는 방식이 달라요.</b> VIX는 숫자 자체(절대 수준)를 보고, 공포탐욕지수는 VIX를 최근 50일 평균과 비교해요. 같은 VIX 20이라도 14에서 올라온 20은 ‘공포’, 30에서 내려온 20은 ‘안심’으로 계산돼요.</li>
           <li><b>반응 속도가 달라요.</b> VIX는 옵션 가격에서 바로 나와 분 단위로 반응해요. 공포탐욕지수에는 125일 평균, 52주 신고가처럼 느린 재료가 섞여 있어서 급락 뒤 반등할 때는 VIX가 먼저 내려오고 공포탐욕지수는 한동안 ‘공포’에 머물러요. 급락 초기에는 반대로 VIX가 먼저 튀어요.</li>
           <li><b>지수는 오르는데 속이 약한 장에서 크게 갈려요.</b> 몇몇 대형주가 S&amp;P500을 끌어올리면 지수가 안정적이라 VIX는 낮아요. 하지만 신고가 강도와 시장 폭 재료는 ‘대부분 종목이 약하다’고 보고 공포탐욕지수를 끌어내려요.</li>
-          <li><b>VIX에는 ‘일정 보험료’가 붙어요.</b> VIX는 앞으로 30일 동안의 출렁임 예상이라서, 분위기가 좋아도 실적 시즌이나 선거, 연준 회의를 앞두면 오를 수 있어요. 공포탐욕지수는 이런 일정 프리미엄을 거의 담지 않아요.</li>
+          <li><b>VIX에는 ‘일정 보험료’가 붙어요.</b> VIX는 앞으로 30일 동안 얼마나 출렁일지 예상한 값이라서, 분위기가 좋아도 실적 시즌이나 선거, 연준 회의를 앞두면 오를 수 있어요. 공포탐욕지수는 이런 일정 프리미엄을 거의 담지 않아요.</li>
         </ol>
         <div class="mx-duo-t"><b>공포탐욕지수의 재료 7개</b> (각각 0~100점으로 바꾼 뒤 똑같은 비중으로 평균)
           <table><tbody>
@@ -270,7 +270,7 @@
             <tr><td>안전자산 수요</td><td>최근 20일 주식 수익률과 채권 수익률 비교</td></tr>
             <tr><td>변동성</td><td>VIX를 50일 평균과 비교</td></tr>
           </tbody></table></div>
-        <p class="mx-foot">읽는 법: 두 지표가 같은 방향이면 신호가 강하고, 어긋나면 그 자체가 정보예요. VIX만 높으면 다가오는 일정에 대한 보험 수요, 공포탐욕지수만 낮으면 지수 겉모습과 달리 종목 대부분이 약한 장일 가능성이 커요.</p>
+        <p class="mx-foot">읽는 법: 두 지표가 같은 방향이면 신호가 강하고, 어긋나면 그 자체가 정보예요. VIX만 높으면 다가오는 일정에 대비한 보험 수요일 수 있고, 공포탐욕지수만 낮으면 지수 겉모습과 달리 종목 대부분이 약한 장일 가능성이 커요.</p>
       </details></article>`;
   }
 
@@ -290,7 +290,7 @@
     const JP = isJP();
     if (JP && !st.jp) { load(false); return; }
     const d = JP ? st.jp : st.data, c = d.composite, t = new Date(d.asOf);
-    $("#mxMeta").textContent = `마지막 갱신 ${t.getMonth() + 1}월 ${t.getDate()}일 ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")} · 지표 ${c.total}개 중 ${c.available}개 받음 · ${JP ? "평일 장 마감 뒤(한국 15:52)와 미국장 뒤에 새로 고쳐져요 · 재무성 국채 금리·야후·FRED" : "매일 아침 7시쯤 자동으로 새로 고쳐져요"}`;
+    $("#mxMeta").textContent = `마지막 갱신 ${t.getMonth() + 1}월 ${t.getDate()}일 ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")} · 지표 ${c.total}개 중 ${c.available}개 받음 · ${JP ? "평일 장 마감 뒤(한국 15:52)와 미국장 뒤에 갱신돼요 · 재무성 국채 금리·야후·FRED" : "매일 아침 7시쯤 자동으로 갱신돼요"}`;
     // 왼쪽 안전 → 오른쪽 위험 (지표 카드의 칸 막대와 같은 방향)
     const steps = [5, 4, 3, 2, 1].map((lv) => `<div class="mx-step ${lv === c.level ? "on" : ""}" style="--c:${col(lv)}"><div class="n">${c.counts[lv] ?? 0}</div><div class="t">${LV[lv][0]} ${LV[lv][1]}</div><div class="mx-bar" style="opacity:${(c.counts[lv] ?? 0) ? .9 : .15}"></div></div>`).join("");
     const alarms = d.indicators.filter((r) => r.level && r.level <= 2).map((r) => `<span class="mx-chip" style="--c:${col(r.level)}">${r.emoji} ${esc(short(r))}</span>`).join("");

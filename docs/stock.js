@@ -34,11 +34,11 @@
     return cache[path];
   }
   const STAGE = {
-    "상승 추세": ["s2", "이동평균선이 50일·150일·200일 순서로 가지런하고 200일선도 오르는 중. 가장 좋은 상태예요."],
+    "상승 추세": ["s2", "이동평균선이 50일·150일·200일 순서로 가지런하고 200일선도 오르고 있어요. 가장 좋은 상태예요."],
     "상승 전환 시도": ["s2t", "가격이 50일선·200일선 위로 올라왔지만 이동평균선 정렬은 아직이에요. 오르기 시작하는 초입일 수 있어요."],
-    "상승 둔화": ["", "가격이 50일선 아래로 내려왔지만 200일선은 아직 오르는 중. 힘이 빠지는 중이에요."],
-    "하락 추세": ["s4", "가격이 200일선 아래이고 200일선도 내려가는 중. 피하는 게 좋은 상태예요."],
-    "바닥 다지기": ["", "뚜렷한 방향 없이 옆으로 기는 구간이에요."],
+    "상승 둔화": ["", "가격이 50일선 아래로 내려왔지만 200일선은 아직 오르고 있어요. 힘이 빠지는 구간이에요."],
+    "하락 추세": ["s4", "가격이 200일선 아래에 있고 200일선도 내려가고 있어요. 피하는 게 좋아요."],
+    "바닥 다지기": ["", "뚜렷한 방향 없이 횡보하는 구간이에요."],
   };
   // 흐름판의 다섯 단계를 와인스타인 Stage 1~4 번호로(레이더 배지와 같은 이름). 상승 전환 시도는 1에서 2로 넘어가는 중.
   const STAGE_NO = { "상승 추세": "Stage 2", "상승 전환 시도": "Stage 1→2", "상승 둔화": "Stage 3", "하락 추세": "Stage 4", "바닥 다지기": "Stage 1" };
@@ -264,22 +264,22 @@
     if (m) {
       const sg = STAGE[m.stage] || ["", ""];
       if (m.stage) stat.push(["추세 단계", `<span class="stage ${sg[0]}">${esc(stageText(m.stage))}</span>`, sg[1]]);
-      if (m.rs_rating != null) stat.push(["RS 지수 (1~99)", `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}">${m.rs_rating}</b>`, "1년 수익률(최근 3개월에 가장 큰 무게)을 시장 안 모든 종목과 비교한 등수예요. 위 RS 상자의 시장 기준선보다 높으면 주도주 후보예요."]);
+      if (m.rs_rating != null) stat.push(["RS 지수 (1~99)", `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}">${m.rs_rating}</b>`, "1년 수익률(최근 3개월 비중이 가장 큼)을 시장 안 모든 종목과 비교한 등수예요. 위 RS 상자의 시장 기준선보다 높으면 주도주 후보예요."]);
       if (m.atr_pct != null) stat.push(["ATR(14일) 평균 변동폭", `<b>${m.atr == null ? "" : money(m.atr) + " "}(${m.atr_pct.toFixed(1)}%)</b>`, `최근 14거래일 동안 하루에 보통 ${m.atr_pct.toFixed(1)}% 움직였어요(고가−저가, 전날 종가와의 갭 포함). 손절 폭·목표가를 잡는 기준으로 써요.`]);
       // 손절 기준 두 가지: −8% 한도(미너비니 최대 손절)와 2×ATR(그 종목의 보통 흔들림 밖). 종가를 매수가로 가정.
       if (m.close != null && m.close > 0) {
-        stat.push(["기준 손절 −8%", `<b>${money(m.close * 0.92)}</b>`, "종가를 매수가로 봤을 때 −8%. 어떤 종목이든 이 아래로는 들고 가지 않는 한도예요."]);
+        stat.push(["기준 손절 −8%", `<b>${money(m.close * 0.92)}</b>`, "종가에 샀다고 봤을 때 −8% 가격이에요. 어떤 종목이든 이 아래로는 들고 가지 않아요."]);
         if (m.atr != null && m.atr_pct != null) {
           const p = m.atr_pct * 2, over = p > 8, used = Math.min(p, 8);
-          stat.push(["ATR 손절 (2×ATR)", `<b class="${over ? "no" : "ok"}">${money(m.close - m.atr * 2)} (−${p.toFixed(1)}%)</b>`, over ? "8%보다 넓어요 → 8% 한도에서 자르고, 변동성이 커서 비중을 줄이거나 더 좁은 자리에서만 사요." : "8% 안에 들어와요 → 이 폭을 손절로 쓰면 보통의 흔들림에는 안 털려요."]);
+          stat.push(["ATR 손절 (2×ATR)", `<b class="${over ? "no" : "ok"}">${money(m.close - m.atr * 2)} (−${p.toFixed(1)}%)</b>`, over ? "8%보다 넓어서 8% 한도에서 잘라요. 변동성이 크니 비중을 줄이거나 손절 폭이 더 좁은 자리에서만 사요." : "8% 안에 들어와요. 이 폭을 손절로 쓰면 평소 흔들림에는 안 털려요."]);
           stat.push(["적용 최대 손절폭", `<b class="ok">−${used.toFixed(1)}%</b> <small>${money(over ? m.close * 0.92 : m.close - m.atr * 2)}</small>`, over ? "2×ATR이 8%보다 넓어서 8% 한도로 잘랐어요." : "2×ATR이 8% 안이라 2×ATR 손절가를 그대로 써요."]);
           const capAtr = 8 / m.atr_pct, tight = capAtr < 1.5;
           stat.push(["8% = 몇 ATR", `<b class="${tight ? "sk-warn" : capAtr >= 2 ? "ok" : ""}">${capAtr.toFixed(1)} ATR</b>`, tight ? `8%가 하루 평균 흔들림의 ${capAtr.toFixed(1)}배뿐이라 평소 움직임에도 털리기 쉬워요. 매수를 미루거나 비중을 줄여요.` : capAtr >= 2 ? "8% 한도가 평소 흔들림보다 넉넉해요." : "8% 한도가 빠듯한 편이에요."]);
-          stat.push(["계좌 위험 2% 기준 비중", `<b>${Math.round(200 / used)}%</b>`, `손절 폭 ${used.toFixed(1)}%로 한 번에 계좌의 2%만 잃도록 할 때 살 수 있는 최대 비중이에요.`]);
+          stat.push(["계좌 위험 2% 기준 비중", `<b>${Math.round(200 / used)}%</b>`, `손절 폭이 ${used.toFixed(1)}%일 때 한 번에 계좌의 2%만 잃도록 살 수 있는 최대 비중이에요.`]);
         }
       }
       if (m.dist_high != null) stat.push(["52주 고점 대비", `<b>${m.dist_high.toFixed(1)}%</b>`, m.dist_high >= -5 ? "고점 근처(신고가권)예요." : m.dist_high >= -15 ? "고점에서 크게 멀지 않아요." : "고점에서 꽤 내려와 있어요."]);
-      if (m.rs_up != null) stat.push(["시장 대비", m.rs_up ? '<span class="ok">강함</span>' : '<span class="no">약함</span>', "시장 지수로 나눈 선(RS선)이 50일 평균 위인지예요."]);
+      if (m.rs_up != null) stat.push(["시장 대비", m.rs_up ? '<span class="ok">강함</span>' : '<span class="no">약함</span>', "주가를 시장 지수로 나눈 선(RS선)이 50일 평균 위에 있는지 봐요."]);
     }
     const statHtml = stat.length ? `<div class="sk-stats">${stat.map(([k, v, h]) => `<div title="${esc(h)}"><div class="k">${k}</div><div class="v">${v}</div><div class="h">${esc(h)}</div></div>`).join("")}</div>` : "";
 
@@ -399,7 +399,7 @@
       ${m ? `<section class="sk-sec" id="skStat"><h4>🛡️ 상태와 위험 관리</h4>${statHtml}</section>` : ""}
       ${hxHtml}${supHtml}${indHtml}${secHtml}${prHtml}
       ${!m ? `<p class="sk-note">이 종목은 산업 강도판의 세부 산업(바구니)에 들어 있지 않아서 수익률·추세·RS 값이 없어요.${KR ? " 수급 표도 바구니 종목만 모아요." : ""}</p>` : ""}
-      ${none ? `<p class="sk-none">이 판이 가진 정보가 많지 않아요. 아래 링크에서 더 보세요.</p>` : ""}
+      ${none ? `<p class="sk-none">이 종목은 흐름판에 모인 정보가 많지 않아요. 아래 링크에서 더 보세요.</p>` : ""}
       <section class="sk-sec" id="skLinks"><h4>🔗 바깥에서 더 보기</h4><div class="sk-links">${links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${t} ↗</a>`).join("")}</div></section>`;
     $$(".sk-ind[data-ind]", box).forEach((b) => b.addEventListener("click", () => {
       const bd = window.__isBoard && window.__isBoard();
@@ -581,7 +581,7 @@
         ["RS 지수 70 이상", m && m.rs_rating != null ? m.rs_rating >= 70 : null, m && m.rs_rating != null ? `RS ${m.rs_rating}` : ""],
       ];
       const ok = T.filter((t) => t[1] === true).length, known = T.filter((t) => t[1] != null).length;
-      ck.innerHTML = `<p class="sk-score"><b class="${ok === known && known ? "ok" : ok >= known - 2 ? "" : "no"}">${ok}/${known}</b> 통과 <span class="muted">· 8개를 모두 통과하면 ‘2단계 상승 추세’의 교과서 모양이에요</span></p>
+      ck.innerHTML = `<p class="sk-score"><b class="${ok === known && known ? "ok" : ok >= known - 2 ? "" : "no"}">${ok}/${known}</b> 통과 <span class="muted">· 8개를 모두 통과하면 교과서적인 ‘2단계 상승 추세’예요</span></p>
         <ul class="sk-checks">${T.map(([t, o, s]) => `<li class="${o == null ? "na" : o ? "ok" : "no"}"><i>${o == null ? "–" : o ? "✓" : "✕"}</i><span>${t}</span><em>${esc(s)}</em></li>`).join("")}</ul>`;
     }
 
