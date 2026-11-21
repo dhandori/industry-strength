@@ -69,7 +69,7 @@ def item(y, n, k, drift, seed, rs=None, al=False, vol=True, t=None, ia=None):
 
 def make_data(folder):
     ai = {"id": "ai", "title": "② AI 반도체·하드웨어", "sections": [
-        {"name": "반도체", "items": [
+        {"name": "반도체", "groups": {"파운드리": "칩을 대신 만들어 주는 공장들입니다.", "프로세서": "컴퓨터와 AI 서버의 두뇌를 설계하는 회사들입니다."}, "items": [
             item("TSM", "Taiwan Semiconductor", "대만", 0.004, 1, rs=95, al=True, t=["파운드리", "CoWoS"]),
             item("NVDA", "NVIDIA", "미국", 0.003, 2, rs=90, al=True, t=["프로세서", "GPU"], ia={"m": "US", "g": "AI 가속기", "k": 3, "of": 70, "d": 2}),
             item("INTC", "Intel", "미국", -0.002, 3, rs=20, t=["프로세서"], ia={"m": "US", "g": "AI 가속기", "k": 3, "of": 70, "d": 2}),
@@ -165,6 +165,17 @@ def main():
                 pg.click("#logb")
                 look("기본", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
                              "Micron", "삼성전자", "Sony"])
+                # 묶음 정의 보기: 섹터 제목 아래 접혀 있고, 펼치면 묶음마다 정의와 대표 종목, 줄을 누르면 그 묶음으로
+                pg.click("main > details.gdef summary")
+                gtxt = pg.inner_text("main > details.gdef")
+                if "AI 서버의 두뇌" not in gtxt or "대표:" not in gtxt:
+                    problems.append(f"{label} 묶음 정의 표가 안 보임")
+                pg.click("main > details.gdef .gr >> nth=1")
+                pg.wait_for_timeout(300)
+                if not pg.locator("main > .sub.hit").count():
+                    problems.append(f"{label} 묶음 정의 줄을 눌러도 묶음으로 안 감")
+                pg.evaluate("window.scrollTo(0, 0)")
+                pg.click("main > details.gdef summary")
                 # RS선 보는 법: 탭 맨 위에 접혀 있고, 누르면 펼쳐진다
                 if pg.evaluate("document.querySelector('main > details.guide').open"):
                     problems.append(f"{label} RS선 보는 법이 처음부터 펼쳐져 있음")
