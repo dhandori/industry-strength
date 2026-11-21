@@ -183,11 +183,13 @@ def main():
                 pg.click("main > .sub >> nth=1")
                 if pg.evaluate(vis) != n0:
                     problems.append(f"{label} 묶음 펼치기가 안 됨")
-                # 섹터 제목 아래 '묶음 모두 접기' 단추
-                pg.click("main > .fbar .fold >> nth=0")
-                if pg.evaluate(vis) != n0 - 5 or pg.inner_text("main > .fbar .fold >> nth=0") != "▸ 묶음 모두 펼치기":
-                    problems.append(f"{label} 묶음 모두 접기: 카드 {pg.evaluate(vis)} (기대 {n0 - 5})")
-                pg.click("main > .fbar .fold >> nth=0")
+                # 섹터 줄 '▦ 전체' 옆 '⊟ 묶음 접기': 탭의 모든 묶음을 한 번에 접고 펼친다
+                pg.click("#cbtn")
+                if pg.evaluate(vis) != n0 - 5 or pg.inner_text("#cbtn") != "⊞ 묶음 펼치기":
+                    problems.append(f"{label} 묶음 접기 단추: 카드 {pg.evaluate(vis)} (기대 {n0 - 5}), 글자 '{pg.inner_text('#cbtn')}'")
+                pg.click("#cbtn")
+                if pg.evaluate(vis) != n0 or pg.inner_text("#cbtn") != "⊟ 묶음 접기":
+                    problems.append(f"{label} 묶음 펼치기 단추가 안 됨")
                 # 전체 판: 하부섹터 순위가 나오고, 누르면 그 묶음으로 간다
                 pg.click("#gbtn")
                 gl = pg.locator("#panel .gl button")
