@@ -149,6 +149,10 @@ main > h2 .fold{float:right;border:1px solid var(--line);background:var(--card);
 .bd span{font-size:12.5px;padding:3px 8px;border-radius:7px;font-variant-numeric:tabular-nums;background:var(--soft);color:var(--ink)}
 .bd .sk{background:#fff4d6;color:#7a4f00;font-weight:700;box-shadow:inset 0 0 0 1px #e7c26a}
 .bd .al{background:var(--up);color:#fff;font-weight:600}
+.bd .tt{background:#0f5132;color:#fff;font-weight:700}
+/* 딱지를 누르면 뜨는 풀이 상자(휴대폰은 마우스를 올릴 수 없어서) */
+#tip{position:fixed;left:12px;right:12px;bottom:16px;z-index:60;max-width:520px;margin:0 auto;background:#1f2430;color:#fff;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.55;white-space:pre-line;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+#tip small{display:block;margin-top:6px;color:#aab1bf;font-size:11.5px}
 .bd .xg{background:var(--risebg);color:var(--risetx);box-shadow:inset 0 0 0 1px var(--risetx);font-weight:600}
 .bd .xd{background:var(--fallbg);color:var(--falltx);box-shadow:inset 0 0 0 1px var(--falltx);font-weight:600}
 .bd .rh{background:#e7f0ff;color:#1d4ed8;font-weight:600}
@@ -243,6 +247,7 @@ canvas.rl{height:352px}
   <div id="sres"></div>
 </div>
 <div id="prog"><i></i><b></b></div>
+<div id="tip" hidden></div>
 <button id="totop" aria-label="맨 위로" title="맨 위로"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 <main id="main"><div id="msg">불러오는 중입니다.</div></main>
 <script>
@@ -433,7 +438,40 @@ function metrics(it){
   }
   it.m = {r1w: ret(5), r1m: ret(21), r3m: ret(63), r6m: ret(126), r1y: (last / c[0] - 1) * 100, vr,
           pos: it.hi > it.lo ? (last - it.lo) / (it.hi - it.lo) * 100 : 50};
+  if (it.k) trendMetrics(it);
 }
+// ── 추세추종 지표(2026-11-21). 종목(국가가 있는 것)만. 단순이동평균은 저장된 종가로 여기서 구한다 ──
+const sma = (c, k, end) => { if (end + 1 < k) return null; let t = 0; for (let i = end - k + 1; i <= end; i++) t += c[i]; return t / k; };
+function trendMetrics(it){
+  const c = it.c, n = c.length, j = n - 1, last = c[j], m = it.m;
+  const s50 = sma(c, 50, j), s150 = sma(c, 150, j), s200 = sma(c, 200, j), s200b = sma(c, 200, j - 21);
+  // 미너비니 트렌드 템플릿 8조건(통과 여부 배열). 1년 치 자료라 200일선 한 달 전 값까지 구할 수 있을 때만
+  if (s200b != null){
+    m.ttc = [last > s150 && last > s200, s150 > s200, s200 > s200b, s50 > s150 && s50 > s200, last > s50,
+             last >= it.lo * 1.3, last >= it.hi * 0.75, it.rs != null && it.rs >= 70];
+    m.tt = m.ttc.filter(Boolean).length;
+  }
+  if (s50) m.ext = (last / s50 - 1) * 100;
+  // 변동성 수축: 최근 10거래일 고저 폭 ÷ 최근 50거래일 고저 폭(작을수록 좁게 다지는 중)
+  if (n >= 50){
+    const rng = k => Math.max(...it.h.slice(n - k)) - Math.min(...it.l.slice(n - k));
+    const r50 = rng(50); if (r50 > 0) m.vc = rng(10) / r50 * 100;
+  }
+  // 매집 비율: 최근 50거래일 오른 날 거래량 합 ÷ 내린 날 거래량 합
+  if (it.v && n > 51){
+    let u = 0, d = 0;
+    for (let i = n - 50; i < n; i++){ if (c[i] > c[i - 1]) u += it.v[i]; else if (c[i] < c[i - 1]) d += it.v[i]; }
+    if (u > 0 && d > 0) m.ud = u / d;
+  }
+  // 정배열 며칠째(오늘 정배열일 때만), 마지막 52주 신고가(종가)가 며칠 전인지
+  if (it.al){ let k = 0; while (k < n && alAt(it, k)) k++; m.ald = k; }
+  let hi = 0; for (let i = 1; i < n; i++) if (c[i] >= c[hi]) hi = i;
+  m.hid = j - hi;
+}
+const TT_NAMES = ["종가가 150일선·200일선 위", "150일선이 200일선 위", "200일선이 한 달 전보다 오름", "50일선이 150일선·200일선 위",
+                  "종가가 50일선 위", "52주 저점보다 30% 이상 위", "52주 고점에서 25% 안쪽", "RS 등급 70 이상"];
+const ttTip = it => `미너비니 트렌드 템플릿 ${it.m.tt}/8\n` + TT_NAMES.map((t, i) => (it.m.ttc[i] ? "✓ " : "✗ ") + t).join("\n") +
+  "\n\n이동평균은 단순이동평균(종가 기준), 52주 고점·저점은 종가 기준입니다.";
 const pct = v => (v > 0 ? "+" : "") + v.toFixed(1) + "%";
 // RS 등급 옆 20거래일 변화: 5 이상 움직였을 때만 ▲▼ 숫자를 붙인다
 const rsArrow = it => it.rsd >= 5 ? " ▲" + it.rsd : it.rsd <= -5 ? " ▼" + (-it.rsd) : "";
@@ -449,7 +487,15 @@ const SORTS = [
   {id:"rs", g:"강도", name:"RS 등급", lab:"RS", key:it => it.rs, val:it => String(it.rs) + rsArrow(it)},
   {id:"rsd", g:"강도", name:"RS 20일 변화", lab:"RS 변화", key:it => it.rsd, val:it => (it.rsd > 0 ? "+" : "") + it.rsd},
   {id:"vr", g:"강도", name:"거래량 배수", lab:"거래량", key:it => it.m.vr, val:it => it.m.vr.toFixed(1) + "배"},
-  {id:"pos", g:"52주 위치", name:"52주 범위 위치", lab:"52주", key:it => it.m.pos, val:it => Math.round(it.m.pos) + "%"}];
+  {id:"pos", g:"52주 위치", name:"52주 범위 위치", lab:"52주", key:it => it.m.pos, val:it => Math.round(it.m.pos) + "%", hide:true},
+  // 추세추종(2026-11-21 사용자 요청). dd = 처음 눌렀을 때 방향(작을수록 좋은 기준은 낮은 순)
+  {id:"tt", g:"추세", name:"추세 점수(미너비니)", lab:"추세", key:it => it.m.tt, val:it => it.m.tt + "/8"},
+  {id:"ph", g:"추세", name:"52주 고점 대비", lab:"고점 대비", key:it => it.ph, val:it => pct(it.ph)},
+  {id:"ext", g:"추세", name:"50일선 이격도", lab:"50일선", key:it => it.m.ext, val:it => pct(it.m.ext)},
+  {id:"vc", g:"추세", name:"변동성 수축", lab:"수축", key:it => it.m.vc, val:it => Math.round(it.m.vc) + "%", dd:"asc"},
+  {id:"ud", g:"추세", name:"매집 비율", lab:"매집", key:it => it.m.ud, val:it => it.m.ud.toFixed(2)},
+  {id:"ald", g:"추세", name:"정배열 며칠째", lab:"정배열", key:it => it.m.ald, val:it => it.m.ald + "일째"},
+  {id:"hid", g:"추세", name:"신고가 후 며칠", lab:"신고가", key:it => it.m.hid, val:it => it.m.hid ? it.m.hid + "일 전" : "오늘", dd:"asc"}];
 const SORT = Object.fromEntries(SORTS.map(x => [x.id, x]));
 const has = (x, it) => { const v = x.key(it); return v != null && isFinite(v); };
 
@@ -457,6 +503,7 @@ const has = (x, it) => { const v = x.key(it); return v != null && isFinite(v); }
 const lastOf = a => a[a.length - 1];
 const CONDS = [
   ["al","정배열",it => it.al],
+  ["tt","미너비니 템플릿",it => it.m.tt === 8],
   ["g","골든크로스",it => it.x === "gc" || it.x === "gs","d"],["d","데드크로스",it => it.x === "dc" || it.x === "ds","g"],
   ["a2","200일선 위",it => lastOf(it.c) > lastOf(it.e["200"]),"b2"],["b2","200일선 아래",it => lastOf(it.c) <= lastOf(it.e["200"]),"a2"],
   ["hi","52주 고점 5% 이내",it => it.ph >= -5],
@@ -469,6 +516,7 @@ const COND = Object.fromEntries(CONDS.map(c => [c[0], c]));
 // 걸러 보기·정렬 기준의 정의(판에서 누르면 아래 상자에 나온다). 계산은 이 페이지와 scripts/watchlist_fetch.py 와 같다
 const DEF = {
   al: "오늘 종가 > 20일 지수이동평균(EMA20) > EMA50 > EMA200. 차트의 세 선이 위에서부터 차례로 놓인 상승 추세입니다.",
+  tt: "마크 미너비니의 트렌드 템플릿 8조건을 모두 만족합니다(교과서적인 2단계 상승 추세). ① 종가가 150일선·200일선 위 ② 150일선이 200일선 위 ③ 200일선이 한 달(21거래일) 전보다 오름 ④ 50일선이 150일선·200일선 위 ⑤ 종가가 50일선 위 ⑥ 52주 저점보다 30% 이상 위 ⑦ 52주 고점에서 25% 안쪽 ⑧ RS 등급 70 이상. 이동평균은 단순이동평균(종가 기준), 52주 고점·저점은 종가 기준입니다. 카드의 '템플릿 ✓'이나 '추세 n/8' 딱지를 누르면(PC는 마우스를 올리면) 조건별 통과 여부가 나옵니다.",
   g: "EMA50이 EMA200을 최근 5거래일 안에 위로 넘었거나(발생), 아직 아래지만 두 선 간격이 EMA200의 1.5% 이내로 좁혀지는 중(임박)입니다.",
   d: "EMA50이 EMA200을 최근 5거래일 안에 아래로 넘었거나(발생), 아직 위지만 두 선 간격이 EMA200의 1.5% 이내로 좁혀지는 중(임박)입니다.",
   a2: "오늘 종가가 EMA200보다 높습니다.",
@@ -490,7 +538,13 @@ const DEF = {
   rs: "종목이 자기 상장 시장 지수보다 얼마나 강했는지를 차트북 전체 종목 안에서 1~99 등급으로 매긴 값입니다. 99가 가장 강합니다. RS선(종목 ÷ 지수)의 3개월 변화 40% + 6·9·12개월 변화 각 20%로 점수를 냅니다. 옆의 ▲▼ 숫자는 20거래일 전 등급과의 차이입니다.",
   rsd: "RS 등급이 20거래일 전보다 얼마나 올랐는지(내렸는지)입니다. 크게 오른 종목은 최근 시장보다 강해지기 시작한 종목입니다.",
   vr: "오늘 거래량 ÷ 직전 20거래일 평균 거래량. 2배면 평소의 두 배가 거래됐다는 뜻입니다.",
-  pos: "(오늘 종가 − 52주 최저 종가) ÷ (52주 최고 − 최저). 0%는 1년 최저, 100%는 1년 최고 자리입니다."};
+  pos: "(오늘 종가 − 52주 최저 종가) ÷ (52주 최고 − 최저). 0%는 1년 최저, 100%는 1년 최고 자리입니다.",
+  ph: "오늘 종가 ÷ 52주 최고 종가 − 1. 0%면 오늘이 신고가이고, 높은 순으로 보면 고점에 가까운 종목부터 나옵니다. 추세추종은 고점 근처에서 사는 쪽이 성공률이 높습니다.",
+  ext: "오늘 종가 ÷ 50일 단순이동평균 − 1. 정배열·템플릿 조건과 함께 낮은 순으로 보면 50일선까지 눌린 종목(눌림목)이, 높은 순으로 보면 너무 달아나 쫓아가기 위험한 종목이 먼저 나옵니다.",
+  vc: "최근 10거래일 고가~저가 폭 ÷ 최근 50거래일 고가~저가 폭. 작을수록 가격이 좁게 다져지는 중입니다(변동성 수축). 52주 고점 5% 이내 조건과 함께 낮은 순으로 보면 돌파 직전 후보가 위로 올라옵니다.",
+  ud: "최근 50거래일 동안 오른 날 거래량 합 ÷ 내린 날 거래량 합(IBD의 U/D 비율). 1보다 크면 사는 쪽 거래가 많았고, 1.5 이상이면 매집 흔적으로 봅니다.",
+  ald: "정배열(종가 > EMA20 > EMA50 > EMA200)이 오늘까지 몇 거래일째 이어지는지입니다. 낮은 순으로 보면 막 추세가 시작된 종목이 먼저 나옵니다. 정배열이 아닌 종목은 맨 뒤로 갑니다.",
+  hid: "마지막 52주 신고가(종가)가 며칠(거래일) 전인지입니다. 0이면 오늘 신고가입니다. 낮은 순으로 보면 신고가 행진 중인 종목이 먼저 나옵니다."};
 const KORDER = ["미국","한국","중국","일본","대만","기타"];
 const kgroup = k => !k ? "" : k === "홍콩" ? "중국" : KORDER.includes(k) ? k : "기타";
 
@@ -556,8 +610,9 @@ function card(it, idx, rank){
   if (!bz.childNodes.length) bz.remove();
   const bd = el.querySelector(".bd");
   // 정렬 중이면 그 기준 값을 맨 앞에 노랗게(오늘 등락률은 가격 옆에 이미 있으니 뺀다)
-  if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it), "지금 정렬 기준인 " + sk.name + " 값입니다.\n\n" + (DEF[sk.id] || "")));
+  if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it), (sk.id === "tt" ? ttTip(it) : "지금 정렬 기준인 " + sk.name + " 값입니다.\n\n" + (DEF[sk.id] || ""))));
   if (it.ia) bd.appendChild(span("ia", "액션 · " + it.ia.g + " " + it.ia.k + "위/" + it.ia.of + (it.ia.d <= 5 ? " · 새로" : " · " + it.ia.d + "일째"), TIP.ia(it)));
+  if (it.m.tt === 8 && EFF !== "tt") bd.appendChild(span("tt", "템플릿 ✓", ttTip(it)));
   if (it.al) bd.appendChild(span("al", "정배열", DEF.al));
   if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1], DEF[it.x[0] === "g" ? "g" : "d"]));
   // RS 등급·20일 변화·RS선 신고가를 딱지 하나로(RS로 정렬 중이면 등급은 노란 딱지에 있으니 신고가만)
@@ -907,7 +962,7 @@ function panel(){
     const wc = group("조건", "고른 것을 모두 만족");
     CONDS.forEach(([k, name, f, opp]) => {
       // RS·거래량이 없는 탭(매크로)에서는 그 단추를 숨긴다. 인더스트리 액션은 매크로만 빼고 늘 보인다(0개여도)
-      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "rsh" || k === "v2")) return;
+      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "rsh" || k === "v2" || k === "tt")) return;
       if (k === "ia" && CUR === "macro" && !ST.c.includes(k)) return;
       const on = ST.c.includes(k);
       const next = on ? ST.c.filter(x => x !== k) : ST.c.filter(x => x !== opp).concat(k);
@@ -938,11 +993,12 @@ function panel(){
     now.appendChild(nd);
     pn.appendChild(now);
     let w = null, g = null;
-    const NOTE = {"기간 수익률": "그 기간 전 종가 대비", "강도": "RS는 전체 종목 안의 1~99 등급, 거래량은 오늘 ÷ 20일 평균", "52주 위치": "52주 최저 0% ~ 최고 100% 사이 어디쯤인가"};
+    const NOTE = {"기간 수익률": "그 기간 전 종가 대비", "강도": "RS는 전체 종목 안의 1~99 등급, 거래량은 오늘 ÷ 20일 평균", "추세": "추세추종용 · 누르면 아래에 계산법이 나옵니다"};
     SORTS.forEach(x => {
       if (((x.id === "rs" || x.id === "rsd") && noRs) || (x.id === "vr" && noVol)) return;
+      if ((x.hide && EFF !== x.id) || (x.key && x.g === "추세" && !all.some(it => has(x, it)))) return;
       if (x.g !== g){ g = x.g; w = group(g || "기준", NOTE[g] || ""); }
-      btn(w, x.name, EFF === x.id, () => { if (ST.s !== x.id) ST.d = "desc"; ST.s = x.id; apply(); });
+      btn(w, x.name, EFF === x.id, () => { if (ST.s !== x.id) ST.d = x.dd || "desc"; ST.s = x.id; apply(); });
     });
     const wd = group("방향");
     btn(wd, "높은 순 ↓", ST.d !== "asc", () => { ST.d = "desc"; apply(); }).disabled = EFF === "base";
@@ -1093,6 +1149,16 @@ $("sq").addEventListener("keydown", ev => {
   }
 });
 document.addEventListener("keydown", ev => { if (ev.key === "/" && $("srch").hidden && document.activeElement.tagName !== "INPUT"){ ev.preventDefault(); sopen(); } });
+// 딱지(.bd span)·표의 RS 칸을 누르면 그 풀이(title)를 아래 상자에 띄운다. 다시 누르거나 아무 데나 누르면 닫힌다.
+document.addEventListener("click", ev => {
+  const tg = ev.target.closest && ev.target.closest(".bd span[title], .tr .s[title]"), tip = $("tip");
+  if (!tg){ tip.hidden = true; return; }
+  ev.stopPropagation();
+  if (!tip.hidden && tip.dataset.for === tg.title){ tip.hidden = true; return; }
+  tip.textContent = tg.title; tip.dataset.for = tg.title;
+  const sm = document.createElement("small"); sm.textContent = "아무 데나 누르면 닫힙니다"; tip.appendChild(sm);
+  tip.hidden = false;
+}, true);
 $("totop").onclick = () => { JUMP = Date.now() + 600; setHidden(false); window.scrollTo(0, 0); };
 
 // ── 스크롤: 아래로 내리면 메뉴 윗부분을 접고, 위로 올리면 편다 ──
