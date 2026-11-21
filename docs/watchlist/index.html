@@ -64,6 +64,14 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 #secs button.on small{color:#fff}
 #secs button:disabled{opacity:.35}
 #secs #gbtn{background:var(--text);border-color:var(--text);color:#fff;font-weight:600;padding:7px 11px}
+/* '▦ 전체' 옆: 이 탭의 하부섹터 묶음을 한 번에 접기·펼치기(모두 접혀 있으면 진한 보라) */
+#secs #cbtn{background:var(--pul);border-color:var(--pu);color:var(--pud);font-weight:700}
+#secs #cbtn.shut{background:var(--pud);border-color:var(--pud);color:#fff}
+/* 섹터 제목 줄 오른쪽 동그란 단추: 그 섹터 묶음 접기(▴)·펼치기(▾). 오른쪽 진행 표시와 안 겹치게 안쪽에 */
+main > h2{position:relative;padding-right:92px}
+main > h2 .sfold{position:absolute;right:44px;top:-4px;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--pu);background:var(--card);color:var(--pud);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+main > h2 .sfold svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+main > h2 .sfold.shut{background:var(--pud);border-color:var(--pud);color:#fff}
 /* 펼침 판(걸러 보기·정렬·섹터 전체) */
 #panel{border-top:1px solid var(--soft);padding:2px 14px 12px;max-height:64vh;overflow-y:auto;max-width:1100px;margin:0 auto}
 #panel[hidden]{display:none}
@@ -136,7 +144,7 @@ main > h2 small{font-size:12.5px;font-weight:500}
 .sub::after{content:"▾";font-size:11px;color:var(--pu)}
 .sub.shut::after{content:"▸"}
 .sub.hit{animation:hit 2.2s ease}
-main > h2 .fold{float:right;border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:8px;font-size:12px;font-weight:600;padding:3px 9px;margin-top:4px}
+
 .tr .s svg{display:block;width:40px;height:11px;margin:3px 0 0 auto;overflow:visible}
 .tr>span.s:last-child{white-space:nowrap;font-size:12.5px}
 .px{font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -694,6 +702,8 @@ function setShut(sh, shut){
   grp.hidden = shut; sh.classList.toggle("shut", shut);
   shut ? SHUT.add(sh.dataset.k) : SHUT.delete(sh.dataset.k);
   store.set("wl.shut", JSON.stringify([...SHUT]));
+  if (sh.lab) sh.lab();
+  foldLab();
   // 펼친 묶음의 차트는 화면에 들어올 때 다시 그리게 관찰을 새로 건다
   if (!shut && io) grp.querySelectorAll("canvas").forEach(cv => { io.unobserve(cv); io.observe(cv); });
   prog();
@@ -775,7 +785,7 @@ function prog(){
   th.style.top = y + "px"; th.style.height = thumbH + "px";
   const cards = SCARDS[cur].filter(c => c.offsetParent); let k = 1;
   for (let i = 0; i < cards.length; i++){ if (cards[i].getBoundingClientRect().top <= hh + viewH * 0.45) k = i + 1; else break; }
-  lb.textContent = k + "/" + cards.length; lb.style.top = (y + thumbH / 2) + "px";
+  lb.textContent = cards.length ? k + "/" + cards.length : "접힘"; lb.style.top = (y + thumbH / 2) + "px";
 }
 function spy(){
   prog();
@@ -833,6 +843,10 @@ function render(restore){
   const row = $("secs"); row.innerHTML = "";
   const gb = document.createElement("button"); gb.id = "gbtn"; gb.textContent = "▦ 전체 " + (PANEL === "grid" ? "▴" : "▾");
   gb.onclick = () => openPanel("grid"); row.appendChild(gb);
+  // 탭의 모든 하부섹터 묶음을 한 번에 접기·펼치기(묶음이 있을 때만 보인다)
+  const cb = document.createElement("button"); cb.id = "cbtn"; cb.hidden = true;
+  cb.onclick = () => { const shut = !ALLHEADS.every(x => x.classList.contains("shut")); ALLHEADS.forEach(x => setShut(x, shut)); foldLab(); };
+  row.appendChild(cb); ALLHEADS = [];
   let shown = 0, total = 0;
   SECINFO = [];
   secs.forEach((s, si) => {
@@ -877,14 +891,22 @@ function render(restore){
       const el = ST.v === "list" ? tableRow(it, ITEMS.length - 1, rank) : card(it, ITEMS.length - 1, rank);
       grp.appendChild(el); SCARDS[SCARDS.length - 1].push(el); shown++;
     });
-    // 섹터 제목 오른쪽: 이 섹터의 묶음을 한꺼번에 접기·펼치기
+    ALLHEADS.push(...heads);
+    // 섹터 제목 줄 오른쪽: 이 섹터의 묶음만 한꺼번에 접기·펼치기
     if (heads.length){
-      const fb = document.createElement("button"); fb.className = "fold";
-      const lab = () => { fb.textContent = heads.every(x => x.classList.contains("shut")) ? "모두 펼치기" : "모두 접기"; };
-      fb.onclick = () => { const shut = !heads.every(x => x.classList.contains("shut")); heads.forEach(x => setShut(x, shut)); lab(); };
+      const fb = document.createElement("button"); fb.className = "sfold";
+      const lab = () => {
+        const all = heads.every(x => x.classList.contains("shut"));
+        // 펼친 섹터는 위 꺾쇠(누르면 접힘), 접힌 섹터는 아래 꺾쇠(누르면 펼침)
+        fb.innerHTML = `<svg viewBox="0 0 24 24"><path d="${all ? "M6 9l6 6 6-6" : "M6 15l6-6 6 6"}"/></svg>`; fb.classList.toggle("shut", all);
+        fb.title = all ? "이 섹터 묶음 모두 펼치기" : "이 섹터 묶음 모두 접기"; fb.setAttribute("aria-label", fb.title);
+      };
+      fb.onclick = e => { e.stopPropagation(); const shut = !heads.every(x => x.classList.contains("shut")); heads.forEach(x => setShut(x, shut)); };
+      heads.forEach(x => { x.lab = lab; });
       lab(); h.appendChild(fb);
     }
   });
+  foldLab();
   if (!shown){ $("prog").style.display = "none"; main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.<br>걸러 보기 조건을 줄이거나 다른 탭을 열어 보세요.</div>'; }
   main.appendChild(nextBtn());
   main.querySelectorAll("canvas").forEach(cv => io.observe(cv));
@@ -895,7 +917,14 @@ function render(restore){
   if (!restore) setHidden(false);
   spy();
 }
-let SECINFO = [], EFF = "base";
+let SECINFO = [], EFF = "base", ALLHEADS = [];
+function foldLab(){
+  const cb = $("cbtn"); if (!cb) return;
+  cb.hidden = !ALLHEADS.length;
+  const all = ALLHEADS.length && ALLHEADS.every(x => x.classList.contains("shut"));
+  cb.textContent = all ? "⊞ 묶음 펼치기" : "⊟ 묶음 접기"; cb.classList.toggle("shut", !!all);
+  cb.title = all ? "이 탭의 하부섹터 묶음을 모두 펼칩니다." : "이 탭의 하부섹터 묶음을 모두 접습니다. 요약 줄만 남아 어느 묶음이 강한지 한눈에 봅니다.";
+}
 
 // 탭 맨 끝의 '다음 탭' 단추. 마지막 탭에서는 처음 탭으로 돌아간다.
 function nextBtn(){
