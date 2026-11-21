@@ -136,7 +136,11 @@ main > h2 small{font-size:12.5px;font-weight:500}
 .sub::after{content:"▾";font-size:11px;color:var(--pu)}
 .sub.shut::after{content:"▸"}
 .sub.hit{animation:hit 2.2s ease}
-main > h2 .fold{float:right;border:1px solid var(--line);background:var(--card);color:var(--sub);border-radius:8px;font-size:12px;font-weight:600;padding:3px 9px;margin-top:4px}
+/* 섹터 제목 바로 아래 왼쪽: 이 섹터 묶음 모두 접기·펼치기(모두 접혀 있으면 진한 보라로 눈에 띄게) */
+.fbar{display:flex;align-items:center;gap:8px;margin:-4px 2px 2px}
+.fbar .fold{border:1.5px solid var(--pu);background:var(--pul);color:var(--pud);border-radius:999px;font-size:13.5px;font-weight:800;padding:6px 14px}
+.fbar .fold.shut{background:var(--pud);border-color:var(--pud);color:#fff}
+.fbar small{font-size:12px;color:var(--sub)}
 .tr .s svg{display:block;width:40px;height:11px;margin:3px 0 0 auto;overflow:visible}
 .tr>span.s:last-child{white-space:nowrap;font-size:12.5px}
 .px{font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -694,6 +698,7 @@ function setShut(sh, shut){
   grp.hidden = shut; sh.classList.toggle("shut", shut);
   shut ? SHUT.add(sh.dataset.k) : SHUT.delete(sh.dataset.k);
   store.set("wl.shut", JSON.stringify([...SHUT]));
+  if (sh.lab) sh.lab();
   // 펼친 묶음의 차트는 화면에 들어올 때 다시 그리게 관찰을 새로 건다
   if (!shut && io) grp.querySelectorAll("canvas").forEach(cv => { io.unobserve(cv); io.observe(cv); });
   prog();
@@ -775,7 +780,7 @@ function prog(){
   th.style.top = y + "px"; th.style.height = thumbH + "px";
   const cards = SCARDS[cur].filter(c => c.offsetParent); let k = 1;
   for (let i = 0; i < cards.length; i++){ if (cards[i].getBoundingClientRect().top <= hh + viewH * 0.45) k = i + 1; else break; }
-  lb.textContent = k + "/" + cards.length; lb.style.top = (y + thumbH / 2) + "px";
+  lb.textContent = cards.length ? k + "/" + cards.length : "접힘"; lb.style.top = (y + thumbH / 2) + "px";
 }
 function spy(){
   prog();
@@ -877,12 +882,19 @@ function render(restore){
       const el = ST.v === "list" ? tableRow(it, ITEMS.length - 1, rank) : card(it, ITEMS.length - 1, rank);
       grp.appendChild(el); SCARDS[SCARDS.length - 1].push(el); shown++;
     });
-    // 섹터 제목 오른쪽: 이 섹터의 묶음을 한꺼번에 접기·펼치기
+    // 섹터 제목 바로 아래: 이 섹터의 묶음을 한꺼번에 접기·펼치기
     if (heads.length){
+      const bar = document.createElement("div"); bar.className = "fbar";
       const fb = document.createElement("button"); fb.className = "fold";
-      const lab = () => { fb.textContent = heads.every(x => x.classList.contains("shut")) ? "모두 펼치기" : "모두 접기"; };
+      const sm = document.createElement("small");
+      const lab = () => {
+        const all = heads.every(x => x.classList.contains("shut")), n = heads.filter(x => x.classList.contains("shut")).length;
+        fb.textContent = all ? "▸ 묶음 모두 펼치기" : "▾ 묶음 모두 접기"; fb.classList.toggle("shut", all);
+        sm.textContent = "묶음 " + heads.length + "개" + (n && !all ? " · " + n + "개 접힘" : "");
+      };
       fb.onclick = () => { const shut = !heads.every(x => x.classList.contains("shut")); heads.forEach(x => setShut(x, shut)); lab(); };
-      lab(); h.appendChild(fb);
+      heads.forEach(x => { x.lab = lab; });
+      lab(); bar.append(fb, sm); h.after(bar);
     }
   });
   if (!shown){ $("prog").style.display = "none"; main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.<br>걸러 보기 조건을 줄이거나 다른 탭을 열어 보세요.</div>'; }
