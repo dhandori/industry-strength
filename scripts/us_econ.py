@@ -282,6 +282,53 @@ def kr_credit():
             "series": ser}
 
 
+def household_misery(today):
+    """가계 생활비 부담 지수(웰스파고 투자연구소 'household misery index'를 공개 자료로 따라 만든 것, 2026-11-21 추가).
+    웰스파고는 정확한 계산식을 공개하지 않았고 출처만 EIA(휘발유 값)와 NAR(주택구입능력지수)로 밝혔다.
+    NAR 지수 과거치는 유료라서 같은 뜻의 '집 사는 부담'을 FRED 공개 자료로 직접 계산한다.
+      휘발유 = GASREGW(EIA 주간 보통 휘발유 소매가)의 월평균
+      집 사는 부담 = 케이스-실러 전국 집값(CSUSHPINSA) × 30년 고정 대출 월 상환 계수(MORTGAGE30US) ÷ 평균 주급(CES0500000011)
+    두 요소를 각각 2010~2025년 평균 = 100으로 맞춘 뒤 반반 평균한다(높을수록 생활비 부담이 큼).
+    웰스파고 그래프(2010-01~2026-10)와 견줘 보면 오차가 평균 5~6포인트이고 2026년 10월은 150으로 같다.
+    집값은 두 달 늦게 나오므로 아직 안 나온 달은 마지막 집값을 그대로 쓰고 house_est 로 표시한다."""
+    raw = {k: fred(k) for k in ["GASREGW", "MORTGAGE30US", "CSUSHPINSA", "CES0500000011"]}
+    cur = today.strftime("%Y-%m-01")   # 이번 달은 아직 끝나지 않았으니 지난달까지만
+
+    def mon(s):
+        m = {}
+        for d, v in s:
+            m.setdefault(d[:7] + "-01", []).append(v)
+        return {k: sum(v) / len(v) for k, v in m.items() if k < cur}
+    gas, rate = mon(raw["GASREGW"]), mon(raw["MORTGAGE30US"])
+    hp, inc = dict(raw["CSUSHPINSA"]), dict(raw["CES0500000011"])
+    rows, est, lp, li = [], [], None, None
+    for m in sorted(gas):
+        if m < "2006-03-01" or m not in rate:   # 평균 주급 자료가 2006년 3월부터
+            continue
+        if m in hp:
+            lp = hp[m]
+        elif lp:
+            est.append(m)
+        li = inc.get(m, li)
+        if not lp or not li:
+            continue
+        i = rate[m] / 1200
+        rows.append((m, gas[m], rate[m], lp * i / (1 - (1 + i) ** -360) / li))
+    base = [r for r in rows if "2010-01-01" <= r[0] < "2026-01-01"]
+    bg = sum(r[1] for r in base) / len(base)
+    bh = sum(r[3] for r in base) / len(base)
+    ser = [[m, round((g / bg + h / bh) * 50, 1), round(g / bg * 100, 1), round(h / bh * 100, 1)] for m, g, _, h in rows]
+    last, vals = ser[-1], [r[1] for r in ser if r[0] >= "2010-01-01"]
+    ago3 = ser[-4][1] if len(ser) > 3 else None
+    d = datetime.strptime(last[0], "%Y-%m-%d")
+    ya = next((r[1] for r in reversed(ser) if r[0] <= d.replace(year=d.year - 1).strftime("%Y-%m-%d")), None)
+    peak = max((r for r in ser if r[0] >= "2010-01-01"), key=lambda r: r[1])
+    return {"date": last[0], "value": last[1], "gas_idx": last[2], "house_idx": last[3],
+            "gas": round(rows[-1][1], 2), "rate": round(rows[-1][2], 2), "ago3": ago3, "year_ago": ya,
+            "pct_rank": round(sum(1 for v in vals if v <= last[1]) / len(vals) * 100), "peak": peak[:2],
+            "house_est": [m for m in est if m <= last[0]], "series": ser}
+
+
 # 2026-11-12 사용자 결정: 10년 기대인플레(T10YIE)는 중요도가 낮아 뺐다(물가는 CPI·근원 CPI·근원 PCE로 본다).
 # 삼의 법칙(SAHMREALTIME)은 따로 카드를 두지 않고 실업률 카드의 보조 줄(extra)로 넣는다.
 
@@ -354,6 +401,16 @@ def main():
         print(f"근원 CPI 분석 {cc['date']}: 근원 {cc['official']['core_mom']:+.1f}% · 헤드라인 {cc['official']['headline_mom']:+.1f}% · {cc['verdict']}({cc['score']}/{len(cc['checks'])}) · 주도 {', '.join(cc['drivers'])}")
     except Exception as e:  # noqa: BLE001
         print(f"근원 CPI 분석 실패: {type(e).__name__}: {e}")
+    try:
+        data["household"] = household_misery(datetime.now(KST).date())
+        h = data["household"]
+        print(f"가계 생활비 부담 지수 {h['date']}: {h['value']} (휘발유 {h['gas_idx']} · 집 사는 부담 {h['house_idx']} · 30년 금리 {h['rate']}%)"
+              + (f" · 집값 추정 {', '.join(h['house_est'])}" if h["house_est"] else ""))
+    except Exception as e:  # noqa: BLE001  실패해도 나머지는 갱신하고 지난 값을 유지
+        print(f"::warning::가계 생활비 부담 지수 실패: {type(e).__name__}: {e}")
+        old = json.loads(OUT.read_text(encoding="utf-8")) if OUT.exists() else {}
+        if old.get("household"):
+            data["household"] = old["household"]
     data["warnings"], gaps = guard(raw, data, datetime.now(KST).date())
     for w in data["warnings"]:
         print(("::error::" if w["kind"] == "gap" else "::warning::") + w["msg"])

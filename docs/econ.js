@@ -62,9 +62,23 @@
     let lo = Math.min(...vals), hi = Math.max(...vals);
     if (opt.bars) lo = Math.min(lo, 0);
     const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
-    const x = (i) => L + (W - L - R) * i / (s.length - 1), y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+    // 2026-11-21: 눈금을 딱 떨어지는 값(1·2·2.5·5×10ⁿ 간격)에 둔다. 예전엔 범위를 4등분한 7.8·9.7 같은 자리에
+    // 반올림한 글자(8·10)를 붙여 선이 실제와 다른 값으로 읽혔다(1년 고통지수 8.05가 '8' 선 위로 보임).
+    let ticks = [];
+    for (const m of [1, 2, 2.5, 5, 10, 20, 25, 50]) {
+      const step = m * 10 ** Math.floor(Math.log10((hi - lo) / 4));
+      if ((hi - lo) / step > 6) continue;
+      const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step;
+      const t = []; for (let v = a; v <= b + step / 2; v += step) t.push(+v.toFixed(10));
+      if (new Set(t.map((v) => opt.ax(v))).size === t.length) { ticks = t; break; }   // 글자가 겹치면(0.5 간격에 소수 0자리) 더 넓게
+    }
+    if (ticks.length > 1) { lo = ticks[0]; hi = ticks.at(-1); }
+    // 매일 자료를 거래일 수로 자른 경우(days)만 순서대로, 나머지는 날짜 간격대로 놓는다(빠진 달이 있어도 간격이 맞게)
+    const t0 = Date.parse(s[0][0]), tN = Date.parse(s.at(-1)[0]);
+    const x = opt.days ? (i) => L + (W - L - R) * i / (s.length - 1) : (i) => L + (W - L - R) * (Date.parse(s[i][0]) - t0) / (tN - t0);
+    const y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
     let g = "";
-    for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4, yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${opt.ax(v)}</text>`; }
+    for (const v of ticks) { const yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${opt.ax(v)}</text>`; }
     if (opt.zone != null && opt.zone < hi) g += `<rect x="${L}" y="${T}" width="${W - L - R}" height="${Math.max(0, y(opt.zone) - T).toFixed(1)}" fill="var(--mx1)" opacity=".07"/>`;   // 위험 구간 칠하기
     (opt.ref || []).filter((v) => v > lo && v < hi).forEach((v) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${opt.refC || "var(--mx2)"}" stroke-dasharray="3 3"/>`; });
     // 가로축: 기간 길이에 맞춰 해(年) 또는 달
@@ -78,11 +92,12 @@
       const yr = +p[0].slice(0, 4), mo = +p[0].slice(5, 7);
       const key = every ? String(yr) : p[0].slice(0, 7);
       if (key === last) return;
-      const show = every ? (last && yr % every === 0) : (last && mo % (small ? 6 : 3) === 1);
+      // 1년 안팎은 달마다(휴대폰은 두 달마다), 2년 안팎은 석 달마다(2026-11-21: 1년 그래프에 눈금이 두 개뿐이었다)
+      const mstep = span <= 1.3 ? (small ? 2 : 1) : (small ? 6 : 3);
+      const show = every ? (last && yr % every === 0) : (last && (mo - 1) % mstep === 0);
       last = key;
       if (!show) return;
-      const xx = x(i).toFixed(1);
-      xt += `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${xx}" y="${H - 7}" text-anchor="middle" font-size="11" fill="var(--muted)">${every ? yr : ym(p[0])}</text>`;
+      xt += tk(i, every ? yr : ym(p[0]));   // 오른쪽 끝 글자는 잘리지 않게 끝에 맞춤
     });
     let body = "";
     if (opt.bars) {
@@ -95,6 +110,8 @@
       ln.v.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? "L" : "M") + x(i).toFixed(1) + "," + y(v).toFixed(1); pen = true; });
       body += `<path d="${d}" fill="none" stroke="${ln.c}" stroke-width="${ln.w || 1.6}"${ln.dash ? ` stroke-dasharray="${ln.dash}"` : ""} stroke-linejoin="round"/>`;
     }
+    // 점이 적으면(1년 월별 등) 주인공 선에 달마다 점을 찍어 어느 달 값인지 보이게
+    if (!opt.bars && s.length <= 30) lines[0].v.forEach((v, i) => { if (v != null && i < s.length - 1) body += `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.6" fill="${lines[0].c}" stroke="var(--surface)" stroke-width="1"/>`; });
     // 표시할 점(예: 과거 고점) [날짜, 값, 글자]
     (opt.marks || []).forEach(([d, v, t, below]) => {
       const i = s.findIndex((p) => p[0] === d);
@@ -112,7 +129,7 @@
   const MSP = [["m12", "1년"], ["m24", "2년"], ["m60", "5년"], ["m120", "10년"], ["m240", "20년"], ["m0", "전체"]];
   // 장기로 봐야 하는 지표는 처음부터 길게(2026-10-31). 위쪽 '그래프 기간' 버튼을 누르면 모두 그 기간으로 맞춘다
   // (일자리 증감·실업수당 청구는 2020년 코로나 때 값이 수십 배로 튀어 길게 보면 나머지가 납작해지므로 묶음 기본값 그대로)
-  const ECON_DEF = { misery: "m0", treasury: "m0", cpi: "m120", core_cpi: "m120", core_pce: "m120", unrate: "m120", vu: "m120", kr_credit: "m0", kr_ratio: "m0" };
+  const ECON_DEF = { misery: "m0", household: "m0", treasury: "m0", cpi: "m120", core_cpi: "m120", core_pce: "m120", unrate: "m120", vu: "m120", kr_credit: "m0", kr_ratio: "m0" };
   st.cs = { ...ECON_DEF };
   const spOf = (key, daily, def) => st.cs[key] ?? def ?? (daily ? (st.span === 24 ? "m24" : st.span === 0 ? "m0" : "m60") : `m${st.span}`);
   const spOpt = (key, daily, def) => { const v = spOf(key, daily, def); return typeof v === "number" ? { days: v } : { months: +v.slice(1) }; };
@@ -173,6 +190,30 @@
         <div class="ec-hero-l"><p>${dir}. 1948년 이후 지금보다 낮았던 달이 <b>${m.pct_rank}%</b>예요. 역대 평균 ${m.avg.toFixed(1)}, 최근 5년 ${m.five_lo.toFixed(1)}~${m.five_hi.toFixed(1)}, 가장 높았던 때는 ${ymK(m.peak[0])} ${m.peak[1].toFixed(1)}이에요.</p>
           <p class="ec-why"><b>무엇인가요?</b> 물가가 오르는 고통과 일자리를 잃는 고통을 더한 숫자예요. 높을수록 사람들이 체감하는 경기가 나쁘고, 소비·선거·정책에 압력이 커져요. 10을 넘으면 높은 편, 7 아래면 편한 편으로 봐요.</p></div>
         <div class="ec-hero-r"><div class="mx-chart">${pick("misery", false)}${svg}<div class="chart-legend"><span><i style="background:var(--price)"></i>고통지수</span>${lines ? `<span><i style="background:var(--ma20)"></i>물가상승률</span><span><i style="background:var(--ma50)"></i>실업률</span>` : ""}<span><i style="background:var(--muted)"></i>역대 평균 ${m.avg.toFixed(1)}</span></div></div></div>
+      </div>
+    </article>`;
+  }
+
+  // ---------- 가계 생활비 부담 지수 (2026-11-21 추가, 웰스파고 'household misery index'를 공개 자료로 따라 만든 것)
+  function household(h) {
+    if (!h || !h.series || h.series.length < 24) return "";
+    const v = h.value;
+    const lv = v < 90 ? [5, "낮음"] : v < 110 ? [4, "보통"] : v < 125 ? [3, "높음"] : v < 140 ? [2, "매우 높음"] : [1, "극심"];
+    const s = h.series, since10 = s.filter((p) => p[0] >= "2010-01-01");
+    const higher = since10.filter((p) => p[1] > v).length;
+    const rankTxt = higher === 0 ? "2010년 이후 <b>가장 높아요</b>" : `2010년 이후 이보다 높았던 달은 <b>${higher}번</b>뿐이에요(가장 높았던 때 ${ymK(h.peak[0])} ${h.peak[1].toFixed(0)})`;
+    const dir = h.ago3 == null ? "" : v > h.ago3 + 2 ? `석 달 전(${h.ago3.toFixed(0)})보다 <b class="up">올라가는 중</b>` : v < h.ago3 - 2 ? `석 달 전(${h.ago3.toFixed(0)})보다 <b class="down">내려가는 중</b>` : `석 달 전(${h.ago3.toFixed(0)})과 비슷`;
+    const svg = chart(s, { ...spOpt("household", false), ref: [100], refC: "var(--muted)", ax: (x) => x.toFixed(0), dot: col(lv[0]), h: innerWidth < 640 ? 190 : 210,
+      lines: [{ v: s.map((p) => p[1]), c: "var(--price)", w: 2.4 }, { v: s.map((p) => p[2]), c: "var(--ma20)", w: 1.4, dash: "4 3" }, { v: s.map((p) => p[3]), c: "var(--ma50)", w: 1.4, dash: "4 3" }] });
+    const est = h.house_est && h.house_est.length ? `<span class="ec-est" title="집값(케이스-실러)은 두 달 늦게 나와요. ${h.house_est.map(ymK).join(", ")}은 마지막 집값을 그대로 두고 대출 금리와 주급만 새 값으로 계산했어요.">집값 추정</span>` : "";
+    return `<article class="card mx-card ec-hero ec-hh" style="--c:${col(lv[0])}">
+      <div class="mx-head"><div><div class="mx-name">가계 생활비 부담 지수 (웰스파고식 고통지수)</div><div class="mx-dir">휘발유 값 + 집 사는 부담 · 2010~2025년 평균 = 100 · 높을수록 살림이 빠듯함</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
+      <div class="mx-val"><b>${v.toFixed(0)}</b><span class="ec-date">${ymK(h.date)}</span>${est}<span class="ec-formula">= 휘발유 <b>${h.gas_idx.toFixed(0)}</b>($${h.gas.toFixed(2)}) · 집 부담 <b>${h.house_idx.toFixed(0)}</b>(30년 대출 ${h.rate.toFixed(2)}%)의 평균</span></div>
+      <div class="ec-hero-b">
+        <div class="ec-hero-l"><p>${dir}. ${rankTxt}. 1년 전에는 ${h.year_ago != null ? h.year_ago.toFixed(0) : "–"}였어요.</p>
+          <p class="ec-why"><b>무엇인가요?</b> 미국 가정이 매달 피부로 느끼는 두 가지 큰 지출, 기름값과 집값 부담을 한 숫자로 만든 지수예요. 100이면 지난 16년 평균만큼이고 150이면 그보다 절반쯤 더 빠듯하다는 뜻이에요. 위의 고통지수가 물가 '오름폭'과 실업을 본다면, 이 지수는 지금 내야 하는 '값 자체'를 봐서 물가 상승이 멈춰도 쉽게 내려오지 않아요.</p>
+          <p class="ec-why"><b>어떻게 만들었나요?</b> 웰스파고 투자연구소가 EIA 휘발유 값과 NAR 주택구입능력지수로 만든 지수를 따라 만들었어요. 웰스파고는 계산식을 공개하지 않았고 NAR 과거 자료는 유료라서, 집 사는 부담은 케이스-실러 집값으로 30년 고정 대출을 받을 때 매달 갚는 돈을 평균 주급으로 나눠 직접 계산했어요. 웰스파고 그래프와 견주면 평균 5포인트쯤 차이 나고 2026년 10월은 둘 다 150이에요.</p></div>
+        <div class="ec-hero-r"><div class="mx-chart">${pick("household", false)}${svg}<div class="chart-legend"><span><i style="background:var(--price)"></i>생활비 부담 지수</span><span><i style="background:var(--ma20)"></i>휘발유</span><span><i style="background:var(--ma50)"></i>집 사는 부담</span><span><i style="background:var(--muted)"></i>평균 100</span></div></div></div>
       </div>
     </article>`;
   }
@@ -376,11 +417,11 @@
       <div class="mx-market-h"><h2>🇺🇸 경기 (물가·고용·금리)</h2><span class="sub">고통지수를 이루는 물가·실업과 국채 금리 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
       ${warnBox(d.warnings)}
       ${spanBar("경기")}
-      <div class="mx-group-h"><h3>고통지수</h3><span class="sub">물가와 실업을 한 숫자로 · 매월</span></div>${hero(d.misery)}
+      <div class="mx-group-h"><h3>고통지수</h3><span class="sub">물가와 실업, 기름값과 집값 부담을 한 숫자로 · 매월</span></div>${hero(d.misery)}${household(d.household)}
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>${d.cpi_core ? coreCard(d.cpi_core) : ""}
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
       <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
-      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 밤 11시 50분과 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
+      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY·GASREGW·MORTGAGE30US·CSUSHPINSA·CES0500000011). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 밤 11시 50분과 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달). 가계 생활비 부담 지수 = (휘발유 월평균 값, 집 사는 부담 = 집값 × 30년 대출 상환 계수 ÷ 평균 주급)을 각각 2010~2025년 평균 100으로 맞춰 반반 평균.</p>
     </section>${d.margin ? `<section class="mx-market mx-us ec-sec ec-b" aria-label="미국 빚투">
       <div class="mx-market-h"><h2>🇺🇸 빚투 (신용융자)</h2><span class="sub">빚내서 산 주식이 너무 많은지 · 고점 신호 · 매월 · FINRA 신용거래 통계</span></div>
       ${spanBar("빚투")}
