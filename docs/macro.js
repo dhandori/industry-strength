@@ -26,7 +26,11 @@
     vix_ratio: ["VIX ÷ VIX3M (단기 공포 쏠림)", "한 달짜리 공포(VIX)를 석 달짜리 공포(VIX3M)로 나눈 값이에요. 1을 넘으면 먼 미래보다 지금 당장이 더 무섭다는 뜻이고, 급락장에서 나타나요."],
     vkospi: ["VKOSPI (한국 주식 공포지수)", "코스피200이 앞으로 한 달 동안 얼마나 출렁일지 예상하는 값이에요(한국판 VIX). 높을수록 한국 시장이 불안하다는 뜻이에요."],
     fng: ["CNN 공포탐욕지수", "미국 투자자들의 분위기를 0~100점으로 나타낸 값이에요. 25점 아래면 겁먹은 시장, 75점 위면 너무 들뜬(과열) 시장이에요."],
+    sp_dd: ["S&P500 고점 대비 낙폭 (최근 1년 최고가 기준)", "S&P500이 최근 1년 동안 가장 높았던 종가에서 지금 몇 % 내려와 있는지예요. 0이면 신고가이고, -10%를 넘으면 조정장, -20%를 넘으면 약세장이라고 불러요."],
+    ks_dd: ["코스피 고점 대비 낙폭 (최근 1년 최고가 기준)", "코스피가 최근 1년 동안 가장 높았던 종가에서 지금 몇 % 내려와 있는지예요. 0이면 신고가이고, -10%를 넘으면 조정장, -20%를 넘으면 약세장이라고 불러요."],
   };
+  // 고점 대비 낙폭 지표(2026-11-22): 주가를 직접 보는 지표. 0 = 신고가, 내려갈수록 위험
+  const isDD = (r) => /_dd$/.test(r.key);
   const nm = (r) => (TXT[r.key] || [])[0] || r.name;
   const short = (r) => nm(r).split(" (")[0];
   const hp = (r) => (TXT[r.key] || [])[1] || r.help;
@@ -122,12 +126,13 @@
     if (r.key === "vix") refs.push(20, 30);
     if (r.key === "vix_ratio") refs.push(1);
     if (r.key === "fng") refs.push(25, 75);
+    if (isDD(r)) refs.push(-10, -20);
     const rf = refs.filter((v) => v > lo && v < hi).map((v) => `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--mx2)" stroke-dasharray="2 3" opacity=".7"/>`).join("");
     const span = isLong ? (LONG[sp][0] ? `최근 ${LONG[sp][0]}년 흐름(매주)` : `${ds[0].slice(0, 4)}년부터 흐름(매주)`) : sp && N === sp + 1 ? `최근 ${sp}거래일 흐름` : months >= 20 ? "최근 2년 흐름" : months >= 10 ? "최근 1년 흐름" : `최근 ${Math.max(1, Math.round(months))}개월 흐름`;
     const fmtD = (d) => s.length <= 80 ? `${+d.slice(5, 7)}/${+d.slice(8, 10)}` : d.slice(2, 7).replace("-", ".");
     // 기간 처음 → 지금 변화(지표 단위 그대로)
     const dv = vs[vs.length - 1] - vs[0];
-    const u = r.unit === "bp" ? "bp" : r.unit === "점" ? "점" : r.unit === "x" ? "" : "";
+    const u = r.unit === "bp" ? "bp" : r.unit === "점" ? "점" : isDD(r) ? "%p" : "";
     const dTxt = `${dv > 0 ? "+" : dv < 0 ? "−" : ""}${num(Math.abs(dv), r.unit)}${u}`;
     const opts = SPANS.concat(lg ? Object.entries(LONG).map(([k, [, t]]) => [k, t]) : []);
     const mini = `<span class="mx-mini" role="group" aria-label="이 그래프 기간">${opts.map(([n, t]) => `<button type="button" data-cspan="${n}" data-key="${esc(r.key)}" aria-pressed="${sp === n}">${t}</button>`).join("")}</span>`;
@@ -158,7 +163,7 @@
     const n = zones.length, left = (idx + Math.max(0.06, Math.min(0.94, frac))) / n * 100;
     const boxes = zones.map((z, i) => `<div class="mx-zb-box${i === idx ? " on" : ""}" style="--c:${z.c}"><b>${z.e} ${z.t}</b><small>${z.r}</small></div>`).join("");
     return `<div class="mx-zb"><div class="mx-zb-ends"><span class="good">✅ ${endL}</span><span class="bad">${endR} ⛔</span></div>
-      <div class="mx-zb-pinrow"><div class="mx-zb-pin" style="left:${left}%;--c:${zones[idx].c}"><span>${pinText}</span></div></div>
+      <div class="mx-zb-pinrow"><div class="mx-zb-pin${left > 88 ? " end" : left < 12 ? " start" : ""}" style="left:${left}%;--c:${zones[idx].c}"><span>${pinText}</span></div></div>
       <div class="mx-zb-row" style="grid-template-columns:repeat(${n},minmax(0,1fr))">${boxes}</div></div>`;
   }
   const RISK_ZONES = [[0, 50, 5], [50, 75, 4], [75, 90, 3], [90, 97, 2], [97, 100.0001, 1]];
@@ -170,7 +175,9 @@
     const what = r.risk === "both"
       ? `최근 5년 중 지금보다 평범했던(덜 치우친) 날이 <b>${p.toFixed(0)}%</b>예요`
       : `최근 5년 중 지금보다 안전했던 날이 <b>${p.toFixed(0)}%</b>예요`;
-    const note = r.speedBump ? `<div class="mx-zb-note">⚡ 위치만 보면 ${LV[RISK_ZONES[idx][2]][0]} ${LV[RISK_ZONES[idx][2]][1]}이지만, 최근 한 달 사이 평소보다 빠르게 나빠져서 ${r.speedBump}단계 올려 ${r.emoji} ${esc(r.label)}로 매겼어요.</div>` : "";
+    const base = LV[RISK_ZONES[idx][2]];
+    const floor = r.floor ? `<div class="mx-zb-note">📌 위치만 보면 ${base[0]} ${base[1]}이지만, 값이 ${r.floor} 이상이면 5년 중 위치와 상관없이 ${r.emoji} ${esc(r.label)}보다 좋게 매기지 않아요. 공포지수가 오래 높으면 ‘최근 5년과 비교한 위치’가 무뎌지기 때문이에요.</div>` : "";
+    const note = floor || !r.speedBump ? floor : `<div class="mx-zb-note">⚡ 위치만 보면 ${LV[RISK_ZONES[idx][2]][0]} ${LV[RISK_ZONES[idx][2]][1]}이지만, 최근 한 달 사이 평소보다 빠르게 나빠져서 ${r.speedBump}단계 올려 ${r.emoji} ${esc(r.label)}로 매겼어요.</div>`;
     return `<div class="mx-pos"><div class="mx-pos-l"><span>${what}</span></div>${zoneBar(zones, idx, (p - a) / (Math.min(100, b) - a), "안전", "위험", `지금 ${p.toFixed(0)}%`)}${note}</div>`;
   }
 
@@ -190,7 +197,8 @@
 
   function card(r) {
     const c = col(r.level);
-    const head = `<div class="mx-head"><div><div class="mx-name">${esc(nm(r))}</div>${DIR[r.risk] ? `<div class="mx-dir">${DIR[r.risk]}</div>` : ""}</div><span class="mx-chip" style="--c:${c}">${r.emoji} ${esc(r.label)}${r.overheat ? " · ⚠️과열" : ""}</span></div>`;
+    const dir = isDD(r) ? "📉 더 내려갈수록 위험" : DIR[r.risk];
+    const head = `<div class="mx-head"><div><div class="mx-name">${esc(nm(r))}</div>${dir ? `<div class="mx-dir">${dir}</div>` : ""}</div><span class="mx-chip" style="--c:${c}">${r.emoji} ${esc(r.label)}${r.overheat ? " · ⚠️과열" : ""}</span></div>`;
     if (!r.level) return `<article class="card mx-card" style="--c:${c}">${head}<div class="mx-empty">오늘은 자료를 받지 못했어요.</div><div class="mx-why">${esc(hp(r))}</div></article>`;
     const unit = r.unit && !["bp", "x", "점"].includes(r.unit) ? `<span class="u">${esc(r.unit)}</span>` : "";
     const zone = r.zone ? `<span class="mx-chip" style="--c:${c}">${esc(r.zone)}</span>` : "";
@@ -274,14 +282,30 @@
       </details></article>`;
   }
 
-  function sentence(d) {
-    const rows = d.indicators.filter((r) => r.level);
+  // 2026-11-22: 종합을 한데 평균하지 않고 나라별 두 줄(주식시장 충격 / 신용·자금 스트레스)로 낸다.
+  // 11/20 급락 때 채권 지표가 조용하다는 이유로 종합이 '경계'에 머문 것을 고쳤다. 옛 자료(markets 없음)는 예전 한 줄 그대로 그린다.
+  const market = (r) => /^(jp_|usjp_|usdjpy)/.test(r.key) ? "JP" : r.key === "vkospi" || r.key === "ks_dd" || /^kr_/.test(r.key) || /^한국/.test(r.group) ? "KR" : "US";
+  const axisName = (ax, mk) => ax === "stock" ? "주식시장 충격" : mk === "JP" ? "금리·환율 스트레스" : "신용·자금 스트레스";
+  function axisSentence(m, mk) {
+    const s = m.stock && m.stock.level, c = m.credit && m.credit.level;
+    if (!s || !c) return "";
+    const other = mk === "JP" ? "금리·환율" : "신용·자금 시장", spread = mk === "JP" ? "금리·환율 쪽" : "회사채·자금 시장";
+    if (s <= 2 && c <= 2) return `주식과 ${other}이 함께 나빠졌어요. 두 쪽이 같이 켜질 때가 가장 위험해요.`;
+    if (s <= 2) return `주식시장은 ${LV[s][0]}${LV[s][1]}까지 흔들렸는데 ${other}은 ${LV[c][0]}${LV[c][1]}에 머물러 있어요. 하락이 주식에서 시작됐고 아직 ${spread}으로는 번지지 않았다는 뜻이에요.`;
+    if (c <= 2) return `주식은 아직 ${LV[s][0]}${LV[s][1]}인데 ${other}이 먼저 ${LV[c][0]}${LV[c][1]}까지 나빠졌어요. 주가보다 먼저 움직일 때가 많아 눈여겨봐야 해요.`;
+    return `주식시장과 ${other} 모두 🟠경계보다 아래예요.`;
+  }
+
+  function sentence(d, mk) {
+    const m = d.markets && d.markets[mk];
+    const rows = d.indicators.filter((r) => r.level && (!m || market(r) === mk));
     const bad = rows.filter((r) => r.level <= 2), fast = rows.filter((r) => r.speedBump > 0);
     const out = [bad.length ? `지표 ${rows.length}개 중 ${bad.length}개가 🟠경계 이상이에요.` : `지표 ${rows.length}개 모두 🟠경계보다 아래예요.`];
+    if (m) { const a = axisSentence(m, mk); if (a) out.unshift(a); }
     if (fast.length) out.push(`최근 한 달 사이 빠르게 나빠진 지표는 ${fast.map(short).join(", ")}예요.`);
     const f = rows.find((r) => r.key === "fng");
     if (f) out.push(`투자자 분위기는 '${f.zone}'(${f.value}점)이에요.`);
-    const o = duoInfo(d);
+    const o = !m || mk === "US" ? duoInfo(d) : null;
     if (o && o.kind !== "same") out.push(o.kind === "fngMore" ? "VIX는 비교적 차분한데 공포탐욕지수는 더 겁먹어 두 지표가 엇갈려요(아래 ‘함께 읽기’ 카드 참고)." : "공포탐욕지수는 덤덤한데 VIX가 더 높아 두 지표가 엇갈려요(아래 ‘함께 읽기’ 카드 참고).");
     return out.join(" ");
   }
@@ -292,21 +316,30 @@
     const d = JP ? st.jp : st.data, c = d.composite, t = new Date(d.asOf);
     $("#mxMeta").textContent = `마지막 갱신 ${t.getMonth() + 1}월 ${t.getDate()}일 ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")} · 지표 ${c.total}개 중 ${c.available}개 받음 · ${JP ? "평일 장 마감 뒤(한국 15:52)와 미국장 뒤에 새로 고쳐져요 · 재무성 국채 금리·야후·FRED" : "매일 아침 7시쯤 자동으로 새로 고쳐져요"}`;
     // 왼쪽 안전 → 오른쪽 위험 (지표 카드의 칸 막대와 같은 방향)
-    const steps = [5, 4, 3, 2, 1].map((lv) => `<div class="mx-step ${lv === c.level ? "on" : ""}" style="--c:${col(lv)}"><div class="n">${c.counts[lv] ?? 0}</div><div class="t">${LV[lv][0]} ${LV[lv][1]}</div><div class="mx-bar" style="opacity:${(c.counts[lv] ?? 0) ? .9 : .15}"></div></div>`).join("");
-    const alarms = d.indicators.filter((r) => r.level && r.level <= 2).map((r) => `<span class="mx-chip" style="--c:${col(r.level)}">${r.emoji} ${esc(short(r))}</span>`).join("");
+    const cur = (window.__isMarket && window.__isMarket()) || "KR";
+    const mv = d.markets && d.markets[cur];   // 고른 나라의 두 줄 판정(없으면 예전 한 줄)
+    const mine = d.indicators.filter((r) => r.level && (!mv || market(r) === cur));
+    const cnt = (lv) => mv ? mine.filter((r) => r.level === lv).length : (c.counts[lv] ?? 0);
+    const top = mv ? mv.level : c.level;
+    const steps = [5, 4, 3, 2, 1].map((lv) => `<div class="mx-step ${lv === top ? "on" : ""}" style="--c:${col(lv)}"><div class="n">${cnt(lv)}</div><div class="t">${LV[lv][0]} ${LV[lv][1]}</div><div class="mx-bar" style="opacity:${cnt(lv) ? .9 : .15}"></div></div>`).join("");
+    const alarms = mine.filter((r) => r.level <= 2).map((r) => `<span class="mx-chip" style="--c:${col(r.level)}">${r.emoji} ${esc(short(r))}</span>`).join("");
+    const MK = { US: "미국", KR: "한국", JP: "일본" };
+    const axRow = (ax) => { const v = mv[ax]; return v && v.level ? `<div class="mx-ax" style="--c:${col(v.level)}"><span>${axisName(ax, cur)} <small>지표 ${v.available}개</small></span><b>${v.emoji} ${esc(v.label)}</b></div>` : ""; };
+    const verdict = mv
+      ? `<div class="card mx-verdict" style="--c:${col(top)}"><div class="k">오늘 ${MK[cur]} 시장 위험도 (지표 ${mine.length}개 · 두 묶음으로 나눠 봐요)</div>
+        <div class="mx-axes">${axRow("stock")}${axRow("credit")}</div><p>${esc(sentence(d, cur))}</p></div>`
+      : `<div class="card mx-verdict" style="--c:${col(c.level)}"><div class="k">오늘 시장 위험도 (${JP ? "일본" : "한국·미국"} 지표 ${c.available}개 종합)</div>
+        <div class="big"><b>${c.emoji} ${esc(c.label)}</b><span>5단계 중 ${c.level ?? "–"}단계 · 1단계가 가장 위험</span></div><p>${esc(sentence(d, cur))}</p></div>`;
     let h = `<section class="mx-hero">
-      <div class="card mx-verdict" style="--c:${col(c.level)}"><div class="k">오늘 시장 위험도 (${JP ? "일본" : "한국·미국"} 지표 ${c.available}개 종합)</div>
-        <div class="big"><b>${c.emoji} ${esc(c.label)}</b><span>5단계 중 ${c.level ?? "–"}단계 · 1단계가 가장 위험</span></div><p>${esc(sentence(d))}</p></div>
+      ${verdict}
       <div class="card"><div class="mx-ladder">${steps}</div>${alarms ? `<div class="mx-alarms">${alarms}</div>` : ""}
-        <p class="foot-note">칸 안 숫자는 그 단계에 있는 지표 개수예요. <b>오른쪽(🔴 위기)으로 갈수록 위험</b>해요. 아래 칩은 지금 🟠경계 이상인 지표예요. 단계는 '최근 5년과 비교한 위치'와 '최근 한 달 동안 얼마나 빨리 변했는지'를 함께 보고 정해요.</p></div></section>`;
+        <p class="foot-note">칸 안 숫자는 그 단계에 있는 지표 개수예요. <b>오른쪽(🔴 위기)으로 갈수록 위험</b>해요. 아래 칩은 지금 🟠경계 이상인 지표예요. 지표마다 단계는 '최근 5년과 비교한 위치'와 '최근 한 달 동안 얼마나 빨리 변했는지'를 함께 보고 정해요.</p></div></section>`;
     // 2026-10-25 재배치: 미국 지표를 먼저, 굵은 구분선 뒤에 한국 지표.
     // VKOSPI는 한국 변동성, CNN 공포탐욕지수는 미국 투자 심리로 각 나라 안에 넣는다(원본 group 값은 '변동성'·'심리'라 key로 나눈다).
-    const market = (r) => /^(jp_|usjp_|usdjpy)/.test(r.key) ? "JP" : r.key === "vkospi" || /^kr_/.test(r.key) || /^한국/.test(r.group) ? "KR" : "US";
-    const sub = (r) => r.group === "변동성" ? "변동성" : r.group === "심리" ? "투자 심리" : "신용·금리·유동성";
-    const SUBS = ["신용·금리·유동성", "변동성", "투자 심리"];
+    const sub = (r) => r.group === "변동성" ? "변동성" : r.group === "심리" ? "투자 심리" : r.group === "주가" ? "주가" : "신용·금리·유동성";
+    const SUBS = ["신용·금리·유동성", "주가", "변동성", "투자 심리"];
     const worstOf = (rows) => Math.min(6, ...rows.filter((r) => r.level).map((r) => r.level));
     // 2026-10-25: 위쪽 한국/미국 버튼(52주 신고가 탭과 같은 버튼)에 맞춰 고른 나라 지표만 보여 준다.
-    const cur = (window.__isMarket && window.__isMarket()) || "KR";
     h += spanBar();
     [["US", "🇺🇸", "미국"], ["KR", "🇰🇷", "한국"], ["JP", "🇯🇵", "일본"]].filter(([mk]) => mk === cur).forEach(([mk, flag, title], i) => {
       const rows = d.indicators.filter((r) => market(r) === mk);
