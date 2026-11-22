@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="style.css?v=3918f30bf7">
-<link rel="stylesheet" href="macro.css?v=84bb2d63a0">
+<link rel="stylesheet" href="macro.css?v=9877ccb1bd">
 <link rel="stylesheet" href="ai.css?v=7ed21e4862">
 <link rel="stylesheet" href="pairs.css?v=8cf2a99974">
 <link rel="stylesheet" href="positioning.css?v=597b0f6c19">
@@ -399,6 +399,8 @@
       <li><b>미국 물가·고용</b>: 고통지수(CPI 전년 대비 상승률 + 실업률), 물가 3개(CPI·근원 CPI·근원 PCE), 고용 5개(실업률(삼의 법칙 포함)·비농업 고용 증감·신규/계속 실업수당 청구·구인 건수÷실업자 수)예요. 위험 단계(🟢~🔴) 종합에는 넣지 않고 따로 보여 줘요. 자료는 FRED이고 발표가 나면 그날 밤 11시 50분, 늦게 나오는 지표는 다음 날 아침 7시 20분에 반영돼요. 원자료에 새 값이 있는데 빠지면 경고가 떠요.</li>
       <li><b>수준</b>: 지표가 최근 5년 동안 ‘위험한 쪽’으로 몇 % 위치에 있는지 봐요. 하위 50%는 🟢정상, 50~75%는 🔵관심, 75~90%는 🟡주의, 90~97%는 🟠경계, 97% 이상은 🔴위기예요.</li>
       <li><b>속도</b>: 최근 1개월(21거래일) 변화가 지난 5년 동안의 1개월 변화와 견줘 유난히 크면(표준점수 2 이상) 한 단계, 아주 크면(3 이상) 두 단계 더 위험하게 봐요. 숫자는 아직 낮아도 빠르게 나빠지는 지표를 놓치지 않기 위해서예요.</li>
+      <li><b>절대 기준 바닥</b>: VIX가 30 이상이거나 VKOSPI가 40 이상이면 5년 중 위치와 상관없이 최소 🟠경계, VIX 40 이상·VKOSPI 60 이상이면 🔴위기로 매겨요. 공포지수가 오래 높으면 ‘최근 5년과 비교한 위치’가 무뎌지기 때문이에요.</li>
+      <li><b>오늘 시장 위험도</b>는 나라별로 두 묶음으로 나눠 따로 매겨요. <b>주식시장 충격</b>은 변동성·투자 심리·주가 낙폭(최근 1년 최고가 대비), <b>신용·자금 스트레스</b>는 회사채 금리차·장단기 금리차·유동성이에요(일본은 금리·환율). 묶음 안에서는 지표 단계를 평균하고, 🔴위기가 3개 이상이거나 🟠경계 이상이 절반을 넘으면 더 위험하게 봐요. 전에는 지표를 한데 평균해서, 주식이 급락해도 채권 지표가 조용하면 종합이 낮게 나왔어요(2026-11-22 고침).</li>
       <li><b>장단기 금리차</b>는 너무 좁아지거나 뒤집혀도, 갑자기 크게 벌어져도 경기 신호라서 5년 중간값에서 양쪽으로 멀어질수록 위험하게 봐요.</li>
       <li><b>주식 풋콜레이시오</b>(미국 투자 심리): 개별 주식 옵션의 풋 거래량 ÷ 콜 거래량. 기본은 미국 옵션 거래소 전체(OCC 자료, 최근 2년), 장기 비교는 Cboe 거래소(2006년~). 10일 평균이 그 기간 중 상위 10% 이상이면 겁먹음(드문 수준), 75% 이상 불안, 하위 10% 이하면 들뜸(탐욕), 25% 이하 낙관으로 봐요. 종합 위험 단계에는 넣지 않아요.</li>
       <li><b>한국 공포탐욕지수</b>(한국 시장 지표 맨 위): CNN 공포탐욕지수 방식을 한국 자료로 만든 것. 코스피 125일선 대비 위치·52주 신고가 대 신저가·오른 종목 거래대금 흐름(맥클렐런)·레버리지 대 인버스 ETF 거래대금·VKOSPI 50일 평균 대비·코스피 대 국고채 20일 수익률·BBB 대 AA 회사채 금리차·신용융자 20일 증가율, 이 8가지를 최근 2년(500거래일) 중 위치로 0~100점 매겨 평균해요. 25 미만 극단적 공포, 75 이상 극단적 탐욕. 종합 위험 단계에는 넣지 않아요.</li>
@@ -497,7 +499,7 @@
 <script src="econ.js?v=04ad62913a"></script>
 <script src="putcall.js?v=7ea8be3601"></script>
 <script src="krfng.js?v=4270fc111c"></script>
-<script src="macro.js?v=b6f82db471"></script>
+<script src="macro.js?v=2d1d496ffd"></script>
 <script src="ai.js?v=341000e0fa"></script>
 <script src="infra.js?v=1ed786499d"></script>
 <script src="chips.js?v=23242b0c2b"></script>
