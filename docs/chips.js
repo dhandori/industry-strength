@@ -235,11 +235,11 @@
       <div class="cp-lgs">${lg}</div>
       <div id="cpPrice"></div>
       <h3 class="ai-h3">메모리 계약가 전망 <span class="sub">트렌드포스 발표 · 전 분기 대비 상승률</span></h3>
-      ${mcRows ? `<div class="cp-crows">${mcRows}</div>` : "<p class='none'>아직 판독된 발표가 없어요.</p>"}
+      ${mcRows ? `<div class="cp-crows">${mcRows}</div>` : "<p class='none'>아직 읽어 온 발표가 없어요.</p>"}
       <p class="foot-note">삼성전자, SK하이닉스, 마이크론의 실제 판매가는 이 계약가를 따라가요. 트렌드포스가 새 분기 전망을 내면 구글 뉴스에서 자동으로 읽어 추가해요.</p>
 
       <details class="ai-more" data-more="chips"${st.more ? " open" : ""}><summary>자세히 보기 · 품목별 표, CPU 가격 인상 타임라인, 자료 기준</summary><div class="ai-more-b">
-      <p class="cp-sub">품목 이름표를 누르면 선을 켜고 끌 수 있어요. 오른쪽 꼬리표는 마지막 값이에요. 선이 계단 모양인 것은 시세가 바뀐 날에만 값이 바뀌기 때문이에요.${maxLen < 20 ? " 이동평균은 기록이 20일 이상인 품목부터 보여요." : ""}</p>
+      <p class="cp-sub">품목 이름표를 누르면 선을 켜고 끌 수 있어요. 오른쪽 꼬리표는 마지막 값이에요. 시세가 바뀐 날에만 값이 달라져서 선이 계단 모양이에요.${maxLen < 20 ? " 이동평균은 기록이 20일 이상인 품목부터 보여요." : ""}</p>
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>분류</th><th>품목</th><th class="num">평균가</th><th class="num">전일 대비</th><th class="num">그날 범위</th><th>기준일</th><th class="num">기록</th></tr></thead><tbody>${tbl}</tbody></table></div>
       <p class="foot-note">현물가는 대리점·중개상 사이 즉석 거래 값이라 대형 고객이 분기마다 정하는 계약가보다 먼저 움직여요. DRAMeXchange는 표마다 갱신 주기가 달라서 D램 칩은 매일, 모듈과 낸드는 대개 주 1회 바뀌어요.</p>
 

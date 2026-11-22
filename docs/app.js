@@ -419,7 +419,7 @@
     } else {
       tree = boardTree(d, k);
       $("#exSub").textContent = `강도판 분류 · ${d.basis_date} 종가 · ${PLABEL[k]} 등락률`;
-      note = "분류·세부 산업 등락률은 구성 종목 등락률의 단순 평균(종목 수 같은 비중)이에요.";
+      note = "분류·세부 산업 등락률은 구성 종목 등락률의 단순 평균(종목마다 같은 비중)이에요.";
     }
     $("#exNote").textContent = `큰 분류를 누르면 세부 업종이 펼쳐지고, 강도판 분류에서는 세부 업종을 누르면 종목까지 펼쳐져요. ${note} 빨강은 상승, 파랑은 하락이에요. 네이버·TV·Finviz 버튼은 새 창으로 열려요.`;
     const sorted = (arr) => arr.slice().sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
@@ -537,7 +537,7 @@
         <div class="rc4">${rsOf(i)}<span class="rc-dist">RS선 1년 최고 대비 <b>${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"}</b> · 20일 시장 대비 <b class="ret ${cls(i.rs_ex20)}">${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}</b></span></div>
       </button>`).join("");
     if (!rows.length) {
-      const msg = "조건에 맞는 산업이 없어요. 지금 이 조건에서는 가격이 오르고 있는 산업이 없어요.";
+      const msg = "조건에 맞는 산업이 없어요. 검색어나 필터를 바꿔 보세요.";
       $("#rankTable tbody").innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
       $("#rankCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
     }
@@ -881,7 +881,7 @@
   function gapRangeText(lo, hi, p, days) {
     const r1 = (v) => Math.round(v * 10) / 10 || 0;
     const where = p >= 90 ? " 과거와 견줘 많이 벌어진 편이에요." : p <= 10 ? " 과거와 견줘 많이 눌린 편이에요." : "";
-    return `${days >= 250 ? "지난 1년" : `최근 ${days}거래일`} 범위 ${fmtPct(r1(lo))} ~ ${fmtPct(r1(hi))} · 이 기간의 ${Math.round(p)}% 날보다 지금이 높아요.${where}`;
+    return `${days >= 250 ? "지난 1년" : `최근 ${days}거래일`} 범위 ${fmtPct(r1(lo))} ~ ${fmtPct(r1(hi))} · 이 기간 중 ${Math.round(p)}%의 날보다 지금이 높아요.${where}`;
   }
   function gap200Of(S, id) {
     const s = S && S.items && S.items[id];

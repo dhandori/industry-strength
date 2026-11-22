@@ -17,8 +17,8 @@
 
   // 가격(종합 강도) × 수급(산업끼리 비교한 20일 수급 강도) 판정 4칸
   const J = {
-    dong: { t: "동행 상승", e: "🔥", tag: "수급 동행", c: "up", help: "가격이 강하고(종합 강도 60점 이상이면서 상승 추세나 상승 전환 시도) 외국인·기관도 산업 상위 30% 안에서 사들이는 중이에요. 추세추종에서 가장 좋은 모양이에요." },
-    itl: { t: "수급 이탈", e: "⚠️", tag: "수급 이탈", c: "warn", help: "가격은 강한데(종합 강도 60점 이상이면서 상승 추세나 상승 전환 시도) 외국인·기관은 20일 동안 팔고 있어요(산업 하위 30%). 개인 돈으로 버티는 상승일 수 있어 힘이 약해질 수 있어요." },
+    dong: { t: "동행 상승", e: "🔥", tag: "수급 동행", c: "up", help: "가격이 강하고(종합 강도 60점 이상이면서 상승 추세나 상승 전환 시도) 외국인·기관 매수세도 산업 상위 30% 안에 들어요. 추세추종에서 가장 좋은 모양이에요." },
+    itl: { t: "수급 이탈", e: "⚠️", tag: "수급 이탈", c: "warn", help: "가격은 강한데(종합 강도 60점 이상이면서 상승 추세나 상승 전환 시도) 외국인·기관은 20일 동안 팔고 있어요(산업 하위 30%). 개인 매수로 버티는 상승이라면 힘이 빠지기 쉬워요." },
     mae: { t: "매집 의심", e: "👀", tag: "매집 의심", c: "watch", help: "가격은 약한데(종합 강도 40점 이하이거나 하락 추세) 외국인·기관이 꾸준히 사요(20일 수급 산업 상위 30%이면서 최근 5일도 순매수, 또는 5일 넘게 연속 순매수). 바로 사는 신호가 아니라, 가격이 돌아서는지 지켜볼 후보예요." },
     yak: { t: "동반 약세", e: "❄️", tag: null, c: "down", help: "가격도 약하고(종합 강도 40점 이하이거나 하락 추세) 외국인·기관도 팔아요(산업 하위 30%). 피하는 게 좋은 모양이에요." },
   };
@@ -95,7 +95,7 @@
     const one = (v, run, who) => `<td class="num"><span class="ret ${cls(v)}">${won(v)}</span>${streak(run, who)}</td>`;
     return one(s.f5, s.fs, "") + one(s.i5, s.is, "");
   }
-  const blockMark = (m) => m.sup && m.sup.blk && m.sup.blk.length ? `<span class="sup-blk" title="${m.sup.blk.map(md).join(", ")}에 기타법인과 큰 덩어리를 주고받은 거래(블록딜·지분 이동)가 있었어요. 시장에서 사 모은 돈이 아니라서 수급 강도 계산에서는 그날을 뺐어요.">⚑ 블록거래</span>` : "";
+  const blockMark = (m) => m.sup && m.sup.blk && m.sup.blk.length ? `<span class="sup-blk" title="${m.sup.blk.map(md).join(", ")}에 기타법인과 대량으로 주고받은 거래(블록딜·지분 이동)가 있었어요. 장내에서 사 모은 물량이 아니라서 수급 강도 계산에서는 그날을 뺐어요.">⚑ 블록거래</span>` : "";
 
   // ---------- 오늘의 신호에 붙는 줄
   const signalRow = () => ({ title: "수급 신호", groups: [
@@ -128,11 +128,11 @@
           <div><em>20일 동안 산 종목</em><b>${nBuy} / ${s.n}</b><small>외국인+기관 순매수 종목</small></div>
         </div>
       </div>
-      ${runTxt ? `<p class="sup-line">${runTxt}이에요.</p>` : ""}`;
+      ${runTxt ? `<p class="sup-line">${runTxt}예요.</p>` : ""}`;
     document.getElementById("dSupTable").innerHTML = `<table class="mem-table sup-table"><thead><tr><th>투자자</th><th class="num">${md(S.basis_date)} 하루</th><th class="num">5일</th><th class="num">20일</th><th class="num">60일</th></tr></thead><tbody>
       ${row("외국인", "f")}${row("기관", "i")}${row("외국인+기관", "fi", ' class="sum"')}${row("개인", "p")}</tbody></table>`;
     document.getElementById("dSupNote").innerHTML = `단위 억 원, 구성 종목 합계예요. 네이버 순매수 수량에 그날 종가를 곱한 추정치라 실제 금액과 몇 % 다를 수 있어요. 기준일 ${esc(S.basis_date)}.`
-      + (blk.length ? ` <b>⚑ 블록거래</b>: ${blk.map((m) => `${esc(m.name)} ${m.sup.blk.map(md).join(", ")}`).join(" / ")}. 기타법인과 큰 덩어리를 주고받은 날이라 합계에는 들어 있지만 수급 강도 계산에서는 뺐어요.` : "");
+      + (blk.length ? ` <b>⚑ 블록거래</b>: ${blk.map((m) => `${esc(m.name)} ${m.sup.blk.map(md).join(", ")}`).join(" / ")}. 기타법인과 대량으로 주고받은 날이라 합계에는 들어 있지만 수급 강도 계산에서는 뺐어요.` : "");
     document.getElementById("dSupChart").innerHTML = `<p class="rsub">그래프 준비 중…</p>`;
   }
 
@@ -248,7 +248,7 @@
       const sub = [r.ind, r.mcap ? (r.mcap >= 10000 ? `시총 ${(r.mcap / 10000).toFixed(1)}조` : `시총 ${Math.round(r.mcap).toLocaleString("ko-KR")}억`) : ""].filter(Boolean).join(" · ");
       const holdTxt = F && r.hold != null ? `<span class="fr-hold">보유 <b>${r.hold.toFixed(1)}%</b><small class="ret ${cls(r.dh)}">${sgn2(r.dh)}%p${r.off ? ` <span class="fr-off" title="보유비중 변화가 거래소 순매수와 어긋나요. 블록딜·지분 매각 같은 장외 이동이 있었을 수 있어요.">⚑장외</span>` : ""}</small></span>` : `<span class="fr-hold"></span>`;
       return `<li class="fr-row"><span class="fr-rk">${k + 1}</span>
-        <span class="fr-nm">${nm}${r.blk ? ` <span class="fr-blk" title="이 기간에 기타법인과 큰 덩어리를 주고받은 날(블록딜·지분 이동)이 있어요. 순매수 금액에 그 거래가 섞여 있을 수 있어요.">⚑블록</span>` : ""}<small>${esc(sub)}</small></span>
+        <span class="fr-nm">${nm}${r.blk ? ` <span class="fr-blk" title="이 기간에 기타법인과 대량으로 주고받은 날(블록딜·지분 이동)이 있어요. 순매수 금액에 그 거래가 섞여 있을 수 있어요.">⚑블록</span>` : ""}<small>${esc(sub)}</small></span>
         <span class="fr-bar ${side}"><i style="width:${w.toFixed(1)}%"></i></span>
         <b class="fr-v ret ${cls(v)}">${sgn2(v)}%</b>
         ${holdTxt}
@@ -257,7 +257,7 @@
     const col = (title, arr, side) => `<div class="fr-col"><h3 class="fr-h ${side}">${title}</h3><ol class="fr-list">${arr.map((r, k) => one(r, k, side)).join("") || `<li class="rsub">없음</li>`}</ol></div>`;
     document.getElementById("frBody").innerHTML = col(`${who}가 시총 대비 많이 산 10`, lists.buy, "up") + col(`${who}가 시총 대비 많이 판 10`, lists.sell, "down");
     document.getElementById("frNote").innerHTML = F
-      ? `큰 % = 기간 순매수 ÷ 시가총액(시총 대비 순매수)이라 대형주가 금액만으로 1등이 되지 않아요. 외국인이 산 주식 수 ÷ 전체 주식 수가 곧 보유비중이 늘어난 몫이라 원래 보유비중 변화(옆 칸 %p)와 같아야 하는데, 블록딜·지분 매각 같은 장외 이동은 보유비중에만 잡혀 어긋나면 ⚑장외로 표시했어요. 보유비중은 네이버 외국인 보유율이에요. 금액은 순매수 수량 × 그날 종가로 계산한 추정치(억 원), 그 아래 작은 %는 같은 기간 주가 등락률이에요. 대상: 코스피 전체와 코스닥 시총 상위 300종목(보통주). 이름을 누르면 종목 상세가 열려요.`
+      ? `큰 %는 기간 순매수를 시가총액으로 나눈 값(시총 대비 순매수)이라 대형주가 금액만으로 1등이 되지 않아요. 외국인이 산 주식 수를 전체 주식 수로 나누면 보유비중이 늘어난 만큼이라, 원래는 보유비중 변화(옆 칸 %p)와 같아야 해요. 다만 블록딜·지분 매각 같은 장외 이동은 보유비중에만 잡혀서, 둘이 어긋나면 ⚑장외로 표시했어요. 보유비중은 네이버 외국인 보유율이에요. 금액은 순매수 수량 × 그날 종가로 계산한 추정치(억 원), 그 아래 작은 %는 같은 기간 주가 등락률이에요. 대상: 코스피 전체와 코스닥 시총 상위 300종목(보통주). 이름을 누르면 종목 상세가 열려요.`
       : `기관은 보유비중이 공개되지 않아 순매수 금액 ÷ 시가총액(%)으로 줄 세웠어요. 금액은 순매수 수량 × 그날 종가로 계산한 추정치(억 원), 그 아래 작은 %는 같은 기간 주가 등락률이에요. 대상: 코스피 전체와 코스닥 시총 상위 300종목(보통주).`;
   }
   document.addEventListener("click", (e) => {
