@@ -21,7 +21,7 @@
       why: "장바구니 물가가 1년 전보다 몇 % 올랐는지예요. 연준 목표는 2% 근처예요. 높을수록 금리를 내리기 어려워요.",
       lv: (v) => v <= 2.5 ? [5, "목표 근처"] : v <= 3.5 ? [3, "목표보다 높음"] : v <= 5 ? [2, "높음"] : [1, "매우 높음"], extra: (x) => `최근 3개월 연율 ${x.toFixed(1)}%` },
     core_cpi: { n: "근원 소비자물가 (식품·에너지 뺀 CPI)", g: "물가", f: (v) => v.toFixed(1) + "%", ref: [2],
-      why: "값이 크게 출렁이는 식품·에너지를 뺀 물가예요. 물가의 '바닥 흐름'이라 연준이 더 눈여겨봐요.",
+      why: "값이 크게 출렁이는 식품·에너지를 뺀 물가예요. 물가의 '기본 흐름'이라 연준이 더 눈여겨봐요.",
       lv: (v) => v <= 2.5 ? [5, "목표 근처"] : v <= 3.5 ? [3, "목표보다 높음"] : v <= 5 ? [2, "높음"] : [1, "매우 높음"], extra: (x) => `최근 3개월 연율 ${x.toFixed(1)}%` },
     core_pce: { n: "근원 PCE 물가 (연준 기준 물가)", g: "물가", f: (v) => v.toFixed(1) + "%", ref: [2],
       why: "연준이 2% 목표를 잴 때 공식으로 쓰는 물가예요. CPI보다 한 달쯤 늦게 나와요.",
@@ -32,7 +32,7 @@
       lv: (v, i) => i.extra == null || i.extra < 0.3 ? null : i.extra < 0.5 ? [3, "삼의 법칙 경계 근접"] : [1, "삼의 법칙 침체 경보"],
       extra: (x) => `삼의 법칙 ${x.toFixed(2)}%p (0.5 넘으면 침체 경보)` },
     payrolls: { n: "비농업 고용 증감 (한 달 새 늘어난 일자리)", g: "고용", f: (v) => `${v >= 0 ? "+" : ""}${(v / 10).toFixed(1)}만 명`, ref: [0], bars: true,
-      why: "한 달 동안 미국 일자리가 몇 개 늘었는지예요(농업 제외). 꾸준히 10만 개 넘게 늘면 탄탄, 0 아래면 일자리가 줄어드는 거예요.",
+      why: "한 달 동안 미국 일자리가 몇 개 늘었는지예요(농업 제외). 꾸준히 10만 개 넘게 늘면 탄탄한 편이고, 0 아래면 일자리가 줄었다는 뜻이에요.",
       lv: (v, i) => { const a = i.extra; return a > 100 ? [5, "탄탄"] : a > 30 ? [4, "둔화"] : a > 0 ? [3, "많이 둔화"] : [1, "감소"]; }, extra: (x) => `최근 3개월 평균 ${x >= 0 ? "+" : ""}${(x / 10).toFixed(1)}만 명` },
     claims: { n: "신규 실업수당 청구 (주간)", g: "고용", f: (v) => `${MAN(v)} 건`, ref: [], daily: true,
       why: "한 주 동안 새로 실업수당을 신청한 사람 수예요. 해고가 늘면 가장 먼저 오르는 숫자예요. 4주 평균으로 흐름을 봐요.",
@@ -62,9 +62,23 @@
     let lo = Math.min(...vals), hi = Math.max(...vals);
     if (opt.bars) lo = Math.min(lo, 0);
     const pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
-    const x = (i) => L + (W - L - R) * i / (s.length - 1), y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+    // 2026-11-21: 눈금을 딱 떨어지는 값(1·2·2.5·5×10ⁿ 간격)에 둔다. 예전엔 범위를 4등분한 7.8·9.7 같은 자리에
+    // 반올림한 글자(8·10)를 붙여 선이 실제와 다른 값으로 읽혔다(1년 고통지수 8.05가 '8' 선 위로 보임).
+    let ticks = [];
+    for (const m of [1, 2, 2.5, 5, 10, 20, 25, 50]) {
+      const step = m * 10 ** Math.floor(Math.log10((hi - lo) / 4));
+      if ((hi - lo) / step > 6) continue;
+      const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step;
+      const t = []; for (let v = a; v <= b + step / 2; v += step) t.push(+v.toFixed(10));
+      if (new Set(t.map((v) => opt.ax(v))).size === t.length) { ticks = t; break; }   // 글자가 겹치면(0.5 간격에 소수 0자리) 더 넓게
+    }
+    if (ticks.length > 1) { lo = ticks[0]; hi = ticks.at(-1); }
+    // 매일 자료를 거래일 수로 자른 경우(days)만 순서대로, 나머지는 날짜 간격대로 놓는다(빠진 달이 있어도 간격이 맞게)
+    const t0 = Date.parse(s[0][0]), tN = Date.parse(s.at(-1)[0]);
+    const x = opt.days ? (i) => L + (W - L - R) * i / (s.length - 1) : (i) => L + (W - L - R) * (Date.parse(s[i][0]) - t0) / (tN - t0);
+    const y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
     let g = "";
-    for (let k = 0; k <= 4; k++) { const v = lo + (hi - lo) * k / 4, yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${opt.ax(v)}</text>`; }
+    for (const v of ticks) { const yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${opt.ax(v)}</text>`; }
     if (opt.zone != null && opt.zone < hi) g += `<rect x="${L}" y="${T}" width="${W - L - R}" height="${Math.max(0, y(opt.zone) - T).toFixed(1)}" fill="var(--mx1)" opacity=".07"/>`;   // 위험 구간 칠하기
     (opt.ref || []).filter((v) => v > lo && v < hi).forEach((v) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${opt.refC || "var(--mx2)"}" stroke-dasharray="3 3"/>`; });
     // 가로축: 기간 길이에 맞춰 해(年) 또는 달
@@ -78,11 +92,12 @@
       const yr = +p[0].slice(0, 4), mo = +p[0].slice(5, 7);
       const key = every ? String(yr) : p[0].slice(0, 7);
       if (key === last) return;
-      const show = every ? (last && yr % every === 0) : (last && mo % (small ? 6 : 3) === 1);
+      // 1년 안팎은 달마다(휴대폰은 두 달마다), 2년 안팎은 석 달마다(2026-11-21: 1년 그래프에 눈금이 두 개뿐이었다)
+      const mstep = span <= 1.3 ? (small ? 2 : 1) : (small ? 6 : 3);
+      const show = every ? (last && yr % every === 0) : (last && (mo - 1) % mstep === 0);
       last = key;
       if (!show) return;
-      const xx = x(i).toFixed(1);
-      xt += `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${xx}" y="${H - 7}" text-anchor="middle" font-size="11" fill="var(--muted)">${every ? yr : ym(p[0])}</text>`;
+      xt += tk(i, every ? yr : ym(p[0]));   // 오른쪽 끝 글자는 잘리지 않게 끝에 맞춤
     });
     let body = "";
     if (opt.bars) {
@@ -95,6 +110,8 @@
       ln.v.forEach((v, i) => { if (v == null) { pen = false; return; } d += (pen ? "L" : "M") + x(i).toFixed(1) + "," + y(v).toFixed(1); pen = true; });
       body += `<path d="${d}" fill="none" stroke="${ln.c}" stroke-width="${ln.w || 1.6}"${ln.dash ? ` stroke-dasharray="${ln.dash}"` : ""} stroke-linejoin="round"/>`;
     }
+    // 점이 적으면(1년 월별 등) 주인공 선에 달마다 점을 찍어 어느 달 값인지 보이게
+    if (!opt.bars && s.length <= 30) lines[0].v.forEach((v, i) => { if (v != null && i < s.length - 1) body += `<circle cx="${x(i).toFixed(1)}" cy="${y(v).toFixed(1)}" r="2.6" fill="${lines[0].c}" stroke="var(--surface)" stroke-width="1"/>`; });
     // 표시할 점(예: 과거 고점) [날짜, 값, 글자]
     (opt.marks || []).forEach(([d, v, t, below]) => {
       const i = s.findIndex((p) => p[0] === d);
@@ -112,7 +129,7 @@
   const MSP = [["m12", "1년"], ["m24", "2년"], ["m60", "5년"], ["m120", "10년"], ["m240", "20년"], ["m0", "전체"]];
   // 장기로 봐야 하는 지표는 처음부터 길게(2026-10-31). 위쪽 '그래프 기간' 버튼을 누르면 모두 그 기간으로 맞춘다
   // (일자리 증감·실업수당 청구는 2020년 코로나 때 값이 수십 배로 튀어 길게 보면 나머지가 납작해지므로 묶음 기본값 그대로)
-  const ECON_DEF = { misery: "m0", treasury: "m0", cpi: "m120", core_cpi: "m120", core_pce: "m120", unrate: "m120", vu: "m120", kr_credit: "m0", kr_ratio: "m0" };
+  const ECON_DEF = { misery: "m0", household: "m0", treasury: "m0", cpi: "m120", core_cpi: "m120", core_pce: "m120", unrate: "m120", vu: "m120", kr_credit: "m0", kr_ratio: "m0" };
   st.cs = { ...ECON_DEF };
   const spOf = (key, daily, def) => st.cs[key] ?? def ?? (daily ? (st.span === 24 ? "m24" : st.span === 0 ? "m0" : "m60") : `m${st.span}`);
   const spOpt = (key, daily, def) => { const v = spOf(key, daily, def); return typeof v === "number" ? { days: v } : { months: +v.slice(1) }; };
@@ -144,7 +161,7 @@
       : D.ref.length ? `<div class="chart-legend"><span><i style="background:var(--mx2)"></i>기준선 ${D.ref.map((r) => i.key === "vu" ? r + "배" : r + "%(연준 목표)").join(", ")}</span></div>` : "";
     return `<article class="card mx-card ec-card" style="--c:${lv ? col(lv[0]) : "var(--line)"}">
       <div class="mx-head"><div><div class="mx-name">${esc(D.n)}</div></div>${lv ? `<span class="mx-chip" style="--c:${col(lv[0])}">${esc(lv[1])}</span>` : ""}</div>
-      <div class="mx-val"><b>${D.f(i.value)}</b><span class="ec-date">${dateTxt}</span>${i.est ? `<span class="ec-est" title="2025년 10월 물가 자료가 미국 정부 셧다운으로 조사되지 않아 BLS도 이번 달 전년 대비 상승률을 발표하지 않았어요. 앞뒤 달(2025년 9월·11월) 지수의 평균으로 1년 전 값을 메워 직접 계산한 추정치예요.">추정</span>` : ""}</div>
+      <div class="mx-val"><b>${D.f(i.value)}</b><span class="ec-date">${dateTxt}</span>${i.est ? `<span class="ec-est" title="미국 정부 셧다운으로 2025년 10월 물가를 조사하지 못해 BLS도 이번 달 전년 대비 상승률을 발표하지 않았어요. 앞뒤 달(2025년 9월·11월) 지수의 평균으로 1년 전 값을 메워 직접 계산한 추정치예요.">추정</span>` : ""}</div>
       ${i.mom != null ? `<div class="ec-mom">전월 대비 <b class="${i.mom > 0 ? "up" : i.mom < 0 ? "down" : ""}">${i.mom > 0 ? "+" : ""}${i.mom.toFixed(1)}%</b><span class="ec-off">BLS 공식</span><small>${ymK(i.mom_date)} · 계절조정</small></div>` : ""}
       <div class="ec-chs">${ch}${ex}${ya}</div>
       <div class="mx-chart">${pick(i.key, D.daily)}${svg}${legend}</div>
@@ -168,19 +185,43 @@
     // 2026-10-30: 맨 위 따로 튀던 큰 카드 → 경기 묶음 첫 카드(다른 지표 카드와 같은 모양, 접으면 값·구성만)
     return `<article class="card mx-card ec-hero" style="--c:${col(lv[0])}">
       <div class="mx-head"><div><div class="mx-name">미국 고통지수 (Misery Index)</div><div class="mx-dir">물가상승률 + 실업률 · 높을수록 체감 경기 나쁨</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
-      <div class="mx-val"><b>${m.value.toFixed(1)}</b><span class="ec-date">${ymK(m.date)}</span>${m.est ? `<span class="ec-est" title="2025년 10월 물가 자료가 미국 정부 셧다운으로 조사되지 않아 BLS도 이번 달 전년 대비 상승률을 발표하지 않았어요. 앞뒤 달(2025년 9월·11월) 지수의 평균으로 1년 전 값을 메워 직접 계산한 추정치예요.">추정</span>` : ""}<span class="ec-formula">= 물가 <b>${m.cpi.toFixed(1)}%</b> + 실업 <b>${m.unrate.toFixed(1)}%</b></span></div>
+      <div class="mx-val"><b>${m.value.toFixed(1)}</b><span class="ec-date">${ymK(m.date)}</span>${m.est ? `<span class="ec-est" title="미국 정부 셧다운으로 2025년 10월 물가를 조사하지 못해 BLS도 이번 달 전년 대비 상승률을 발표하지 않았어요. 앞뒤 달(2025년 9월·11월) 지수의 평균으로 1년 전 값을 메워 직접 계산한 추정치예요.">추정</span>` : ""}<span class="ec-formula">= 물가 <b>${m.cpi.toFixed(1)}%</b> + 실업 <b>${m.unrate.toFixed(1)}%</b></span></div>
       <div class="ec-hero-b">
         <div class="ec-hero-l"><p>${dir}. 1948년 이후 지금보다 낮았던 달이 <b>${m.pct_rank}%</b>예요. 역대 평균 ${m.avg.toFixed(1)}, 최근 5년 ${m.five_lo.toFixed(1)}~${m.five_hi.toFixed(1)}, 가장 높았던 때는 ${ymK(m.peak[0])} ${m.peak[1].toFixed(1)}이에요.</p>
-          <p class="ec-why"><b>무엇인가요?</b> 물가가 오르는 고통과 일자리를 잃는 고통을 더한 숫자예요. 높을수록 사람들이 체감하는 경기가 나쁘고, 소비·선거·정책에 압력이 커져요. 10을 넘으면 높은 편, 7 아래면 편한 편으로 봐요.</p></div>
+          <p class="ec-why"><b>무엇인가요?</b> 물가가 오르는 고통과 일자리를 잃는 고통을 더한 숫자예요. 높을수록 사람들이 체감하는 경기가 나쁘고, 소비·선거·정책에 주는 부담도 커져요. 10을 넘으면 높은 편, 7 아래면 낮은 편으로 봐요.</p></div>
         <div class="ec-hero-r"><div class="mx-chart">${pick("misery", false)}${svg}<div class="chart-legend"><span><i style="background:var(--price)"></i>고통지수</span>${lines ? `<span><i style="background:var(--ma20)"></i>물가상승률</span><span><i style="background:var(--ma50)"></i>실업률</span>` : ""}<span><i style="background:var(--muted)"></i>역대 평균 ${m.avg.toFixed(1)}</span></div></div></div>
       </div>
     </article>`;
   }
 
+  // ---------- 가계 생활비 부담 지수 (2026-11-21 추가, 웰스파고 'household misery index'를 공개 자료로 따라 만든 것)
+  function household(h) {
+    if (!h || !h.series || h.series.length < 24) return "";
+    const v = h.value;
+    const lv = v < 90 ? [5, "낮음"] : v < 110 ? [4, "보통"] : v < 125 ? [3, "높음"] : v < 140 ? [2, "매우 높음"] : [1, "극심"];
+    const s = h.series, since10 = s.filter((p) => p[0] >= "2010-01-01");
+    const higher = since10.filter((p) => p[1] > v).length;
+    const rankTxt = higher === 0 ? "2010년 이후 <b>가장 높아요</b>" : `2010년 이후 이보다 높았던 달은 <b>${higher}번</b>뿐이에요(가장 높았던 때 ${ymK(h.peak[0])} ${h.peak[1].toFixed(0)})`;
+    const dir = h.ago3 == null ? "" : v > h.ago3 + 2 ? `석 달 전(${h.ago3.toFixed(0)})보다 <b class="up">올라가는 중</b>` : v < h.ago3 - 2 ? `석 달 전(${h.ago3.toFixed(0)})보다 <b class="down">내려가는 중</b>` : `석 달 전(${h.ago3.toFixed(0)})과 비슷`;
+    const svg = chart(s, { ...spOpt("household", false), ref: [100], refC: "var(--muted)", ax: (x) => x.toFixed(0), dot: col(lv[0]), h: innerWidth < 640 ? 190 : 210,
+      lines: [{ v: s.map((p) => p[1]), c: "var(--price)", w: 2.4 }, { v: s.map((p) => p[2]), c: "var(--ma20)", w: 1.4, dash: "4 3" }, { v: s.map((p) => p[3]), c: "var(--ma50)", w: 1.4, dash: "4 3" }] });
+    const est = h.house_est && h.house_est.length ? `<span class="ec-est" title="집값(케이스-실러)은 두 달 늦게 나와요. ${h.house_est.map(ymK).join(", ")}은 마지막 집값을 그대로 두고 대출 금리와 주급만 새 값으로 계산했어요.">집값 추정</span>` : "";
+    return `<article class="card mx-card ec-hero ec-hh" style="--c:${col(lv[0])}">
+      <div class="mx-head"><div><div class="mx-name">가계 생활비 부담 지수 (웰스파고식 고통지수)</div><div class="mx-dir">휘발유 값 + 집 사는 부담 · 2010~2025년 평균 = 100 · 높을수록 살림이 빠듯함</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
+      <div class="mx-val"><b>${v.toFixed(0)}</b><span class="ec-date">${ymK(h.date)}</span>${est}<span class="ec-formula">= 휘발유 <b>${h.gas_idx.toFixed(0)}</b>($${h.gas.toFixed(2)}) · 집 부담 <b>${h.house_idx.toFixed(0)}</b>(30년 대출 ${h.rate.toFixed(2)}%)의 평균</span></div>
+      <div class="ec-hero-b">
+        <div class="ec-hero-l"><p>${dir}. ${rankTxt}. 1년 전에는 ${h.year_ago != null ? h.year_ago.toFixed(0) : "–"}였어요.</p>
+          <p class="ec-why"><b>무엇인가요?</b> 미국 가정이 매달 피부로 느끼는 두 가지 큰 지출, 기름값과 집값 부담을 한 숫자로 만든 지수예요. 100이면 지난 16년 평균만큼이고 150이면 그보다 절반쯤 더 빠듯하다는 뜻이에요. 위의 고통지수가 물가 '오름폭'과 실업을 본다면, 이 지수는 지금 내야 하는 '값 자체'를 봐서 물가 상승이 멈춰도 쉽게 내려오지 않아요.</p>
+          <p class="ec-why"><b>어떻게 만들었나요?</b> 웰스파고 투자연구소가 EIA 휘발유 값과 NAR 주택구입능력지수로 만든 지수를 따라 만들었어요. 웰스파고는 계산식을 공개하지 않았고 NAR 과거 자료는 유료라서, 집 사는 부담은 케이스-실러 집값으로 30년 고정 대출을 받을 때 매달 갚는 돈을 평균 주급으로 나눠 직접 계산했어요. 웰스파고 그래프와 견주면 평균 5포인트쯤 차이 나고 2026년 10월은 둘 다 150이에요.</p></div>
+        <div class="ec-hero-r"><div class="mx-chart">${pick("household", false)}${svg}<div class="chart-legend"><span><i style="background:var(--price)"></i>생활비 부담 지수</span><span><i style="background:var(--ma20)"></i>휘발유</span><span><i style="background:var(--ma50)"></i>집 사는 부담</span><span><i style="background:var(--muted)"></i>평균 100</span></div></div></div>
+      </div>
+    </article>`;
+  }
+
   // ---------- 미국 국채 금리 2년·10년·30년 (매일)
-  const TR = [["2년", "var(--ma20)", "연준 기준금리 예상을 가장 잘 따라가요. 내리면 시장이 금리 인하를 기대하는 중이에요."],
+  const TR = [["2년", "var(--ma20)", "연준 기준금리 예상을 가장 잘 따라가요. 내리면 시장이 금리 인하를 기대한다는 뜻이에요."],
     ["10년", "var(--price)", "주택담보대출·회사채 금리의 기준이 되는 대표 금리예요. 오르면 주식(특히 성장주) 값에 부담이에요."],
-    ["30년", "var(--ma200)", "가장 긴 국채 금리예요. 나라 빚·장기 물가에 대한 걱정이 크면 많이 올라요."]];
+    ["30년", "var(--ma200)", "가장 긴 국채 금리예요. 나라 빚이나 장기 물가 걱정이 커지면 많이 올라요."]];
   function treasury(t) {
     if (!t || !t.series || t.series.length < 30) return "";
     const s = t.series, f = (v) => v == null ? "–" : v.toFixed(2) + "%";
@@ -191,7 +232,7 @@
       lines: [{ v: s.map((r) => r[2]), c: TR[1][1], w: 2 }, { v: s.map((r) => r[1]), c: TR[0][1], w: 1.6 }, { v: s.map((r) => r[3]), c: TR[2][1], w: 1.6 }] });
     const sp = (a, b) => Math.round((a - b) * 100);
     const c102 = sp(t.now[1], t.now[0]), c3010 = sp(t.now[2], t.now[1]);
-    const curve = c102 < 0 ? `10년이 2년보다 <b>${-c102}bp 낮아요(역전)</b> — 과거엔 경기침체 앞에서 자주 나왔어요.` : `10년이 2년보다 <b>${c102}bp 높아요</b>${c102 < 30 ? "(거의 평평)" : ""}.`;
+    const curve = c102 < 0 ? `10년이 2년보다 <b>${-c102}bp 낮아요(역전)</b>. 과거엔 경기침체를 앞두고 자주 나타났어요.` : `10년이 2년보다 <b>${c102}bp 높아요</b>${c102 < 30 ? "(거의 평평)" : ""}.`;
     return `<article class="card mx-card ec-tr" style="--c:var(--accent)">
       <div class="mx-head"><div><div class="mx-name">미국 국채 금리 (2년·10년·30년)</div></div><span class="ec-date">${+t.date.slice(5, 7)}/${+t.date.slice(8, 10)} 기준</span></div>
       <div class="ec-tr-grid">
@@ -216,9 +257,9 @@
     if (pk >= 40) marks.push([p12[0], pk, `이번 ${pk.toFixed(0)}%`, true]);
     const svg = chart(m.series, { ...spOpt("margin", false, "m0"), ref: [0, 50], zone: 50, ax: (x) => x.toFixed(0) + "%", dot: col(lv[0]), marks, W: 1000, h: innerWidth < 640 ? 210 : 300 });
     const story = peakOut
-      ? `증가율이 ${ymK(p12[0])} <b>${pk.toFixed(0)}%</b>로 정점을 찍고 <b>${m.falls}개월 연속 내려와</b> 지금 ${v.toFixed(0)}%예요. 과거엔 이렇게 <b>정점에서 꺾일 때</b>가 주가 고점 신호였던 경우가 많았어요.`
+      ? `증가율이 ${ymK(p12[0])} <b>${pk.toFixed(0)}%</b>로 정점을 찍고 <b>${m.falls}개월 연속 내려와</b> 지금 ${v.toFixed(0)}%예요. 과거엔 이렇게 <b>정점에서 꺾일 때</b> 주가도 고점인 경우가 많았어요.`
       : v >= 50 ? `빚을 내 주식을 사는 돈이 1년 새 ${v.toFixed(0)}% 늘었어요. 역대 고점권(50% 이상)이라, 여기서 증가율이 꺾이기 시작하면 고점 신호로 봐요.`
-      : `빚투 증가율 ${v.toFixed(0)}%. 50%를 넘었다가 꺾이는지가 핵심이에요.`;
+      : `빚투 증가율은 ${v.toFixed(0)}%예요. 50%를 넘었다가 꺾이는지가 핵심이에요.`;
     return `<article class="card mx-card ec-mg" style="--c:${col(lv[0])}">
       <div class="mx-head"><div><div class="mx-name">미국 빚투 (신용융자 잔고, 전년 대비 증가율)</div><div class="mx-dir">📈 50% 넘었다가 꺾이면 위험</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
       <div class="mx-val"><b>${v.toFixed(1)}%</b><span class="ec-date">${ymK(m.date)}</span></div>
@@ -260,7 +301,7 @@
       out.push(miniCard({ n: "빚투 ÷ 미국 GDP", dir: "📈 오를수록 위험", lv, v: v.toFixed(2) + "%", date: ymK(gr.at(-1)[0]),
         chs: [`1998년 이후 지금보다 낮았던 달 ${rank}%`, `가장 높았던 때 ${ym(hi[0])} ${hi[1].toFixed(2)}%`],
         pick: pick("gdpratio", false, "m0"), svg: chart(gr, { ...spOpt("gdpratio", false, "m0"), ax: (x) => x.toFixed(1) + "%", dot: col(lv[0]), marks, W: 600 }), title: "1998년부터 흐름 · 빨간 점 = 빚투 증가율이 고점이던 때",
-        why: "신용융자 잔고를 미국 경제 규모(명목 GDP)로 나눈 값이에요. 물가·경제가 커지면 빚 금액도 자연히 커지니, 경제 규모에 비해 빚투가 얼마나 큰지로 과열을 봐요. 자료: FINRA·FRED(GDP, 분기)." }));
+        why: "신용융자 잔고를 미국 경제 규모(명목 GDP)로 나눈 값이에요. 물가가 오르고 경제가 커지면 빚 금액도 자연히 늘어나니, 경제 규모에 비해 빚투가 얼마나 큰지로 과열을 봐요. 자료: FINRA·FRED(GDP, 분기)." }));
     }
     return out.length ? `<div class="mx-grid">${out.join("")}</div>` : "";
   }
@@ -284,7 +325,7 @@
     const marks = [];
     yo.forEach((p, i) => { if (p[1] >= 60 && p[1] === Math.max(...yo.slice(Math.max(0, i - 120), i + 121).map((x) => x[1])) && !marks.some((m) => m[0].slice(0, 4) === p[0].slice(0, 4))) marks.push([p[0], p[1], p[0].slice(0, 4)]); });
     const story = peakOut
-      ? `빚투 잔고가 ${ymK(k.ath[0])} <b>${jo(k.ath[1])}</b>로 사상 최고를 찍은 뒤 <b>${Math.abs(fromAth).toFixed(0)}% 줄었어요</b>. 1년 전 대비 증가율도 ${ymK(pk[0])} ${pk[1].toFixed(0)}%에서 지금 ${k.yoy.toFixed(0)}%로 꺾였어요. 빚투가 정점에서 꺾일 때는 개인 매수 힘이 약해지는 구간이었던 경우가 많아요.`
+      ? `빚투 잔고가 ${ymK(k.ath[0])} <b>${jo(k.ath[1])}</b>로 사상 최고를 찍은 뒤 <b>${Math.abs(fromAth).toFixed(0)}% 줄었어요</b>. 1년 전 대비 증가율도 ${ymK(pk[0])} ${pk[1].toFixed(0)}%에서 지금 ${k.yoy.toFixed(0)}%로 꺾였어요. 빚투가 정점에서 꺾이면 개인 매수세가 약해지는 경우가 많았어요.`
       : k.yoy >= 50 ? `빚투가 1년 새 ${k.yoy.toFixed(0)}% 늘었어요. 과열 구간이라, 여기서 증가율이 꺾이면 고점 신호로 봐요.`
       : `빚투 잔고 ${jo(k.credit)}, 1년 전보다 ${k.yoy.toFixed(0)}% 많아요.`;
     const lvSvg = chart(S.map((r) => [r[0], r[1]]), { ...spOpt("kr_credit", true), ax: (x) => (x / 10000).toFixed(0) + "조", dot: col(lv[0]), W: 1000, h: innerWidth < 640 ? 200 : 260,
@@ -310,7 +351,7 @@
           pick: pick("kr_yoy", true, "m0"), svg: yoSvg, title: "2010년부터 흐름 · 빨간 칠 = 50% 넘는 과열", why: "신용융자 잔고가 1년 전보다 몇 % 늘었는지예요. 미국 빚투 증가율과 같은 방식으로, 정점을 찍고 꺾일 때를 고점 신호로 봐요." })}
         ${miniCard({ n: "신용융자 ÷ 고객예탁금", dir: "📈 오를수록 빚 비중 큼", lv: rRank >= 90 ? [2, "빚 비중 높음"] : rRank >= 70 ? [3, "높은 편"] : [5, "보통"], v: k.ratio.toFixed(1) + "%", date: `${+k.date.slice(5, 7)}/${+k.date.slice(8, 10)}`,
           chs: [`2002년 이후 지금보다 낮았던 날 ${rRank}%`, `예탁금 ${jo(k.deposit)} · 1년 전 ${k.y1 ? jo(k.y1[2]) : "–"}`],
-          pick: pick("kr_ratio", true), svg: rtSvg, title: "", why: "주식 살 현금(예탁금)에 비해 빚(신용융자)이 얼마나 되는지예요. 높을수록 빚에 기대 오른 시장이라 충격에 약해요. 예탁금이 줄면서 비율이 오르면 더 조심할 신호예요." })}
+          pick: pick("kr_ratio", true), svg: rtSvg, title: "", why: "주식 살 현금(예탁금)에 비해 빚(신용융자)이 얼마나 되는지예요. 높을수록 빚에 기대 오른 시장이라 충격에 약해요. 예탁금이 줄면서 비율이 오르면 더 조심해야 해요." })}
       </div>
     </section>`;
   }
@@ -347,7 +388,7 @@
       <ul class="cc-checks">${c.checks.map((k) => `<li class="${k.on ? "on" : ""}"><i>${k.on ? "✔" : "·"}</i><div><b>${esc(k.t)}</b> <span class="muted">${esc(k.v)}</span><small>${esc(k.why)}</small></div></li>`).join("")}</ul>
       ${fed ? `<h4 class="cc-h">연준이 보는 끈질긴 물가 <span class="sub">연율 % · 일부 품목이 튄 것과 전체 흐름을 가려 보는 지표</span></h4>
       <div class="table-wrap"><table class="mem-table cc-tbl cc-fed"><thead><tr><th>지표</th><th class="num">이번 달</th><th class="num">최근 3개월 평균</th><th class="num">전년 대비</th></tr></thead><tbody>${fed}</tbody></table></div>` : ""}
-      <div class="mx-why"><b>어떻게 봤나요?</b> 전월 대비는 BLS가 매달 공식 발표하는 계절조정 수치와 같은 방식으로 FRED 지수에서 계산했어요(반올림 차이 ±0.1%p). 이번 달 오름폭을 그 항목의 지난 12개월 보통 오름폭과 비교해 ‘어디가 문제였는지’를 골랐고, 연속성·가속·주거 뺀 서비스·경직 물가·중위 물가·확산·변동성 품목 쏠림 7가지로 ‘지속될지’를 판단했어요. 경직 물가는 애틀랜타 연준, 중위·절사평균 CPI는 클리블랜드 연준 자료예요.</div></article>`;
+      <div class="mx-why"><b>어떻게 봤나요?</b> 전월 대비는 BLS가 매달 공식 발표하는 계절조정 수치와 같은 방식으로 FRED 지수에서 계산했어요(반올림 차이 ±0.1%p). 이번 달 오름폭을 그 항목이 지난 12개월 동안 보통 오르던 폭과 비교해 ‘어디가 문제였는지’를 골랐고, 연속성·가속·주거 뺀 서비스·경직 물가·중위 물가·확산·변동성 품목 쏠림 7가지로 ‘지속될지’를 판단했어요. 경직 물가는 애틀랜타 연준, 중위·절사평균 CPI는 클리블랜드 연준 자료예요.</div></article>`;
   }
   function warnBox(w) {
     if (!w || !w.length) return "";
@@ -376,11 +417,11 @@
       <div class="mx-market-h"><h2>🇺🇸 경기 (물가·고용·금리)</h2><span class="sub">고통지수를 이루는 물가·실업과 국채 금리 · FRED 자료 · 갱신 ${esc(d.updated_at)}</span></div>
       ${warnBox(d.warnings)}
       ${spanBar("경기")}
-      <div class="mx-group-h"><h3>고통지수</h3><span class="sub">물가와 실업을 한 숫자로 · 매월</span></div>${hero(d.misery)}
+      <div class="mx-group-h"><h3>고통지수</h3><span class="sub">물가와 실업, 기름값과 집값 부담을 한 숫자로 · 매월</span></div>${hero(d.misery)}${household(d.household)}
       <div class="mx-group-h"><h3>물가 (인플레이션)</h3><span class="sub">연준 목표 2% 대비</span></div><div class="mx-grid">${grp("물가")}</div>${d.cpi_core ? coreCard(d.cpi_core) : ""}
       <div class="mx-group-h"><h3>고용 (실업)</h3><span class="sub">일자리가 식는지 보는 지표</span></div><div class="mx-grid">${grp("고용")}</div>
       <div class="mx-group-h"><h3>금리 (미국 국채)</h3><span class="sub">매일 · 그래프 기간 버튼 적용</span></div>${treasury(d.treasury)}
-      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 국채 금리 매일 — 모두 한국 시간 밤 9시 반~10시 반에 나오고 이 판은 밤 11시 50분과 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달).</p>
+      <p class="foot-note">자료: 세인트루이스 연준 FRED (DGS2·DGS10·DGS30·CPIAUCSL·CPILFESL·PCEPILFE·UNRATE·SAHMREALTIME·PAYEMS·ICSA·CCSA·JTSJOL·UNEMPLOY·GASREGW·MORTGAGE30US·CSUSHPINSA·CES0500000011). 발표 주기: CPI 매월 중순, 고용보고서(실업률·일자리) 매월 첫 금요일, PCE 매월 말, 구인 건수 매월 초, 실업수당 청구 매주 목요일, 국채 금리 매일이에요. 모두 한국 시간 밤 9시 반~10시 반에 나오고, 이 판은 밤 11시 50분과 아침 7시 20분에 반영해요. 원자료에 새 값이 있는데 반영이 안 되면 맨 위에 경고가 떠요. 고통지수 = CPI 전년 대비 상승률 + 실업률(같은 달). 가계 생활비 부담 지수 = (휘발유 월평균 값, 집 사는 부담 = 집값 × 30년 대출 상환 계수 ÷ 평균 주급)을 각각 2010~2025년 평균 100으로 맞춰 반반 평균.</p>
     </section>${d.margin ? `<section class="mx-market mx-us ec-sec ec-b" aria-label="미국 빚투">
       <div class="mx-market-h"><h2>🇺🇸 빚투 (신용융자)</h2><span class="sub">빚내서 산 주식이 너무 많은지 · 고점 신호 · 매월 · FINRA 신용거래 통계</span></div>
       ${spanBar("빚투")}

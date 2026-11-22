@@ -72,9 +72,9 @@
     const alive = rise.filter((m) => ALIVE.includes(m.it.stage)).length;
     const r = rise.length ? alive / rise.length : 0;
     const q = !rise.length ? ""
-      : r >= 0.5 ? `<p class="fl-q good">강해진 세부 산업 ${rise.length}개 중 <b>${alive}개</b>는 가격도 오르고 있어요 → 실제로 돈이 들어오는 <b>진짜 강세</b>에 가까워요.</p>`
-      : alive ? `<p class="fl-q mid">강해진 세부 산업 ${rise.length}개 중 가격까지 오르는 곳은 <b>${alive}개</b>뿐이에요 → 순환의 초입일 수 있으니 <b>추세↑</b> 표시가 붙은 산업부터 보세요.</p>`
-      : `<p class="fl-q warn">강해진 세부 산업 ${rise.length}개 모두 가격 추세는 아직 약해요 → 실제로 올랐다기보다 <b>덜 빠져서</b> 순위만 오른 것일 수 있어요.</p>`;
+      : r >= 0.5 ? `<p class="fl-q good">강해진 세부 산업 ${rise.length}개 중 <b>${alive}개</b>는 가격도 오르고 있어요. 실제로 돈이 들어오는 <b>진짜 강세</b>에 가까워요.</p>`
+      : alive ? `<p class="fl-q mid">강해진 세부 산업 ${rise.length}개 중 가격까지 오르는 곳은 <b>${alive}개</b>뿐이에요. 순환의 초입일 수 있으니 <b>추세↑</b> 표시가 붙은 산업부터 보세요.</p>`
+      : `<p class="fl-q warn">강해진 세부 산업 ${rise.length}개 모두 가격 추세는 아직 약해요. 실제로 올랐다기보다 <b>덜 빠져서</b> 순위만 오른 것일 수 있어요.</p>`;
     return `<div class="fl-head">
       <div class="fl-side"><span class="fl-lab">힘이 빠지는 곳</span><div class="fl-chips">${side(dns, "down", "뚜렷한 곳 없음")}</div></div>
       <div class="fl-arrow" aria-hidden="true">→</div>
@@ -127,8 +127,8 @@
   const mapHelp = () => `<details class="fl-help"${helpOpen ? " open" : ""}>
       <summary>강도 이동판 읽는 법</summary>
       <ul>
-        <li><b>한 줄 = 큰 분류 하나</b>예요. 강도는 그 분류 세부 산업들의 순위를 점수로 바꾼 평균이에요(1위 = 100, 꼴찌 = 0${smoothOf(st.k) > 1 ? `, ${smoothOf(st.k)}일 평균` : ""}).</li>
-        <li><b>빈 점 = ${st.k}일 전, 화살촉 = 지금</b>이에요(조금만 움직였으면 빈 점은 화살촉에 가려 생략). 화살표가 길수록 많이 움직였고, 가운데 세로선(50)보다 오른쪽이면 지금 시장에서 강한 쪽이에요.</li>
+        <li><b>한 줄 = 큰 분류 하나</b>예요. 강도는 그 분류 세부 산업의 순위를 점수로 바꿔 평균 낸 값이에요(1위 = 100, 꼴찌 = 0${smoothOf(st.k) > 1 ? `, ${smoothOf(st.k)}일 평균` : ""}).</li>
+        <li><b>빈 점 = ${st.k}일 전, 화살촉 = 지금</b>이에요(조금만 움직였으면 빈 점은 화살촉에 가려 안 보여요). 화살표가 길수록 많이 움직였고, 가운데 세로선(50)보다 오른쪽이면 지금 시장에서 강한 쪽이에요.</li>
         <li><b>주도</b>(강하고 더 강해짐) → <b>식는 중</b>(강하지만 약해짐) → <b>소외</b>(약하고 더 약해짐) → <b>부상</b>(약하지만 강해짐) → 다시 주도, 이렇게 돌아요.</li>
         <li>추세추종이라면 <b>주도</b>와 <b>강세 진입</b> 표시가 붙은 분류를 먼저 보고, <b>강세 이탈</b>·<b>식는 중</b>은 보유 비중을 점검하는 신호로 보세요.</li>
         <li>줄을 누르면 아래 순위표가 그 분류로 걸러져요.</li>

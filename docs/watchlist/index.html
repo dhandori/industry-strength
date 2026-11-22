@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<title>와모 차트북</title>
+<style>
+:root{--pu:#a78bfa;--pul:#ede9fe;--pud:#5b21b6;--bg:#f4f5f7;--card:#fff;--line:#e3e5ea;--soft:#eef0f3;--text:#16181d;--sub:#6b7280;--ink:#374151;--up:#089981;--dn:#f23645;--upbg:#e3f5ee;--dnbg:#fdecec;--rise:#e8313a;--fall:#1d6ae5;--risebg:#fdecec;--fallbg:#e8f0fe;--risetx:#c4161c;--falltx:#1450b8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;-webkit-text-size-adjust:100%}
+button{font:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+/* 상단 메뉴: 화면 위에 고정. 아래로 내리면 제목·탭 줄이 위로 숨고 섹터 줄만 남는다 */
+header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top);transition:transform .2s ease}
+.top{display:flex;justify-content:space-between;align-items:center;padding:8px 10px 2px 14px;max-width:1100px;margin:0 auto}
+.ttl b{display:block;font-size:17px;letter-spacing:-.2px}
+.ttl small{font-size:11px;color:var(--sub)}
+.ttl small.old{color:var(--dn);font-weight:600}
+.ic{display:flex;gap:2px}
+.ic button,#vbtn{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;width:52px;padding:5px 0 4px;border:0;border-radius:10px;background:none;color:#4b5563;font-size:10.5px}
+.ic button svg,#vbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ic button.on{background:var(--ink);color:#fff}
+.ic button.open{background:var(--soft)}
+.ic button i{position:absolute;top:2px;right:7px;min-width:15px;height:15px;border-radius:8px;background:var(--dn);color:#fff;font-style:normal;font-size:10px;font-weight:700;line-height:15px;text-align:center;padding:0 3px}
+.ic button i:empty{display:none}
+#tabs{display:flex;padding:0 4px;border-bottom:1px solid var(--soft);max-width:1100px;margin:0 auto}
+#tabs button{flex:1 1 0;min-width:0;border:0;background:none;color:var(--sub);font-size:14px;padding:8px 2px 7px;border-bottom:2.5px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tabs button{letter-spacing:-.5px}
+@media (max-width:520px){ #tabs button{font-size:13px;padding-left:0;padding-right:0} }
+@media (max-width:375px){ #tabs button{font-size:12px} #tabs button[data-id=all]{padding:8px 6px 7px} }
+#tabs button[data-id=all]{flex:0 0 auto;padding:8px 9px 7px}
+#tabs button.on{color:var(--up);font-weight:700;border-color:var(--up)}
+/* 조작 줄: 걸러보기·정렬 단추 + 걸린 조건 칩 + 모두 지우기 + 결과 수. 메뉴를 접어도 남는다 */
+#bar{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:8px 12px 2px;scrollbar-width:none;max-width:1100px;margin:0 auto}
+#bar::-webkit-scrollbar{display:none}
+#bar .tb{flex:none;display:inline-flex;align-items:center;gap:5px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);border-radius:10px;font-size:14px;font-weight:600;padding:7px 11px}
+#bar .tb svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#bar .tb.on{background:var(--ink);color:#fff}
+#bar .tb.open{box-shadow:0 0 0 3px rgba(55,65,81,.18)}
+#bar .tb b{font-weight:700;color:#fff;background:var(--dn);border-radius:8px;font-size:11px;min-width:17px;padding:1px 5px;text-align:center}
+#bar .tb b:empty{display:none}
+#chips{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:6px 12px 0;scrollbar-width:none;max-width:1100px;margin:0 auto}
+#chips::-webkit-scrollbar{display:none}
+#chips[hidden]{display:none}
+#chips small{flex:none;font-size:11.5px;color:var(--sub)}
+#chips .chip,#bar .chip{flex:none;border:0;background:#e8f1ff;color:#1e3a8a;border-radius:999px;font-size:12.5px;font-weight:600;padding:6px 10px}
+#chips .chip::after,#bar .chip::after{content:" ✕";color:#64748b;font-size:11px;font-weight:400}
+#bar .seg{flex:none;display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+#bar .seg button{border:0;background:var(--card);color:var(--sub);font-size:13px;padding:7px 9px;border-left:1px solid var(--line)}
+#bar .seg button:first-child{border-left:0}
+#bar .seg button.on{background:var(--soft);color:var(--text);font-weight:700}
+#bar .lg1{flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--sub);border-radius:10px;font-size:13px;padding:7px 10px}
+#bar .lg1.on{border-color:var(--ink);color:var(--text);font-weight:700;background:var(--soft)}
+#bar .lg1.on::before{content:"✓ "}
+#bar .clr{flex:none;border:1.5px solid #f2a7a7;background:#fff5f5;color:#b91c1c;border-radius:10px;font-size:13.5px;font-weight:600;padding:7px 10px}
+#bar #cnt{flex:none;font-style:normal;font-size:12px;color:var(--sub);margin-left:auto;padding-left:6px;white-space:nowrap}
+#bar #cnt b{color:var(--text)}
+.row{display:flex;gap:6px;overflow-x:auto;padding:7px 12px;scrollbar-width:none;touch-action:pan-x;overscroll-behavior:contain;max-width:1100px;margin:0 auto}
+.row::-webkit-scrollbar{display:none}
+#secs button{flex:none;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:14px;padding:7px 12px;border-radius:999px;white-space:nowrap;user-select:none;-webkit-user-select:none}
+#secs button small{font-size:11px;font-weight:400;color:var(--sub);margin-left:4px}
+#secs button.on{background:var(--up);border-color:var(--up);color:#fff;font-weight:600}
+#secs button.on small{color:#fff}
+#secs button:disabled{opacity:.35}
+#secs #gbtn{background:var(--text);border-color:var(--text);color:#fff;font-weight:600;padding:7px 11px}
+/* '▦ 전체' 옆: 이 탭의 하부섹터 묶음을 한 번에 접기·펼치기(모두 접혀 있으면 진한 보라) */
+#secs #cbtn{background:var(--pul);border-color:var(--pu);color:var(--pud);font-weight:700}
+#secs #cbtn.shut{background:var(--pud);border-color:var(--pud);color:#fff}
+/* RS선 보는 법: 탭 맨 위에 접어 두는 안내 상자 */
+.guide{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:4px 0 6px;font-size:13.5px;line-height:1.6;color:var(--ink)}
+.guide summary{cursor:pointer;padding:10px 14px;font-weight:800;color:var(--pud);list-style:none}
+.guide summary::-webkit-details-marker{display:none}
+.guide summary::after{content:" ▾";color:var(--pu)}
+.guide[open] summary::after{content:" ▴"}
+.guide summary small{font-weight:500;color:var(--sub);margin-left:6px;font-size:12px}
+.guide .gb{padding:0 14px 12px}
+.guide p{margin:8px 0}
+.guide p.one{background:var(--pul);border-radius:8px;padding:8px 10px;margin-top:2px}
+.guide b{color:var(--text)}
+.guide table{border-collapse:collapse;width:100%;margin:6px 0;font-size:12.5px}
+.guide td{border-top:1px solid var(--soft);padding:5px 4px;vertical-align:top}
+.guide td:first-child{font-weight:700;color:var(--text);width:46%}
+/* 섹터 제목 아래 '묶음 정의 보기': 그 섹터 하부섹터 묶음을 이름·정의·대표 종목 표로 */
+.gdef{margin:-2px 0 4px}
+.gdef summary{padding:8px 14px;font-size:13px}
+.gdef .gr{display:grid;grid-template-columns:92px minmax(0,1fr);column-gap:10px;padding:8px 0;border-top:1px solid var(--soft);cursor:pointer}
+.gdef .gr:first-child{border-top:0}
+.gdef .gr b{color:var(--pud);font-size:13px;word-break:keep-all}
+.gdef .gr span{font-size:13px;line-height:1.5;word-break:keep-all}
+.gdef .gr small{display:block;color:var(--sub);font-size:11.5px;margin-top:2px}
+.gdef .gr:active{background:var(--pul)}
+/* 섹터 제목 줄 오른쪽 동그란 단추: 그 섹터 묶음 접기(▴)·펼치기(▾). 오른쪽 진행 표시와 안 겹치게 안쪽에 */
+main > h2{position:relative;padding-right:92px}
+main > h2 .sfold{position:absolute;right:44px;top:-4px;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--pu);background:var(--card);color:var(--pud);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+main > h2 .sfold svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+main > h2 .sfold.shut{background:var(--pud);border-color:var(--pud);color:#fff}
+/* 펼침 판(걸러 보기·정렬·섹터 전체) */
+#panel{border-top:1px solid var(--soft);padding:2px 14px 12px;max-height:64vh;overflow-y:auto;max-width:1100px;margin:0 auto}
+#panel[hidden]{display:none}
+#panel h3{font-size:13.5px;font-weight:700;color:var(--text);margin:14px 0 7px}
+#panel h3 small{font-size:11.5px;font-weight:400;color:var(--sub);margin-left:6px}
+#panel .now{margin:10px 0 0;padding:8px 10px;border-radius:9px;background:var(--soft);font-size:12.5px;color:var(--ink)}
+#panel .now b{color:var(--text)}
+#panel .now small{display:block;margin-top:4px;font-size:12px;color:var(--sub);line-height:1.45}
+#panel .defs{margin:14px 0 0;padding:9px 11px;border-radius:9px;background:var(--pul);font-size:12.5px;color:var(--ink);line-height:1.5}
+#panel .defs p{margin:0 0 6px}#panel .defs p:last-child{margin:0}
+#panel .defs b{color:var(--pud)}
+#panel .wrap{display:flex;flex-wrap:wrap;gap:6px}
+#panel .wrap button{font-size:13.5px;padding:7px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink)}
+#panel .wrap button.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+#panel .wrap button.on::before{content:"✓ "}
+#panel .wrap button:disabled{opacity:.4}
+#panel .wrap button small{font-size:11px;margin-left:4px;opacity:.75}
+#panel .foot{display:flex;gap:8px;margin-top:16px;position:sticky;bottom:-12px;box-shadow:0 -6px 10px -6px rgba(0,0,0,.08);background:var(--card);padding:8px 0 12px;border-top:1px solid var(--soft)}
+#panel .foot button{flex:1;font-size:14px;padding:11px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+#panel .foot button.go{flex:2;background:var(--up);border-color:var(--up);color:#fff;font-weight:600}
+#panel .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px}
+#panel .grid button{text-align:left;border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:var(--card);color:var(--text)}
+#panel .grid button b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#panel .grid button span{display:block;font-size:12px;color:#4b5563;margin-top:2px;font-variant-numeric:tabular-nums}
+#panel .grid button i{display:block;height:4px;border-radius:2px;background:var(--soft);margin-top:6px;overflow:hidden}
+#panel .grid button i u{display:block;height:100%;background:var(--up)}
+#panel .grid button:disabled{opacity:.4}
+/* 하부섹터 순위 */
+#panel .gl{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:5px}
+#panel .gl button{display:grid;grid-template-columns:20px minmax(0,1fr);column-gap:6px;text-align:left;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:var(--card);color:var(--text)}
+#panel .gl button i{font-style:normal;font-weight:800;color:var(--pud);font-variant-numeric:tabular-nums;grid-row:span 2}
+#panel .gl button b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#panel .gl button b small{font-size:11px;font-weight:400;color:var(--sub);margin-left:5px}
+#panel .gl button span{font-size:12px;color:#4b5563;font-variant-numeric:tabular-nums}
+#panel .gl.weak button{background:var(--soft);color:var(--sub)}
+#dim{position:fixed;inset:0;background:rgba(22,24,29,.28);z-index:4}
+#dim[hidden]{display:none}
+main{max-width:970px;margin:0 auto;padding:8px 8px 60px}
+h2{font-size:15px;margin:18px 6px 8px}
+/* 큰 섹터 제목: 굵은 글씨 + 연보라 밑줄 */
+main > h2{font-size:20px;font-weight:900;margin:30px 4px 12px;padding-bottom:8px;border-bottom:3px solid var(--pu)}
+h2 small{color:var(--sub);font-weight:400;margin-left:6px}
+main > h2 small{font-size:12.5px;font-weight:500}
+/* 카드 */
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 10px 6px;margin-bottom:10px}
+.hd{display:block}
+/* 첫 줄: 종목명 바로 오른쪽에 가격·오늘 등락률(이름이 길면 이름만 줄임표로 줄인다), 둘째 줄: 사업 설명 */
+.nr{display:flex;align-items:baseline;gap:10px;min-width:0}
+.nr .nm{flex:0 1 auto}
+.nr .px{flex:none}
+@media (min-width:700px){ .hd .biz{font-size:13.5px;line-height:1.4} }
+.nm{font-size:16px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm small{font-size:11px;font-weight:400;color:var(--sub);margin-left:5px}
+.nm em{font-style:normal;font-size:11px;font-weight:600;color:var(--ink);background:var(--soft);border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.nm .rk{display:inline-block;min-width:24px;font-size:12px;font-weight:700;color:#fff;background:var(--ink);border-radius:6px;padding:1px 5px;margin-right:6px;text-align:center;vertical-align:2px}
+.biz{word-break:keep-all;font-size:12.5px;color:#4b5563;margin:2px 0 0;line-height:1.35}
+/* 하부섹터 딱지(설명 앞)와 섹터 안 묶음 소제목 */
+.biz .tg{display:inline;font-weight:700;color:var(--pud);margin-right:5px}
+.tr .tg{color:var(--pud);font-weight:600}
+/* 하부섹터 소제목: 연보라 알약 */
+.sub{display:inline-flex;align-items:center;gap:7px;background:var(--pul);color:var(--pud);border-radius:999px;padding:6px 14px;margin:16px 0 8px 2px;font-size:14px;font-weight:800}
+.sub small{color:var(--pu);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.bd .ia{background:#ede9fe;color:#5b21b6;font-weight:700}
+.bd span[title],.biz .tg[title],.tr .s[title]{cursor:help}
+.tbl .sub{display:flex;width:max-content;margin:8px 10px 6px}
+/* 하부섹터 요약 줄: 누르면 그 묶음을 접고 편다 */
+.sub{cursor:pointer;user-select:none;flex-wrap:wrap;max-width:100%}
+.sub .st{font-size:12px;font-weight:600;color:var(--ink)}
+.sub .st b{font-weight:700}
+.sub::after{content:"▾";font-size:11px;color:var(--pu)}
+.sub.shut::after{content:"▸"}
+.sub.hit{animation:hit 2.2s ease}
+
+.tr .s svg{display:block;width:40px;height:11px;margin:3px 0 0 auto;overflow:visible}
+.tr>span.s:last-child{white-space:nowrap;font-size:12.5px}
+.px{font-size:15.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pill{display:inline-block;font-style:normal;font-size:13px;font-weight:700;border-radius:7px;padding:2px 7px;margin-left:6px;font-variant-numeric:tabular-nums}
+/* 가격 오르내림은 한국식: 오르면 빨강, 내리면 파랑 */
+.pill.up{background:var(--risebg);color:var(--risetx)}.pill.dn{background:var(--fallbg);color:var(--falltx)}
+.up{color:var(--rise)}.dn{color:var(--fall)}
+.bd{display:flex;gap:5px;margin:7px 0 0;flex-wrap:wrap}
+.bd:empty{display:none}
+.bd span{font-size:12.5px;padding:3px 8px;border-radius:7px;font-variant-numeric:tabular-nums;background:var(--soft);color:var(--ink)}
+.bd .sk{background:#fff4d6;color:#7a4f00;font-weight:700;box-shadow:inset 0 0 0 1px #e7c26a}
+.bd .al{background:var(--up);color:#fff;font-weight:600}
+.bd .tt{background:#0f5132;color:#fff;font-weight:700}
+/* 딱지를 누르면 뜨는 풀이 상자(휴대폰은 마우스를 올릴 수 없어서) */
+#tip{position:fixed;left:12px;right:12px;bottom:16px;z-index:60;max-width:520px;margin:0 auto;background:#1f2430;color:#fff;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.55;white-space:pre-line;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+#tip small{display:block;margin-top:6px;color:#aab1bf;font-size:11.5px}
+.bd .xg{background:var(--risebg);color:var(--risetx);box-shadow:inset 0 0 0 1px var(--risetx);font-weight:600}
+.bd .xd{background:var(--fallbg);color:var(--falltx);box-shadow:inset 0 0 0 1px var(--falltx);font-weight:600}
+.bd .rh{background:#e7f0ff;color:#1d4ed8;font-weight:600}
+.bd .vh{background:#f3e8ff;color:#6b21a8;font-weight:600}
+.bd .st{background:#fff4d6;color:#8a5a00}
+/* 52주 범위 막대: 왼쪽 끝이 52주 최저 종가, 오른쪽 끝이 최고 종가, 점이 지금 */
+canvas{display:block;width:100%;height:300px;margin-top:4px}
+@media (min-width:900px){ canvas{height:345px} }
+/* RS선 칸이 붙는 차트는 그만큼 키운다 */
+canvas.rl{height:352px}
+@media (min-width:900px){ canvas.rl{height:397px} }  /* 태블릿·PC: 카드 크기를 사용자가 그린 사각형에 맞춤 */
+.lg{display:flex;justify-content:space-between;font-size:11px;color:var(--sub);padding:2px 2px 2px}
+.lg b{font-weight:600;margin-left:6px}
+/* 표 형태 목록 보기 */
+.tbl{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:6px}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 62px 58px 44px 46px;align-items:center;column-gap:6px;padding:9px 10px;border-top:1px solid var(--soft);font-variant-numeric:tabular-nums;font-size:13px}
+.tr:first-child{border-top:0}
+.tr.th{background:#f8f9fb;color:var(--sub);font-size:11.5px;padding:7px 10px;position:static}
+.tr.th button{border:0;background:none;color:inherit;font-size:inherit;padding:0;text-align:right}
+.tr.th button:first-child{text-align:left}
+.tr.th button.on{color:var(--text);font-weight:700}
+.tr.th button.on::after{content:" ↓"}
+.tr.th button.on.asc::after{content:" ↑"}
+.tr.it{cursor:pointer}
+.tr .n{min-width:0}
+.tr .n b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .n small{display:block;font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tr .n small i{font-style:normal;color:#fff;background:var(--ink);border-radius:4px;padding:0 4px;margin-right:4px;font-weight:700}
+.tr>span{text-align:right}
+.tr .pill{margin:0;font-size:12.5px;padding:2px 5px}
+.tr .s{font-weight:700}
+.tr .mb{position:relative;display:block;height:5px;border-radius:3px;background:var(--soft);margin-top:3px}
+.tr .mb u{position:absolute;top:-2px;width:3px;height:9px;border-radius:2px;background:var(--ink)}
+.tr.open{background:#f8fbfa}
+.tbl .card{border:0;border-top:1px solid var(--soft);border-radius:0;margin:0}
+#prog{position:fixed;right:3px;width:3px;border-radius:3px;background:rgba(107,114,128,.16);pointer-events:none;z-index:3;display:none}
+#prog i{position:absolute;left:0;width:3px;border-radius:3px;background:rgba(8,153,129,.6)}
+#prog b{position:absolute;right:7px;transform:translateY(-50%);font-size:10.5px;font-weight:600;color:#4b5563;background:rgba(255,255,255,.85);border:1px solid var(--line);border-radius:8px;padding:1px 6px;white-space:nowrap;font-variant-numeric:tabular-nums}
+/* 종목 검색: 화면 전체를 덮는 창. 결과를 누르면 그 탭의 카드로 간다 */
+#srch{position:fixed;inset:0;z-index:7;background:var(--card);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+#srch[hidden]{display:none}
+.sbx{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);max-width:1100px;width:100%;margin:0 auto}
+.sbx svg{width:20px;height:20px;flex:none;stroke:var(--sub);fill:none;stroke-width:2;stroke-linecap:round}
+#sq{flex:1;min-width:0;border:0;outline:0;font-size:17px;background:none;color:var(--text);padding:6px 0}
+#sx{border:0;background:var(--soft);border-radius:8px;padding:7px 12px;font-size:14px;color:var(--ink)}
+#sres{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;max-width:1100px;width:100%;margin:0 auto}
+#sres button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--soft);background:none;padding:11px 16px}
+#sres button:active,#sres button.on{background:var(--pul)}
+#sres button.grp > b{color:var(--pud)}
+#sres b{font-size:15.5px;color:var(--text)}
+#sres b small{font-size:12.5px;font-weight:500;color:var(--sub);margin-left:6px}
+#sres span{display:block;font-size:12.5px;color:var(--sub);margin-top:2px}
+#sres em{font-style:normal;color:var(--pud);font-weight:600}
+#sres p{padding:30px 16px;text-align:center;color:var(--sub);font-size:14px;line-height:1.6;margin:0}
+.card.hit,.tr.hit{animation:hit 2.2s ease}
+@keyframes hit{0%,40%{box-shadow:0 0 0 3px var(--pu);background:var(--pul)}100%{box-shadow:0 0 0 0 transparent}}
+#msg{padding:40px 16px;text-align:center;color:var(--sub);font-size:14px;line-height:1.6}
+/* 탭 끝의 '다음 탭' 단추와 오른쪽 아래 '맨 위로' 단추: 아래로 다 본 뒤 다음 큰 섹터로 바로 넘어가게 */
+#next{display:block;width:100%;margin:18px 0 4px;padding:15px 12px;border:1.5px solid var(--up);border-radius:12px;background:var(--upbg);color:var(--up);font-size:15.5px;font-weight:700}
+#next small{display:block;margin-top:3px;font-size:12px;font-weight:500;color:var(--sub)}
+#totop{position:fixed;right:14px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:4;width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:rgba(255,255,255,.94);box-shadow:0 2px 10px rgba(0,0,0,.14);display:none;align-items:center;justify-content:center;padding:0}
+#totop.on{display:flex}
+#totop svg{width:22px;height:22px;fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<header id="hdr">
+  <div id="hide">
+    <div class="top">
+      <div class="ttl"><b>와모 차트북</b><small id="upd"></small></div>
+      <div class="ic"><button id="qbtn" aria-label="종목 검색" hidden><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span>검색</span></button>
+      <button id="vbtn" aria-label="보기 바꾸기"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>목록</span></button></div>
+    </div>
+    <nav id="tabs"></nav>
+  </div>
+  <div id="bar">
+    <button id="fbtn" class="tb"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg><span>걸러보기</span><b></b></button>
+    <button id="sbtn" class="tb"><svg viewBox="0 0 24 24"><path d="M8 4v16M8 20l-3-3M8 20l3-3M16 20V4M16 4l-3 3M16 4l3 3"/></svg><span>정렬</span></button>
+    <span id="per" class="seg"></span>
+    <button id="logb" class="lg1" title="로그 축 켜기·끄기">로그</button>
+    <span id="clrw" style="display:contents"></span><em id="cnt"></em>
+  </div>
+  <div id="chips" hidden></div>
+  <div class="row" id="secs"></div>
+  <div id="panel" hidden></div>
+</header>
+<div id="dim" hidden></div>
+<div id="srch" hidden>
+  <div class="sbx"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+    <input id="sq" type="search" placeholder="티커·영문·한글·딱지로 찾기" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search">
+    <button id="sx">닫기</button></div>
+  <div id="sres"></div>
+</div>
+<div id="prog"><i></i><b></b></div>
+<div id="tip" hidden></div>
+<button id="totop" aria-label="맨 위로" title="맨 위로"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+<main id="main"><div id="msg">불러오는 중입니다.</div></main>
+<script>
+// 한국식: 양봉 빨강, 음봉 파랑. 이동평균선은 봉과 섞이지 않게 주황·초록·보라
+const EMA = [["20","#f08c00"],["50","#2f9e44"],["200","#7048e8"]];
+const UP = "#e8313a", DN = "#1d6ae5", UPW = "#c4161c", DNW = "#1450b8";
+// 자료는 같은 저장소의 watchlist-data 가지에 매일 덮어쓴다(기록이 쌓이지 않게). 내 컴퓨터 시험 때만 옆 폴더를 읽는다.
+const LOCAL = ["localhost","127.0.0.1"].includes(location.hostname);
+const DATA = LOCAL ? "data/" : "https://raw.githubusercontent.com/dhandori/industry-strength/watchlist-data/";
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+};
+// 탭 이름은 휴대폰 한 줄에 다섯 개가 들어가게 줄여 쓴다(전체 이름은 섹터 판 제목에 나온다)
+const SHORT = {macro:"매크로", ai:"AI반도체", sw:"SW인프라", fin:"금융소비", ind:"산업에너지", all:"전체"};
+// '전체' 탭: 지수·매크로를 뺀 모든 탭을 한 화면에 모아 걸러 보기·정렬을 한 번에 건다(섹터 이름 앞에 탭 이름)
+const ALL = {id: "all", title: "전체 종목 (매크로 제외)"};
+const tabTitle = id => id === "all" ? ALL.title : (META.tabs.find(t => t.id === id) || {}).title;
+let META = null, CUR = null, TAB = null, ITEMS = [], io = null, HEADS = [], HIDX = [], SCARDS = [], SPY = -1, LOCK = false, ROWBUSY = 0;
+
+function fmt(v, dg){ return v.toLocaleString("en-US",{minimumFractionDigits:dg,maximumFractionDigits:dg}); }
+function sign(v, d){ return (v > 0 ? "+" : "") + v.toFixed(d) + "%"; }
+
+function niceTicks(lo, hi, n){
+  const span = hi - lo, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1,2,2.5,5,10].map(m => m*mag).find(s => s >= raw) || raw;
+  const out = [];
+  for (let v = Math.ceil(lo/step)*step; v <= hi + step*1e-9; v += step) out.push(v);
+  return {ticks: out, step};
+}
+
+// 차트 기간: 3m·6m·1y. 받은 자료는 1년 치이고 그중 최근 63·126거래일만 잘라 그린다(봉이 굵어져 꼬리가 잘 보인다).
+const PERIODS = [["3m","3개월",63],["6m","6개월",126],["1y","1년",0]];
+function draw(cv, it0){
+  const K = (PERIODS.find(p => p[0] === period()) || [])[2] || 0;
+  const it = !K || it0.c.length <= K ? it0 : (() => { const cut = a => a.slice(a.length - K);
+    return {...it0, o: cut(it0.o), h: cut(it0.h), l: cut(it0.l), c: cut(it0.c), v: cut(it0.v), d: cut(it0.d),
+            e: Object.fromEntries(Object.entries(it0.e).map(([k, a]) => [k, cut(a)])), rl: it0.rl && cut(it0.rl)}; })();
+  const dpr = Math.min(window.devicePixelRatio || 1, 3);
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = Math.round(W*dpr); cv.height = Math.round(H*dpr);
+  const g = cv.getContext("2d"); g.scale(dpr, dpr);
+  const n = it.c.length, hasVol = it.v.some(v => v > 0);
+  const axW = 50, padT = 6, xH = 18;
+  const volH = hasVol ? 46 : 0, gap = hasVol ? 6 : 0;
+  // RS선 칸(종목 ÷ 상장 시장 지수): 거래량 아래 44px
+  const rl = it.rl && it.rl.some(v => v != null) ? it.rl : null, rsH = rl ? 44 : 0, rgap = rl ? 8 : 0;
+  const pH = H - padT - xH - volH - gap - rsH - rgap, pW = W - axW;
+  let lo = Math.min(...it.l), hi = Math.max(...it.h);
+  EMA.forEach(([k]) => it.e[k].forEach(v => { if (v < lo) lo = v; if (v > hi) hi = v; }));
+  // 로그 축(기본): 같은 비율의 움직임을 같은 높이로. 0 이하 값이 있으면 그릴 수 없어 선형으로 그린다.
+  const LOG = ST.log !== false && lo > 0;
+  const T = LOG ? Math.log : (v => v), TI = LOG ? Math.exp : (v => v);
+  { const a = T(lo), b = T(hi), pad = (b - a) * 0.04 || (LOG ? 0.01 : 1); lo = TI(a - pad); hi = TI(b + pad); }
+  const tlo = T(lo), thi = T(hi);
+  // 마지막 봉 오른쪽에 봉 5개 폭만큼 빈칸을 둬서 오늘 봉이 가격 눈금 칸에 붙지 않게 한다
+  const slots = n + 5, sw = pW / slots;
+  const X = i => (i + 0.5) * sw, Y = v => padT + (thi - T(v)) / (thi - tlo) * pH;
+  g.font = "11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textBaseline = "middle";
+
+  // 격자와 가격 눈금
+  let {ticks, step} = niceTicks(lo, hi, 5);
+  let tdg = step >= 1 ? 0 : Math.min(4, Math.ceil(-Math.log10(step)) + (String(step/Math.pow(10,Math.floor(Math.log10(step)))).startsWith("2.5") ? 1 : 0));
+  if (LOG && hi / lo > 1.6){
+    // 로그 축 눈금: 1·1.2·1.5·2·2.5·3·4·5·6·8 × 10ⁿ 가운데 서로 차트 높이의 1/7 이상 떨어진 것만 위에서부터 고른다
+    const M = [1,1.2,1.5,2,2.5,3,4,5,6,8], cand = [];
+    for (let e = Math.floor(Math.log10(lo)); e <= Math.ceil(Math.log10(hi)); e++) M.forEach(m => { const v = m * Math.pow(10, e); if (v >= lo && v <= hi) cand.push(v); });
+    ticks = []; let ly = -1e9;
+    cand.sort((x, y) => y - x).forEach(v => { const y = Y(v); if (y - ly >= pH / 7){ ticks.push(v); ly = y; } });
+    const mn = Math.min(...ticks); tdg = mn >= 100 ? 0 : mn >= 10 ? 1 : mn >= 1 ? 2 : 3;
+    if (ticks.every(v => Math.abs(v - Math.round(v)) < 1e-9)) tdg = 0;
+  }
+  g.strokeStyle = "#eef0f3"; g.lineWidth = 1; g.fillStyle = "#6b7280"; g.textAlign = "left";
+  let lastTy = 1e9;
+  ticks.forEach(v => { if (v <= 0 && LOG) return; const y = Math.round(Y(v)) + 0.5; if (Math.abs(lastTy - y) < 16) return; lastTy = y;
+    g.beginPath(); g.moveTo(0,y); g.lineTo(pW,y); g.stroke(); g.fillText(fmt(v,tdg), pW + 5, y); });
+
+  // 월 눈금
+  g.textAlign = "center"; g.textBaseline = "top";
+  let lastLabelX = -99;
+  for (let i = 1; i < n; i++){
+    if (it.d[i].slice(2,4) !== it.d[i-1].slice(2,4)){
+      const x = Math.round(X(i) - sw/2) + 0.5;
+      g.strokeStyle = "#eef0f3"; g.beginPath(); g.moveTo(x, padT); g.lineTo(x, H - xH); g.stroke();
+      if (x - lastLabelX > 21 && x < pW - 8){
+        const m = +it.d[i].slice(2,4);
+        g.fillStyle = m === 1 ? "#16181d" : "#6b7280";
+        g.fillText(m === 1 ? "20" + it.d[i].slice(0,2) : m + "월", x, H - xH + 4);
+        lastLabelX = x;
+      }
+    }
+  }
+
+  // 52주 최고·최저 종가 점선
+  g.setLineDash([2,3]); g.strokeStyle = "#9aa1ad";
+  [it.hi, it.lo].forEach(v => { if (v < lo || v > hi) return; const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(0,y); g.lineTo(pW,y); g.stroke(); });
+  g.setLineDash([]);
+
+  // 이동평균선: 봉 뒤에 조금 옅게(봉 꼬리를 가리지 않게)
+  g.lineWidth = 1.3; g.lineJoin = "round"; g.globalAlpha = 0.8;
+  EMA.forEach(([k, col]) => {
+    g.strokeStyle = col; g.beginPath();
+    it.e[k].forEach((v, i) => i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)));
+    g.stroke();
+  });
+  g.globalAlpha = 1;
+
+  // 일봉: 꼬리는 화면 픽셀에 맞춰 또렷하게(번지지 않게), 몸통보다 조금 진한 색으로
+  const bw = Math.max(1, Math.min(9, sw * 0.62));
+  const dp = 1 / dpr, lw = Math.max(1, Math.round(dpr)) * dp;
+  const snap = x => (Math.round(x * dpr) + (Math.round(dpr) % 2 ? 0.5 : 0)) * dp;
+  for (let i = 0; i < n; i++){
+    const up = it.c[i] >= it.o[i], x = snap(X(i));
+    g.strokeStyle = up ? UPW : DNW; g.lineWidth = lw;
+    g.beginPath(); g.moveTo(x, Y(it.h[i])); g.lineTo(x, Y(it.l[i])); g.stroke();
+    g.fillStyle = up ? UP : DN;
+    const y1 = Y(Math.max(it.o[i], it.c[i])), y2 = Y(Math.min(it.o[i], it.c[i]));
+    g.fillRect(x - bw/2, y1, bw, Math.max(lw, y2 - y1));
+  }
+
+  // 점선 바로 안쪽 왼쪽에 '52주 고점 −x%'(선 아래), '52주 저점 +x%'(선 위). 흰 바탕을 깔아 봉과 겹쳐도 읽히게.
+  g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textAlign = "left"; g.textBaseline = "middle";
+  [[it.hi, "52주 고점 " + sign(it.ph, 1), 9, DNW], [it.lo, "52주 저점 " + sign(it.pl, 1), -9, UPW]].forEach(([v, t, dy, col]) => {
+    const y = Math.max(padT + 8, Math.min(padT + pH - 8, Math.round(Y(v)) + dy)), w = g.measureText(t).width;
+    g.fillStyle = "rgba(255,255,255,.85)"; g.fillRect(3, y - 7, w + 8, 14);
+    g.fillStyle = col; g.fillText(t, 7, y);
+  });
+  g.font = "11px -apple-system,BlinkMacSystemFont,sans-serif";
+  // 마지막 종가 표시
+  const last = it.c[n-1], ly = Math.max(padT + 8, Math.min(padT + pH - 8, Y(last)));
+  g.fillStyle = it.chg >= 0 ? UP : DN; g.fillRect(pW + 1, ly - 9, axW - 2, 18);
+  g.fillStyle = "#fff"; g.textAlign = "left"; g.textBaseline = "middle";
+  g.fillText(fmt(last, last >= 10000 ? 0 : last >= 1000 ? 1 : it.dg), pW + 4, ly);
+
+  // 거래량
+  if (hasVol){
+    const top = padT + pH + gap, vmax = Math.max(...it.v);
+    g.strokeStyle = "#e3e5ea"; g.beginPath(); g.moveTo(0, top - gap/2 + 0.5); g.lineTo(pW, top - gap/2 + 0.5); g.stroke();
+    g.globalAlpha = 0.7;
+    for (let i = 0; i < n; i++){
+      const h = it.v[i] / vmax * volH;
+      g.fillStyle = it.c[i] >= it.o[i] ? UP : DN;
+      g.fillRect(X(i) - bw/2, top + volH - h, bw, h);
+    }
+    g.globalAlpha = 1; g.fillStyle = "#6b7280"; g.textAlign = "left"; g.textBaseline = "top";
+    g.fillText("거래량", pW + 5, top + 2);
+  }
+  if (rl) drawRs(g, it0, it, rl, X, n, pW, padT + pH + gap + volH + rgap, rsH, rgap);
+  g.strokeStyle = "#e3e5ea"; g.strokeRect(0.5, padT + 0.5, pW - 1, H - xH - padT - 1);
+}
+// RS선 칸: 선이 오르면 시장보다 강해지는 중. 점선은 1년 중 RS선 최고 자리, 파란 점은 오늘이 그 신고가일 때.
+const RSC = "#1d4ed8";
+function drawRs(g, it0, it, rl, X, n, pW, top, rsH, rgap){
+  const vals = rl.filter(v => v != null), best = Math.max(...it0.rl.filter(v => v != null));
+  let a = Math.min(...vals), b = Math.max(...vals);
+  const pad = (b - a) * 0.1 || 1; a -= pad; b += pad;
+  const Y = v => top + (b - v) / (b - a) * rsH;
+  g.strokeStyle = "#e3e5ea"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, top - rgap / 2 + 0.5); g.lineTo(pW, top - rgap / 2 + 0.5); g.stroke();
+  if (best <= b){ g.setLineDash([2,3]); g.strokeStyle = "#93a3c4"; const y = Math.round(Y(best)) + 0.5; g.beginPath(); g.moveTo(0, y); g.lineTo(pW, y); g.stroke(); g.setLineDash([]); }
+  // 칸 이름은 선보다 먼저 쓴다(바탕 없이). 선이 글씨 위로 지나가 1~2월 선이 가려지지 않게(2026-11-21 사용자 지적)
+  // 글씨가 들어갈 왼쪽 앞부분(칸 폭의 35%)에서 선이 위쪽에 있으면 글씨를 칸 아래쪽에 쓴다
+  const head = rl.slice(0, Math.max(1, Math.round(rl.length * 0.35))).filter(v => v != null);
+  const low = head.length && Math.max(...head) > a + (b - a) * 0.55;
+  g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.textAlign = "left"; g.textBaseline = low ? "bottom" : "top";
+  g.fillStyle = "#6b7280"; g.fillText("RS선 · " + (it0.rb || "시장 지수") + " 대비", 7, low ? top + rsH - 2 : top + 2);
+  g.strokeStyle = RSC; g.lineWidth = 1.4; g.lineJoin = "round"; g.beginPath();
+  let on = false;
+  rl.forEach((v, i) => { if (v == null){ on = false; return; } on ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)); on = true; });
+  g.stroke();
+  if (it0.rsh && rl[n - 1] != null){ g.fillStyle = RSC; g.beginPath(); g.arc(X(n - 1), Y(rl[n - 1]), 3.2, 0, Math.PI * 2); g.fill(); }
+  if (it0.rs != null){
+    g.font = "700 12px -apple-system,BlinkMacSystemFont,sans-serif"; g.fillStyle = it0.rs >= 80 ? RSC : "#4b5563";
+    g.fillText("RS " + it0.rs, pW + 5, top + 2);
+    const ar = rsArrow(it0).trim();
+    if (ar){ g.font = "600 11px -apple-system,BlinkMacSystemFont,sans-serif"; g.fillStyle = it0.rsd > 0 ? UPW : DNW; g.fillText(ar, pW + 5, top + 18); }
+  }
+  g.font = "11px -apple-system,BlinkMacSystemFont,sans-serif";
+}
+
+// ── 종목별 계산값: 기간 수익률, 거래량 배수, 52주 범위 위치 ──
+function metrics(it){
+  const c = it.c, n = c.length, last = c[n - 1];
+  const ret = k => n > k ? (last / c[n - 1 - k] - 1) * 100 : null;
+  let vr = null;
+  if (it.v && it.v.some(v => v > 0)){
+    const w = it.v.slice(Math.max(0, n - 21), n - 1).filter(v => v > 0);
+    const avg = w.length ? w.reduce((a, b) => a + b, 0) / w.length : 0;
+    if (avg > 0 && it.v[n - 1] > 0) vr = it.v[n - 1] / avg;
+  }
+  it.m = {r1w: ret(5), r1m: ret(21), r3m: ret(63), r6m: ret(126), r1y: (last / c[0] - 1) * 100, vr,
+          pos: it.hi > it.lo ? (last - it.lo) / (it.hi - it.lo) * 100 : 50};
+  if (it.k) trendMetrics(it);
+}
+// ── 추세추종 지표(2026-11-21). 종목(국가가 있는 것)만. 단순이동평균은 저장된 종가로 여기서 구한다 ──
+const sma = (c, k, end) => { if (end + 1 < k) return null; let t = 0; for (let i = end - k + 1; i <= end; i++) t += c[i]; return t / k; };
+function trendMetrics(it){
+  const c = it.c, n = c.length, j = n - 1, last = c[j], m = it.m;
+  const s50 = sma(c, 50, j), s150 = sma(c, 150, j), s200 = sma(c, 200, j), s200b = sma(c, 200, j - 21);
+  // 미너비니 트렌드 템플릿 8조건(통과 여부 배열). 1년 치 자료라 200일선 한 달 전 값까지 구할 수 있을 때만
+  if (s200b != null){
+    m.ttc = [last > s150 && last > s200, s150 > s200, s200 > s200b, s50 > s150 && s50 > s200, last > s50,
+             last >= it.lo * 1.3, last >= it.hi * 0.75, it.rs != null && it.rs >= 70];
+    m.tt = m.ttc.filter(Boolean).length;
+  }
+  if (s50) m.ext = (last / s50 - 1) * 100;
+  // 변동성 수축: 최근 10거래일 고저 폭 ÷ 최근 50거래일 고저 폭(작을수록 좁게 다지는 중)
+  if (n >= 50){
+    const rng = k => Math.max(...it.h.slice(n - k)) - Math.min(...it.l.slice(n - k));
+    const r50 = rng(50); if (r50 > 0) m.vc = rng(10) / r50 * 100;
+  }
+  // 매집 비율: 최근 50거래일 오른 날 거래량 합 ÷ 내린 날 거래량 합
+  if (it.v && n > 51){
+    let u = 0, d = 0;
+    for (let i = n - 50; i < n; i++){ if (c[i] > c[i - 1]) u += it.v[i]; else if (c[i] < c[i - 1]) d += it.v[i]; }
+    if (u > 0 && d > 0) m.ud = u / d;
+  }
+  // 정배열 며칠째(오늘 정배열일 때만), 마지막 52주 신고가(종가)가 며칠 전인지
+  if (it.al){ let k = 0; while (k < n && alAt(it, k)) k++; m.ald = k; }
+  let hi = 0; for (let i = 1; i < n; i++) if (c[i] >= c[hi]) hi = i;
+  m.hid = j - hi;
+}
+const TT_NAMES = ["종가가 150일선·200일선 위", "150일선이 200일선 위", "200일선이 한 달 전보다 오름", "50일선이 150일선·200일선 위",
+                  "종가가 50일선 위", "52주 저점보다 30% 이상 위", "52주 고점에서 25% 안쪽", "RS 등급 70 이상"];
+const ttTip = it => `미너비니 트렌드 템플릿 ${it.m.tt}/8\n` + TT_NAMES.map((t, i) => (it.m.ttc[i] ? "✓ " : "✗ ") + t).join("\n") +
+  "\n\n이동평균은 단순이동평균(종가 기준), 52주 고점·저점은 종가 기준입니다.";
+const pct = v => (v > 0 ? "+" : "") + v.toFixed(1) + "%";
+// RS 등급 옆 20거래일 변화: 5 이상 움직였을 때만 ▲▼ 숫자를 붙인다
+const rsArrow = it => it.rsd >= 5 ? " ▲" + it.rsd : it.rsd <= -5 ? " ▼" + (-it.rsd) : "";
+// 정렬 기준. key 가 클수록 앞. val 은 카드·표에 보일 값. 값이 없는 종목은 맨 뒤로 간다.
+const SORTS = [
+  {id:"base", g:"", name:"기본 순서"},
+  {id:"chg", g:"오늘", name:"오늘 등락률", lab:"오늘", key:it => it.chg, val:it => pct(it.chg)},
+  {id:"r1w", g:"기간 수익률", name:"1주", lab:"1주", key:it => it.m.r1w, val:it => pct(it.m.r1w)},
+  {id:"r1m", g:"기간 수익률", name:"1개월", lab:"1개월", key:it => it.m.r1m, val:it => pct(it.m.r1m)},
+  {id:"r3m", g:"기간 수익률", name:"3개월", lab:"3개월", key:it => it.m.r3m, val:it => pct(it.m.r3m)},
+  {id:"r6m", g:"기간 수익률", name:"6개월", lab:"6개월", key:it => it.m.r6m, val:it => pct(it.m.r6m)},
+  {id:"r1y", g:"기간 수익률", name:"1년", lab:"1년", key:it => it.m.r1y, val:it => pct(it.m.r1y)},
+  {id:"rs", g:"강도", name:"RS 등급", lab:"RS", key:it => it.rs, val:it => String(it.rs) + rsArrow(it)},
+  {id:"rsd", g:"강도", name:"RS 20일 변화", lab:"RS 변화", key:it => it.rsd, val:it => (it.rsd > 0 ? "+" : "") + it.rsd},
+  {id:"vr", g:"강도", name:"거래량 배수", lab:"거래량", key:it => it.m.vr, val:it => it.m.vr.toFixed(1) + "배"},
+  {id:"pos", g:"52주 위치", name:"52주 범위 위치", lab:"52주", key:it => it.m.pos, val:it => Math.round(it.m.pos) + "%", hide:true},
+  // 추세추종(2026-11-21 사용자 요청). dd = 처음 눌렀을 때 방향(작을수록 좋은 기준은 낮은 순)
+  {id:"tt", g:"추세", name:"추세 점수(미너비니)", lab:"추세", key:it => it.m.tt, val:it => it.m.tt + "/8"},
+  {id:"ph", g:"추세", name:"52주 고점 대비", lab:"고점 대비", key:it => it.ph, val:it => pct(it.ph)},
+  {id:"ext", g:"추세", name:"50일선 이격도", lab:"50일선", key:it => it.m.ext, val:it => pct(it.m.ext)},
+  {id:"vc", g:"추세", name:"변동성 수축", lab:"수축", key:it => it.m.vc, val:it => Math.round(it.m.vc) + "%", dd:"asc"},
+  {id:"ud", g:"추세", name:"매집 비율", lab:"매집", key:it => it.m.ud, val:it => it.m.ud.toFixed(2)},
+  {id:"ald", g:"추세", name:"정배열 며칠째", lab:"정배열", key:it => it.m.ald, val:it => it.m.ald + "일째"},
+  {id:"hid", g:"추세", name:"신고가 후 며칠", lab:"신고가", key:it => it.m.hid, val:it => it.m.hid ? it.m.hid + "일 전" : "오늘", dd:"asc"}];
+const SORT = Object.fromEntries(SORTS.map(x => [x.id, x]));
+const has = (x, it) => { const v = x.key(it); return v != null && isFinite(v); };
+
+// ── 걸러 보기: 조건은 모두 만족(교집합), 국가는 하나라도(합집합). 넷째 칸은 함께 켤 수 없는 반대 조건 ──
+const lastOf = a => a[a.length - 1];
+const CONDS = [
+  ["al","정배열",it => it.al],
+  ["tt","미너비니 템플릿",it => it.m.tt === 8],
+  ["g","골든크로스",it => it.x === "gc" || it.x === "gs","d"],["d","데드크로스",it => it.x === "dc" || it.x === "ds","g"],
+  ["a2","200일선 위",it => lastOf(it.c) > lastOf(it.e["200"]),"b2"],["b2","200일선 아래",it => lastOf(it.c) <= lastOf(it.e["200"]),"a2"],
+  ["hi","52주 고점 5% 이내",it => it.ph >= -5],
+  ["rs8","RS 80 이상",it => it.rs >= 80],
+  ["rsh","RS선 신고가",it => !!it.rsh],
+  ["ia","인더스트리 액션",it => !!it.ia],
+  ["v2","거래량 2배 이상",it => it.m.vr >= 2],
+  ["up","5% 급등",it => it.chg >= 5,"dn"],["dn","5% 급락",it => it.chg <= -5,"up"]];
+const COND = Object.fromEntries(CONDS.map(c => [c[0], c]));
+// 걸러 보기·정렬 기준의 정의(판에서 누르면 아래 상자에 나온다). 계산은 이 페이지와 scripts/watchlist_fetch.py 와 같다
+const DEF = {
+  al: "오늘 종가 > 20일 지수이동평균(EMA20) > EMA50 > EMA200. 차트의 세 선이 위에서부터 차례로 놓인 상승 추세입니다.",
+  tt: "마크 미너비니의 트렌드 템플릿 8조건을 모두 만족합니다(교과서적인 2단계 상승 추세). ① 종가가 150일선·200일선 위 ② 150일선이 200일선 위 ③ 200일선이 한 달(21거래일) 전보다 오름 ④ 50일선이 150일선·200일선 위 ⑤ 종가가 50일선 위 ⑥ 52주 저점보다 30% 이상 위 ⑦ 52주 고점에서 25% 안쪽 ⑧ RS 등급 70 이상. 이동평균은 단순이동평균(종가 기준), 52주 고점·저점은 종가 기준입니다. 카드의 '템플릿 ✓'이나 '추세 n/8' 딱지를 누르면(PC는 마우스를 올리면) 조건별 통과 여부가 나옵니다.",
+  g: "EMA50이 EMA200을 최근 5거래일 안에 위로 넘었거나(발생), 아직 아래지만 두 선 간격이 EMA200의 1.5% 이내로 좁혀지는 중(임박)입니다.",
+  d: "EMA50이 EMA200을 최근 5거래일 안에 아래로 넘었거나(발생), 아직 위지만 두 선 간격이 EMA200의 1.5% 이내로 좁혀지는 중(임박)입니다.",
+  a2: "오늘 종가가 EMA200보다 높습니다.",
+  b2: "오늘 종가가 EMA200 이하입니다.",
+  hi: "오늘 종가가 최근 1년 최고 종가에서 5% 안쪽에 있습니다.",
+  rs8: "RS 등급 80 이상(차트북 전체 주식 중 상위 약 20%). RS 등급은 종목이 자기 상장 시장 지수(코스피·코스닥·S&P500·닛케이·가권·항셍·상하이)보다 얼마나 강했는지를 1~99로 매긴 값이라, 나라 장세와 상관없이 비교할 수 있습니다.",
+  rsh: "RS선(종목 종가 ÷ 상장 시장 지수)이 오늘 지난 1년 중 가장 높습니다. 주가는 아직 신고가가 아니어도 시장보다 강해졌다는 뜻이라, 주도주가 될 종목이 여기서 먼저 드러나는 경우가 많습니다.",
+  ia: "이 종목이 속한 업종이 시장 흐름판(한국·미국·일본 세부 산업 강도 순위)에서 상위 25% 안에 있습니다. 흐름판은 업종마다 차트북보다 많은 종목으로 5·20·60일 수익률을 비교해 순위를 매깁니다. 딱지에는 업종 이름, 순위, 상위권에 머문 거래일 수가 나오고, 5거래일 이내에 새로 들어왔으면 '새로'가 붙습니다. 흐름판에 없는 종목(중국·대만 전부, 미국 일부)은 판정하지 않습니다.",
+  v2: "오늘 거래량이 직전 20거래일 평균 거래량의 2배 이상입니다.",
+  up: "오늘 종가가 직전 거래일 종가보다 5% 이상 올랐습니다.",
+  dn: "오늘 종가가 직전 거래일 종가보다 5% 이상 내렸습니다.",
+  base: "섹터 안에서 같은 하부섹터끼리 모아 둔 순서입니다(트레이딩뷰 워치리스트 순서와 같음).",
+  chg: "오늘 종가 ÷ 직전 거래일 종가 − 1.",
+  r1w: "오늘 종가 ÷ 5거래일 전 종가 − 1.",
+  r1m: "오늘 종가 ÷ 21거래일 전 종가 − 1.",
+  r3m: "오늘 종가 ÷ 63거래일 전 종가 − 1.",
+  r6m: "오늘 종가 ÷ 126거래일 전 종가 − 1.",
+  r1y: "오늘 종가 ÷ 1년 전(차트 첫날) 종가 − 1.",
+  rs: "종목이 자기 상장 시장 지수보다 얼마나 강했는지를 차트북 전체 종목 안에서 1~99 등급으로 매긴 값입니다. 99가 가장 강합니다. RS선(종목 ÷ 지수)의 3개월 변화 40% + 6·9·12개월 변화 각 20%로 점수를 냅니다. 옆의 ▲▼ 숫자는 20거래일 전 등급과의 차이입니다.",
+  rsd: "RS 등급이 20거래일 전보다 얼마나 오르내렸는지 봅니다. 크게 올랐다면 최근 들어 시장보다 강해지기 시작한 종목입니다.",
+  vr: "오늘 거래량 ÷ 직전 20거래일 평균 거래량. 2배면 평소의 두 배가 거래됐다는 뜻입니다.",
+  pos: "(오늘 종가 − 52주 최저 종가) ÷ (52주 최고 − 최저). 0%는 1년 최저, 100%는 1년 최고 자리입니다.",
+  ph: "오늘 종가 ÷ 52주 최고 종가 − 1. 0%면 오늘이 신고가이고, 높은 순으로 보면 고점에 가까운 종목부터 나옵니다. 추세추종은 고점 근처에서 사는 쪽이 성공률이 높습니다.",
+  ext: "오늘 종가 ÷ 50일 단순이동평균 − 1. 정배열·템플릿 조건과 함께 낮은 순으로 보면 50일선까지 눌린 종목(눌림목)이, 높은 순으로 보면 50일선에서 너무 멀어져 추격 매수가 위험한 종목이 먼저 나옵니다.",
+  vc: "최근 10거래일 고가~저가 폭 ÷ 최근 50거래일 고가~저가 폭. 작을수록 가격이 좁은 폭에서 다져지고 있습니다(변동성 수축). 52주 고점 5% 이내 조건과 함께 낮은 순으로 보면 돌파 직전 후보가 위로 올라옵니다.",
+  ud: "최근 50거래일 동안 오른 날 거래량 합 ÷ 내린 날 거래량 합(IBD의 U/D 비율). 1보다 크면 오른 날 거래가 더 많았고, 1.5 이상이면 매집 흔적으로 봅니다.",
+  ald: "정배열(종가 > EMA20 > EMA50 > EMA200)이 오늘까지 몇 거래일째 이어졌는지 셉니다. 낮은 순으로 보면 추세가 막 시작된 종목이 먼저 나옵니다. 정배열이 아닌 종목은 맨 뒤로 갑니다.",
+  hid: "마지막 52주 신고가(종가)가 며칠(거래일) 전이었는지 봅니다. 0이면 오늘 신고가입니다. 낮은 순으로 보면 신고가 행진 중인 종목이 먼저 나옵니다."};
+const KORDER = ["미국","한국","중국","일본","대만","기타"];
+const kgroup = k => !k ? "" : k === "홍콩" ? "중국" : KORDER.includes(k) ? k : "기타";
+
+// c: 조건, k: 국가, s: 정렬 기준, d: desc(높은 순)|asc(낮은 순), v: chart|list, g: sec(섹터별)|all(탭 전체 한 줄)
+let ST = {c: [], k: [], s: "base", d: "desc", v: "chart", g: "sec", p: "", log: true};
+try { Object.assign(ST, JSON.parse(store.get("wl.st") || "{}")); } catch(e){}
+{ const mv = {"chg-":["chg","desc"],"chg+":["chg","asc"],"chgr":["chg","asc"],"ph":["pos","desc"],"posr":["pos","asc"],"pl":["base","desc"]}[ST.s]; if (mv) [ST.s, ST.d] = mv; }
+if (ST.d !== "asc") ST.d = "desc";
+if (!SORT[ST.s]) ST.s = "base";
+ST.c = (ST.c || []).filter(c => COND[c]); ST.k = (ST.k || []).filter(k => KORDER.includes(k));
+{ const old = store.get("wl.flt"); if (old && COND[old] && !store.get("wl.st")) ST.c = [old]; }
+const save = () => store.set("wl.st", JSON.stringify(ST));
+// 기간을 고른 적이 없으면 휴대폰 6개월, 태블릿·PC 1년
+const period = () => PERIODS.some(p => p[0] === ST.p) ? ST.p : (window.innerWidth < 900 ? "6m" : "1y");
+const hasK = data => data.sections.some(s => s.items.some(it => it.k));
+const active = data => ST.c.length + (hasK(data) ? ST.k.length : 0);
+function tester(data){
+  const useK = hasK(data) && ST.k.length;
+  return it => ST.c.every(c => COND[c][2](it)) && (!useK || ST.k.includes(kgroup(it.k)));
+}
+// 같은 회사가 두 곳에 상장돼 둘 다 들어 있으면(TSMC, 토요타, 중국 A·H주 등) 순위를 볼 때 하나만 남긴다.
+// 미국 상장(기호에 점이 없는 것)을 남기고, 둘 다 미국 밖이면 먼저 나온 것을 남긴다.
+function dupSet(data){
+  const by = {}, drop = new Set();
+  data.sections.forEach(s => s.items.forEach(it => (by[it.n] = by[it.n] || []).push(it)));
+  Object.values(by).forEach(list => {
+    if (list.length < 2) return;
+    const keep = list.find(it => !it.y.includes(".") && !it.y.startsWith("^")) || list[0];
+    list.forEach(it => { if (it !== keep) drop.add(it.y); });
+  });
+  return drop;
+}
+
+// ── 카드 ──
+const CROSS = {gc:["xg","골든크로스 발생"], gs:["xg","골든크로스 임박"], dc:["xd","데드크로스 발생"], ds:["xd","데드크로스 임박"]};
+function span(cls, txt, tip){ const s = document.createElement("span"); if (cls) s.className = cls; s.textContent = txt; if (tip) s.title = tip; return s; }
+// 딱지에 마우스를 올리면 나오는 풀이(값이 들어간 문장 + 기준 정의)
+const MKT = {KR: "한국", US: "미국", JP: "일본"};
+const TIP = {
+  ia: it => `${MKT[it.ia.m] || it.ia.m} 시장 흐름판에서 '${it.ia.g}' 업종이 ${it.ia.of}개 업종 중 ${it.ia.k}위로 상위 25% 안에 있습니다. ` +
+    (it.ia.d <= 5 ? `상위권에 새로 들어온 지 ${it.ia.d}거래일째입니다.` : `상위권에 ${it.ia.d}거래일째 머물러 있습니다.`) +
+    (it.ia.b != null ? ` 이 업종 종목의 ${it.ia.b}%가 50일선 위에 있습니다.` : "") + "\n\n" + DEF.ia,
+  rs: it => `RS ${it.rs}: 상장 시장 지수보다 강한 정도가 차트북 주식 중 상위 ${Math.max(1, 100 - it.rs)}% 안에 듭니다.` +
+    (it.rsd != null ? ` 20거래일 전에는 ${it.rs - it.rsd}였습니다(${it.rsd > 0 ? "+" : ""}${it.rsd}).` : "") + "\n\n" + DEF.rs,
+  vr: it => `오늘 거래량이 직전 20거래일 평균의 ${it.m.vr.toFixed(1)}배입니다. 평소보다 거래가 몰렸다는 뜻입니다.`,
+};
+function card(it, idx, rank){
+  const ld = it.d[it.d.length - 1], sk = SORT[EFF], pd = /\.(KS|KQ|T)$/.test(it.y) ? 0 : it.dg;
+  const el = document.createElement("div"); el.className = "card"; el.dataset.y = it.y;
+  el.innerHTML =
+    `<div class="hd"><div class="nr"><div class="nm"></div><div class="px">${fmt(lastOf(it.c), pd)}<i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></div></div>` +
+    `<div class="biz"></div><div class="bd"></div></div>` +
+    `<canvas data-i="${idx}"${it.rl ? ' class="rl"' : ""}></canvas>` +
+    `<div class="lg"><span>EMA${EMA.map(([k,c]) => `<b style="color:${c}">${k}</b>`).join("")}</span><span>${+ld.slice(2,4)}/${+ld.slice(4,6)} 종가 기준</span></div>`;
+  const nm = el.querySelector(".nm");
+  if (rank) nm.appendChild(span("rk", rank));
+  nm.appendChild(document.createTextNode(it.n));
+  const sm = document.createElement("small"); sm.textContent = it.y; nm.appendChild(sm);
+  if (it.k){ const em = document.createElement("em"); em.textContent = it.k; nm.appendChild(em); }
+  const bz = el.querySelector(".biz");
+  if (it.t && it.t.length) bz.appendChild(span("tg", it.t.join(" · "), "하부섹터 딱지입니다. 첫 딱지가 같은 종목끼리 섹터 안에서 한 묶음으로 모입니다."));
+  if (it.b) bz.appendChild(document.createTextNode(it.b));
+  if (!bz.childNodes.length) bz.remove();
+  const bd = el.querySelector(".bd");
+  // 정렬 중이면 그 기준 값을 맨 앞에 노랗게(오늘 등락률은 가격 옆에 이미 있으니 뺀다)
+  if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it), (sk.id === "tt" ? ttTip(it) : "지금 정렬 기준인 " + sk.name + " 값입니다.\n\n" + (DEF[sk.id] || ""))));
+  if (it.ia) bd.appendChild(span("ia", "액션 · " + it.ia.g + " " + it.ia.k + "위/" + it.ia.of + (it.ia.d <= 5 ? " · 새로" : " · " + it.ia.d + "일째"), TIP.ia(it)));
+  if (it.m.tt === 8 && EFF !== "tt") bd.appendChild(span("tt", "템플릿 ✓", ttTip(it)));
+  if (it.al) bd.appendChild(span("al", "정배열", DEF.al));
+  if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1], DEF[it.x[0] === "g" ? "g" : "d"]));
+  // RS 등급·20일 변화·RS선 신고가를 딱지 하나로(RS로 정렬 중이면 등급은 노란 딱지에 있으니 신고가만)
+  if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 || it.rsh ? "rh" : "", "RS " + it.rs + rsArrow(it) + (it.rsh ? " · 신고가" : ""),
+    TIP.rs(it) + (it.rsh ? "\n\nRS선 신고가: " + DEF.rsh : "")));
+  else if (it.rsh) bd.appendChild(span("rh", "RS선 신고가", DEF.rsh));
+  if (it.m.vr >= 2 && EFF !== "vr") bd.appendChild(span("vh", "거래량 " + it.m.vr.toFixed(1) + "배", TIP.vr(it)));
+  if (it.stale) bd.appendChild(span("st", "갱신 실패, 이전 자료", "이번 갱신 때 이 종목의 일봉을 받지 못해 직전 회차 자료를 그대로 보여 줍니다."));
+  return el;
+}
+
+// ── 표 형태 목록: 종목 | 오늘 | 1개월 | 52주 위치 | RS. 칸 제목을 누르면 그 기준으로 정렬, 줄을 누르면 차트를 편다 ──
+const COLS = [["종목","base"],["오늘","chg"],["1개월","r1m"],["52주","pos"],["RS","rs"]];
+function tableHead(){
+  const th = document.createElement("div"); th.className = "tr th";
+  COLS.forEach(([t, id]) => {
+    const b = document.createElement("button"); b.textContent = t;
+    if (DEF[id]) b.title = DEF[id];
+    b.onclick = e => { e.stopPropagation(); if (EFF === id && id !== "base") ST.d = ST.d === "asc" ? "desc" : "asc"; else { ST.s = id; ST.d = "desc"; } save(); render(false); };
+    b.classList.toggle("on", EFF === id && id !== "base"); b.classList.toggle("asc", ST.d === "asc");
+    th.appendChild(b);
+  });
+  return th;
+}
+function tableRow(it, idx, rank){
+  const r = document.createElement("div"); r.className = "tr it"; r.dataset.y = it.y;
+  const n = document.createElement("div"); n.className = "n";
+  const b = document.createElement("b"); b.textContent = it.n; n.appendChild(b);
+  const sm = document.createElement("small");
+  if (rank){ const i = document.createElement("i"); i.textContent = rank; sm.appendChild(i); }
+  sm.appendChild(document.createTextNode(it.y + (it.k ? " · " + it.k : "")));
+  if (it.t && it.t.length) sm.appendChild(span("tg", " · " + it.t.join(" · ")));
+  n.appendChild(sm);
+  r.appendChild(n);
+  r.insertAdjacentHTML("beforeend",
+    `<span><i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></span>` +
+    `<span class="s ${it.m.r1m >= 0 ? "up" : "dn"}">${it.m.r1m == null ? "–" : pct(it.m.r1m)}</span>` +
+    `<span>${Math.round(it.m.pos)}%<i class="mb"><u style="left:calc(${Math.max(0, Math.min(100, it.m.pos))}% - 1px)"></u></i></span>` +
+    `<span class="s">${it.rs == null ? "–" : it.rs + rsArrow(it)}${spark(it)}</span>`);
+  if (it.rs != null) r.lastElementChild.title = TIP.rs(it);
+  r.onclick = () => {
+    const nx = r.nextElementSibling;
+    if (nx && nx.classList.contains("card")){ nx.remove(); r.classList.remove("open"); prog(); return; }
+    const el = card(it, idx, 0); r.after(el); r.classList.add("open");
+    const cv = el.querySelector("canvas"); draw(cv, it); cv.dataset.w = cv.clientWidth; prog();
+  };
+  return r;
+}
+
+// 표의 RS 칸 아래 작은 선: 최근 63거래일 RS선(오르면 시장보다 강해지는 중)
+function spark(it){
+  const v = (it.rl || []).slice(-63).filter(x => x != null);
+  if (v.length < 10) return "";
+  const lo = Math.min(...v), hi = Math.max(...v), r = hi - lo || 1;
+  const pts = v.map((x, i) => (i / (v.length - 1) * 34).toFixed(1) + "," + (10 - (x - lo) / r * 10).toFixed(1)).join(" ");
+  return `<svg viewBox="0 0 34 11"><polyline points="${pts}" fill="none" stroke="${it.rs >= 80 ? RSC : "#8a93a3"}" stroke-width="1.3" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+
+// ── 하부섹터 묶음: 요약 줄을 누르면 접고 편다(처음엔 펼침, 접은 묶음은 브라우저에 기억) ──
+let SHUT = new Set();
+try { SHUT = new Set(JSON.parse(store.get("wl.shut") || "[]")); } catch(e){}
+function grpStat(mem){
+  const r = mem.map(x => x.m.r1m).filter(v => v != null);
+  return {n: mem.length, al: mem.filter(x => x.al).length, r1m: r.length ? r.reduce((a, c) => a + c, 0) / r.length : null};
+}
+function subHead(sec, g, mem){
+  const st = grpStat(mem), sh = document.createElement("div"); sh.className = "sub";
+  sh.dataset.sec = sec; sh.dataset.g = g; sh.dataset.k = CUR + "|" + sec + "|" + g;
+  sh.appendChild(document.createTextNode(g));
+  const k = document.createElement("small"); k.textContent = st.n; sh.appendChild(k);
+  const t = document.createElement("span"); t.className = "st";
+  t.innerHTML = `정배열 ${st.al}` + (st.r1m == null ? "" : ` · 1개월 <b class="${st.r1m >= 0 ? "up" : "dn"}">${pct(st.r1m)}</b>`);
+  sh.appendChild(t);
+  sh.title = "누르면 이 묶음을 접거나 펼칩니다.";
+  return sh;
+}
+function setShut(sh, shut){
+  const grp = sh.nextElementSibling;
+  grp.hidden = shut; sh.classList.toggle("shut", shut);
+  shut ? SHUT.add(sh.dataset.k) : SHUT.delete(sh.dataset.k);
+  store.set("wl.shut", JSON.stringify([...SHUT]));
+  if (sh.lab) sh.lab();
+  foldLab();
+  // 펼친 묶음의 차트는 화면에 들어올 때 다시 그리게 관찰을 새로 건다
+  if (!shut && io) grp.querySelectorAll("canvas").forEach(cv => { io.unobserve(cv); io.observe(cv); });
+  prog();
+}
+// 하부섹터 묶음으로 가서 펼친다(액션판·검색에서 씀). 걸러 보기·정렬 중이면 묶음이 없으니 먼저 처음 상태로.
+function goGroup(sec, g){
+  if (EFF !== "base" || ST.g === "all" || active(TAB) > 0){ reset(); save(); render(false); }
+  const sh = [...$("main").querySelectorAll(".sub")].find(x => x.dataset.sec === sec && x.dataset.g === g);
+  const si = TAB.sections.findIndex(s => s.name === sec);
+  const tgt = sh || (SECINFO[si] && SECINFO[si].h);
+  if (!tgt) return;
+  if (sh && sh.classList.contains("shut")) setShut(sh, false);
+  LOCK = true; if (si >= 0) light(si);
+  jumpTo(tgt);
+  if (sh){ sh.classList.remove("hit"); void sh.offsetWidth; sh.classList.add("hit"); }
+}
+// 탭 안 하부섹터 묶음별 정배열 수(오늘·20거래일 전)와 1개월 평균. 3종목 미만 묶음은 뺀다.
+function alAt(it, back){
+  const j = it.c.length - 1 - back, e = it.e;
+  return j >= 0 && it.c[j] > e["20"][j] && e["20"][j] > e["50"][j] && e["50"][j] > e["200"][j];
+}
+function groupStats(data){
+  const out = [];
+  data.sections.forEach(s => {
+    const by = {};
+    s.items.forEach(it => { const g = (it.t || [])[0]; if (g) (by[g] = by[g] || []).push(it); });
+    Object.entries(by).forEach(([g, mem]) => {
+      if (mem.length < 3) return;
+      out.push({sec: s.name, g, ...grpStat(mem), al20: mem.filter(it => alAt(it, 20)).length});
+    });
+  });
+  return out;
+}
+
+// ── 상단 메뉴 위치 계산 ──
+const hdr = $("hdr");
+const hdrBottom = () => hdr.getBoundingClientRect().bottom;
+let HID = false;
+function setHidden(h){
+  if (!$("panel").hidden) h = false;
+  HID = h; hdr.style.transform = h ? `translateY(-${$("hide").offsetHeight}px)` : "";
+}
+function pad(){ $("main").style.paddingTop = (hdr.offsetHeight - ($("panel").hidden ? 0 : $("panel").offsetHeight) + 8) + "px"; }
+function jumpTo(h){
+  // 이동하면 메뉴가 접히므로, 접힌 높이 기준으로 제목이 바로 보이게 한다
+  const visible = hdr.offsetHeight - $("hide").offsetHeight - ($("panel").hidden ? 0 : $("panel").offsetHeight);
+  JUMP = Date.now() + 600; setHidden(true);
+  window.scrollTo(0, h.getBoundingClientRect().top + window.scrollY - visible - 8);
+}
+let JUMP = 0;
+
+// 지금 화면에 보이는 섹터의 버튼에 불을 켜고, 버튼 줄 가운데로 민다(손가락이 버튼 줄을 만지는 동안은 안 민다)
+function light(cur){
+  if (cur === SPY) return;
+  SPY = cur;
+  const row = $("secs"), bs = [...row.querySelectorAll("button[data-s]")];
+  bs.forEach((b, i) => b.classList.toggle("on", i === cur));
+  const b = bs[cur];
+  if (!b || Date.now() < ROWBUSY) return;
+  const l = b.offsetLeft - row.scrollLeft, r = l + b.offsetWidth;
+  if (l < 60 || r > row.clientWidth - 8) row.scrollLeft = b.offsetLeft - (row.clientWidth - b.offsetWidth) / 2;
+}
+// 오른쪽 가는 막대: 지금 보는 섹터를 어디까지 봤는지(옆 숫자 = 몇 번째 종목/섹터 종목 수)
+function prog(){
+  const bar = $("prog");
+  if (!HEADS.length){ bar.style.display = "none"; return; }
+  const hh = hdrBottom(), line = hh + 24, vh = window.innerHeight;
+  let cur = 0;
+  for (let i = 0; i < HEADS.length; i++){ if (HEADS[i].getBoundingClientRect().top <= line) cur = i; else break; }
+  const top = HEADS[cur].getBoundingClientRect().top;
+  const end = cur + 1 < HEADS.length ? HEADS[cur + 1].getBoundingClientRect().top : $("main").getBoundingClientRect().bottom;
+  const secH = Math.max(1, end - top), viewH = vh - hh;
+  const trackTop = hh + 10, trackH = vh - hh - 20;
+  const thumbH = Math.max(26, Math.min(trackH, trackH * viewH / secH));
+  const p = Math.max(0, Math.min(1, (hh - top) / Math.max(1, secH - viewH)));
+  const y = (trackH - thumbH) * p;
+  bar.style.display = "block"; bar.style.top = trackTop + "px"; bar.style.height = trackH + "px";
+  const th = bar.firstChild, lb = bar.lastChild;
+  th.style.top = y + "px"; th.style.height = thumbH + "px";
+  const cards = SCARDS[cur].filter(c => c.offsetParent); let k = 1;
+  for (let i = 0; i < cards.length; i++){ if (cards[i].getBoundingClientRect().top <= hh + viewH * 0.45) k = i + 1; else break; }
+  lb.textContent = cards.length ? k + "/" + cards.length : "접힘"; lb.style.top = (y + thumbH / 2) + "px";
+}
+function spy(){
+  prog();
+  if (!HEADS.length || LOCK) return;
+  const line = hdrBottom() + 24;
+  let cur = 0;
+  for (let i = 0; i < HEADS.length; i++){ if (HEADS[i].getBoundingClientRect().top <= line) cur = i; else break; }
+  light(HIDX[cur]);
+}
+["touchstart","wheel","keydown","mousedown"].forEach(ev => window.addEventListener(ev, e => {
+  if (!(e.target.closest && e.target.closest("#secs"))) LOCK = false;
+}, {passive: true}));
+
+async function openTab(id, restore){
+  CUR = id; store.set("wl.tab", id);
+  [...$("tabs").children].forEach(b => b.classList.toggle("on", b.dataset.id === id));
+  const main = $("main"); main.innerHTML = '<div id="msg">불러오는 중입니다.</div>'; $("secs").innerHTML = "";
+  let data;
+  const get = async t => (await fetch(`${DATA}${t}.json?t=${encodeURIComponent(META.updated)}`)).json();
+  try {
+    if (id === "all"){
+      const ids = META.tabs.map(t => t.id).filter(t => t !== "macro");
+      main.innerHTML = `<div id="msg">${ids.length}개 탭을 모두 불러오는 중입니다.<br>처음 한 번은 몇 초 걸립니다.</div>`;
+      const ds = await Promise.all(ids.map(get));
+      data = {id: "all", title: ALL.title, sections: ds.flatMap(d => d.sections.map(s => ({...s, name: (SHORT[d.id] || d.id) + " › " + s.name})))};
+    } else data = await get(id);
+  }
+  catch(e){ main.innerHTML = '<div id="msg">자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.</div>'; return; }
+  if (CUR !== id) return;
+  data.sections.forEach(s => s.items.forEach(metrics));
+  data.dup = dupSet(data);
+  TAB = data;
+  render(restore);
+}
+
+function render(restore){
+  const main = $("main"), id = CUR, data = TAB;
+  if (!data) return;
+  if (io) io.disconnect();
+  io = new IntersectionObserver(es => es.forEach(e => {
+    const cv = e.target;
+    if (!cv.clientWidth) return;
+    if (e.isIntersecting){ if (!cv.width || cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }
+    else { cv.width = 0; cv.height = 0; }
+  }), {rootMargin: "700px 0px"});
+  main.innerHTML = ""; ITEMS = []; HEADS = []; HIDX = []; SCARDS = []; SPY = -1; LOCK = false;
+  if (id !== "macro") main.appendChild(guide());
+  const any = active(data) > 0, test = tester(data);
+  // 이 탭 자료에 없는 기준(매크로 탭의 RS·거래량 등)으로 정렬돼 있으면 기본 순서로 보여 준다
+  let sk = SORT[ST.s];
+  if (sk.key && !data.sections.some(s => s.items.some(it => has(sk, it)))) sk = SORT.base;
+  EFF = sk.id;
+  const rk = EFF !== "base" || ST.g === "all";
+  const keep = it => !(rk && data.dup.has(it.y));
+  const secs = ST.g === "all" ? [{name: "탭 전체", items: data.sections.flatMap(s => s.items)}] : data.sections;
+  const row = $("secs"); row.innerHTML = "";
+  const gb = document.createElement("button"); gb.id = "gbtn"; gb.textContent = "▦ 전체 " + (PANEL === "grid" ? "▴" : "▾");
+  gb.onclick = () => openPanel("grid"); row.appendChild(gb);
+  // 탭의 모든 하부섹터 묶음을 한 번에 접기·펼치기(묶음이 있을 때만 보인다)
+  const cb = document.createElement("button"); cb.id = "cbtn"; cb.hidden = true;
+  cb.onclick = () => { const shut = !ALLHEADS.every(x => x.classList.contains("shut")); ALLHEADS.forEach(x => setShut(x, shut)); foldLab(); };
+  row.appendChild(cb); ALLHEADS = [];
+  let shown = 0, total = 0;
+  SECINFO = [];
+  secs.forEach((s, si) => {
+    const base = s.items.filter(keep);
+    let list = base.filter(test);
+    const n = base.filter(it => it.al).length;
+    total += base.length;
+    const dir = ST.d === "asc" ? 1 : -1;
+    if (sk.key) list = list.filter(it => has(sk, it)).sort((a, b) => dir * (sk.key(a) - sk.key(b))).concat(list.filter(it => !has(sk, it)));
+    const b = document.createElement("button"); b.dataset.s = si; b.textContent = s.name;
+    const bs = document.createElement("small"); bs.textContent = list.length; b.appendChild(bs);
+    row.appendChild(b);
+    const r1m = base.map(it => it.m.r1m).filter(v => v != null);
+    SECINFO.push({name: s.name, n, tot: base.length, hit: list.length, r1m: r1m.length ? r1m.reduce((a, c) => a + c, 0) / r1m.length : null, h: null});
+    if (!list.length){ b.disabled = true; return; }
+    const h = document.createElement("h2"); h.id = "s" + si; h.textContent = s.name;
+    const c = document.createElement("small");
+    c.textContent = !any ? base.length + "개, 정배열 " + n + "개" : list.length + "개 (전체 " + base.length + "개)";
+    h.appendChild(c);
+    main.appendChild(h); HEADS.push(h); HIDX.push(si); SCARDS.push([]); SECINFO[si].h = h;
+    b.onclick = () => { LOCK = true; ROWBUSY = Date.now() + 2500; light(si); jumpTo(h); };
+    let box = main;
+    if (ST.v === "list"){ box = document.createElement("div"); box.className = "tbl"; box.appendChild(tableHead()); main.appendChild(box); }
+    // 기본 순서로 섹터별로 볼 때는 같은 하부섹터(첫 딱지)끼리 모여 있으므로 묶음마다 작은 소제목을 단다
+    // 묶음 요약 줄(종목 수·정배열 수·1개월 평균)을 누르면 그 묶음을 접고 편다
+    const subs = !sk.key && ST.g !== "all", cnt = {};
+    if (subs) list.forEach(it => { const g = (it.t || [])[0]; if (g) (cnt[g] = cnt[g] || []).push(it); });
+    const multi = subs && Object.keys(cnt).length > 1, heads = [];
+    let lastSub = null, grp = box;
+    list.forEach((it, i) => {
+      const g = (it.t || [])[0];
+      if (multi && g && g !== lastSub){
+        const sh = subHead(s.name, g, cnt[g]); box.appendChild(sh);
+        grp = document.createElement("div"); grp.className = "grp"; box.appendChild(grp);
+        if (SHUT.has(sh.dataset.k)){ grp.hidden = true; sh.classList.add("shut"); }
+        sh.onclick = () => setShut(sh, !sh.classList.contains("shut"));
+        heads.push(sh);
+      }
+      lastSub = g;
+      ITEMS.push(it);
+      const rank = sk.key ? i + 1 : 0;
+      const el = ST.v === "list" ? tableRow(it, ITEMS.length - 1, rank) : card(it, ITEMS.length - 1, rank);
+      grp.appendChild(el); SCARDS[SCARDS.length - 1].push(el); shown++;
+    });
+    ALLHEADS.push(...heads);
+    // 섹터 제목 아래: 묶음 정의 표(접혀 있음). 줄을 누르면 그 묶음으로 간다
+    if (heads.length && s.groups){
+      const gd = document.createElement("details"); gd.className = "guide gdef";
+      const su = document.createElement("summary"); su.textContent = "ⓘ 묶음 정의 보기";
+      const sm = document.createElement("small"); sm.textContent = heads.length + "개 묶음이 무엇인지"; su.appendChild(sm);
+      const gb = document.createElement("div"); gb.className = "gb";
+      heads.forEach(sh => {
+        const g = sh.dataset.g, mem = cnt[g] || [];
+        const r = document.createElement("div"); r.className = "gr";
+        const nb = document.createElement("b"); nb.textContent = g;
+        const tx = document.createElement("span"); tx.textContent = s.groups[g] || "";
+        const rep = document.createElement("small"); rep.textContent = "대표: " + mem.slice(0, 3).map(x => knOf(x)).join(" · ") + (mem.length > 3 ? " 외 " + (mem.length - 3) + "개" : "");
+        tx.appendChild(rep); r.append(nb, tx);
+        r.onclick = () => goGroup(sh.dataset.sec, g);
+        gb.appendChild(r);
+      });
+      gd.append(su, gb); h.after(gd);
+    }
+    // 섹터 제목 줄 오른쪽: 이 섹터의 묶음만 한꺼번에 접기·펼치기
+    if (heads.length){
+      const fb = document.createElement("button"); fb.className = "sfold";
+      const lab = () => {
+        const all = heads.every(x => x.classList.contains("shut"));
+        // 펼친 섹터는 위 꺾쇠(누르면 접힘), 접힌 섹터는 아래 꺾쇠(누르면 펼침)
+        fb.innerHTML = `<svg viewBox="0 0 24 24"><path d="${all ? "M6 9l6 6 6-6" : "M6 15l6-6 6 6"}"/></svg>`; fb.classList.toggle("shut", all);
+        fb.title = all ? "이 섹터 묶음 모두 펼치기" : "이 섹터 묶음 모두 접기"; fb.setAttribute("aria-label", fb.title);
+      };
+      fb.onclick = e => { e.stopPropagation(); const shut = !heads.every(x => x.classList.contains("shut")); heads.forEach(x => setShut(x, shut)); };
+      heads.forEach(x => { x.lab = lab; });
+      lab(); h.appendChild(fb);
+    }
+  });
+  foldLab();
+  if (!shown){ $("prog").style.display = "none"; main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.<br>걸러 보기 조건을 줄이거나 다른 탭을 열어 보세요.</div>'; }
+  main.appendChild(nextBtn());
+  main.querySelectorAll("canvas").forEach(cv => io.observe(cv));
+  tools(data, shown, total);
+  if (PANEL) panel();
+  pad();
+  window.scrollTo(0, restore ? +(store.get("wl.y." + id) || 0) : 0);
+  if (!restore) setHidden(false);
+  spy();
+}
+let SECINFO = [], EFF = "base", ALLHEADS = [];
+// 한글 이름: 검색 색인(meta.json index)의 kn. 없으면 원래 이름
+let KN = null;
+const knOf = it => { if (!KN){ KN = {}; (META.index || []).forEach(r => { if (r[2]) KN[r[0]] = r[2]; }); } return KN[it.y] || it.n; };
+// RS선 보는 법(2026-11-21 사용자 요청). 매크로 탭을 뺀 탭 맨 위에 접어 두고, 펼침 여부는 브라우저에 기억한다.
+const GUIDE_RS = `<summary>📈 RS선 보는 법<small>차트 아래 파란 선</small></summary><div class="gb">
+<p class="one"><b>한 줄 요약: 파란 선이 올라가면 시장보다 강한 종목, 내려가면 약한 종목입니다.</b></p>
+<p><b>① RS선이란</b><br>이 종목 주가를 시장 지수로 나눈 선입니다. 시장과 비교한 성적표라고 보면 됩니다.<br>
+예) 주가 +10%, 지수 +5%면 시장보다 잘했으니 선이 오릅니다.<br>
+예) 주가 −3%, 지수 −8%면 주가는 빠졌지만 시장보다 덜 빠졌으니 선이 오릅니다.<br>
+예) 주가 +2%, 지수 +6%면 주가는 올랐지만 시장보다 덜 올랐으니 선이 내립니다.</p>
+<p><b>② 차트에서 볼 것 3가지</b><br>
+· <b>선의 방향</b>: 오르는 중인지 내리는 중인지만 봅니다. 선의 높이 숫자는 신경 쓰지 않아도 됩니다.<br>
+· <b>점선</b>: 지난 1년 동안 선이 가장 높았던 자리입니다. 선이 점선에 가까울수록 강합니다.<br>
+· <b>파란 점</b>: 오늘 선이 점선을 넘었다는 표시(RS선 신고가)입니다.</p>
+<p><b>③ 오른쪽 숫자 'RS 85 ▲7'</b><br>
+· <b>85</b>: 차트북 종목 100개를 줄 세우면 85개보다 강하다는 뜻입니다. 99가 가장 강합니다.<br>
+· <b>▲7</b>: 한 달(20거래일) 전보다 7 올랐습니다. ▼는 내렸다는 표시입니다.</p>
+<p><b>④ 이렇게 읽으면 됩니다</b></p>
+<table>
+<tr><td>주가도 신고가, RS선도 신고가(파란 점)</td><td>가장 좋은 모양입니다. 주도주일 가능성이 큽니다.</td></tr>
+<tr><td>주가는 아직 고점 아래인데 RS선이 먼저 신고가</td><td>곧 주도주가 될 수 있는 좋은 신호입니다.</td></tr>
+<tr><td>주가는 오르는데 RS선은 내려감</td><td>시장 덕에 오른 것뿐이라 약한 종목입니다.</td></tr>
+<tr><td>주가는 빠지는데 RS선은 버티거나 오름</td><td>하락장에서 잘 버틴 종목입니다. 반등 때 앞장설 후보입니다.</td></tr>
+</table>
+<p><b>⑤ 무엇과 비교하나</b><br>주식이 상장된 시장의 지수와 비교합니다. 미국 주식은 S&amp;P500, 코스피·코스닥 주식은 각 지수, 일본은 닛케이225, 중국은 상하이종합, 대만은 가권, 홍콩은 항셍입니다. TSMC·SAP처럼 미국에 상장된 외국 회사도 달러로 거래되니 S&amp;P500과 비교합니다. 유럽 상장 종목은 비교할 지수가 없어 RS가 없습니다.</p>
+</div>`;
+function guide(){
+  const d = document.createElement("details"); d.className = "guide"; d.innerHTML = GUIDE_RS;
+  d.open = store.get("wl.guide") === "1";
+  d.addEventListener("toggle", () => { store.set("wl.guide", d.open ? "1" : "0"); pad(); prog(); });
+  return d;
+}
+function foldLab(){
+  const cb = $("cbtn"); if (!cb) return;
+  cb.hidden = !ALLHEADS.length;
+  const all = ALLHEADS.length && ALLHEADS.every(x => x.classList.contains("shut"));
+  cb.textContent = all ? "⊞ 묶음 펼치기" : "⊟ 묶음 접기"; cb.classList.toggle("shut", !!all);
+  cb.title = all ? "이 탭의 하부섹터 묶음을 모두 펼칩니다." : "이 탭의 하부섹터 묶음을 모두 접습니다. 요약 줄만 남아 어느 묶음이 강한지 한눈에 보입니다.";
+}
+
+// 탭 맨 끝의 '다음 탭' 단추. 마지막 탭에서는 처음 탭으로 돌아간다.
+function nextBtn(){
+  const ts = META.tabs, i = ts.findIndex(t => t.id === CUR), last = i === ts.length - 1 || i < 0, nx = ts[last ? 0 : i + 1];
+  const b = document.createElement("button"); b.id = "next";
+  b.textContent = (last ? "처음 탭으로: " : "다음 탭: ") + (SHORT[nx.id] || nx.title) + " →";
+  const sm = document.createElement("small"); sm.textContent = nx.title; b.appendChild(sm);
+  b.onclick = () => { if (PANEL) openPanel(PANEL); openTab(nx.id, false); };
+  return b;
+}
+
+// ── 도구 단추와 걸린 조건 칩 ──
+function tools(data, shown, total){
+  const n = active(data);
+  $("fbtn").classList.toggle("on", n > 0); $("fbtn").querySelector("b").textContent = n || "";
+  const sl = $("sbtn").querySelector("span");
+  sl.textContent = EFF === "base" ? (ST.g === "all" ? "정렬 · 탭 전체" : "정렬") : "정렬 · " + SORT[EFF].lab + (ST.d === "asc" ? " ↑" : " ↓");
+  $("sbtn").classList.toggle("on", EFF !== "base" || ST.g === "all");
+  $("vbtn").querySelector("span").textContent = ST.v === "list" ? "차트" : "목록";
+  $("vbtn").querySelector("svg").innerHTML = ST.v === "list" ? '<path d="M4 19l5-6 4 3 7-9"/><path d="M4 4v16h16"/>' : '<path d="M4 6h16M4 12h16M4 18h16"/>';
+  // 걸러보기·정렬 바로 옆에 '↺ 초기화'(무엇이든 걸려 있을 때만), 걸린 조건 칩은 그 아래 줄에
+  const add = (box, cls, txt, fn) => { const b = document.createElement("button"); b.className = cls; b.textContent = txt; b.onclick = () => { fn(); apply(); }; box.appendChild(b); };
+  const dirty = n > 0 || EFF !== "base" || ST.g === "all";
+  const pe = $("per"); pe.innerHTML = "";
+  PERIODS.forEach(([k, t]) => { const b = document.createElement("button"); b.textContent = t; b.classList.toggle("on", period() === k);
+    b.onclick = () => { ST.p = k; save(); tools(data, shown, total); redraw(); }; pe.appendChild(b); });
+  const lb = $("logb"); lb.classList.toggle("on", ST.log !== false);
+  lb.onclick = () => { ST.log = ST.log === false; save(); lb.classList.toggle("on", ST.log !== false); redraw(); };
+  const cw = $("clrw"); cw.innerHTML = "";
+  if (dirty) add(cw, "clr", "↺ 초기화", reset);
+  $("cnt").innerHTML = n ? `<b>${shown}</b> / ${total}종목` : `${total}종목`;
+  const ch = $("chips"); ch.innerHTML = "";
+  ST.c.forEach(c => add(ch, "chip", COND[c][1], () => { ST.c = ST.c.filter(x => x !== c); }));
+  if (hasK(data)) ST.k.forEach(k => add(ch, "chip", k, () => { ST.k = ST.k.filter(x => x !== k); }));
+  if (ST.g === "all") add(ch, "chip", "탭 전체 한 줄", () => { ST.g = "sec"; });
+  ch.hidden = !ch.children.length;
+  if (!ch.hidden){ const sm = document.createElement("small"); sm.textContent = "누르면 그 조건만 풀립니다"; ch.appendChild(sm); }
+}
+function apply(){ save(); render(false); }
+// 기간을 바꾸면 지금 그려져 있는 차트만 새 기간으로 다시 그린다(표 보기에서 펼친 차트 포함)
+function redraw(){ document.querySelectorAll("canvas").forEach(cv => { if (cv.width && cv.clientWidth && ITEMS[cv.dataset.i]) draw(cv, ITEMS[cv.dataset.i]); }); }
+// 모두 지우기: 조건·국가·정렬·묶음을 처음 상태로(보기 방식 차트/목록은 그대로)
+function reset(){ ST.c = []; ST.k = []; ST.s = "base"; ST.d = "desc"; ST.g = "sec"; }
+
+// ── 펼침 판 ──
+let PANEL = null;
+function openPanel(kind){
+  PANEL = PANEL === kind ? null : kind;
+  $("panel").hidden = !PANEL; $("dim").hidden = !PANEL;
+  ["fbtn","sbtn"].forEach(b => $(b).classList.toggle("open", PANEL === {fbtn:"flt", sbtn:"sort"}[b]));
+  if (PANEL){ setHidden(false); panel(); }
+  const gb = $("gbtn"); if (gb) gb.textContent = "▦ 전체 " + (PANEL === "grid" ? "▴" : "▾");
+  prog();
+}
+function panel(){
+  const pn = $("panel"), data = TAB; pn.innerHTML = "";
+  if (!data || !PANEL) return;
+  const group = (title, note) => { const h = document.createElement("h3"); h.textContent = title; if (note){ const sm = document.createElement("small"); sm.textContent = note; h.appendChild(sm); } pn.appendChild(h); const w = document.createElement("div"); w.className = "wrap"; pn.appendChild(w); return w; };
+  const btn = (w, txt, on, fn, num) => { const b = document.createElement("button"); b.textContent = txt; if (num != null){ const sm = document.createElement("small"); sm.textContent = num; b.appendChild(sm); } b.classList.toggle("on", on); b.onclick = fn; w.appendChild(b); return b; };
+  const all = data.sections.flatMap(s => s.items);
+  if (PANEL === "flt"){
+    // 버튼 옆 숫자: 지금 걸린 다른 조건에 이 버튼을 더했을 때 남는 종목 수
+    const would = st => { const keep = ST; ST = st; const t = tester(data), m = all.filter(t).length; ST = keep; return m; };
+    const wc = group("조건", "고른 것을 모두 만족");
+    CONDS.forEach(([k, name, f, opp]) => {
+      // RS·거래량이 없는 탭(매크로)에서는 그 단추를 숨긴다. 인더스트리 액션은 매크로만 빼고 늘 보인다(0개여도)
+      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "rsh" || k === "v2" || k === "tt")) return;
+      if (k === "ia" && CUR === "macro" && !ST.c.includes(k)) return;
+      const on = ST.c.includes(k);
+      const next = on ? ST.c.filter(x => x !== k) : ST.c.filter(x => x !== opp).concat(k);
+      btn(wc, name, on, () => { ST.c = next; apply(); }, on ? null : would({...ST, c: next}));
+    });
+    if (hasK(data)){
+      const wk = group("국가", "고른 것 가운데 하나");
+      KORDER.forEach(k => {
+        const tot = all.filter(it => kgroup(it.k) === k).length; if (!tot) return;
+        const on = ST.k.includes(k);
+        btn(wk, k, on, () => { ST.k = on ? ST.k.filter(x => x !== k) : ST.k.concat(k); apply(); }, tot);
+      });
+    }
+    const df = document.createElement("div"); df.className = "defs";
+    if (ST.c.length) ST.c.forEach(c => { const p = document.createElement("p"); const b = document.createElement("b"); b.textContent = COND[c][1]; p.append(b, " " + DEF[c]); df.appendChild(p); });
+    else df.textContent = "조건을 누르면 그 기준의 정의가 여기에 나옵니다.";
+    pn.appendChild(df);
+    const ft = document.createElement("div"); ft.className = "foot";
+    const rs = document.createElement("button"); rs.textContent = "↺ 조건 초기화"; rs.disabled = !active(data); rs.onclick = () => { ST.c = []; ST.k = []; apply(); };
+    const go = document.createElement("button"); go.className = "go"; go.textContent = "닫기 · " + all.filter(tester(data)).length + "종목 보기";
+    go.onclick = () => openPanel("flt");
+    ft.append(rs, go); pn.appendChild(ft);
+  } else if (PANEL === "sort"){
+    const noRs = !all.some(it => it.rs != null), noVol = !all.some(it => it.m.vr != null);
+    const now = document.createElement("div"); now.className = "now";
+    now.innerHTML = EFF === "base" ? "지금: <b>기본 순서</b> (트레이딩뷰 워치리스트에 넣은 순서)" : `지금: <b>${SORT[EFF].g === "기간 수익률" ? SORT[EFF].name + " 수익률" : SORT[EFF].name}</b> · <b>${ST.d === "asc" ? "낮은 순 ↑" : "높은 순 ↓"}</b>`;
+    const nd = document.createElement("small"); nd.textContent = DEF[EFF] + (EFF !== "base" ? " 값이 없는 종목은 맨 뒤로 가고, 같은 회사가 두 곳에 상장돼 있으면 하나만 남깁니다." : "");
+    now.appendChild(nd);
+    pn.appendChild(now);
+    let w = null, g = null;
+    const NOTE = {"기간 수익률": "그 기간 전 종가 대비", "강도": "RS는 전체 종목 안의 1~99 등급, 거래량은 오늘 ÷ 20일 평균", "추세": "추세추종용 · 누르면 아래에 계산법이 나옵니다"};
+    SORTS.forEach(x => {
+      if (((x.id === "rs" || x.id === "rsd") && noRs) || (x.id === "vr" && noVol)) return;
+      if ((x.hide && EFF !== x.id) || (x.key && x.g === "추세" && !all.some(it => has(x, it)))) return;
+      if (x.g !== g){ g = x.g; w = group(g || "기준", NOTE[g] || ""); }
+      btn(w, x.name, EFF === x.id, () => { if (ST.s !== x.id) ST.d = x.dd || "desc"; ST.s = x.id; apply(); });
+    });
+    const wd = group("방향");
+    btn(wd, "높은 순 ↓", ST.d !== "asc", () => { ST.d = "desc"; apply(); }).disabled = EFF === "base";
+    btn(wd, "낮은 순 ↑", ST.d === "asc", () => { ST.d = "asc"; apply(); }).disabled = EFF === "base";
+    const wg = group("묶음", "탭 전체 한 줄로 보면 섹터 구분 없이 순위를 매깁니다");
+    btn(wg, "섹터별", ST.g !== "all", () => { ST.g = "sec"; apply(); });
+    btn(wg, "탭 전체 한 줄로", ST.g === "all", () => { ST.g = "all"; apply(); });
+    const ft = document.createElement("div"); ft.className = "foot";
+    const rs = document.createElement("button"); rs.textContent = "↺ 정렬 초기화"; rs.disabled = EFF === "base" && ST.g !== "all";
+    rs.onclick = () => { ST.s = "base"; ST.d = "desc"; ST.g = "sec"; apply(); };
+    const go = document.createElement("button"); go.className = "go"; go.textContent = "닫기"; go.onclick = () => openPanel("sort");
+    ft.append(rs, go); pn.appendChild(ft);
+  } else if (PANEL === "grid"){
+    const any = active(data) > 0;
+    const h = document.createElement("h3"); h.textContent = tabTitle(CUR);
+    const hs = document.createElement("small"); hs.textContent = "섹터별 정배열 종목 수 / 전체, 1개월 평균 수익률 · 초록이 짙을수록 정배열 비율이 높습니다"; h.appendChild(hs); pn.appendChild(h);
+    const gr = document.createElement("div"); gr.className = "grid"; pn.appendChild(gr);
+    SECINFO.forEach((s, si) => {
+      const b = document.createElement("button"), r = s.tot ? s.n / s.tot : 0;
+      b.style.background = `rgba(8,153,129,${Math.min(0.55, r * 1.4).toFixed(2)})`;
+      const nb = document.createElement("b"); nb.textContent = s.name; b.appendChild(nb);
+      b.insertAdjacentHTML("beforeend", `<span>${any ? "맞는 종목 " + s.hit + " · " : ""}정배열 ${s.n} / ${s.tot}</span>` +
+        `<span>1개월 평균 <b class="${s.r1m >= 0 ? "up" : "dn"}" style="display:inline;font-size:12px">${s.r1m == null ? "–" : pct(s.r1m)}</b></span><i><u style="width:${(r * 100).toFixed(0)}%"></u></i>`);
+      b.disabled = !s.h;
+      b.onclick = () => { openPanel("grid"); LOCK = true; light(si); jumpTo(s.h); };
+      gr.appendChild(b);
+    });
+    // 하부섹터 순위: 강한 묶음, 새로 강해지는 묶음, 약한 묶음(3종목 이상 묶음만)
+    const G = CUR === "macro" ? [] : groupStats(data);
+    if (G.length){
+      const ratio = x => x.al / x.n, up = x => (x.al - x.al20) / x.n, r1 = (x, d) => x.r1m == null ? d : x.r1m;
+      const strong = [...G].sort((a, b) => ratio(b) - ratio(a) || r1(b, -1e9) - r1(a, -1e9)).slice(0, 8);
+      const rising = G.filter(x => x.al > x.al20).sort((a, b) => up(b) - up(a) || r1(b, -1e9) - r1(a, -1e9)).slice(0, 5);
+      const weak = [...G].filter(x => !strong.includes(x)).sort((a, b) => ratio(a) - ratio(b) || r1(a, 1e9) - r1(b, 1e9)).slice(0, 3);
+      const list = (title, note, rows, cls) => {
+        const hh = document.createElement("h3"); hh.textContent = title;
+        const sm = document.createElement("small"); sm.textContent = note; hh.appendChild(sm); pn.appendChild(hh);
+        const box = document.createElement("div"); box.className = "gl" + (cls ? " " + cls : ""); pn.appendChild(box);
+        rows.forEach((x, i) => {
+          const b = document.createElement("button"), d = x.al - x.al20;
+          b.innerHTML = `<i>${i + 1}</i><b></b><span>정배열 ${x.al}/${x.n}` +
+            (x.r1m == null ? "" : ` · 1개월 <em class="${x.r1m >= 0 ? "up" : "dn"}" style="font-style:normal;font-weight:700">${pct(x.r1m)}</em>`) +
+            ` · 20일 전보다 ${d > 0 ? "+" + d : d === 0 ? "같음" : d}</span>`;
+          const nb = b.querySelector("b"); nb.textContent = x.g;
+          const ns = document.createElement("small"); ns.textContent = x.sec; nb.appendChild(ns);
+          b.onclick = () => { openPanel("grid"); goGroup(x.sec, x.g); };
+          box.appendChild(b);
+        });
+      };
+      list("🔥 강한 묶음", "정배열 비율이 높은 하부섹터 · 누르면 그 묶음으로 갑니다", strong);
+      if (rising.length) list("⬆ 새로 강해지는 묶음", "20거래일 전보다 정배열 종목이 가장 많이 늘어난 곳", rising);
+      if (weak.length) list("약한 묶음", "정배열 비율이 가장 낮은 곳", weak, "weak");
+    }
+  }
+}
+$("fbtn").onclick = () => openPanel("flt");
+$("sbtn").onclick = () => openPanel("sort");
+$("vbtn").onclick = () => { ST.v = ST.v === "list" ? "chart" : "list"; save(); render(false); };
+$("dim").onclick = () => openPanel(PANEL);
+// ── 종목 검색: meta.json 의 색인(모든 탭)에서 티커·영문·한글·별칭·딱지로 찾는다. 한글 초성(ㅅㅅㅈㅈ)도 된다 ──
+const CHO = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ";
+const norm = v => (v || "").toLowerCase().replace(/[\s.\-·&,'()^/=]/g, "");
+const cho = v => [...(v || "")].map(c => { const k = c.charCodeAt(0) - 0xac00; return k >= 0 && k < 11172 ? CHO[Math.floor(k / 588)] : c; }).join("");
+let SIDX = null, SHIT = [], SSEL = 0;
+function sindex(){
+  if (SIDX) return SIDX;
+  SIDX = (META.index || []).map(([y, n, kn, al, t, tab, sec]) => {
+    const base = y.replace(/\.[A-Z]+$/, "");
+    const words = [y, base, n, kn, ...(al ? al.split("|") : []), ...(t ? t.split(" · ") : [])].filter(Boolean);
+    return {y, n, kn, al, t, tab, sec, base: norm(base), keys: words.map(norm), ch: words.map(w => norm(cho(w)))};
+  });
+  return SIDX;
+}
+function sfind(q){
+  const nq = norm(q); if (!nq) return [];
+  const onlyCho = /^[ㄱ-ㅎ]+$/.test(nq);
+  const out = [];
+  sindex().forEach(e => {
+    let sc = 9;
+    if (e.base === nq || norm(e.y) === nq) sc = 0;
+    else e.keys.forEach((k, i) => { if (k.startsWith(nq)) sc = Math.min(sc, i < 4 ? 1 : 3); else if (k.includes(nq)) sc = Math.min(sc, i < 4 ? 2 : 4); });
+    if (sc === 9 && onlyCho) e.ch.forEach(k => { if (k.startsWith(nq)) sc = Math.min(sc, 5); else if (k.includes(nq)) sc = Math.min(sc, 6); });
+    if (sc < 9) out.push([sc, e]);
+  });
+  return out.sort((a, b) => a[0] - b[0]).slice(0, 40).map(x => x[1]);
+}
+function sdraw(){
+  const q = $("sq").value, box = $("sres"); box.innerHTML = "";
+  SHIT = sfind(q); SSEL = 0;
+  if (!q.trim()){ box.innerHTML = '<p>티커(NVDA, 000660), 영문(nvidia), 한글(엔비디아, 하닉), 초성(ㅅㅅㅈㅈ), 딱지(HBM)로 찾을 수 있습니다.</p>'; return; }
+  SHIT = sgroups(q).concat(SHIT);
+  if (!SHIT.length){ box.innerHTML = '<p>찾는 종목이 차트북에 없습니다.</p>'; return; }
+  SHIT.forEach((e, i) => {
+    const b = document.createElement("button"); b.classList.toggle("on", i === 0);
+    if (e.grp){
+      b.className = "grp" + (i === 0 ? " on" : "");
+      const nm = document.createElement("b"); nm.textContent = "묶음 · " + e.g;
+      const sm = document.createElement("small"); sm.textContent = e.n + "종목"; nm.appendChild(sm);
+      const ln = document.createElement("span"); ln.textContent = (SHORT[e.tab] || e.tab) + " › " + e.sec;
+      b.append(nm, ln); b.onclick = () => sgo(e); box.appendChild(b); return;
+    }
+    const nm = document.createElement("b"); nm.textContent = e.kn && e.kn !== e.n ? e.kn : e.n;
+    const sm = document.createElement("small"); sm.textContent = (e.kn && e.kn !== e.n ? e.n + " · " : "") + e.y; nm.appendChild(sm);
+    const ln = document.createElement("span"); ln.textContent = (SHORT[e.tab] || e.tab) + " › " + e.sec + (e.t ? " · " : "");
+    if (e.t){ const em = document.createElement("em"); em.textContent = e.t; ln.appendChild(em); }
+    b.append(nm, ln); b.onclick = () => sgo(e); box.appendChild(b);
+  });
+}
+// 하부섹터(첫 딱지) 이름이 맞는 묶음. 두 글자 이상일 때만, 3개까지
+function sgroups(q){
+  const nq = norm(q); if (nq.length < 2) return [];
+  const by = {};
+  sindex().forEach(e => {
+    const g = (e.t || "").split(" · ")[0]; if (!g) return;
+    const ng = norm(g); if (!ng.includes(nq)) return;
+    const k = e.tab + "|" + e.sec + "|" + g;
+    (by[k] = by[k] || {grp: true, tab: e.tab, sec: e.sec, g, n: 0, sc: ng.startsWith(nq) ? 0 : 1}).n++;
+  });
+  return Object.values(by).filter(x => x.n >= 2).sort((a, b) => a.sc - b.sc || b.n - a.n).slice(0, 3);
+}
+function sopen(){ $("srch").hidden = false; $("sq").value = ""; sdraw(); setTimeout(() => $("sq").focus(), 30); }
+function sclose(){ $("srch").hidden = true; $("sq").blur(); }
+async function sgo(e){
+  sclose();
+  if (PANEL) openPanel(PANEL);
+  if (CUR !== e.tab || !TAB) await openTab(e.tab, false);
+  if (e.grp){ goGroup(e.sec, e.g); return; }
+  const pick = () => [...$("main").querySelectorAll("[data-y]")].find(x => x.dataset.y === e.y);
+  let el = pick();
+  // 걸러 보기·정렬 때문에 안 보이면 조건을 풀고 기본 순서로 다시 그린다
+  if (!el){ reset(); save(); render(false); el = pick(); }
+  if (!el) return;
+  // 접힌 묶음 안이면 펼친다
+  const gp = el.closest(".grp");
+  if (gp && gp.hidden) setShut(gp.previousElementSibling, false);
+  jumpTo(el);
+  el.classList.remove("hit"); void el.offsetWidth; el.classList.add("hit");
+}
+$("qbtn").onclick = sopen;
+$("sx").onclick = sclose;
+$("sq").addEventListener("input", sdraw);
+$("sq").addEventListener("keydown", ev => {
+  if (ev.key === "Escape") sclose();
+  else if (ev.key === "Enter" && SHIT.length){ ev.preventDefault(); sgo(SHIT[SSEL]); }
+  else if ((ev.key === "ArrowDown" || ev.key === "ArrowUp") && SHIT.length){
+    ev.preventDefault(); SSEL = (SSEL + (ev.key === "ArrowDown" ? 1 : SHIT.length - 1)) % SHIT.length;
+    [...$("sres").children].forEach((b, i) => b.classList.toggle("on", i === SSEL)); $("sres").children[SSEL].scrollIntoView({block: "nearest"});
+  }
+});
+document.addEventListener("keydown", ev => { if (ev.key === "/" && $("srch").hidden && document.activeElement.tagName !== "INPUT"){ ev.preventDefault(); sopen(); } });
+// 딱지(.bd span)·표의 RS 칸을 누르면 그 풀이(title)를 아래 상자에 띄운다. 다시 누르거나 아무 데나 누르면 닫힌다.
+document.addEventListener("click", ev => {
+  const tg = ev.target.closest && ev.target.closest(".bd span[title], .tr .s[title]"), tip = $("tip");
+  if (!tg){ tip.hidden = true; return; }
+  ev.stopPropagation();
+  if (!tip.hidden && tip.dataset.for === tg.title){ tip.hidden = true; return; }
+  tip.textContent = tg.title; tip.dataset.for = tg.title;
+  const sm = document.createElement("small"); sm.textContent = "아무 데나 누르면 닫힙니다"; tip.appendChild(sm);
+  tip.hidden = false;
+}, true);
+$("totop").onclick = () => { JUMP = Date.now() + 600; setHidden(false); window.scrollTo(0, 0); };
+
+// ── 스크롤: 아래로 내리면 메뉴 윗부분을 접고, 위로 올리면 편다 ──
+let tick = 0, spyTick = 0, lastY = 0;
+window.addEventListener("scroll", () => {
+  const y = window.scrollY;
+  if (Date.now() > JUMP && !PANEL){
+    if (y > lastY + 6 && y > 140) setHidden(true);
+    else if (y < lastY - 6 || y < 60) setHidden(false);
+  }
+  lastY = y;
+  $("totop").classList.toggle("on", y > window.innerHeight * 1.5);
+  if (!spyTick) spyTick = requestAnimationFrame(() => { spyTick = 0; spy(); });
+  if (tick) return;
+  tick = setTimeout(() => { tick = 0; if (CUR) store.set("wl.y." + CUR, String(Math.round(window.scrollY))); }, 400);
+}, {passive: true});
+hdr.addEventListener("transitionend", () => prog());
+let rz = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(rz);
+  rz = setTimeout(() => { pad(); if (HID) setHidden(true); prog(); document.querySelectorAll("canvas").forEach(cv => { if (cv.width && cv.clientWidth && cv.dataset.w != cv.clientWidth){ draw(cv, ITEMS[cv.dataset.i]); cv.dataset.w = cv.clientWidth; } }); }, 200);
+});
+["touchstart","touchmove","pointerdown","wheel"].forEach(ev => $("secs").addEventListener(ev, () => { ROWBUSY = Date.now() + 2500; }, {passive: true}));
+
+(async () => {
+  try { META = await (await fetch(DATA + "meta.json?t=" + Date.now())).json(); }
+  catch(e){ $("msg").textContent = "자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요."; return; }
+  $("qbtn").hidden = !(META.index && META.index.length);
+  const up = $("upd"); up.textContent = META.updated.slice(5).replace("-", "/") + " KST 갱신";
+  const age = (Date.now() - new Date(META.updated.replace(" ", "T") + ":00+09:00")) / 36e5;
+  if (age > 80) { up.classList.add("old"); up.textContent += " (오래됨)"; }
+  [ALL, ...META.tabs].forEach(t => {
+    const b = document.createElement("button"); b.dataset.id = t.id; b.textContent = SHORT[t.id] || t.title; b.title = t.title;
+    b.onclick = () => { if (PANEL) openPanel(PANEL); openTab(t.id, false); };
+    $("tabs").appendChild(b);
+  });
+  pad();
+  const saved = store.get("wl.tab");
+  openTab(saved === "all" || META.tabs.some(t => t.id === saved) ? saved : META.tabs[0].id, true);
+})();
+</script>
+</body>
+</html>

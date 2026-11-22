@@ -1,0 +1,101 @@
+name: 차트북 갱신
+
+# 트레이딩뷰 워치리스트 종목의 1년 일봉 차트 페이지 와모 차트북(docs/watchlist/) 자료를 하루 두 번 만든다.
+#  아침 06:30 KST(화~토): 미국장 마감 반영. 저녁 18:03 KST(월~금): 한국·중국·일본·대만·홍콩장 마감 반영.
+# 자료는 main 에 쌓지 않고 watchlist-data 가지에 매번 덮어쓴다(저장소가 불어나지 않게).
+# 이 저장소는 예약 실행이 늦는 일이 있어 회차마다 재시도를 걸었다. 이번 회차에 이미 갱신했으면 몇 초 안에 끝난다.
+# 완료 텔레그램은 wamo_claude_bot 의 watchlist-notify.yml 이 meta.json 을 보고 보낸다(봇 비밀값이 그쪽에 있다).
+# 아침 회차가 08:40 KST까지 안 되면 Claude 예약 작업 '차트북 점검'이 config/watchlist_wake.txt 를 고쳐 다시 돌린다.
+on:
+  schedule:
+    - cron: "30 21 * * 1-5"   # 06:30 KST 화~토 (미국장 마감 뒤)
+    - cron: "25 22 * * 1-5"   # 07:25 KST 재시도
+    - cron: "25 23 * * 1-5"   # 08:25 KST 재시도
+    - cron: "3 9 * * 1-5"     # 18:03 KST 월~금 (아시아장 마감 뒤)
+    - cron: "50 9 * * 1-5"    # 18:50 KST 재시도
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "이미 최신이어도 다시 받기"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - "config/watchlist_tabs.json"
+      - "config/watchlist_wake.txt"
+      - "scripts/watchlist_fetch.py"
+      - ".github/workflows/watchlist.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: watchlist-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      # 이번 회차에 이미 갱신한 자료가 있으면 내려받기·설치 없이 여기서 끝낸다(실행 시간 몇 초).
+      - name: 최신 여부 확인
+        id: chk
+        env:
+          FORCE: ${{ (github.event_name == 'push' || inputs.force) && '1' || '0' }}
+        run: |
+          skip=false
+          if [ "$FORCE" != "1" ]; then
+            skip=$(curl -fsS -m 20 "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/watchlist-data/meta.json?t=$(date +%s)" | python3 -c "
+          import sys, json, datetime as dt
+          K = dt.timezone(dt.timedelta(hours=9))
+          try:
+              m = json.load(sys.stdin); now = dt.datetime.now(K)
+              mo = now.replace(hour=6, minute=10, second=0, microsecond=0); ev = now.replace(hour=17, minute=40, second=0, microsecond=0)
+              st = ev if now >= ev else mo if now >= mo else ev - dt.timedelta(days=1)
+              done = dt.datetime.strptime(m['updated'], '%Y-%m-%d %H:%M').replace(tzinfo=K)
+              print('true' if done >= st and len(m.get('failed') or []) <= 3 else 'false')
+          except Exception:
+              print('false')
+          " || echo false)
+          fi
+          echo "skip=$skip" >> "$GITHUB_OUTPUT"
+          echo "건너뜀: $skip"
+
+      - uses: actions/checkout@v4
+        if: steps.chk.outputs.skip != 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.chk.outputs.skip != 'true'
+        with:
+          python-version: "3.12"
+
+      - name: 패키지 설치
+        if: steps.chk.outputs.skip != 'true'
+        run: pip install "requests>=2.31"
+
+      - name: 어제 자료 가져오기 (받지 못한 종목 대비)
+        if: steps.chk.outputs.skip != 'true'
+        continue-on-error: true
+        run: git clone --depth 1 --branch watchlist-data "https://github.com/${GITHUB_REPOSITORY}" prev
+
+      - name: 일봉 수집·계산
+        if: steps.chk.outputs.skip != 'true'
+        env:
+          FORCE: ${{ (github.event_name == 'push' || inputs.force) && '1' || '0' }}
+        run: |
+          rm -rf prev/.git
+          python scripts/watchlist_fetch.py config/watchlist_tabs.json out prev
+
+      - name: 자료 올리기 (덮어쓰기)
+        if: steps.chk.outputs.skip != 'true'
+        run: |
+          if [ ! -f out/meta.json ]; then echo "새 자료 없음"; exit 0; fi
+          cd out
+          git init -q -b watchlist-data
+          git config user.name "industry-strength-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -q -m "차트북 자료 $(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M KST')"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}" watchlist-data

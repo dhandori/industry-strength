@@ -9,6 +9,8 @@ on:
       - "docs/*.html"
       - "docs/*.js"
       - "docs/*.css"
+      - "docs/watchlist/**"
+      - "scripts/watchlist_fetch.py"
       - "tests/**"
       - "scripts/version_assets.py"
       - ".github/workflows/ci.yml"
@@ -39,12 +41,16 @@ jobs:
         run: |
           for f in docs/*.js; do node --check "$f"; done
           python -m compileall -q scripts tests
-      - name: 버전 스크립트 검사
-        run: python -m unittest discover -s tests -v
+      - name: 단위 검사(버전 스크립트, 차트북 RS 등급)
+        run: |
+          python -m pip install requests
+          python -m unittest discover -s tests -v
       - run: python -m pip install playwright==1.62.0
       - run: python -m playwright install --with-deps chromium
       - name: 탭 9개를 PC·휴대폰 크기로 열어 보기
         run: python tests/browser_check.py
+      - name: 차트북을 PC·휴대폰 크기로 열어 보기
+        run: python tests/watchlist_check.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

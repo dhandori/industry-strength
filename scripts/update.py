@@ -467,6 +467,34 @@ def stage_of(close, ma50, ma150, ma200, ma200_up, dist_high) -> str:
     return "바닥 다지기"
 
 
+RS_WEIGHTS = {63: 0.4, 126: 0.2, 189: 0.2, 252: 0.2}   # 오닐식 RS 가중치(종목·산업·기준선 공통)
+
+
+def oneil_last(s: pd.Series | None) -> float | None:
+    """시리즈 마지막 날의 오닐식 가중 수익률. 1년 이력이 없으면 있는 기간끼리 가중치를 다시 나눈다."""
+    if s is None:
+        return None
+    s = s.dropna()
+    if len(s) <= 63:
+        return None
+    num = den = 0.0
+    for w, wt in RS_WEIGHTS.items():
+        if len(s) > w:
+            num += (s.iloc[-1] / s.iloc[-1 - w] - 1) * wt
+            den += wt
+    return num / den if den else None
+
+
+def rating_among(perf_last: pd.Series, v: float | None) -> int | None:
+    """값 v를 perf_last 무리에 한 칸 끼워 넣었을 때의 1~99 점수(RS 지수와 같은 잣대).
+    지수(시장)를 종목·산업과 같은 잣대로 매긴 '시장 RS 기준선'에 쓴다."""
+    vals = perf_last.dropna()
+    if v is None or vals.empty or not math.isfinite(v):
+        return None
+    pct = (float((vals < v).sum()) + 1) / (len(vals) + 1)
+    return int(min(99, max(1, math.ceil(pct * 99))))
+
+
 def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     """구성 종목 동일가중 바구니 지수(시작 100)와 종목별 지표를 만든다.
 
@@ -519,7 +547,9 @@ def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     s_perf = (s_num / s_den.replace(0, np.nan)).where(sr[63].notna())
     s_rating = np.ceil(s_perf.rank(axis=1, pct=True) * 99).clip(1, 99)
     last = cal[-1]
-    members = {}
+    # 시장 RS 기준선(종목 잣대): 지수의 같은 가중 수익률을 종목들 사이에 넣으면 몇 점인가.
+    members = {"__rs_base__": {"bench": rating_among(s_perf.loc[last], oneil_last(bench)),
+                               "bench2": rating_among(s_perf.loc[last], oneil_last(bench2)) if bench2 is not None else None}}
     for it in m["items"]:
         rows = []
         for mb in it["members"]:
@@ -541,6 +571,7 @@ def build_baskets(m: dict, close: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
                 "ret20": r(k[20].at[last, t] * 100), "ret60": r(k[60].at[last, t] * 100),
                 "ret200": r(k[200].at[last, t] * 100),
                 "rs_rating": r(s_rating.at[last, t], 0),
+                **({"rs_b2": True} if bench2 is not None and mkt_of.get(t) in second_mkts else {}),   # RS선·기준선을 두 번째 지수와 비교
                 "dist_high": r(dist.at[last, t] * 100),
                 "above50": None if pd.isna(ma50.at[last, t]) else bool(c > ma50.at[last, t]),
                 "rs_up": None if pd.isna(rs_ma.at[last, t]) else bool(rs.at[last, t] > rs_ma.at[last, t]),
@@ -719,6 +750,13 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
           "top_half": g["top_half"], "stage2": g["stage2"]} for g in groups.values()),
         key=lambda x: -(x["score"] or 0))
 
+    def gap200_range(b: pd.Series, m200: pd.Series) -> dict:
+        g = ((b / m200 - 1) * 100).dropna().iloc[-252:]
+        if len(g) < 20:
+            return {}
+        return {"gap200_lo": r(g.min()), "gap200_hi": r(g.max()),
+                "gap200_pct": r((g.iloc[:-1] < g.iloc[-1]).mean() * 100, 0), "gap200_days": int(len(g))}
+
     def index_info(b: pd.Series, meta: dict) -> dict:
         b = b.dropna()
         m50, m200 = b.rolling(50).mean(), b.rolling(200).mean()
@@ -733,7 +771,10 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
         return {**meta, "close": r(c), "chg1": r((b.iloc[-1] / b.iloc[-2] - 1) * 100),
                 "ret5": r((b.iloc[-1] / b.iloc[-6] - 1) * 100), "ret20": r((b.iloc[-1] / b.iloc[-21] - 1) * 100),
                 "ret60": r((b.iloc[-1] / b.iloc[-61] - 1) * 100),
-                "above50": bool(c > m50.iloc[-1]), "above200": bool(c > m200.iloc[-1]), "ma200_up": up, "regime": reg}
+                "above50": bool(c > m50.iloc[-1]), "above200": bool(c > m200.iloc[-1]), "ma200_up": up, "regime": reg,
+                # 200일선 이격도(%): 종가가 200일선보다 얼마나 위·아래인지. 판정에는 쓰지 않는 보조자료.
+                # 지수마다 평소 벌어지는 크기가 달라, 지난 252거래일 범위와 그 기간에 오늘보다 낮았던 날의 비율을 함께 낸다.
+                "gap200": r((c / m200.iloc[-1] - 1) * 100), **gap200_range(b, m200)}
 
     b_ma50 = bench.rolling(50).mean()
     b_ma200 = bench.rolling(200).mean()
@@ -754,6 +795,9 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
         "benchmark2": index_info(bench2, m["benchmark2"]) if bench2 is not None and bench2.notna().sum() > 210 else None,
         "breadth": {"dates": [d.strftime("%Y-%m-%d") for d in hist_idx],
                     "above50": ser(breadth50, 1), "stage2": ser(breadth_s2, 1)},
+        # 시장 RS 기준선(산업 잣대): 지수를 산업들 사이에 넣었을 때의 RS 지수. 이보다 높은 산업이 '시장보다 강한' 산업이다.
+        "rs_base": {"industry": {"bench": rating_among(rs_perf.loc[last], oneil_last(bench)),
+                                 "bench2": rating_among(rs_perf.loc[last], oneil_last(bench2)) if bench2 is not None else None}},
         "groups": group_list,
         "items": sorted(out_items, key=lambda x: (x["rank"] is None, x["rank"] or 0)),
         "history": {
@@ -849,7 +893,9 @@ def main():
             fatal = True
             continue
         basket, mem = build_baskets(m, c)
+        stock_base = mem.pop("__rs_base__", None)
         summary, series = compute(mkey, m, basket, pd.DataFrame(index=basket.index), None)
+        summary["rs_base"]["stock"] = stock_base
         for it in summary["items"]:
             extra = mem.get(it["id"], {})
             it.update({k: extra.get(k) for k in ("members", "breadth50", "near_high", "uptrend", "n", "leader")})
