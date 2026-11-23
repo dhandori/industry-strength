@@ -6,6 +6,7 @@
 - 정렬: 1개월 수익률 순서가 맞는지, 같은 회사 두 상장(미국·대만)이 미국 하나만 남는지
 - 낮은 순 정렬, '모두 지우기' 한 번에 처음 상태로 돌아가는지
 - 표 보기에서 줄을 누르면 차트가 펼쳐지는지, 매크로 탭(RS 없음)에서 RS 정렬이 기본 순서로 바뀌는지
+- '이 섹터만' 보기(2026-11-23): 한 섹터만 남기, 하위 묶음 칩, 다음 섹터·모두 보기 단추
 - 새로 생긴 신호(2026-11-23, 신호가 반드시 나도록 만든 둘째 자료): 카드 딱지, '▦ 전체' 단추 알림과 판 맨 위 목록,
   줄 제목·이름 누르기, 걸러 보기 묶음, 갱신 실패·오래된 종목 빼기, 숫자 줄(하루 변동·10일 저점·50일선·거래대금),
   거래대금 원화 환산 정렬, 하루 변동폭·10일 저점 정렬, 한글 이름이 다른 같은 영문 이름(소프트뱅크 둘)
@@ -255,7 +256,8 @@ def check_signals(b, url, label, w, h):
         problems.append(f"{label} 숫자 줄 {got} (기대 {want})")
     if far != ("far" in (pg.get_attribute(".card[data-y=UPCO] .kv span >> nth=1", "class") or "")):
         problems.append(f"{label} 숫자 줄: 10일 저점 주황 표시가 기대({far})와 다름")
-    eur = pg.locator('.card[data-y="RHM.DE"] .kv span', has_text="거래대금").inner_text()
+    # 화면 밖 카드는 content-visibility 로 그리기를 미뤄 inner_text 가 빈 값이라 DOM 글자로 읽는다
+    eur = pg.locator('.card[data-y="RHM.DE"] .kv span', has_text="거래대금").text_content()
     if eur != f"거래대금 {money(SIG_ITEMS[7][0]['c'][-1] * 1_000_000)} 유로":
         problems.append(f"{label} 숫자 줄: 유로 거래대금 글자 '{eur}'")
     pg.click(".card[data-y=UPCO] .kv span >> nth=1")
@@ -713,6 +715,29 @@ def main():
                 pg.wait_for_timeout(300)
                 if pg.evaluate("window.scrollY") > 2:
                     problems.append(f"{label} 다음 탭이 맨 위부터 열리지 않음")
+                # '이 섹터만'(2026-11-23): 반도체만 남고, 하위 묶음 칩으로 고르고, 맨 아래 단추로 다음 섹터·모두 보기
+                heads = lambda: pg.eval_on_selector_all("main > h2", "hs => hs.map(h => h.firstChild.textContent)")
+                pg.click("#s0 .sone")
+                pg.wait_for_timeout(300)
+                chips = pg.eval_on_selector_all(".subsel button", "bs => bs.map(b => b.textContent)")
+                if heads() != ["반도체"] or chips != ["전체5", "파운드리1", "프로세서3"]:
+                    problems.append(f"{label} 이 섹터만: 섹터 {heads()}, 칩 {chips}")
+                pg.click(".subsel button:has-text('프로세서')")
+                pg.wait_for_timeout(300)
+                ys = pg.eval_on_selector_all(".card", "cs => cs.map(c => c.dataset.y)")
+                if sorted(ys) != ["000660.KS", "INTC", "NVDA"]:
+                    problems.append(f"{label} 하위 묶음 칩 '프로세서': 카드 {ys}")
+                look("이 섹터만·프로세서")
+                if not pg.inner_text("#next").startswith("다음 섹터: 메모리"):
+                    problems.append(f"{label} 이 섹터만 끝 단추 글자 '{pg.inner_text('#next')}'")
+                pg.click("#next")
+                pg.wait_for_timeout(300)
+                if heads() != ["메모리"] or pg.locator(".card").count() != 3:
+                    problems.append(f"{label} 다음 섹터: 섹터 {heads()}, 카드 {pg.locator('.card').count()}")
+                pg.click("#next")
+                pg.wait_for_timeout(300)
+                if heads() != ["반도체", "메모리"]:
+                    problems.append(f"{label} 모두 보기로 안 돌아옴: {heads()}")
                 problems += [f"{label}: {e}" for e in errors]
                 pg.close()
             # 새로 생긴 신호·숫자 줄·거래대금(2026-11-23): 신호가 반드시 나도록 만든 자료로 바꿔 다시 연다
