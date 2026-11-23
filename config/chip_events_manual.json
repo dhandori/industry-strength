@@ -1,5 +1,5 @@
 {
- "_설명": "CPU 가격 인상 타임라인의 기본 사건(사람이 출처를 확인해 넣은 것). 자동 뉴스 판독이 놓치거나 제목에 숫자가 없는 사건을 채운다. pct_lo~pct_hi는 인상률(%), kind는 reported(실시) 또는 plan(예정·보도). segment는 server·pc·all. memory_contract는 트렌드포스의 분기 계약가 전망(전 분기 대비 %).",
+ "_설명": "CPU 가격 인상 타임라인의 기본 사건(사람이 출처를 확인해 넣은 것). 자동 뉴스 판독이 놓치거나 제목에 숫자가 없는 사건을 채운다. pct_lo~pct_hi는 인상률(%), kind는 reported(실시) 또는 plan(예정·보도). segment는 server·pc·all. memory_contract는 트렌드포스의 분기 계약가 전망(전 분기 대비 %). memory_spot은 메모리 현물가 수동 입력(공개 첫 화면에 아직 없거나 공개 표에 없는 품목). group은 dram·module·wafer·gddr·flash, item은 공개 표 품목 이름과 똑같이 쓴다. d는 기준일, avg는 평균가(달러), chg는 직전 기록 대비 %(모르면 null), hi·lo는 모르면 null. 같은 품목·날짜의 공개 값이 들어오면 공개 값이 이긴다.",
  "cpu": [
   {
    "date": "2026-02-04",
@@ -148,6 +148,41 @@
    "outlet": "TrendForce (TechNews 인용)",
    "link": "https://cdn.technews.tw/2026/09/30/ai-server-incremental-demand-supports-4q26-memory-contract-price-increase-consumer-pressure-unabated",
    "qoq": true
+  }
+ ],
+ "memory_spot": [
+  {
+   "group": "module",
+   "item": "DDR5 RDIMM 32GB 4800/5600",
+   "d": "2026-11-23",
+   "avg": 1645,
+   "hi": null,
+   "lo": null,
+   "chg": -11.8,
+   "outlet": "사용자 제공 (DRAMeXchange 주간 모듈 현물가)",
+   "note": "공개 첫 화면 갱신 전 값. 11/16 $1,865 대비 -11.80%"
+  },
+  {
+   "group": "module",
+   "item": "DDR5 RDIMM 64GB",
+   "d": "2026-11-16",
+   "avg": 2850,
+   "hi": null,
+   "lo": null,
+   "chg": null,
+   "outlet": "계산값",
+   "note": "11/23 $2,635와 전주 대비 -7.54%로 거꾸로 계산한 전주 값($2,849.9)"
+  },
+  {
+   "group": "module",
+   "item": "DDR5 RDIMM 64GB",
+   "d": "2026-11-23",
+   "avg": 2635,
+   "hi": null,
+   "lo": null,
+   "chg": -7.54,
+   "outlet": "사용자 제공 (DRAMeXchange 주간 모듈 현물가)",
+   "note": "공개 첫 화면에 없는 품목. 전주 대비 -7.54%"
   }
  ]
 }

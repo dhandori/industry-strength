@@ -8,6 +8,8 @@
 - CPU 가격 인상: CPU는 공개 시세가 없어서, 인텔·AMD·퀄컴 등의 가격 인상 기사 제목에서 회사·서버/PC·인상률을 읽는다.
   같은 숫자를 두 곳 이상(또는 주요 매체 한 곳)이 쓴 것만 채택. 'plan·reportedly·may' 같은 표현은 '예정·보도'로 표시.
   config/chip_events_manual.json 의 사람이 확인한 사건을 기본으로 깔고 자동 판독분을 더한다.
+- 메모리 현물가 수동 입력: 같은 파일의 memory_spot. 공개 첫 화면보다 먼저 나온 값이나 공개 표에 없는 품목(예: RDIMM 64GB)을
+  출처와 함께 넣는다. 같은 품목·날짜의 공개 값이 들어오면 공개 값이 이기고 수동 값은 버린다(2026-11-23 추가).
 
 python scripts/chip_prices.py            # 수집 + 저장
 python scripts/chip_prices.py --dry-run  # 저장하지 않고 요약만 출력
@@ -107,6 +109,27 @@ def merge_memory(old, snap):
             cutoff = (datetime.now(KST) - timedelta(days=KEEP_DAYS)).strftime("%Y-%m-%d")
             hist[key] = [x for x in rows if x["d"] >= cutoff]
     return {"history": hist, "items": meta, "latest": latest}
+
+
+def apply_manual_spot(mem, manual):
+    """memory_spot 수동 값을 이력에 얹는다. 같은 품목·날짜에 공개(자동·archive) 값이 있으면 건드리지 않는다."""
+    hist = mem.setdefault("history", {})
+    meta = mem.setdefault("items", {})
+    unit = {g: u for g, u in SECTIONS.values()}
+    n = 0
+    for m in manual:
+        grp, item, day = m["group"], m["item"], m["d"]
+        key = f"{grp}/{item}"
+        rows = hist.get(key, [])
+        if any(x["d"] == day and x.get("src") != "manual" for x in rows):
+            continue
+        row = {"d": day, "avg": float(m["avg"]), "hi": m.get("hi"), "lo": m.get("lo"), "chg": m.get("chg"),
+               "src": "manual", "note": m.get("note", ""), "outlet": m.get("outlet", "")}
+        rows = sorted([x for x in rows if x["d"] != day] + [row], key=lambda x: x["d"])
+        hist[key] = rows
+        meta.setdefault(key, {"group": grp, "item": item, "unit": unit.get(grp, "")})
+        n += 1
+    return n
 
 
 # ---------- 공통: 구글 뉴스 검색
@@ -317,6 +340,7 @@ def main():
     except Exception as e:
         res["memory"] = old.get("memory") or {}
         res["sources"]["dram"] = {"ok": False, "err": str(e)[:200]}
+    res["sources"]["dram"]["manual"] = apply_manual_spot(res["memory"], manual.get("memory_spot", []))
 
     try:
         res["memory_contract"] = merge_mem(manual.get("memory_contract", []), mem_news())
