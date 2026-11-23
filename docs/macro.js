@@ -14,20 +14,20 @@
   const st = { data: null, loading: null };
   // 2026-10-25 쉬운 이름·설명 (WAMO 저장소 wamo_macro.py와 같은 문구 — 데이터가 옛 문구여도 화면은 이 문구로 보인다)
   const TXT = {
-    kr_aa: ["우량 회사채 가산금리 (AA- − 국고채 3년)", "튼튼한 회사가 나라보다 돈을 빌릴 때 더 내는 이자예요. 이 차이가 벌어지면 회사들이 돈 빌리기 어려워졌다는 뜻이에요."],
-    kr_bbb: ["비우량 회사채 가산금리 (BBB- − 국고채 3년)", "신용등급이 낮은 편인 회사가 나라보다 더 내는 이자예요. 돈줄이 막히기 시작하면 가장 먼저, 가장 크게 벌어져요."],
-    kr_cpcd: ["기업 단기자금 금리차 (CP − CD 91일)", "회사가 3개월짜리로 급히 빌리는 돈(CP)의 이자에서 은행 단기 금리(CD)를 뺀 값이에요. 벌어지면 회사들의 당장 쓸 돈 사정이 나빠졌다는 신호예요."],
-    kr_curve: ["한국 장단기 금리차 (국고채 10년 − 3년)", "10년 국채 금리에서 3년 국채 금리를 뺀 값이에요. 0 아래로 뒤집히면 경기 둔화 신호이고, 갑자기 크게 벌어져도 불안 신호예요."],
-    us_hy: ["미국 하이일드 스프레드 (저신용 회사채)", "신용등급이 낮은 미국 회사가 국채보다 더 내는 이자예요. 위기가 오면 가장 먼저, 가장 빠르게 치솟는 대표 경보등이에요."],
-    us_ig: ["미국 투자등급 스프레드 (우량 회사채)", "튼튼한 미국 회사가 국채보다 더 내는 이자예요. 하이일드보다 느리게 움직이지만, 이것까지 오르면 불안이 넓게 퍼졌다는 뜻이에요."],
-    us_liq: ["미국 순유동성 (시장에 풀린 달러)", "연준이 푼 돈에서 정부 통장(TGA)과 역레포(RRP)에 묶인 돈을 뺀 값이에요. 시장에서 실제로 돌고 있는 돈이라 줄어들면 주식에 부담이에요."],
-    us_curve: ["미국 장단기 금리차 (10년 − 2년)", "10년 국채 금리에서 2년 국채 금리를 뺀 값이에요. 0 아래로 뒤집히면 경기침체 예고이고, 뒤집혔다가 빠르게 다시 벌어질 때도 과거 침체 직전에 자주 나왔어요."],
-    vix: ["VIX (미국 주식 공포지수)", "미국 주식이 앞으로 한 달 동안 얼마나 출렁일지 시장이 예상하는 값이에요. 20 아래면 평온, 30 위면 공포 구간이에요."],
-    vix_ratio: ["VIX ÷ VIX3M (단기 공포 쏠림)", "한 달짜리 공포(VIX)를 석 달짜리 공포(VIX3M)로 나눈 값이에요. 1을 넘으면 먼 미래보다 지금 당장이 더 무섭다는 뜻이고, 급락장에서 나타나요."],
-    vkospi: ["VKOSPI (한국 주식 공포지수)", "코스피200이 앞으로 한 달 동안 얼마나 출렁일지 예상하는 값이에요(한국판 VIX). 높을수록 한국 시장이 불안하다는 뜻이에요."],
-    fng: ["CNN 공포탐욕지수", "미국 투자자들의 분위기를 0~100점으로 나타낸 값이에요. 25점 아래면 겁먹은 시장, 75점 위면 너무 들뜬(과열) 시장이에요."],
-    sp_dd: ["S&P500 고점 대비 낙폭 (최근 1년 최고가 기준)", "S&P500이 최근 1년 동안 가장 높았던 종가에서 지금 몇 % 내려와 있는지예요. 0이면 신고가이고, -10%를 넘으면 조정장, -20%를 넘으면 약세장이라고 불러요."],
-    ks_dd: ["코스피 고점 대비 낙폭 (최근 1년 최고가 기준)", "코스피가 최근 1년 동안 가장 높았던 종가에서 지금 몇 % 내려와 있는지예요. 0이면 신고가이고, -10%를 넘으면 조정장, -20%를 넘으면 약세장이라고 불러요."],
+    kr_aa: ["우량 회사채 가산금리 (AA- − 국고채 3년)", "튼튼한 회사가 나라보다 돈을 빌릴 때 더 내는 이자입니다. 이 차이가 벌어지면 회사들이 돈 빌리기가 어려워진 것입니다."],
+    kr_bbb: ["비우량 회사채 가산금리 (BBB- − 국고채 3년)", "신용등급이 낮은 편인 회사가 나라보다 더 내는 이자입니다. 돈줄이 막히기 시작하면 가장 먼저, 가장 크게 벌어집니다."],
+    kr_cpcd: ["기업 단기자금 금리차 (CP − CD 91일)", "회사가 3개월짜리로 급히 빌리는 돈(CP)의 이자에서 은행 단기 금리(CD)를 뺀 값입니다. 이 차이가 벌어지면 회사들이 당장 쓸 돈 사정이 나빠졌다는 신호입니다."],
+    kr_curve: ["한국 장단기 금리차 (국고채 10년 − 3년)", "10년 국채 금리에서 3년 국채 금리를 뺀 값입니다. 0 아래로 뒤집히면 경기 둔화 신호이고, 갑자기 크게 벌어져도 불안 신호입니다."],
+    us_hy: ["미국 하이일드 스프레드 (저신용 회사채)", "신용등급이 낮은 미국 회사가 국채보다 더 내는 이자입니다. 위기가 오면 가장 먼저, 가장 빠르게 치솟는 대표 경보등입니다."],
+    us_ig: ["미국 투자등급 스프레드 (우량 회사채)", "튼튼한 미국 회사가 국채보다 더 내는 이자입니다. 하이일드보다 느리게 움직이지만, 이것까지 오르면 불안이 넓게 퍼졌다고 봐야 합니다."],
+    us_liq: ["미국 순유동성 (시장에 풀린 달러)", "연준이 푼 돈에서 정부 통장(TGA)과 역레포(RRP)에 묶인 돈을 뺀 값입니다. 시장에서 실제로 도는 돈이라서 줄어들면 주식에 부담이 됩니다."],
+    us_curve: ["미국 장단기 금리차 (10년 − 2년)", "10년 국채 금리에서 2년 국채 금리를 뺀 값입니다. 0 아래로 뒤집히면 경기침체 예고로 보고, 뒤집혔다가 빠르게 다시 벌어지는 모습도 과거 침체 직전에 자주 나왔습니다."],
+    vix: ["VIX (미국 주식 공포지수)", "미국 주식이 앞으로 한 달 동안 얼마나 출렁일지 시장이 예상하는 값입니다. 20 아래면 평온하고, 30 위면 공포 구간입니다."],
+    vix_ratio: ["VIX ÷ VIX3M (단기 공포 쏠림)", "한 달짜리 공포(VIX)를 석 달짜리 공포(VIX3M)로 나눈 값입니다. 1을 넘으면 시장이 먼 앞날보다 지금 당장을 더 무서워하는 상태인데, 급락장에서 이렇게 됩니다."],
+    vkospi: ["VKOSPI (한국 주식 공포지수)", "코스피200이 앞으로 한 달 동안 얼마나 출렁일지 예상하는 값입니다(한국판 VIX). 높을수록 한국 시장이 불안합니다."],
+    fng: ["CNN 공포탐욕지수", "미국 투자자들의 분위기를 0~100점으로 나타낸 값입니다. 25점 아래면 겁먹은 시장이고, 75점 위면 너무 들뜬(과열) 시장입니다."],
+    sp_dd: ["S&P500 고점 대비 낙폭 (최근 1년 최고가 기준)", "S&P500이 최근 1년 동안 가장 높았던 종가에서 지금 몇 % 내려와 있는지 나타냅니다. 0이면 신고가이고, -10%를 넘으면 조정장, -20%를 넘으면 약세장이라고 부릅니다."],
+    ks_dd: ["코스피 고점 대비 낙폭 (최근 1년 최고가 기준)", "코스피가 최근 1년 동안 가장 높았던 종가에서 지금 몇 % 내려와 있는지 나타냅니다. 0이면 신고가이고, -10%를 넘으면 조정장, -20%를 넘으면 약세장이라고 부릅니다."],
   };
   // 고점 대비 낙폭 지표(2026-11-22): 주가를 직접 보는 지표. 0 = 신고가, 내려갈수록 위험
   const isDD = (r) => /_dd$/.test(r.key);
@@ -175,11 +175,11 @@
     const idx = RISK_ZONES.findIndex(([a, b]) => p >= a && p < b), [a, b] = RISK_ZONES[idx];
     const zones = RISK_ZONES.map(([lo, hi, lv]) => ({ c: col(lv), e: LV[lv][0], t: LV[lv][1], r: `${lo}~${Math.min(100, Math.round(hi))}%` }));
     const what = r.risk === "both"
-      ? `최근 5년 중 지금보다 평범했던(덜 치우친) 날이 <b>${p.toFixed(0)}%</b>예요`
-      : `최근 5년 중 지금보다 안전했던 날이 <b>${p.toFixed(0)}%</b>예요`;
+      ? `최근 5년 중 지금보다 평범했던(덜 치우친) 날이 <b>${p.toFixed(0)}%</b>입니다`
+      : `최근 5년 중 지금보다 안전했던 날이 <b>${p.toFixed(0)}%</b>입니다`;
     const base = LV[RISK_ZONES[idx][2]];
-    const floor = r.floor ? `<div class="mx-zb-note">📌 위치만 보면 ${base[0]} ${base[1]}이지만, 값이 ${r.floor} 이상이면 5년 중 위치와 상관없이 ${r.emoji} ${esc(r.label)}보다 좋게 매기지 않아요. 공포지수가 오래 높으면 ‘최근 5년과 비교한 위치’가 무뎌지기 때문이에요.</div>` : "";
-    const note = floor || !r.speedBump || base[1] === r.label ? floor : `<div class="mx-zb-note">⚡ 위치만 보면 ${LV[RISK_ZONES[idx][2]][0]} ${LV[RISK_ZONES[idx][2]][1]}이지만, 최근 한 달 사이 평소보다 빠르게 나빠져서 ${r.speedBump}단계 올려 ${r.emoji} ${esc(r.label)}로 매겼어요.</div>`;
+    const floor = r.floor ? `<div class="mx-zb-note">📌 위치만 보면 ${base[0]} ${base[1]}이지만, 값이 ${r.floor} 이상이면 5년 중 위치와 상관없이 ${r.emoji} ${esc(r.label)}보다 좋게 매기지 않습니다. 공포지수가 오래 높으면 ‘최근 5년과 비교한 위치’가 무뎌지기 때문입니다.</div>` : "";
+    const note = floor || !r.speedBump || base[1] === r.label ? floor : `<div class="mx-zb-note">⚡ 위치만 보면 ${LV[RISK_ZONES[idx][2]][0]} ${LV[RISK_ZONES[idx][2]][1]}이지만, 최근 한 달 사이 평소보다 빠르게 나빠져서 ${r.speedBump}단계 올려 ${r.emoji} ${esc(r.label)}로 매겼습니다.</div>`;
     return `<div class="mx-pos"><div class="mx-pos-l"><span>${what}</span></div>${zoneBar(zones, idx, (p - a) / (Math.min(100, b) - a), "안전", "위험", `지금 ${p.toFixed(0)}%`)}${note}</div>`;
   }
 
@@ -191,24 +191,24 @@
     const zones = FZ.map(([lo, hi, lv, e, t, cc]) => ({ c: cc || col(lv), e: e || LV[lv][0], t: t || LV[lv][1], r: `${Math.min(100, Math.round(hi))}~${lo}` }));
     const idx = FZ.findIndex(([a, b]) => p >= a && p < b);
     const lo = FZ[idx][0], hi = Math.min(100, FZ[idx][1]);
-    return `<div class="mx-pos"><div class="mx-pos-l"><span>점수가 높으면 투자자들이 들뜬 상태, 낮으면 겁먹은 상태예요</span></div>${zoneBar(zones, idx, (hi - p) / (hi - lo), "탐욕(안심)", "공포(위험)", `지금 ${r.value}점`)}</div>
+    return `<div class="mx-pos"><div class="mx-pos-l"><span>점수가 높으면 투자자들이 들뜬 상태이고, 낮으면 겁먹은 상태입니다</span></div>${zoneBar(zones, idx, (hi - p) / (hi - lo), "탐욕(안심)", "공포(위험)", `지금 ${r.value}점`)}</div>
       <div class="mx-cmp"><div><b>${r.value}</b><span>오늘</span></div>${cell("prev", "어제")}${cell("week_ago", "1주 전")}${cell("month_ago", "한 달 전")}${cell("year_ago", "1년 전")}</div>
-      ${r.crossCheck != null ? `<div class="mx-foot">다른 사이트(finhacker.cz) 값 ${r.crossCheck}점${r.crossCheck === r.value ? " · 같아요" : " · 조금 달라요(갱신 시각 차이)"}</div>` : ""}
-      ${(r.series || []).length >= 15 ? chart(r) : `<div class="mx-foot">이 지표는 과거 값을 받을 수 없어 매일 쌓고 있어요. 약 3주 뒤부터 흐름 그래프가 나타나요.</div>`}`;
+      ${r.crossCheck != null ? `<div class="mx-foot">다른 사이트(finhacker.cz) 값 ${r.crossCheck}점${r.crossCheck === r.value ? " · 같습니다" : " · 조금 다릅니다(갱신 시각 차이)"}</div>` : ""}
+      ${(r.series || []).length >= 15 ? chart(r) : `<div class="mx-foot">이 지표는 과거 값을 받을 수 없어서 매일 쌓고 있습니다. 약 3주 뒤부터 흐름 그래프가 나타납니다.</div>`}`;
   }
 
   function card(r) {
     const c = col(r.level);
     const dir = isDD(r) ? "📉 더 내려갈수록 위험" : DIR[r.risk];
     const head = `<div class="mx-head"><div><div class="mx-name">${esc(nm(r))}</div>${dir ? `<div class="mx-dir">${dir}</div>` : ""}</div><span class="mx-chip" style="--c:${c}">${r.emoji} ${esc(r.label)}${r.overheat ? " · ⚠️과열" : ""}</span></div>`;
-    if (!r.level) return `<article class="card mx-card" style="--c:${c}">${head}<div class="mx-empty">오늘은 자료를 받지 못했어요.</div><div class="mx-why">${esc(hp(r))}</div></article>`;
+    if (!r.level) return `<article class="card mx-card" style="--c:${c}">${head}<div class="mx-empty">오늘은 자료를 받지 못했습니다.</div><div class="mx-why">${esc(hp(r))}</div></article>`;
     const unit = r.unit && !["bp", "x", "점"].includes(r.unit) ? `<span class="u">${esc(r.unit)}</span>` : "";
     const zone = r.zone ? `<span class="mx-chip" style="--c:${c}">${esc(r.zone)}</span>` : "";
     return `<article class="card mx-card" style="--c:${c}">${head}
       <div class="mx-val"><b>${esc(r.valueText)}</b>${unit}${zone}${chg(r)}</div>
       ${r.key === "fng" ? fng(r) : pos(r) + chart(r)}
-      <div class="mx-why"><b>무엇인가요?</b> ${esc(hp(r))}</div>
-      <div class="mx-foot">자료 날짜 ${esc(r.date || "–")}${r.stale ? " · <b>오늘 새 자료를 못 받아 마지막 값을 보여 드려요</b>" : ""}</div></article>`;
+      <div class="mx-why"><b>지표 풀이</b> ${esc(hp(r))}</div>
+      <div class="mx-foot">자료 날짜 ${esc(r.date || "–")}${r.stale ? " · <b>오늘 새 자료를 못 받아 마지막 값을 보여 드립니다</b>" : ""}</div></article>`;
   }
 
   // 2026-10-25 추가: VIX와 공포탐욕지수를 같은 '겁먹은 정도' 5칸에 나란히 놓고, 어긋나면 이유와 확인할 곳을 알려 준다.
@@ -235,40 +235,40 @@
     const { vx, fg, a, b, kind, avg50, ratio } = o;
     const row = (title, val, t, ranges) => `<div class="mx-duo-row"><div class="mx-duo-l"><b>${title}</b><span>${val}</span></div>
       <div class="mx-duo-cells">${TEMP.map(([e, w], i) => `<div class="mx-duo-cell${i === t ? " on" : ""}" style="--c:${col(TCOL[i])}"><b>${e} ${w}</b><small>${ranges[i]}</small></div>`).join("")}</div></div>`;
-    const head = { same: ["✅ 두 지표가 같은 방향이에요", "var(--mx5)"], fngMore: ["⚠️ 엇갈려요: 공포탐욕지수가 더 겁먹었어요", "var(--mx2)"], vixMore: ["⚠️ 엇갈려요: VIX가 더 겁먹었어요", "var(--mx2)"] }[kind];
+    const head = { same: ["✅ 두 지표가 같은 방향입니다", "var(--mx5)"], fngMore: ["⚠️ 엇갈립니다: 공포탐욕지수가 더 겁먹었습니다", "var(--mx2)"], vixMore: ["⚠️ 엇갈립니다: VIX가 더 겁먹었습니다", "var(--mx2)"] }[kind];
     let body = "";
     if (kind === "same") {
-      body = a >= 3 ? "둘 다 겁먹은 쪽이라 공포 신호가 겹쳐요. 두 지표가 같은 쪽을 가리킬 때 신호가 가장 강해요."
-        : a <= 1 ? "둘 다 평온한 쪽이라 시장 분위기가 안정적이에요."
-        : "둘 다 중간쯤이라 한쪽으로 뚜렷한 신호는 없어요.";
+      body = a >= 3 ? "둘 다 겁먹은 쪽이라 공포 신호가 겹칩니다. 두 지표가 같은 쪽을 가리킬 때 신호가 가장 강합니다."
+        : a <= 1 ? "둘 다 평온한 쪽이라 시장 분위기가 안정적입니다."
+        : "둘 다 중간쯤이라 어느 한쪽으로 뚜렷한 신호는 없습니다.";
     } else if (kind === "fngMore") {
-      body = `VIX(${vx.valueText})만 보면 크게 불안하지 않은데, 공포탐욕지수(${fg.value}점)는 겁먹은 쪽이에요. 이런 조합은 대개 <b>지수는 버티는데 종목 대부분이 약한 장</b>이거나, 125일 평균처럼 <b>느리게 움직이는 재료가 지난 하락을 아직 반영하고 있는</b> 경우예요.`;
+      body = `VIX(${vx.valueText})만 보면 크게 불안하지 않은데, 공포탐욕지수(${fg.value}점)는 겁먹은 쪽입니다. 이런 조합은 대개 <b>지수는 버티는데 종목 대부분이 약한 장</b>이거나, 125일 평균처럼 <b>느리게 움직이는 재료가 지난 하락을 아직 반영하고 있는</b> 경우입니다.`;
     } else {
-      body = `공포탐욕지수(${fg.value}점)는 덤덤한데 VIX(${vx.valueText})는 높아요. 이런 조합은 대개 실적 발표, 연준 회의, 선거 같은 <b>큰 일정을 앞두고 보험(옵션)을 미리 사 두는</b> 경우이거나, <b>급락이 막 시작돼</b> 느린 재료들이 아직 따라오지 못한 경우예요.`;
+      body = `공포탐욕지수(${fg.value}점)는 덤덤한데 VIX(${vx.valueText})는 높습니다. 이런 조합은 대개 실적 발표, 연준 회의, 선거 같은 <b>큰 일정을 앞두고 보험(옵션)을 미리 사 두는</b> 경우이거나, <b>급락이 막 시작돼</b> 느린 재료들이 아직 따라오지 못한 경우입니다.`;
       if (ratio) body += ratio.value >= 1
-        ? ` 지금 VIX÷VIX3M이 ${ratio.valueText}로 1을 넘어서, 앞날보다 '지금 당장'이 더 무서운 상태예요. 급락 초기 쪽에 가까워요.`
-        : ` 지금 VIX÷VIX3M은 ${ratio.valueText}로 1 아래라, 당장의 충격보다는 앞으로의 일정에 대비하는 쪽에 가까워요.`;
+        ? ` 지금 VIX÷VIX3M이 ${ratio.valueText}로 1을 넘었으니 앞날보다 '지금 당장'이 더 무서운 상태이고, 급락 초기 쪽에 가깝습니다.`
+        : ` 지금 VIX÷VIX3M은 ${ratio.valueText}로 1 아래라서, 당장의 충격보다는 앞으로 있을 일정에 대비하는 쪽에 가깝습니다.`;
     }
     const inside = avg50 == null ? "" : (() => {
       const pct = (vx.value / avg50 - 1) * 100, up = pct >= 0;
-      return `<li>공포탐욕지수는 VIX를 그대로 쓰지 않고 <b>최근 50일 평균과 비교</b>해요. 지금 VIX(${vx.valueText})는 50일 평균 ${avg50.toFixed(1)}보다 <b>${Math.abs(pct).toFixed(0)}% ${up ? "높아서" : "낮아서"}</b>, 공포탐욕지수 안에서는 ${Math.abs(pct) < 5 ? "중립에 가깝게" : up ? "‘공포’ 쪽으로" : "‘안심’ 쪽으로"} 계산돼요.${up && a <= 1 ? " 숫자 자체는 평온해 보여도 평소보다는 올라 있다는 뜻이에요." : ""}</li>`;
+      return `<li>공포탐욕지수는 VIX를 그대로 쓰지 않고 <b>최근 50일 평균과 비교</b>합니다. 지금 VIX(${vx.valueText})는 50일 평균 ${avg50.toFixed(1)}보다 <b>${Math.abs(pct).toFixed(0)}% ${up ? "높아서" : "낮아서"}</b>, 공포탐욕지수 안에서는 ${Math.abs(pct) < 5 ? "중립에 가깝게" : up ? "‘공포’ 쪽으로" : "‘안심’ 쪽으로"} 계산됩니다.${up && a <= 1 ? " 숫자 자체는 평온해 보여도 평소보다는 올라 있는 셈입니다." : ""}</li>`;
     })();
     const check = kind === "fngMore"
-      ? `<li>확인할 곳: <button class="mx-link" data-goview="highs">52주 신고가 탭</button>에서 미국 신고가 종목 수가 줄었는지, 몇몇 대형주만 버티고 있는지 보세요. 신고가 종목이 적은데 지수만 높다면 이 경우에 해당해요.</li>`
-      : kind === "vixMore" ? `<li>확인할 곳: 이번 달 큰 일정(실적 발표, 연준 회의, 선거)이 있는지, 위의 VIX÷VIX3M 카드가 1을 넘는지 함께 보세요.</li>` : "";
+      ? `<li><button class="mx-link" data-goview="highs">52주 신고가 탭</button>에서 미국 신고가 종목 수가 줄었는지, 몇몇 대형주만 버티고 있는지 확인해 보면 됩니다. 신고가 종목이 적은데 지수만 높다면 이 경우입니다.</li>`
+      : kind === "vixMore" ? `<li>이번 달에 큰 일정(실적 발표, 연준 회의, 선거)이 있는지, 위의 VIX÷VIX3M 카드가 1을 넘는지 함께 확인해 보면 됩니다.</li>` : "";
     return `<article class="card mx-duo" style="--c:${head[1]}">
-      <div class="mx-head"><div><div class="mx-name">VIX와 공포탐욕지수 함께 읽기</div><div class="mx-dir">두 지표를 같은 ‘겁먹은 정도’ 칸에 나란히 놓았어요. 오른쪽으로 갈수록 겁먹은 상태예요</div></div></div>
+      <div class="mx-head"><div><div class="mx-name">VIX와 공포탐욕지수 함께 읽기</div><div class="mx-dir">두 지표를 같은 ‘겁먹은 정도’ 칸에 나란히 놓았습니다. 오른쪽으로 갈수록 겁먹은 상태입니다</div></div></div>
       <div class="mx-duo-v" style="color:${head[1]}">${head[0]}</div>
       ${row("VIX", vx.valueText, a, VIX_R)}${row("공포탐욕지수", `${fg.value}점`, b, FNG_R)}
       <p class="mx-duo-p">${body}</p>
       <ul class="mx-duo-ul">${inside}${check}</ul>
-      <details class="mx-duo-more"><summary>왜 두 지표는 자주 어긋날까요? (5가지 이유)</summary>
+      <details class="mx-duo-more"><summary>두 지표가 자주 어긋나는 이유 5가지</summary>
         <ol>
-          <li><b>VIX는 공포탐욕지수의 재료 7개 중 하나예요.</b> 비중이 약 14%라서 VIX가 크게 움직여도 나머지 6개가 조용하면 공포탐욕지수는 별로 안 움직여요.</li>
-          <li><b>재는 방식이 달라요.</b> VIX는 숫자 자체(절대 수준)를 보고, 공포탐욕지수는 VIX를 최근 50일 평균과 비교해요. 같은 VIX 20이라도 14에서 올라온 20은 ‘공포’, 30에서 내려온 20은 ‘안심’으로 계산돼요.</li>
-          <li><b>반응 속도가 달라요.</b> VIX는 옵션 가격에서 바로 나와 분 단위로 반응해요. 공포탐욕지수에는 125일 평균, 52주 신고가처럼 느린 재료가 섞여 있어서 급락 뒤 반등할 때는 VIX가 먼저 내려오고 공포탐욕지수는 한동안 ‘공포’에 머물러요. 급락 초기에는 반대로 VIX가 먼저 튀어요.</li>
-          <li><b>지수는 오르는데 속이 약한 장에서 크게 갈려요.</b> 몇몇 대형주가 S&amp;P500을 끌어올리면 지수가 안정적이라 VIX는 낮아요. 하지만 신고가 강도와 시장 폭 재료는 ‘대부분 종목이 약하다’고 보고 공포탐욕지수를 끌어내려요.</li>
-          <li><b>VIX에는 ‘일정 보험료’가 붙어요.</b> VIX는 앞으로 30일 동안 얼마나 출렁일지 예상한 값이라서, 분위기가 좋아도 실적 시즌이나 선거, 연준 회의를 앞두면 오를 수 있어요. 공포탐욕지수는 이런 일정 프리미엄을 거의 담지 않아요.</li>
+          <li><b>VIX는 공포탐욕지수의 재료 7개 중 하나입니다.</b> 비중이 약 14%라서 VIX가 크게 움직여도 나머지 6개가 조용하면 공포탐욕지수는 별로 움직이지 않습니다.</li>
+          <li><b>재는 방식이 다릅니다.</b> VIX는 숫자 자체(절대 수준)를 보고, 공포탐욕지수는 VIX를 최근 50일 평균과 비교합니다. 그래서 같은 VIX 20이라도 14에서 올라온 20은 ‘공포’로, 30에서 내려온 20은 ‘안심’으로 계산됩니다.</li>
+          <li><b>반응 속도도 다릅니다.</b> VIX는 옵션 가격에서 바로 나와 분 단위로 반응합니다. 공포탐욕지수에는 125일 평균, 52주 신고가처럼 느린 재료가 섞여 있어서, 급락 뒤 반등할 때는 VIX가 먼저 내려오고 공포탐욕지수는 한동안 ‘공포’에 머뭅니다. 급락 초기에는 거꾸로 VIX가 먼저 튑니다.</li>
+          <li><b>지수는 오르는데 속이 약한 장에서 크게 갈립니다.</b> 몇몇 대형주가 S&amp;P500을 끌어올리면 지수가 안정적이라 VIX는 낮습니다. 하지만 신고가 강도와 시장 폭 재료는 ‘대부분 종목이 약하다’고 보고 공포탐욕지수를 끌어내립니다.</li>
+          <li><b>VIX에는 ‘일정 보험료’가 붙습니다.</b> VIX는 앞으로 30일 동안 얼마나 출렁일지 예상한 값이라서, 분위기가 좋아도 실적 시즌이나 선거, 연준 회의를 앞두면 오를 수 있습니다. 공포탐욕지수에는 이런 일정 프리미엄이 거의 들어 있지 않습니다.</li>
         </ol>
         <div class="mx-duo-t"><b>공포탐욕지수의 재료 7개</b> (각각 0~100점으로 바꾼 뒤 똑같은 비중으로 평균)
           <table><tbody>
@@ -280,7 +280,7 @@
             <tr><td>안전자산 수요</td><td>최근 20일 주식 수익률과 채권 수익률 비교</td></tr>
             <tr><td>변동성</td><td>VIX를 50일 평균과 비교</td></tr>
           </tbody></table></div>
-        <p class="mx-foot">읽는 법: 두 지표가 같은 방향이면 신호가 강하고, 어긋나면 그 자체가 정보예요. VIX만 높으면 다가오는 일정에 대비한 보험 수요일 수 있고, 공포탐욕지수만 낮으면 지수 겉모습과 달리 종목 대부분이 약한 장일 가능성이 커요.</p>
+        <p class="mx-foot">두 지표가 같은 방향이면 신호가 강하고, 어긋나면 어긋났다는 것 자체가 정보가 됩니다. VIX만 높으면 다가오는 일정에 대비한 보험 수요일 수 있고, 공포탐욕지수만 낮으면 지수 겉모습과 달리 종목 대부분이 약한 장일 가능성이 큽니다.</p>
       </details></article>`;
   }
 
@@ -292,23 +292,23 @@
     const s = m.stock && m.stock.level, c = m.credit && m.credit.level;
     if (!s || !c) return "";
     const other = mk === "JP" ? "금리·환율" : "신용·자금 시장", spread = mk === "JP" ? "금리·환율 쪽" : "회사채·자금 시장";
-    if (s <= 2 && c <= 2) return `주식과 ${other}이 함께 나빠졌어요. 두 쪽이 같이 켜질 때가 가장 위험해요.`;
-    if (s <= 2) return `주식시장은 ${LV[s][0]}${LV[s][1]}까지 흔들렸는데 ${other}은 ${LV[c][0]}${LV[c][1]}에 머물러 있어요. 하락이 주식에서 시작됐고 아직 ${spread}으로는 번지지 않았다는 뜻이에요.`;
-    if (c <= 2) return `주식은 아직 ${LV[s][0]}${LV[s][1]}인데 ${other}이 먼저 ${LV[c][0]}${LV[c][1]}까지 나빠졌어요. 주가보다 먼저 움직일 때가 많아 눈여겨봐야 해요.`;
-    return `주식시장과 ${other} 모두 🟠경계보다 아래예요.`;
+    if (s <= 2 && c <= 2) return `주식과 ${other}이 함께 나빠졌습니다. 두 쪽이 같이 켜질 때가 가장 위험합니다.`;
+    if (s <= 2) return `주식시장은 ${LV[s][0]}${LV[s][1]}까지 흔들렸는데 ${other}은 ${LV[c][0]}${LV[c][1]}에 머물러 있습니다. 하락은 주식에서 시작됐고, 아직 ${spread}으로는 번지지 않았습니다.`;
+    if (c <= 2) return `주식은 아직 ${LV[s][0]}${LV[s][1]}인데 ${other}이 먼저 ${LV[c][0]}${LV[c][1]}까지 나빠졌습니다. 이쪽은 주가보다 먼저 움직일 때가 많아 눈여겨봐야 합니다.`;
+    return `주식시장과 ${other} 모두 🟠경계보다 아래입니다.`;
   }
 
   function sentence(d, mk) {
     const m = d.markets && d.markets[mk];
     const rows = d.indicators.filter((r) => r.level && (!m || market(r) === mk));
     const bad = rows.filter((r) => r.level <= 2), fast = rows.filter((r) => r.speedBump > 0);
-    const out = [bad.length ? `지표 ${rows.length}개 중 ${bad.length}개가 🟠경계 이상이에요.` : `지표 ${rows.length}개 모두 🟠경계보다 아래예요.`];
+    const out = [bad.length ? `지표 ${rows.length}개 중 ${bad.length}개가 🟠경계 이상입니다.` : `지표 ${rows.length}개 모두 🟠경계보다 아래입니다.`];
     if (m) { const a = axisSentence(m, mk); if (a) out.unshift(a); }
-    if (fast.length) out.push(`최근 한 달 사이 빠르게 나빠진 지표는 ${fast.map(short).join(", ")}${batchim(short(fast.at(-1))) ? "이에요" : "예요"}.`);
+    if (fast.length) out.push(`최근 한 달 사이 빠르게 나빠진 지표는 ${fast.map(short).join(", ")}입니다.`);
     const f = rows.find((r) => r.key === "fng");
-    if (f) out.push(`투자자 분위기는 '${f.zone}'(${f.value}점)이에요.`);
+    if (f) out.push(`투자자 분위기는 '${f.zone}'(${f.value}점)입니다.`);
     const o = !m || mk === "US" ? duoInfo(d) : null;
-    if (o && o.kind !== "same") out.push(o.kind === "fngMore" ? "VIX는 비교적 차분한데 공포탐욕지수는 더 겁먹어 두 지표가 엇갈려요(아래 ‘함께 읽기’ 카드 참고)." : "공포탐욕지수는 덤덤한데 VIX가 더 높아 두 지표가 엇갈려요(아래 ‘함께 읽기’ 카드 참고).");
+    if (o && o.kind !== "same") out.push(o.kind === "fngMore" ? "VIX는 비교적 차분한데 공포탐욕지수가 더 겁먹어서 두 지표가 엇갈립니다(아래 ‘함께 읽기’ 카드 참고)." : "공포탐욕지수는 덤덤한데 VIX가 더 높아서 두 지표가 엇갈립니다(아래 ‘함께 읽기’ 카드 참고).");
     return out.join(" ");
   }
 
@@ -316,7 +316,7 @@
     const JP = isJP();
     if (JP && !st.jp) { load(false); return; }
     const d = JP ? st.jp : st.data, c = d.composite, t = new Date(d.asOf);
-    $("#mxMeta").textContent = `마지막 갱신 ${t.getMonth() + 1}월 ${t.getDate()}일 ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")} · 지표 ${c.total}개 중 ${c.available}개 받음 · ${JP ? "평일 장 마감 뒤(한국 15:52)와 미국장 뒤에 갱신돼요 · 재무성 국채 금리·야후·FRED" : "매일 아침 7시쯤 자동으로 갱신돼요"}`;
+    $("#mxMeta").textContent = `마지막 갱신 ${t.getMonth() + 1}월 ${t.getDate()}일 ${String(t.getHours()).padStart(2, "0")}:${String(t.getMinutes()).padStart(2, "0")} · 지표 ${c.total}개 중 ${c.available}개 받음 · ${JP ? "평일 장 마감 뒤(한국 15:52)와 미국장 뒤에 갱신됩니다 · 재무성 국채 금리·야후·FRED" : "매일 아침 7시쯤 자동으로 갱신됩니다"}`;
     // 왼쪽 안전 → 오른쪽 위험 (지표 카드의 칸 막대와 같은 방향)
     const cur = (window.__isMarket && window.__isMarket()) || "KR";
     const mv = d.markets && d.markets[cur];   // 고른 나라의 두 줄 판정(없으면 예전 한 줄)
@@ -328,14 +328,14 @@
     const MK = { US: "미국", KR: "한국", JP: "일본" };
     const axRow = (ax) => { const v = mv[ax]; return v && v.level ? `<div class="mx-ax" style="--c:${col(v.level)}"><span>${axisName(ax, cur)} <small>지표 ${v.available}개</small></span><b>${v.emoji} ${esc(v.label)}</b></div>` : ""; };
     const verdict = mv
-      ? `<div class="card mx-verdict" style="--c:${col(top)}"><div class="k">오늘 ${MK[cur]} 시장 위험도 (지표 ${mine.length}개 · 두 묶음으로 나눠 봐요)</div>
+      ? `<div class="card mx-verdict" style="--c:${col(top)}"><div class="k">오늘 ${MK[cur]} 시장 위험도 (지표 ${mine.length}개 · 두 묶음으로 나눠 봅니다)</div>
         <div class="mx-axes">${axRow("stock")}${axRow("credit")}</div><p>${esc(sentence(d, cur))}</p></div>`
       : `<div class="card mx-verdict" style="--c:${col(c.level)}"><div class="k">오늘 시장 위험도 (${JP ? "일본" : "한국·미국"} 지표 ${c.available}개 종합)</div>
         <div class="big"><b>${c.emoji} ${esc(c.label)}</b><span>5단계 중 ${c.level ?? "–"}단계 · 1단계가 가장 위험</span></div><p>${esc(sentence(d, cur))}</p></div>`;
     let h = `<section class="mx-hero">
       ${verdict}
       <div class="card"><div class="mx-ladder">${steps}</div>${alarms ? `<div class="mx-alarms">${alarms}</div>` : ""}
-        <p class="foot-note">칸 안 숫자는 그 단계에 있는 지표 개수예요. <b>오른쪽(🔴 위기)으로 갈수록 위험</b>해요. 아래 칩은 지금 🟠경계 이상인 지표예요. 지표마다 단계는 '최근 5년과 비교한 위치'와 '최근 한 달 동안 얼마나 빨리 변했는지'를 함께 보고 정해요.</p></div></section>`;
+        <p class="foot-note">칸 안 숫자는 그 단계에 든 지표 개수이고, <b>오른쪽(🔴 위기)으로 갈수록 위험</b>합니다. 아래 칩은 지금 🟠경계 이상인 지표들입니다. 단계는 지표마다 '최근 5년과 비교한 위치'와 '최근 한 달 동안 얼마나 빨리 변했는지'를 함께 보고 정합니다.</p></div></section>`;
     // 2026-10-25 재배치: 미국 지표를 먼저, 굵은 구분선 뒤에 한국 지표.
     // VKOSPI는 한국 변동성, CNN 공포탐욕지수는 미국 투자 심리로 각 나라 안에 넣는다(원본 group 값은 '변동성'·'심리'라 key로 나눈다).
     const sub = (r) => r.group === "변동성" ? "변동성" : r.group === "심리" ? "투자 심리" : r.group === "주가" ? "주가" : "신용·금리·유동성";
@@ -394,13 +394,13 @@
         const r = await fetch(SRC_JP + "?v=" + Date.now(), { cache: "no-store" });
         if (!r.ok) throw new Error(r.status);
         st.jp = await r.json(); render();
-      } catch (e) { $("#mxBody").innerHTML = `<div class="mx-empty">일본 매크로 자료를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</div>`; }
+      } catch (e) { $("#mxBody").innerHTML = `<div class="mx-empty">일본 매크로 자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주십시오.</div>`; }
       return;
     }
     if (st.data && !force) return render();
     if (!st.loading) st.loading = fetch(SRC + "?v=" + Date.now(), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
     try { st.data = await st.loading; render(); }
-    catch (e) { $("#mxBody").innerHTML = `<div class="mx-empty">매크로 지수 자료를 불러오지 못했어요. 잠시 뒤 다시 열어 주세요.</div>`; }
+    catch (e) { $("#mxBody").innerHTML = `<div class="mx-empty">매크로 지수 자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주십시오.</div>`; }
     finally { st.loading = null; }
   }
 
