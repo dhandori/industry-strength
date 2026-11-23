@@ -357,7 +357,7 @@ const store = {
   set(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
 };
 // 탭 이름은 휴대폰 한 줄에 다섯 개가 들어가게 줄여 쓴다(전체 이름은 섹터 판 제목에 나온다)
-const SHORT = {macro:"매크로", ai:"AI반도체", sw:"SW인프라", fin:"금융소비", ind:"산업에너지", all:"전체"};
+const SHORT = {macro:"매크로", commo:"원자재", ai:"AI반도체", sw:"SW인프라", fin:"금융소비", ind:"산업에너지", all:"전체"};
 // '전체' 탭: 지수·매크로를 뺀 모든 탭을 한 화면에 모아 걸러 보기·정렬을 한 번에 건다(섹터 이름 앞에 탭 이름)
 const ALL = {id: "all", title: "전체 종목 (매크로 제외)"};
 const tabTitle = id => id === "all" ? ALL.title : (META.tabs.find(t => t.id === id) || {}).title;
