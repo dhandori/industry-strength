@@ -102,8 +102,8 @@ def make_data(folder):
 # 6501.T 는 UPCO 와 같은 모양이지만 마지막 거래일이 하루 앞서고(이름 옆에 날짜), STAL(갱신 실패)과
 # OLDD(마지막 거래일이 10일 앞섬)는 같은 모양이어도 신호를 내면 안 된다. 나머지는 신호 없이 천천히 내리는 종목이다.
 DAY0 = dt.date(2025, 11, 19)
-FXR = {"USD": 1.0, "KRW": 1400.0, "JPY": 150.0, "TWD": 32.0}
-UNIT = {"": ("USD", "달러"), "KS": ("KRW", "원"), "T": ("JPY", "엔"), "DE": ("EUR", "유로")}
+FXR = {"USD": 1.0, "KRW": 1400.0, "JPY": 150.0, "TWD": 32.0, "HKD": 7.8}
+UNIT = {"": ("USD", "달러"), "KS": ("KRW", "원"), "T": ("JPY", "엔"), "DE": ("EUR", "유로"), "HK": ("HKD", "홍콩달러")}
 
 
 def unit(y):
@@ -122,9 +122,11 @@ def money(v):
     if a >= 9999.5e8:
         t = v / 1e12
         return loc(js_round(t) if abs(t) >= 99.95 else js_round(t * 10) / 10) + "조"
-    if a >= 9999.5e4:
+    if a >= 9.995e8:
         return loc(js_round(v / 1e8)) + "억"
-    if a >= 1e4:
+    if a >= 9999.5e4:
+        return loc(js_round(v / 1e7) / 10) + "억"
+    if a >= 9999.5:
         return loc(js_round(v / 1e4)) + "만"
     return loc(js_round(v))
 
@@ -179,7 +181,11 @@ SIG_ITEMS = [  # (종목, 한글 이름)
     (stock("RHM.DE", "Rheinmetall", "독일", "flat", 1500, 1_000_000, 1_000_000, 0.03), ""),
     (stock("9984.T", "SoftBank", "일본", "flat", 10_000, 1_000_000, 1_000_000, 0.02, rs=30), "소프트뱅크그룹"),
     (stock("9434.T", "SoftBank", "일본", "flat", 200, 10_000_000, 10_000_000, 0.01, rs=20), "소프트뱅크"),
+    # 같은 회사 두 상장(영문·한글 이름이 같음): 정렬하면 미국 상장 PRUS 만 남지만, 신호는 홍콩 상장 1234.HK 에만 난다
+    (stock("PRUS", "Pair Co", "미국", "flat", 50, 100_000, 100_000, 0.01, rs=10), "페어"),
+    (stock("1234.HK", "Pair Co", "홍콩", "up", 40, 1_000_000, 5_000_000, 0.012, rs=72), "페어"),
 ]
+DROPPED = {"1234.HK"}  # 정렬·탭 전체 보기에서 같은 회사로 빠지는 상장
 
 
 def make_signal_data(folder):
@@ -262,14 +268,14 @@ def check_signals(b, url, label, w, h):
         problems.append(f"{label} 차트 포켓 피봇 자리 계산이 오늘을 못 잡음")
     # '▦ 전체' 단추 알림: 새로 좋아진 종목 수(UPCO·6501.T)
     bub = pg.inner_text("#gbtn i") if pg.locator("#gbtn i").count() else ""
-    if bub != "새 2":
-        problems.append(f"{label} 전체 단추 알림 '{bub}' (기대 새 2)")
+    if bub != "새 3":
+        problems.append(f"{label} 전체 단추 알림 '{bub}' (기대 새 3)")
     # 전체 판 맨 위 목록: 줄마다 개수, 하루 앞선 종목은 이름 옆에 날짜
     pg.click("#gbtn")
-    if "좋아짐 2 · 나빠짐 1" not in pg.inner_text("#panel .sgs summary"):
+    if "좋아짐 3 · 나빠짐 1" not in pg.inner_text("#panel .sgs summary"):
         problems.append(f"{label} 새 신호 요약 '{pg.inner_text('#panel .sgs summary')}'")
     rows = pg.evaluate("[...document.querySelectorAll('#panel .sgr')].map(r => [r.querySelector('.sgh').firstChild.textContent, r.querySelector('.sgh b').textContent, [...r.querySelectorAll('.sgl button')].map(b => b.dataset.y)])")
-    exp_rows = [[n, "2", ["UPCO", "6501.T"]] for n in ("정배열 진입", "템플릿 통과", "RS선 신고가 돌파", "52주 신고가 돌파", "포켓 피봇")]
+    exp_rows = [[n, "3", ["UPCO", "6501.T", "1234.HK"]] for n in ("정배열 진입", "템플릿 통과", "RS선 신고가 돌파", "52주 신고가 돌파", "포켓 피봇")]
     exp_rows += [["정배열 이탈", "1", ["DNCO"]], ["템플릿 이탈", "1", ["DNCO"]]]
     if rows != exp_rows:
         problems.append(f"{label} 새 신호 목록 {rows} (기대 {exp_rows})")
@@ -290,6 +296,21 @@ def check_signals(b, url, label, w, h):
     pg.wait_for_timeout(400)
     if not pg.is_hidden("#panel") or not pg.locator(".card.hit[data-y=DNCO]").count():
         problems.append(f"{label} 이름 누르기: 판이 안 닫히거나 그 종목으로 안 감")
+    # 걸러 보기에 가려진 종목(정배열 이탈로 거른 상태의 UPCO)도 이름을 누르면 조건을 풀고 그 카드로 간다
+    pg.evaluate("window.scrollTo(0, 0)")
+    pg.click("#gbtn")
+    pg.locator("#panel .sgh", has_text="정배열 이탈").click()
+    pg.wait_for_timeout(300)
+    pg.click("#gbtn")
+    pg.locator("#panel .sgr", has_text="포켓 피봇").locator(".sgl button[data-y=UPCO]").click()
+    pg.wait_for_timeout(400)
+    if not pg.locator(".card.hit[data-y=UPCO]").count() or pg.locator("#chips .chip").count():
+        problems.append(f"{label} 걸러 보기에 가려진 종목 이름 누르기: 조건이 안 풀리거나 그 종목으로 안 감")
+    # 10일 저점이 하루 변동폭보다 가까운 DNCO 는 '평소 흔들림' 풀이
+    pg.click(".card[data-y=DNCO] .kv span >> nth=1")
+    if "평소 흔들림에도" not in pg.inner_text("#tip"):
+        problems.append(f"{label} 숫자 줄: 가까운 저점 풀이가 안 뜸")
+    pg.click("main > h2 >> nth=0")
     # 걸러 보기 판의 '오늘 새로 생긴 신호' 묶음: 포켓 피봇 → UPCO·6501.T
     pg.evaluate("window.scrollTo(0, 0)")
     pg.click("#fbtn")
@@ -298,14 +319,14 @@ def check_signals(b, url, label, w, h):
     pg.locator("#panel .wrap button", has_text="포켓 피봇").first.click()
     pg.click("#panel .foot .go")
     cards = pg.evaluate("[...document.querySelectorAll('.card')].map(c => c.dataset.y)")
-    if cards != ["UPCO", "6501.T"]:
+    if cards != ["UPCO", "6501.T", "1234.HK"]:
         problems.append(f"{label} 포켓 피봇 걸러 보기 {cards}")
     pg.click("#bar .clr")
     # 거래대금 정렬: 원화로 바꿔 줄 세우고, 환율이 없는 유로 종목은 맨 뒤(노란 딱지 없음)
     def krw(it):
         r = FXR.get(unit(it["y"])[0])
         return it["c"][-1] * it["v"][-1] / r * FXR["KRW"] if r else None
-    its = [it for it, _ in SIG_ITEMS]
+    its = [it for it, _ in SIG_ITEMS if it["y"] not in DROPPED]
     exp = [it["y"] for it in sorted([x for x in its if krw(x) is not None], key=krw, reverse=True)] + ["RHM.DE"]
     pg.click("#sbtn")
     pg.click("#panel .wrap button:text-is('거래대금')")

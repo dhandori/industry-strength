@@ -369,8 +369,9 @@ const px = (it, v) => fmt(v, pdg(it));
 function money(v){
   const a = Math.abs(v), loc = x => x.toLocaleString("en-US");
   if (a >= 9999.5e8){ const t = v / 1e12; return (Math.abs(t) >= 99.95 ? loc(Math.round(t)) : loc(Math.round(t * 10) / 10)) + "조"; }
-  if (a >= 9999.5e4) return loc(Math.round(v / 1e8)) + "억";
-  if (a >= 1e4) return loc(Math.round(v / 1e4)) + "만";
+  if (a >= 9.995e8) return loc(Math.round(v / 1e8)) + "억";
+  if (a >= 9999.5e4) return loc(Math.round(v / 1e7) / 10) + "억";
+  if (a >= 9999.5) return loc(Math.round(v / 1e4)) + "만";
   return loc(Math.round(v));
 }
 // 종목 통화: 기호 끝(상장 거래소)으로 정한다. [통화 코드, 한글 이름]. 표에 없는 거래소는 거래대금을 쓰지 않는다
@@ -641,7 +642,8 @@ function signals(it, newest){
   const ty = m.ttc ? ttAt(it, 1) : null;
   if (ty){ const y8 = ty.every(Boolean); if (m.tt === 8 && !y8) out.push("n_tt"); else if (m.tt < 8 && y8) out.push("x_tt"); }
   if (it.rsh && it.rl && !topAt(it.rl, j - 1)) out.push("n_rsh");
-  if (m.hid === 0 && !topAt(c, j - 1)) out.push("n_hi");
+  // 52주 신고가 돌파: 거래일이 220개(약 11개월)도 안 되는 신규 상장은 1년 최고라 할 수 없어 뺀다
+  if (m.hid === 0 && !topAt(c, j - 1) && j >= 220) out.push("n_hi");
   if (m.pp) out.push("pp");
   if (it.al === false && alAt(it, 1)) out.push("x_al");
 }
@@ -689,6 +691,7 @@ function loadFx(){
     const last = {};
     d.sections.forEach(s => s.items.forEach(x => { last[x.y] = x.c[x.c.length - 1]; }));
     if (last["KRW=X"] > 0) FX = {USD: 1, KRW: last["KRW=X"], JPY: last["JPY=X"], CNY: last["CNY=X"], TWD: last["TWD=X"], HKD: 7.8};
+    if (!FX) FXP = null;
     return FX;
   }).catch(() => { FXP = null; return null; });
   return FXP;
@@ -782,16 +785,17 @@ function tester(data){
 // 영문 이름이 같아도 한글 이름이 서로 다르면 다른 회사로 본다(소프트뱅크그룹 9984.T와 통신사 소프트뱅크 9434.T, 2026-11-23).
 function dupSet(data){
   const by = {}, drop = new Set(), kn = knMap();
+  drop.of = {};  // 빠지는 상장 → 남기는 상장
   data.sections.forEach(s => s.items.forEach(it => (by[it.n] = by[it.n] || []).push(it)));
   Object.values(by).forEach(list => {
     if (list.length < 2) return;
     const names = [...new Set(list.map(it => kn[it.y]).filter(Boolean))];
     const parts = names.length > 1 ? names.map(k => list.filter(it => kn[it.y] === k)) : [list];
-    if (names.length > 1) parts[0].push(...list.filter(it => !kn[it.y]));
+    // 한글 이름으로 회사가 둘 이상 갈리면 한글 이름이 없는 상장은 어느 회사인지 몰라 따로 둔다(빼지 않는다)
     parts.forEach(p => {
       if (p.length < 2) return;
       const keep = p.find(it => !it.y.includes(".") && !it.y.startsWith("^")) || p[0];
-      p.forEach(it => { if (it !== keep) drop.add(it.y); });
+      p.forEach(it => { if (it !== keep){ drop.add(it.y); drop.of[it.y] = keep.y; } });
     });
   });
   return drop;
@@ -1298,8 +1302,12 @@ function openPanel(kind){
 // 이 탭 종목 가운데 신호가 난 것(같은 회사 두 상장은 하나, 국가를 골랐으면 그 나라만). 줄마다 RS 높은 순
 function sigRows(data){
   const useK = hasK(data) && ST.k.length, rk = it => it.rs == null ? -1 : it.rs;
-  const its = data.sections.flatMap(s => s.items).filter(it => it.m.sg && it.m.sg.length && !data.dup.has(it.y) && (!useK || ST.k.includes(kgroup(it.k))));
-  return SIGS.map(([k, name, good]) => ({k, name, good, items: its.filter(it => it.m.sg.includes(k)).sort((a, b) => rk(b) - rk(a))})).filter(r => r.items.length);
+  const its = data.sections.flatMap(s => s.items).filter(it => it.m.sg && it.m.sg.length && (!useK || ST.k.includes(kgroup(it.k))));
+  // 같은 회사 두 상장은 장이 닫히는 때가 달라 신호도 따로 난다. 빠지는 상장(대만·일본·홍콩 쪽 등)은 남기는 상장에 같은 신호가 있을 때만 뺀다
+  return SIGS.map(([k, name, good]) => {
+    const has = its.filter(it => it.m.sg.includes(k)), ys = new Set(has.map(it => it.y));
+    return {k, name, good, items: has.filter(it => !(data.dup.has(it.y) && ys.has(data.dup.of[it.y]))).sort((a, b) => rk(b) - rk(a))};
+  }).filter(r => r.items.length);
 }
 // 새로 좋아진 종목 수('▦ 전체' 단추에 띄운다)
 let NEWN = 0;
@@ -1415,7 +1423,7 @@ function panel(){
       if ((x.hide && EFF !== x.id) || (x.key && (x.g === "추세" || x.g === "변동·손절") && !all.some(it => has(x, it)))) return;
       if (x.fx && !all.some(it => it.m.tv != null)) return;
       if (x.g !== g){ g = x.g; w = group(g || "기준", NOTE[g] || ""); }
-      btn(w, x.name, EFF === x.id, () => { if (ST.s !== x.id) ST.d = x.dd || "desc"; ST.s = x.id; if (x.fx && !FX) loadFx().then(apply); else apply(); });
+      btn(w, x.name, EFF === x.id, () => { if (ST.s !== x.id) ST.d = x.dd || "desc"; ST.s = x.id; if (x.fx && !FX){ const t0 = TAB; loadFx().then(() => { if (TAB === t0) apply(); }); } else apply(); });
     });
     const ft = document.createElement("div"); ft.className = "foot";
     const rs = document.createElement("button"); rs.textContent = "↺ 정렬 초기화"; rs.disabled = EFF === "base" && ST.g !== "all";
