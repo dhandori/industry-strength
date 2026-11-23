@@ -1,40 +1,19 @@
 {
- "updated_at": "2026-11-23 15:02 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/45121433055",
- "trigger": "push",
+ "updated_at": "2026-11-23 15:50 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/45126827870",
+ "trigger": "workflow_dispatch",
  "markets": {
   "KR": {
    "ok": true,
-   "basis_date": "2026-11-20",
+   "basis_date": "2026-11-23",
    "n": 71,
    "warnings": [],
    "tradingview": {
-    "date": "2026-11-20",
+    "date": "2026-11-23",
     "asked": 358,
     "got": 358,
     "filled": 0,
-    "fixed": [
-     "__bench__ 7.621e+04→7.436e+04",
-     "__sec_305720.KS 1.142e+04→1.12e+04",
-     "__sec_266420.KS 1.465e+04→1.425e+04",
-     "__sec_157490.KS 7140→6630",
-     "__sec_300610.KS 5010→4850",
-     "__sec_091180.KS 2.082e+04→2.042e+04",
-     "__sec_139230.KS 7290→7100",
-     "__sec_449450.KS 2.984e+04→2.839e+04",
-     "__sec_117700.KS 5320→4995",
-     "__sec_117460.KS 9635→9340",
-     "__sec_091170.KS 1.447e+04→1.39e+04",
-     "__sec_140700.KS 1.652e+04→1.594e+04",
-     "__sec_140710.KS 6710→6435",
-     "__sec_266390.KS 1.482e+04→1.416e+04",
-     "005930.KS 1.831e+05→1.79e+05",
-     "000660.KS 1.113e+06→1.095e+06",
-     "240810.KQ 6.56e+04→6.73e+04",
-     "319660.KQ 7.99e+04→8.21e+04",
-     "084370.KQ 7.1e+04→7.4e+04",
-     "095610.KQ 7.82e+04→8.43e+04"
-    ]
+    "fixed": []
    }
   },
   "US": {
