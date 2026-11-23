@@ -255,7 +255,8 @@ def check_signals(b, url, label, w, h):
         problems.append(f"{label} 숫자 줄 {got} (기대 {want})")
     if far != ("far" in (pg.get_attribute(".card[data-y=UPCO] .kv span >> nth=1", "class") or "")):
         problems.append(f"{label} 숫자 줄: 10일 저점 주황 표시가 기대({far})와 다름")
-    eur = pg.locator('.card[data-y="RHM.DE"] .kv span', has_text="거래대금").inner_text()
+    # 화면 밖 카드는 content-visibility 로 그리기를 미뤄 inner_text 가 빈 값이라 DOM 글자로 읽는다
+    eur = pg.locator('.card[data-y="RHM.DE"] .kv span', has_text="거래대금").text_content()
     if eur != f"거래대금 {money(SIG_ITEMS[7][0]['c'][-1] * 1_000_000)} 유로":
         problems.append(f"{label} 숫자 줄: 유로 거래대금 글자 '{eur}'")
     pg.click(".card[data-y=UPCO] .kv span >> nth=1")
