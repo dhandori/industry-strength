@@ -51,7 +51,7 @@
     const mobile = w < 520, H = o.H || Math.round(Math.max(230, Math.min(330, w * 0.42))), P = { l: 8, r: mobile ? 52 : 62, t: 14, b: 40 };
     const tot = cats.map((c) => c.stack.reduce((s, x) => s + x.v, 0));
     const vals = [...tot, ...(o.line || []).filter((v) => v != null)].filter((v) => v > 0);
-    if (!vals.length) return "<p class='none'>아직 자료가 없어요.</p>";
+    if (!vals.length) return "<p class='none'>아직 자료가 없습니다.</p>";
     const S = yScale(Math.min(...vals), Math.max(...vals), o.log);
     const iw = w - P.l - P.r, bw = iw / cats.length, Y = (v) => P.t + (1 - S.f(v)) * (H - P.t - P.b);
     let g = "";
@@ -92,7 +92,7 @@
   function gpuChart(days, w) {
     const mobile = w < 520, H = Math.round(Math.max(240, Math.min(340, w * 0.42))), P = { l: 8, r: mobile ? 76 : 82, t: 14, b: 40 };
     const on = GPU.filter(([k]) => !st.gpuOff.has(k)).map(([k, c]) => ({ k, c, pts: days.map((d) => ({ d: d.d, v: d.vast?.[k]?.med })).filter((p) => p.v) })).filter((s) => s.pts.length);
-    if (!on.length) return "<p class='none'>보여 줄 GPU를 하나 이상 골라 주세요.</p>";
+    if (!on.length) return "<p class='none'>보여 줄 GPU를 하나 이상 골라 주십시오.</p>";
     const all = on.flatMap((s) => s.pts.map((p) => p.v)), S = yScale(0, Math.max(...all), false);
     const t1 = Date.parse(days.at(-1).d), t0 = Math.min(Date.parse(days[0].d), t1 - 13 * 864e5), tEnd = t1 + 864e5;
     const X = (d) => P.l + (Date.parse(d) - t0) / (tEnd - t0) * (w - P.l - P.r), Y = (v) => P.t + (1 - S.f(v)) * (H - P.t - P.b);
@@ -178,12 +178,12 @@
     box.innerHTML = `<section class="card in-card">
       <div class="card-head wrap"><h2>AI 인프라 수요 <span class="sub">토큰 총량, 지출, GPU 단가</span></h2></div>
       <p class="ai-meta">갱신 ${esc(d.updated_at)} · 매일 09:40·12:40 KST 자동 수집${bad.length ? ` · <b class="ai-bad">이번 수집 실패: ${bad.join(", ")} (지난 값 표시)</b>` : ""}</p>
-      ${cLast ? `<p class="ai-lead">빅테크 5사가 ${cLast.q.slice(2, 4)}년 ${cLast.q.slice(-1)}분기 데이터센터·서버에 <b>${bn(cLast.usd)}</b>를 썼어요${cYoY != null ? `. 1년 전보다 <b class="${cYoY >= 0 ? "up" : "down"}">${sgn(cYoY)}%</b>예요` : ""}.${mult ? ` OpenRouter를 거친 토큰은 ${weeksSpan}주 전의 <b>${mult.toFixed(1)}배</b>로 늘었어요.` : ""}</p>` : ""}
+      ${cLast ? `<p class="ai-lead">빅테크 5사가 ${cLast.q.slice(2, 4)}년 ${cLast.q.slice(-1)}분기 데이터센터·서버에 <b>${bn(cLast.usd)}</b>를 썼습니다${cYoY != null ? `. 1년 전과 비교하면 <b class="${cYoY >= 0 ? "up" : "down"}">${sgn(cYoY)}%</b>입니다` : ""}.${mult ? ` OpenRouter를 거친 토큰은 ${weeksSpan}주 전의 <b>${mult.toFixed(1)}배</b>로 늘었습니다.` : ""}</p>` : ""}
       <h3 class="ai-h3">빅테크 설비투자 <span class="sub">아마존, 구글, 마이크로소프트, 메타, 오라클 · 분기별 현금 지출</span></h3>
       <div class="cp-ctl"><div class="chart-legend">${CO.map(([, n, c]) => `<span><i style="background:${c}"></i>${n}</span>`).join("")}<span><i style="background:var(--ink);height:3px"></i>4분기 이동평균(합계)</span></div>
         <div class="cp-tabs">${[["3y", "3년"], ["5y", "5년"], ["all", "전체"]].map(([k, t]) => `<button class="toggle" aria-pressed="${st.crange === k}" data-cr="${k}">${t}</button>`).join("")}</div></div>
       <div id="inCap"></div>
-      <p class="cp-sub">${ann ? `최근 4개 분기를 더하면 <b>${dol(ann)}</b>예요. ` : ""}데이터센터, 서버, GPU를 사는 데 쓴 돈이라 AI 칩 수요가 가장 직접 드러나요.</p>
+      <p class="cp-sub">${ann ? `최근 4개 분기를 더하면 <b>${dol(ann)}</b>입니다. ` : ""}데이터센터, 서버, GPU를 사는 데 쓴 돈이라 AI 칩 수요가 가장 직접 드러납니다.</p>
       <details class="ai-more" data-more="infra"${st.more ? " open" : ""}><summary>자세히 보기 · 숫자 요약, 토큰 총량, 회사별 표, 지출 추정, GPU 임대료</summary><div class="ai-more-b">
       <div class="tiles ai-tiles">
         ${last ? tile("지난주 토큰 (OpenRouter)", tok(last.total), `${ymd(last.week)} 주${mult ? ` · ${weeksSpan}주 전의 <b class="up">${mult.toFixed(1)}배</b>` : ""}`) : ""}
@@ -196,25 +196,25 @@
       <div class="cp-ctl"><div class="chart-legend"><span><i style="background:var(--ai-tok)"></i>그 주 합계</span><span><i style="background:var(--ink);height:3px"></i>4주 이동평균</span><span><i style="background:var(--ai-tok);opacity:.35"></i>진행 중인 주</span></div>
         <div class="cp-tabs"><button class="toggle" aria-pressed="${st.tlog}" data-tlog="1">로그 눈금</button></div></div>
       <div id="inTok"></div>
-      <p class="cp-sub">${prev4 && last ? `4주 전(${ymd(prev4.week)} 주 ${tok(prev4.total)})보다 <b class="${last.total >= prev4.total ? "up" : "down"}">${sgn((last.total / prev4.total - 1) * 100)}%</b>예요. ` : ""}로그 눈금을 켜면 같은 배수로 늘어난 구간이 같은 높이로 보여서, 증가 속도가 빨라지는지 느려지는지 읽기 쉬워요.</p>
-      <p class="foot-note">OpenRouter는 여러 AI 모델을 한 창구에서 파는 중개 서비스라, 여기 숫자는 시장 전체가 아니라 그중 일부예요. OpenAI·구글·Anthropic이 자기 API로 직접 판 양은 빠져 있고, 값싼 중국 모델 비중이 높아요. 그래도 같은 기준으로 매주 재기 때문에 수요가 늘어나는 속도를 보기에는 좋은 지표예요. 1조는 10<sup>12</sup>, 1경은 10<sup>16</sup>이에요.</p>
+      <p class="cp-sub">${prev4 && last ? `4주 전(${ymd(prev4.week)} 주 ${tok(prev4.total)})보다 <b class="${last.total >= prev4.total ? "up" : "down"}">${sgn((last.total / prev4.total - 1) * 100)}%</b>입니다. ` : ""}로그 눈금을 켜면 같은 배수로 늘어난 구간이 같은 높이로 보여서, 늘어나는 속도가 빨라지는지 느려지는지 읽기 쉽습니다.</p>
+      <p class="foot-note">OpenRouter는 여러 AI 모델을 한 창구에서 파는 중개 서비스라, 여기 숫자는 시장 전체가 아니라 그중 일부입니다. OpenAI·구글·Anthropic이 자기 API로 직접 판 양은 빠져 있고, 값싼 중국 모델 비중이 높습니다. 그래도 매주 같은 기준으로 재기 때문에 수요가 얼마나 빨리 늘어나는지 보기에는 좋은 지표입니다. 1조는 10<sup>12</sup>, 1경은 10<sup>16</sup>입니다.</p>
 
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>회사</th><th>최근 분기</th><th class="num">설비투자</th><th class="num">1년 전 대비</th><th class="num">최근 4분기 합</th><th>공시일</th></tr></thead><tbody>${cTbl}</tbody></table></div>
-      <p class="foot-note">SEC에 낸 분기·연간 보고서의 현금흐름표 '유형자산 취득' 금액이에요(아마존은 '생산 자산 취득'). 분기 보고서는 연초부터 쌓인 값이라 앞 분기를 빼서 분기 값을 구했어요. 마이크로소프트와 오라클은 회계연도가 달라서 분기 끝 날짜에 가장 가까운 달력 분기로 맞췄어요. 리스로 빌린 데이터센터는 이 금액에 들어가지 않아서 실제 투자 규모는 더 커요.</p>
+      <p class="foot-note">SEC에 낸 분기·연간 보고서에서 현금흐름표의 '유형자산 취득' 금액을 가져왔습니다(아마존은 '생산 자산 취득'). 분기 보고서 숫자는 연초부터 쌓인 값이라 앞 분기를 빼서 분기 값을 구했습니다. 마이크로소프트와 오라클은 회계연도가 달라서 분기 끝 날짜에 가장 가까운 달력 분기로 맞췄습니다. 리스로 빌린 데이터센터는 이 금액에 들어가지 않으니 실제 투자 규모는 이보다 큽니다.</p>
 
       <h3 class="ai-h3">토큰 지출 추정 <span class="sub">OpenRouter 주간 · 모델별 토큰 × 정가</span></h3>
       ${sl.usd ? `<div class="ai-run"><span>${sl.week ? `${ymd(sl.week)} 주` : "최근 7일"} 추정 지출</span><b>${dol(sl.usd)}</b><em>유료 토큰 100만 개당 평균 $${sl.usd_per_m}${sl.approx ? " · 월요일 확정 전 근사값" : ""}</em></div>` : ""}
-      ${sw.length > 1 ? `<div id="inSpend"></div>` : `<p class="cp-sub">지출 추정은 2026년 11월 첫 주부터 쌓기 시작했어요. 매주 월요일 09:40에 지난주 값이 한 칸씩 늘어나고, 4주가 모이면 이동평균선도 그려요.</p>`}
+      ${sw.length > 1 ? `<div id="inSpend"></div>` : `<p class="cp-sub">지출 추정은 2026년 11월 첫 주부터 쌓기 시작했습니다. 매주 월요일 09:40에 지난주 값이 한 칸씩 늘어나고, 4주가 모이면 이동평균선도 함께 그립니다.</p>`}
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th class="num">#</th><th>모델</th><th class="num">추정 지출</th><th class="num">비중</th><th class="num">토큰</th><th class="num">100만 토큰당</th></tr></thead><tbody>${sTop}</tbody></table></div>
-      <p class="foot-note">OpenRouter는 금액 합계를 공개하지 않아요. 그래서 모델마다 그 주 입력·출력·캐시 토큰에 OpenRouter 정가를 곱해 더했어요. 무료판은 0원으로 쳤고, 대량 할인이나 개인 키(BYOK) 정산 차이는 반영하지 못해서 실제 금액과는 차이가 있어요. 토큰은 값싼 모델에서 많이 쓰이지만, 돈은 비싼 상위 모델에 몰려요.</p>
+      <p class="foot-note">OpenRouter는 금액 합계를 공개하지 않습니다. 그래서 모델마다 그 주에 쓰인 입력·출력·캐시 토큰에 OpenRouter 정가를 곱해 더했습니다. 무료판은 0원으로 쳤고, 대량 할인이나 개인 키(BYOK) 정산 차이는 반영하지 못해서 실제 금액과는 차이가 납니다. 토큰은 값싼 모델에서 많이 쓰이지만 돈은 비싼 상위 모델에 몰립니다.</p>
 
       <h3 class="ai-h3">GPU 시간당 임대료 <span class="sub">GPU 1장을 1시간 빌리는 값(달러)</span></h3>
       <div class="cp-lgs">${gBtns}</div>
       <div id="inGpu"></div>
-      <p class="cp-sub">${gd.length < 7 ? `GPU 임대료는 공개된 과거 기록이 없어서 ${ymd(g0.d || "2026-11-03")}부터 매일 한 줄씩 쌓고 있어요. 7일이 모이면 이동평균(점선)도 그려요. ` : "점선은 7일 이동평균이에요. "}이름표를 누르면 선을 켜고 끌 수 있어요.</p>
+      <p class="cp-sub">${gd.length < 7 ? `GPU 임대료는 공개된 과거 기록이 없어서 ${ymd(g0.d || "2026-11-03")}부터 매일 한 줄씩 쌓고 있습니다. 7일이 모이면 이동평균(점선)도 그립니다. ` : "점선은 7일 이동평균입니다. "}이름표를 누르면 선을 켜고 끌 수 있습니다.</p>
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>GPU</th><th class="num">시장 중앙값</th><th class="num">중간 50% 범위</th><th class="num">빌릴 수 있는 수</th><th class="num">RunPod 정가</th><th class="num">RunPod 커뮤니티</th>${gd.length > 1 ? `<th class="num">기록 시작 대비</th>` : ""}</tr></thead><tbody>${gRows}</tbody></table></div>
-      <p class="foot-note">시장 중앙값은 Vast.ai 공개 마켓에서 지금 빌릴 수 있는 매물의 1장당 값을 GPU 수로 가중해 가운데 값을 잡은 거예요. 개인과 소형 업체가 내놓은 매물이 많아 대형 클라우드 정가보다 싸게 나와요. 빌릴 수 있는 수가 줄면서 값이 오르면 공급이 빠듯하다는 신호예요. RunPod 정가는 회사가 공개한 정찰가라 자주 바뀌지 않지만, 바뀌면 가격 인상이 확정됐다는 뜻이에요. 참고로 공개 보도 기준 H100 1년 계약가는 2025년 10월 시간당 1.70달러에서 2026년 3월 2.35달러로 약 40% 올랐어요(SemiAnalysis).</p>
-      <p class="foot-note">자료: <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter</a>(CC BY 4.0), <a href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC EDGAR</a>, <a href="https://vast.ai/" target="_blank" rel="noopener">Vast.ai</a>, <a href="https://www.runpod.io/pricing" target="_blank" rel="noopener">RunPod</a>. 투자 판단의 참고 자료예요.</p>
+      <p class="foot-note">시장 중앙값은 Vast.ai 공개 마켓에서 지금 빌릴 수 있는 매물의 1장당 값을 GPU 수로 가중해 가운데 값을 잡은 것입니다. 개인과 소형 업체가 내놓은 매물이 많아서 대형 클라우드 정가보다 싸게 나옵니다. 빌릴 수 있는 수가 줄면서 값이 오르면 공급이 빠듯하다는 신호입니다. RunPod 정가는 회사가 공개한 정찰가라 자주 바뀌지 않는데, 바뀌었다면 가격 인상이 확정된 것입니다. 참고로 공개 보도를 보면 H100 1년 계약가는 2025년 10월 시간당 1.70달러에서 2026년 3월 2.35달러로 약 40% 올랐습니다(SemiAnalysis).</p>
+      <p class="foot-note">자료: <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter</a>(CC BY 4.0), <a href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC EDGAR</a>, <a href="https://vast.ai/" target="_blank" rel="noopener">Vast.ai</a>, <a href="https://www.runpod.io/pricing" target="_blank" rel="noopener">RunPod</a>. 투자 판단에 참고할 자료입니다.</p>
       </div></details>
     </section>`;
     if (tw.length) $("#inTok").innerHTML = barChart(tCats, W($("#inTok")), { line: tLine, log: st.tlog, fmt: tok, aria: "OpenRouter 주간 토큰 총량" });
@@ -231,7 +231,7 @@
     if (!$("#infraBody")) return;
     if (!st.data || force) {
       if (!st.loading || force) st.loading = fetch("data/ai_infra.json?v=" + Date.now(), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
-      try { st.data = await st.loading; } catch (e) { st.loading = null; $("#infraBody").innerHTML = "<p class='ai-meta'>AI 인프라 수요 자료를 불러오지 못했어요. 잠시 후 새로고침해 주세요.</p>"; return; }
+      try { st.data = await st.loading; } catch (e) { st.loading = null; $("#infraBody").innerHTML = "<p class='ai-meta'>AI 인프라 수요 자료를 불러오지 못했습니다. 잠시 후 새로고침해 주십시오.</p>"; return; }
     }
     render();
   }

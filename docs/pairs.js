@@ -19,7 +19,7 @@
       if (!st.loading || force) st.loading = fetch("data/pairs.json?v=" + Date.now(), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
       try { st.data = await st.loading; } catch (e) {
         st.loading = null;
-        $("#pairsMeta").textContent = "페어 자료가 아직 없어요. 다음 자동 갱신(한국장·미국장 마감 후) 때 채워져요.";
+        $("#pairsMeta").textContent = "페어 자료가 아직 없습니다. 다음 자동 갱신(한국장·미국장 마감 후) 때 채워집니다.";
         $("#pairsBody").innerHTML = ""; return;
       }
     }
@@ -40,15 +40,15 @@
   function readings(p) {
     const out = [];
     const t = p.trend?.[1];
-    out.push(t === "up" ? `<b>추세</b> 비율이 50일선과 200일선 위에 차례로 놓여 있어 <b>${esc(p.a_name)}</b> 우위가 이어지고 있어요. 뜻: ${esc(p.up)}.`
-      : t === "down" ? `<b>추세</b> 비율이 50일선과 200일선 아래에 차례로 놓여 있어 <b>${esc(p.b_name)}</b> 우위가 이어지고 있어요. 뜻: ${esc(p.down)}.`
-      : `<b>추세</b> 비율이 50일선·200일선 사이에서 엇갈려요(200일선 ${p.above200 ? "위" : "아래"}). 아직 어느 쪽 우위로 굳었다고 보기 어려워요.`);
-    if (p.rsi != null) out.push(p.rsi <= 30 ? `<b>RSI ${p.rsi}</b> 30 이하 · 최근 2~3주 동안 ${esc(p.a_name)} 쪽이 너무 빨리 밀렸어요. 짧은 되돌림이 자주 나오는 자리지만, 추세가 강하면 더 내려가기도 해요.`
-      : p.rsi >= 70 ? `<b>RSI ${p.rsi}</b> 70 이상 · 최근 2~3주 동안 ${esc(p.a_name)} 쪽이 너무 빨리 앞서갔어요. 쉬어 가는 경우가 많지만, 추세 초입엔 더 오르기도 해요.`
-      : `<b>RSI ${p.rsi}</b> 30~70 사이 · 단기 과열이나 침체는 아니에요.`);
-    if (p.z != null) out.push(Math.abs(p.z) >= 2 ? `<b>Z점수 ${sgn(p.z, 2, "")}</b> 최근 60일 평균에서 표준편차 ${Math.abs(p.z).toFixed(1)}개만큼 ${p.z < 0 ? "아래" : "위"} · 평소 범위를 벗어난 드문 자리라 평균 쪽으로 되돌아올지 지켜볼 만해요.`
-      : `<b>Z점수 ${sgn(p.z, 2, "")}</b> 평소 범위(±2) 안이에요.`);
-    if (p.pos52 != null) out.push(`<b>1년 범위</b> 최저 0% ~ 최고 100% 중 <b>${Math.round(p.pos52)}%</b> 위치 · 1년 최고 비율보다 ${Math.abs(p.dist_hi ?? 0).toFixed(1)}% 아래.`);
+    out.push(t === "up" ? `<b>추세</b> 비율이 50일선과 200일선 위에 차례로 놓여 있어 <b>${esc(p.a_name)}</b> 우위가 이어지고 있습니다. 뜻: ${esc(p.up)}.`
+      : t === "down" ? `<b>추세</b> 비율이 50일선과 200일선 아래에 차례로 놓여 있어 <b>${esc(p.b_name)}</b> 우위가 이어지고 있습니다. 뜻: ${esc(p.down)}.`
+      : `<b>추세</b> 비율이 50일선·200일선 사이에서 엇갈립니다(200일선 ${p.above200 ? "위" : "아래"}). 아직 어느 쪽 우위로 굳었다고 보기는 어렵습니다.`);
+    if (p.rsi != null) out.push(p.rsi <= 30 ? `<b>RSI ${p.rsi}</b> 30 이하 · 최근 2~3주 동안 ${esc(p.a_name)} 쪽이 너무 빨리 밀렸습니다. 짧은 되돌림이 자주 나오는 자리지만, 추세가 강하면 더 내려가기도 합니다.`
+      : p.rsi >= 70 ? `<b>RSI ${p.rsi}</b> 70 이상 · 최근 2~3주 동안 ${esc(p.a_name)} 쪽이 너무 빨리 앞서갔습니다. 대개 쉬어 가지만, 추세 초입에는 더 오르기도 합니다.`
+      : `<b>RSI ${p.rsi}</b> 30~70 사이 · 단기 과열도 침체도 아닙니다.`);
+    if (p.z != null) out.push(Math.abs(p.z) >= 2 ? `<b>Z점수 ${sgn(p.z, 2, "")}</b> 최근 60일 평균에서 표준편차 ${Math.abs(p.z).toFixed(1)}개만큼 ${p.z < 0 ? "아래" : "위"} · 평소 범위를 벗어난 드문 자리라 평균 쪽으로 되돌아올지 지켜볼 만합니다.`
+      : `<b>Z점수 ${sgn(p.z, 2, "")}</b> 평소 범위(±2) 안에 있습니다.`);
+    if (p.pos52 != null) out.push(`<b>1년 범위</b> 최저 0% ~ 최고 100% 중 <b>${Math.round(p.pos52)}%</b> 위치 · 1년 최고 비율보다 ${Math.abs(p.dist_hi ?? 0).toFixed(1)}% 아래에 있습니다.`);
     return out;
   }
 
@@ -134,7 +134,7 @@
   const chip = ([t, c]) => `<span class="pr-chip ${c}">${esc(t)}</span>`;
   function card(p) {
     const name = `${esc(tk(p.a))} / ${esc(tk(p.b))}`;
-    if (!p.series) return `<div class="pr-card off"><div class="pr-h"><b>${name}</b></div><p class="pr-desc">${esc(p.desc)}</p><p class="pr-none">자료를 받지 못했어요. 다음 갱신 때 다시 시도해요.</p></div>`;
+    if (!p.series) return `<div class="pr-card off"><div class="pr-h"><b>${name}</b></div><p class="pr-desc">${esc(p.desc)}</p><p class="pr-none">자료를 받지 못했습니다. 다음 갱신 때 다시 받아 봅니다.</p></div>`;
     const v = verdict(p);
     const rsiTone = p.rsi == null ? "" : p.rsi <= 30 ? "down" : p.rsi >= 70 ? "up" : "";
     const zTone = p.z == null ? "" : p.z <= -2 ? "down" : p.z >= 2 ? "up" : "";
@@ -197,15 +197,15 @@
     const hot = all.filter((p) => (p.flags || []).length).sort((a, b) => Math.abs(b.z ?? 0) - Math.abs(a.z ?? 0));
     const sum = `<section class="card pr-today"><div class="card-head"><h2>오늘 눈여겨볼 페어 <span class="sub">신호가 켜진 ${hot.length}개 · 누르면 큰 차트</span></h2></div>
       ${hot.length ? `<div class="pr-hot">${hot.map((p) => `<button class="pr-hotrow t-${verdict(p).tone}" type="button" data-id="${p.id}"><b>${esc(tk(p.a))} / ${esc(tk(p.b))}</b><span class="pr-hotv">${esc(verdict(p).head)}</span><span class="pr-hotc">${p.flags.map(chip).join("")}</span></button>`).join("")}</div>`
-        : `<p class="pr-none">오늘은 추세 전환·과열·침체 신호가 켜진 페어가 없어요.</p>`}</section>`;
+        : `<p class="pr-none">오늘은 추세 전환·과열·침체 신호가 켜진 페어가 없습니다.</p>`}</section>`;
     box.innerHTML = sum + `<details class="card pr-help"><summary>이 탭 보는 법 <span class="sub">비율 · 추세 · RSI · Z점수 · 활용 예</span></summary>
       <div class="pr-help-grid">
-        <div><h3>비율 읽기</h3><p><b>비율 = A ÷ B</b>예요. 두 종목이 같이 떨어져도 A가 덜 떨어지면 비율은 올라요. 그래서 <b>시장 방향과 상관없이 누가 더 센지</b>만 보여 줘요. 차트 왼쪽 위·아래의 ↑·↓ 표시가 각각 어느 쪽 강세인지 알려 줘요.</p></div>
-        <div><h3>추세 (가장 먼저 볼 것)</h3><p>비율이 <b>50일선·200일선 위</b>에 차례로 있으면 A 우위가 굳은 상태, <b>아래</b>면 B 우위예요. 비율이 <b>200일선을 뚫거나 깨는 순간</b>을 상대 흐름이 바뀌는 첫 신호로 많이 봐요.</p></div>
-        <div><h3>RSI (단기 과열·침체)</h3><p>최근 14거래일 동안 비율이 얼마나 한쪽으로 쏠렸는지예요. <b>70 위</b>는 A가 너무 빨리 앞서간 것, <b>30 아래</b>는 너무 빨리 밀린 것이에요. 되돌림이 자주 나오지만, 강한 추세 중엔 극단이 오래가기도 해요.</p></div>
-        <div><h3>Z점수 (평소 범위)</h3><p>비율이 최근 60일 평균에서 표준편차 몇 개만큼 떨어졌는지예요. 보통 <b>±2 안</b>에서 움직이고, 넘으면 드문 자리라 평균으로 돌아올지 살펴볼 만해요. 페어 트레이딩에서 진입·청산 기준으로 많이 써요.</p></div>
-        <div><h3>활용 예</h3><p>SMH/IGV가 200일선 아래로 내려가고 RSI가 30 아래면 "소프트웨어 쪽으로 돈이 옮겨 가는 중인데, 단기로는 반도체가 너무 많이 밀렸다"고 읽어요. 추세를 따를지, 되돌림을 노릴지는 <b>추세(50·200일선)를 먼저</b> 보고 정해요.</p></div>
-        <div><h3>주의</h3><p class="pr-warn">상대강도를 보는 화면이지 매매 신호가 아니에요. 실제 페어 트레이딩에는 헤지 비율(얼마씩 사고팔지)과 두 가격이 벌어졌다가 다시 붙는 성질이 있는지도 확인해야 해요. 종가끼리 나눈 선이라 캔들은 그리지 않아요.</p></div>
+        <div><h3>비율 읽기</h3><p><b>비율 = A ÷ B</b>입니다. 두 종목이 같이 떨어져도 A가 덜 떨어지면 비율은 오릅니다. 그래서 <b>시장 방향과 상관없이 누가 더 센지</b>만 보여 줍니다. 차트 왼쪽 위·아래에 있는 ↑·↓ 표시를 보면 각각 어느 쪽이 강세인지 알 수 있습니다.</p></div>
+        <div><h3>추세 (가장 먼저 볼 것)</h3><p>비율이 <b>50일선·200일선 위</b>에 차례로 있으면 A 우위가 굳은 것이고, <b>아래</b>에 있으면 B 우위입니다. 비율이 <b>200일선을 뚫거나 깨는 순간</b>을 상대 흐름이 바뀌는 첫 신호로 많이 봅니다.</p></div>
+        <div><h3>RSI (단기 과열·침체)</h3><p>최근 14거래일 동안 비율이 얼마나 한쪽으로 쏠렸는지를 잽니다. <b>70 위</b>면 A가 너무 빨리 앞서간 것이고, <b>30 아래</b>면 너무 빨리 밀린 것입니다. 이런 자리에서는 되돌림이 자주 나오지만, 추세가 강할 때는 극단이 오래가기도 합니다.</p></div>
+        <div><h3>Z점수 (평소 범위)</h3><p>비율이 최근 60일 평균에서 표준편차 몇 개만큼 떨어져 있는지 나타냅니다. 보통은 <b>±2 안</b>에서 움직이고, 이를 넘으면 드문 자리라 평균으로 돌아올지 살펴볼 만합니다. 페어 트레이딩에서 진입·청산 기준으로 많이 씁니다.</p></div>
+        <div><h3>활용 예</h3><p>SMH/IGV가 200일선 아래로 내려가고 RSI가 30 아래라면 "소프트웨어 쪽으로 돈이 옮겨 가는 중인데, 단기로는 반도체가 너무 많이 밀렸다"고 읽습니다. 추세를 따를지 되돌림을 노릴지는 <b>추세(50·200일선)를 먼저</b> 보고 정합니다.</p></div>
+        <div><h3>주의</h3><p class="pr-warn">상대강도를 보는 화면이지 매매 신호가 아닙니다. 실제로 페어 트레이딩을 하려면 헤지 비율(얼마씩 사고팔지)과, 두 가격이 벌어졌다가 다시 붙는 성질이 있는지도 확인해야 합니다. 종가끼리 나눈 선이라 캔들은 그리지 않습니다.</p></div>
       </div></details>`;
     for (const g of d.groups) {
       const sec = document.createElement("section"); sec.className = "card pr-group";

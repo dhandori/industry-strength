@@ -121,20 +121,20 @@ def guard(raw, data, today):
         newest = min((raw[k][-1][0] for k in src if raw.get(k)), default=None)
         if newest and i["date"] < newest:
             gaps.append(i["key"])
-            warn.append({"kind": "gap", "key": i["key"], "msg": f"{i['key']}: 원자료에는 {newest} 값이 있는데 화면 지표는 {i['date']}에 멈춰 있음(계산에서 빠짐)"})
+            warn.append({"kind": "gap", "key": i["key"], "msg": f"{i['key']}: 원자료에는 {newest} 값이 있는데 화면 지표는 {i['date']}에 멈춰 있어 계산에서 빠졌습니다."})
         age = (today - datetime.strptime(i["date"], "%Y-%m-%d").date()).days
         if age > MAX_AGE.get(i["key"], 120):
-            warn.append({"kind": "stale", "key": i["key"], "msg": f"{i['key']}: 마지막 값이 {i['date']}({age}일 전) — 발표가 늦거나 수집이 멈췄는지 확인"})
+            warn.append({"kind": "stale", "key": i["key"], "msg": f"{i['key']}: 마지막 값이 {i['date']}({age}일 전)입니다. 발표가 늦어졌는지, 수집이 멈췄는지 확인해야 합니다."})
     m = data["misery"]
     if m["date"] < min(raw["CPIAUCSL"][-1][0], raw["UNRATE"][-1][0]):
         gaps.append("misery")
-        warn.append({"kind": "gap", "key": "misery", "msg": f"고통지수: 원자료는 {min(raw['CPIAUCSL'][-1][0], raw['UNRATE'][-1][0])}까지 있는데 {m['date']}에 멈춰 있음"})
+        warn.append({"kind": "gap", "key": "misery", "msg": f"고통지수: 원자료는 {min(raw['CPIAUCSL'][-1][0], raw['UNRATE'][-1][0])}까지 있는데 {m['date']}에 멈춰 있습니다."})
     cc = data.get("cpi_core")
     if not cc:
-        warn.append({"kind": "gap", "key": "cpi_core", "msg": "근원 CPI 분석을 만들지 못함"})
+        warn.append({"kind": "gap", "key": "cpi_core", "msg": "근원 CPI 분석을 만들지 못했습니다."})
         gaps.append("cpi_core")
     elif cc["date"] < raw["CPILFESL"][-1][0]:
-        warn.append({"kind": "gap", "key": "cpi_core", "msg": f"근원 CPI 분석이 {cc['date']}에 멈춰 있음(원자료 {raw['CPILFESL'][-1][0]})"})
+        warn.append({"kind": "gap", "key": "cpi_core", "msg": f"원자료는 {raw['CPILFESL'][-1][0]}까지 있는데 근원 CPI 분석은 {cc['date']}에 멈춰 있습니다."})
         gaps.append("cpi_core")
     return warn, gaps
 

@@ -79,10 +79,10 @@
   async function render(market) {
     st.market = market || st.market;
     const meta = $("#hxMeta");
-    try { await loadRaw(); } catch (e) { meta.textContent = "신고가 데이터를 불러오지 못했어요. 잠시 후 새로고침해 주세요."; return; }
-    if (!st.raw.markets[st.market]) { meta.textContent = "이 시장의 신고가 기록이 아직 없어요. 다음 갱신 뒤에 보여요."; return; }
+    try { await loadRaw(); } catch (e) { meta.textContent = "신고가 데이터를 불러오지 못했습니다. 잠시 뒤 새로고침해 주십시오."; return; }
+    if (!st.raw.markets[st.market]) { meta.textContent = "이 시장은 아직 신고가 기록이 없습니다. 다음 갱신이 끝나면 보입니다."; return; }
     const D = model(st.market);
-    if (!D.days.length) { meta.textContent = "아직 기록이 없어요."; return; }
+    if (!D.days.length) { meta.textContent = "아직 기록이 없습니다."; return; }
     if (!st.day || !D.byDay[st.day]) st.day = D.days.at(-1);
     meta.textContent = `${{ KR: "한국", US: "미국", JP: "일본" }[st.market]} 기준일 ${D.days.at(-1)} 종가 · 최근 ${D.days.length}거래일 기록 · 갱신 ${st.market === "JP" ? st.raw.updatedJP : st.raw.updated_at}${st.market === "JP" ? " · 도쿄 시총 1,000억 엔 이상" : ""}`;
     renderTiles(D); renderChart(D); renderStrong(D); renderHeat(D); renderFreq(D); renderDay(D);
@@ -104,7 +104,7 @@
         <div class="d">${dl == null ? "" : `전 거래일 ${prev.n}개 (${dl >= 0 ? "▲" : "▼"}${Math.abs(dl)})`} · 최근 10일 평균 ${avg.toFixed(0)}개</div></div>
       <div class="tile"><div class="k">최근 ${RECENT}거래일 합계</div>
         <div class="v">${sr}<span class="of">개</span></div>
-        <div class="d">${old.length ? `그 전 ${RECENT}거래일 ${so}개 (<span class="${sr >= so ? "up-t" : "down-t"}">${sr >= so ? "▲" : "▼"}${Math.abs(sr - so)}</span>)` : "비교할 이전 기록이 아직 없어요"}</div></div>
+        <div class="d">${old.length ? `그 전 ${RECENT}거래일 ${so}개 (<span class="${sr >= so ? "up-t" : "down-t"}">${sr >= so ? "▲" : "▼"}${Math.abs(sr - so)}</span>)` : "비교할 이전 기록이 아직 없습니다"}</div></div>
       <div class="tile"><div class="k">${idx} 등락 · 신저가</div>
         <div class="v"><span class="ret ${cls(last.idx_chg)}">${pct(last.idx_chg)}</span></div>
         <div class="d">신저가 ${last.lows == null ? "기록 없음" : last.lows + "개"}${last.us_dir ? ` · 전날 미국장 ${last.us_dir}` : ""}</div></div>
@@ -123,7 +123,7 @@
     const lg = $("#hxLegend");
     if (!LW || !LW.createChart) {
       el.classList.add("as-table");
-      el.innerHTML = `<div class="chart-fallback"><p>차트를 불러오지 못해 숫자로 보여 드려요.</p>${D.info.slice(-10).map((x) => `${md(x.d)} <b>${x.n}</b>`).join(" · ")}</div>`;
+      el.innerHTML = `<div class="chart-fallback"><p>차트를 불러오지 못해 숫자로 보여 드립니다.</p>${D.info.slice(-10).map((x) => `${md(x.d)} <b>${x.n}</b>`).join(" · ")}</div>`;
       lg.innerHTML = ""; return;
     }
     el.classList.remove("as-table");
@@ -333,7 +333,7 @@
       el.innerHTML = keys.length ? `<div class="grp-list">${keys.map((k) => `
         <div class="gl-row"><div class="gl-head"><b>${esc(k)}</b><span class="muted">${esc(g[k][0].big)}</span></div>
           <div class="gl-bar"><i style="width:${g[k].length / mx * 100}%"></i><em>${g[k].length}</em></div>
-          <div class="gl-chips">${g[k].map(chip).join("")}</div></div>`).join("")}</div>` : `<p class="empty">조건에 맞는 종목이 없어요.</p>`;
+          <div class="gl-chips">${g[k].map(chip).join("")}</div></div>`).join("")}</div>` : `<p class="empty">조건에 맞는 종목이 없습니다.</p>`;
     } else {
       const { k, d } = st.sortT;
       const val = (r) => k === "name" ? r.name : k === "ind" ? r.ind : r[k];

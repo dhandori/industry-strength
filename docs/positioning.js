@@ -306,7 +306,7 @@
     if (!st.built) {
       if (!st.loading) st.loading = fetch("data/positioning.json?v=" + Date.now(), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
       try { st.data = await st.loading; }
-      catch (e) { st.loading = null; el.innerHTML = '<div id="po"><p class="po-fail">포지셔닝 자료를 불러오지 못했습니다. 잠시 뒤 새로고침해 주세요.</p></div>'; return; }
+      catch (e) { st.loading = null; el.innerHTML = '<div id="po"><p class="po-fail">포지셔닝 자료를 불러오지 못했습니다. 잠시 뒤 새로고침해 주십시오.</p></div>'; return; }
       try { render(); } catch (e) { console.error("positioning", e); el.innerHTML = '<div id="po"><p class="po-fail">화면을 그리지 못했습니다.</p></div>'; return; }
       st.built = true;
     }

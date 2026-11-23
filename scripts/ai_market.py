@@ -245,7 +245,7 @@ def parse_s1(t):
         if d and d not in q and b in q:
             q[d] = {"q": _q(d), "end": d, "usd": round(q[b]["usd"] * k / 1e6) * 1e6, "kind": "derived",
                     "where": f"S-1 문구 '{_q(b)}의 {m.group(2)}배'로 계산(금액 칸은 빈칸)"}
-            pending.append({"what": f"{_q(d)} 매출 금액", "note": "서류에 금액 칸이 비어 있어 배수로 계산한 추정치예요. 수정 S-1에서 확정돼요."})
+            pending.append({"what": f"{_q(d)} 매출 금액", "note": "서류에 금액 칸이 비어 있어 배수로 계산한 추정치입니다. 수정 S-1에서 확정됩니다."})
     # 4) 런레이트: 'our Run-Rate Revenue was $ as of October 31, 2026' (빈칸) 또는 '$123.4 billion'
     run = None
     for m in re.finditer(r"Run-Rate Revenue was \$ ?(?:([\d,.]+) ?(billion|million))? ?as of ([A-Z][a-z]+ \d{1,2}, \d{4})", t):
@@ -253,7 +253,7 @@ def parse_s1(t):
         if m.group(1):
             run = {"date": d, "usd": _usd(m.group(1), m.group(2))}
             break
-        pending.insert(0, {"what": f"런레이트({d} 기준)", "note": "서류에 금액 칸이 비어 있어요. 로드쇼 전 수정 S-1에서 채워질 가능성이 커요."})
+        pending.insert(0, {"what": f"런레이트({d} 기준)", "note": "서류에 금액 칸이 비어 있습니다. 로드쇼 전에 나올 수정 S-1에서 채워질 가능성이 큽니다."})
         break
     defn = re.search(r"Run-Rate Revenue ?” is an operating metric.{20,500}?multiplied by 1[23]\.(?:.{0,300}?multiplied by 1[23]\.)?", t)
     return {"quarters": sorted(q.values(), key=lambda x: x["end"]), "run_rate": run, "pending": pending,
