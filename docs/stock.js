@@ -40,7 +40,7 @@
     "하락 추세": ["s4", "가격이 200일선 아래에 있고 200일선도 내려가고 있습니다. 피하는 게 좋습니다."],
     "바닥 다지기": ["", "뚜렷한 방향 없이 횡보하는 구간입니다."],
   };
-  // 흐름판의 다섯 단계를 와인스타인 Stage 1~4 번호로(레이더 배지와 같은 이름). 상승 전환 시도는 1에서 2로 넘어가는 중.
+  // 상황판의 다섯 단계를 와인스타인 Stage 1~4 번호로(레이더 배지와 같은 이름). 상승 전환 시도는 1에서 2로 넘어가는 중.
   const STAGE_NO = { "상승 추세": "Stage 2", "상승 전환 시도": "Stage 1→2", "상승 둔화": "Stage 3", "하락 추세": "Stage 4", "바닥 다지기": "Stage 1" };
   const stageText = (st) => STAGE_NO[st] ? `${STAGE_NO[st]} · ${st}` : st;
   const RANGES = [["3m", "3개월", 63], ["6m", "6개월", 126], ["1y", "1년", 252], ["2y", "2년", 9999]];
@@ -400,7 +400,7 @@
       ${m ? `<section class="sk-sec" id="skStat"><h4>🛡️ 상태와 위험 관리</h4>${statHtml}</section>` : ""}
       ${hxHtml}${supHtml}${indHtml}${secHtml}${prHtml}
       ${!m ? `<p class="sk-note">이 종목은 산업 강도판의 세부 산업(바구니)에 들어 있지 않아서 수익률·추세·RS 값이 없습니다.${KR ? " 수급 표도 바구니에 든 종목만 모읍니다." : ""}</p>` : ""}
-      ${none ? `<p class="sk-none">이 종목은 흐름판에 모인 정보가 많지 않습니다. 아래 링크에서 더 보실 수 있습니다.</p>` : ""}
+      ${none ? `<p class="sk-none">이 종목은 상황판에 모인 정보가 많지 않습니다. 아래 링크에서 더 보실 수 있습니다.</p>` : ""}
       <section class="sk-sec" id="skLinks"><h4>🔗 바깥에서 더 보기</h4><div class="sk-links">${links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${t} ↗</a>`).join("")}</div></section>`;
     $$(".sk-ind[data-ind]", box).forEach((b) => b.addEventListener("click", () => {
       const bd = window.__isBoard && window.__isBoard();

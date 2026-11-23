@@ -223,11 +223,11 @@ def rs_store(ln, n):
     return [None] * (n - len(out)) + out[-n:]
 
 
-# ── 인더스트리 액션: 종목이 속한 업종이 시장 흐름판(docs/data/<시장>.json)에서 상위권인지 본다 ──
+# ── 인더스트리 액션: 종목이 속한 업종이 시장 상황판(docs/data/<시장>.json)에서 상위권인지 본다 ──
 # 2026-11-20 사용자 결정. 옛 방식(차트북에 담은 같은 딱지 종목 3개 이상끼리 비교)은 표본이 적어 흔들렸고,
-# 지난 8개월 동안 묶음의 평균 48%를 액션으로 잡아 가려내지 못했다. 흐름판은 한국·미국·일본 세부 산업을
-# 업종마다 여러 종목으로 계산해 매일 순위를 매긴다. 상위권 = 종합 순위 상위 25%(흐름판의 top).
-# 흐름판에 없는 종목(중국·대만 전부, 미국 일부)은 판정하지 않는다(사용자 결정).
+# 지난 8개월 동안 묶음의 평균 48%를 액션으로 잡아 가려내지 못했다. 상황판은 한국·미국·일본 세부 산업을
+# 업종마다 여러 종목으로 계산해 매일 순위를 매긴다. 상위권 = 종합 순위 상위 25%(상황판의 top).
+# 상황판에 없는 종목(중국·대만 전부, 미국 일부)은 판정하지 않는다(사용자 결정).
 FLOW_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "docs", "data")
 FLOW_MARKETS = ("KR", "US", "JP")
 FLOW_MAX_AGE = 7  # 기준일이 이보다 오래된 시장 자료는 쓰지 않는다(일)
@@ -242,10 +242,10 @@ def load_flow(flow_dir=FLOW_DIR, today=None):
         try:
             data = json.load(open(os.path.join(flow_dir, f"{mk}.json"), encoding="utf-8"))
             if (today - dt.date.fromisoformat(data["basis_date"])).days > FLOW_MAX_AGE:
-                print("흐름판 자료가 오래됨", mk, data["basis_date"], file=sys.stderr)
+                print("상황판 자료가 오래됨", mk, data["basis_date"], file=sys.stderr)
                 continue
         except Exception as e:
-            print("흐름판 자료 못 읽음", mk, e, file=sys.stderr)
+            print("상황판 자료 못 읽음", mk, e, file=sys.stderr)
             continue
         for ind in data["items"]:
             if not ind.get("top") or ind.get("rank") is None:
@@ -261,7 +261,7 @@ def load_flow(flow_dir=FLOW_DIR, today=None):
 
 
 def add_ia(tabs_out, flow=None):
-    """흐름판 상위권 업종에 든 종목에 ia(업종 정보, 여러 업종이면 순위가 가장 높은 것)를 붙인다. 붙인 종목 수를 돌려준다."""
+    """상황판 상위권 업종에 든 종목에 ia(업종 정보, 여러 업종이면 순위가 가장 높은 것)를 붙인다. 붙인 종목 수를 돌려준다."""
     flow = load_flow() if flow is None else flow
     found = 0
     for tab_id, sections in tabs_out:

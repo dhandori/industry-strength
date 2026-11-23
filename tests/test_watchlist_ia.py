@@ -1,4 +1,4 @@
-"""차트북 인더스트리 액션 검사: 종목이 속한 업종이 시장 흐름판에서 상위권일 때만 액션으로 본다."""
+"""차트북 인더스트리 액션 검사: 종목이 속한 업종이 시장 상황판에서 상위권일 때만 액션으로 본다."""
 import datetime as dt
 import json
 import sys
@@ -43,7 +43,7 @@ class IaTest(unittest.TestCase):
         nv, hp, tw = t[0][1][0]["items"]
         self.assertEqual((nv["ia"]["g"], nv["ia"]["k"], nv["ia"]["of"], nv["ia"]["d"]), ("AI 가속기", 2, 3, 12))
         self.assertNotIn("ia", hp)  # 상위권이 아닌 업종
-        self.assertNotIn("ia", tw)  # 흐름판에 없는 종목은 판정하지 않는다
+        self.assertNotIn("ia", tw)  # 상황판에 없는 종목은 판정하지 않는다
 
     def test_best_ranked_industry_wins(self):
         t = self.tabs(["AMD"])
