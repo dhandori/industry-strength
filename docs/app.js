@@ -168,7 +168,7 @@
       if (!state.data[m]) state.data[m] = await getJSON(`data/${m}.json`);
       if (m === "KR" && window.__supply) await window.__supply.attach(state.data[m]);   // 한국 수급(없어도 화면은 그대로)
     } catch (e) {
-      $("#meta").textContent = "데이터를 불러오지 못했어요. 잠시 후 새로고침해 주세요.";
+      $("#meta").textContent = "데이터를 불러오지 못했습니다. 잠시 후 새로고침해 주십시오.";
       return;
     }
     render();
@@ -211,10 +211,10 @@
     const card = $("#sectorCard"), list = d && d.sectors;
     window.__secflow && window.__secflow.show(state.market);
     $("#secNote").textContent = state.market === "KR"
-      ? "한국 업종 20개를 대표 업종 ETF(KODEX 반도체, PLUS K방산 등) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 묶인 산업만 보여요. 원전, 전자부품, 통신, 리츠는 아직 칸이 없어요."
+      ? "한국 업종 20개를 대표 업종 ETF(KODEX 반도체, PLUS K방산 등) 종가로 봅니다. 칸을 누르면 아래 세부 산업 순위에 그 업종에 묶인 산업만 남습니다. 원전, 전자부품, 통신, 리츠는 아직 칸이 없습니다."
       : state.market === "JP"
-      ? "도쿄 증시 TOPIX-17 업종을 노무라 NEXT FUNDS 업종 ETF(1617~1633) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 묶인 산업만 보여요. 업종 ETF는 거래가 적어 하루 등락이 지수와 조금 다를 수 있어요."
-      : "S&P 500 큰 업종 11개를 섹터 ETF(XLK, XLE 등) 종가로 봐요. 칸을 누르면 아래 세부 산업 순위에서 그 업종에 속한 산업만 보여요. 세부 산업은 가장 가까운 큰 업종 하나에 넣어 묶었어요.";
+      ? "도쿄 증시 TOPIX-17 업종을 노무라 NEXT FUNDS 업종 ETF(1617~1633) 종가로 봅니다. 칸을 누르면 아래 세부 산업 순위에 그 업종에 묶인 산업만 남습니다. 업종 ETF는 거래가 적어서 하루 등락이 지수와 조금 다를 수 있습니다."
+      : "S&P 500 큰 업종 11개를 섹터 ETF(XLK, XLE 등) 종가로 봅니다. 칸을 누르면 아래 세부 산업 순위에 그 업종에 속한 산업만 남습니다. 세부 산업은 저마다 가장 가까운 큰 업종 하나에 넣어 묶었습니다.";
     $("#sectors").hidden = !(list && list.length);
     card.hidden = !(list && list.length) && !(window.__secflow && window.__secflow.has(state.market));
     if (!(list && list.length)) { $("#secSub").textContent = ""; return; }
@@ -254,7 +254,7 @@
     const tone = s2 / Math.max(1, d.items.length) >= 0.3 ? "up" : s2 / Math.max(1, d.items.length) <= 0.1 ? "down" : "";
     // 카드 4장은 같은 틀(이름표 → 큰 숫자 → 비교 한 줄)로 맞춘다. 긴 설명은 ? 도움말로 뺐다(2026-11-16 배치 정리).
     const n = Math.max(1, d.items.length);
-    const regHelp = "지수가 50일·200일선 위인지만 본 판정이에요. ‘이격’은 종가가 200일선보다 몇 % 위·아래인지로, 판정에는 넣지 않은 참고 숫자예요. 지수마다 평소 벌어지는 크기가 달라 지난 1년 범위와 함께 보여 줘요." + (state.market === "JP" ? "" : " 분산일·거래량·신고가 수까지 합친 판정은 레이더 ‘시장 날씨’에 있어서 서로 다를 수 있어요.");
+    const regHelp = "지수가 50일선과 200일선 위에 있는지만 보고 내린 판정입니다. ‘이격’은 종가가 200일선보다 몇 % 위나 아래에 있는지 적은 참고 숫자로, 판정에는 넣지 않았습니다. 지수마다 평소 벌어지는 크기가 달라서 지난 1년 범위와 함께 보여 드립니다." + (state.market === "JP" ? "" : " 분산일·거래량·신고가 수까지 합친 판정은 레이더 ‘시장 날씨’에 따로 있어서, 여기 판정과 다를 수 있습니다.");
     const help = (t, label) => `<button class="help" type="button" aria-label="${label} 뜻" data-help="${esc(t)}">?</button>`;
     $("#tiles").innerHTML = `
       <div class="tile tile-main"><div class="k">상승 추세 산업</div>
@@ -276,7 +276,7 @@
 
   // ---------- signals
   const SHOW = 5, SHOW_WIDE = 10;   // 5개가 넘는 신호는 두 칸 너비(벤토)로 키우고 10개까지 바로 보인다
-  const weakHelp = "순위는 올랐지만 가격은 아직 하락하거나 힘이 빠진 산업이에요. 덜 빠져서 순위가 오른 경우일 수 있으니 추세 확인이 먼저예요.";
+  const weakHelp = "순위는 올랐지만 가격은 아직 내리고 있거나 힘이 빠진 산업입니다. 덜 빠져서 순위만 오른 것일 수 있으니 추세부터 확인해야 합니다.";
   function renderSignals(d) {
     // 강세 신호 3종은 한 줄, 주의 신호 2종은 그 아래 한 줄. 0개인 카드는 한 줄로 접는다.
     const rows = [
@@ -288,7 +288,7 @@
         { t: "RS 신고가", c: "var(--good)", help: "시장 대비 강도(RS선)가 1년 중 최고인 산업" },
       ] },
       { title: "주의 신호", groups: [
-        { t: "50일선 돌파", c: "var(--accent)", help: "바구니 지수가 오늘 50일선 위로 올라온 산업 · 전환 초입일 수 있어요" },
+        { t: "50일선 돌파", c: "var(--accent)", help: "바구니 지수가 오늘 50일선 위로 올라온 산업 · 추세가 막 바뀌기 시작한 것일 수 있습니다" },
         { t: "약화 경고", c: "var(--down)", any: ["상위권 이탈", "50일선 이탈"], help: "상위 25%에서 밀려났거나 50일선 아래로 내려간 산업" },
       ] },
     ];
@@ -406,22 +406,22 @@
       const nv = await loadNaver();
       if (state.market !== mk || state.exSrc !== "naver") return;
       if (!nv || !nv.industries) {
-        el.innerHTML = `<p class="empty">네이버 업종 자료가 아직 없어요. 한국장 마감 뒤 자동 수집이 한 번 끝나면 채워져요.</p>`;
+        el.innerHTML = `<p class="empty">네이버 업종 자료가 아직 없습니다. 한국장 마감 뒤 자동 수집이 한 번 돌고 나면 채워집니다.</p>`;
         $("#exSub").textContent = "네이버 업종"; return;
       }
       if (!nv.periods_available.includes(k)) {
-        el.innerHTML = `<p class="empty">네이버 업종의 ${PLABEL[k]} 등락률은 매일 쌓은 기록을 이어 붙여 계산해요. 기록이 ${k.replace("ret", "")}거래일 쌓이면 보여 드릴게요(지금 ${nv.days_recorded}일치).<br>1일 등락률은 지금 바로 볼 수 있어요.</p>`;
+        el.innerHTML = `<p class="empty">네이버 업종의 ${PLABEL[k]} 등락률은 매일 쌓은 기록을 이어 붙여 계산합니다. 기록이 ${k.replace("ret", "")}거래일 쌓이면 보여 드리겠습니다(지금 ${nv.days_recorded}일치).<br>1일 등락률은 지금 바로 보실 수 있습니다.</p>`;
         $("#exSub").textContent = `네이버 업종 · ${nv.basis_date} 종가 기준`; return;
       }
       tree = naverTree(nv, k);
       $("#exSub").innerHTML = `네이버 업종 ${nv.n_industries}개 · ${nv.basis_date} 종가 · ${PLABEL[k]} <a class="xl-inline" href="${nv.source_url}" target="_blank" rel="noopener">네이버 업종별 시세 ↗</a>`;
-      note = (k === "chg1" ? "업종 등락률은 네이버가 발표한 값 그대로예요." : "여러 날 등락률은 네이버 업종 하루 등락률을 이어 곱했어요.") + " 섹터는 소속 업종을 종목 수로 가중 평균했어요. 업종 안 종목은 '네이버' 버튼으로 네이버 화면에서 보세요.";
+      note = (k === "chg1" ? "업종 등락률은 네이버가 발표한 값을 그대로 씁니다." : "여러 날 등락률은 네이버 업종의 하루 등락률을 이어 곱해 계산했습니다.") + " 섹터는 소속 업종을 종목 수로 가중 평균했습니다. 업종 안 종목은 '네이버' 버튼을 누르면 네이버 화면에서 볼 수 있습니다.";
     } else {
       tree = boardTree(d, k);
       $("#exSub").textContent = `강도판 분류 · ${d.basis_date} 종가 · ${PLABEL[k]} 등락률`;
-      note = "분류·세부 산업 등락률은 구성 종목 등락률의 단순 평균(종목마다 같은 비중)이에요.";
+      note = "분류와 세부 산업 등락률은 구성 종목 등락률을 단순 평균한 값입니다(종목마다 같은 비중).";
     }
-    $("#exNote").textContent = `큰 분류를 누르면 세부 업종이 펼쳐지고, 강도판 분류에서는 세부 업종을 누르면 종목까지 펼쳐져요. ${note} 빨강은 상승, 파랑은 하락이에요. 네이버·TV·Finviz 버튼은 새 창으로 열려요.`;
+    $("#exNote").textContent = `큰 분류를 누르면 세부 업종이 펼쳐지고, 강도판 분류에서는 세부 업종을 누르면 종목까지 나옵니다. ${note} 빨강은 상승, 파랑은 하락입니다. 네이버·TV·Finviz 버튼은 새 창으로 열립니다.`;
     const sorted = (arr) => arr.slice().sort((a, b) => (b.v ?? -1e9) - (a.v ?? -1e9));
     const scale = (arr) => Math.max(1e-9, ...arr.map((x) => Math.abs(x.v ?? 0)));
     const bar = (v, mx) => v == null ? `<span class="ex-bar"></span>`
@@ -537,12 +537,12 @@
         <div class="rc4">${rsOf(i)}<span class="rc-dist">RS선 1년 최고 대비 <b>${i.rs_hi_dist == null ? "–" : i.rs_hi_dist.toFixed(1) + "%"}</b> · 20일 시장 대비 <b class="ret ${cls(i.rs_ex20)}">${i.rs_ex20 == null ? "–" : (i.rs_ex20 > 0 ? "+" : "") + i.rs_ex20.toFixed(1) + "%p"}</b></span></div>
       </button>`).join("");
     if (!rows.length) {
-      const msg = "조건에 맞는 산업이 없어요. 검색어나 필터를 바꿔 보세요.";
+      const msg = "조건에 맞는 산업이 없습니다. 검색어나 필터를 바꿔 보십시오.";
       $("#rankTable tbody").innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
       $("#rankCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
     }
     $$("#rankTable tbody tr[data-id], #rankCards .rcard").forEach((tr) => tr.addEventListener("click", () => openDetail(tr.dataset.id)));
-    $("#tableNote").innerHTML = `파란 띠는 종합 순위 상위 25%(${d.top_cut}위 이내)예요. 막대 길이는 전체 산업 중 몇 % 위치인지, 막대 옆 숫자는 종합 강도 점수예요. 수익률 아래 작은 숫자는 그 기간 수익률 순위예요.` + (sup ? sup.tableNote(d) : "");
+    $("#tableNote").innerHTML = `파란 띠는 종합 순위 상위 25%(${d.top_cut}위 이내)를 표시합니다. 막대 길이는 전체 산업 가운데 몇 % 자리에 있는지를, 막대 옆 숫자는 종합 강도 점수를 나타냅니다. 수익률 아래 작은 숫자는 그 기간 수익률 순위입니다.` + (sup ? sup.tableNote(d) : "");
   }
 
   // ---------- RS 강한 종목: 시장 안 전체 종목을 한 줄로 세운다 (같은 종목이 여러 산업에 있으면 한 번만).
@@ -599,7 +599,7 @@
         <div class="rc-inds">${indBtns(inds)}</div>
       </div>`).join("");
     if (!total) {
-      const msg = "조건에 맞는 종목이 없어요.";
+      const msg = "조건에 맞는 종목이 없습니다.";
       $("#rsstTable tbody").innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:24px">${msg}</td></tr>`;
       $("#rsstCards").innerHTML = `<p class="none" style="padding:16px 0">${msg}</p>`;
     }
@@ -608,8 +608,8 @@
     more.textContent = state.rsstAll ? `상위 ${LIMIT}개만 보기 ‹` : `전체 ${total}개 보기 ›`;
     $$("#rsstTable .ind-link, #rsstCards .ind-link").forEach((b) => b.addEventListener("click", () => openDetail(b.dataset.id)));
     $("#rsstSub").textContent = `${d.basis_date} 종가 · ${RSST_LABEL[k]} 높은 순 · ${total}종목`;
-    const pending = (!hasRs && k === "rs_rating") || (!has200 && k === "ret200") ? " 지금 데이터에는 이 값이 아직 없어서 20일 수익률 순으로 보여 드려요. 다음 자동 갱신부터 채워져요." : "";
-    $("#rsstNote").textContent = `시장 안 전체 종목을 한 줄로 세웠어요. 여러 산업에 함께 속한 종목은 한 번만 나오고, 소속 산업을 누르면 그 산업의 차트·상세가 열려요. RS 지수는 산업 순위의 RS 지수와 같은 방식(최근 3개월 40%·6·9·12개월 각 20%)으로 종목끼리 비교한 1~99 백분위예요. '시장보다 강함'은 종목 RS선(주가÷시장 지수)이 50일 평균 위라는 뜻이에요.${pending}`;
+    const pending = (!hasRs && k === "rs_rating") || (!has200 && k === "ret200") ? " 지금 데이터에는 이 값이 아직 없어서 20일 수익률 순으로 보여 드립니다. 다음 자동 갱신부터 채워집니다." : "";
+    $("#rsstNote").textContent = `시장 안 전체 종목을 한 줄로 세웠습니다. 여러 산업에 함께 속한 종목은 한 번만 나오고, 소속 산업을 누르면 그 산업의 차트와 상세가 열립니다. RS 지수는 산업 순위에 쓰는 RS 지수와 같은 방식(최근 3개월 40%, 6·9·12개월 각 20%)으로 종목끼리 비교한 1~99 백분위입니다. '시장보다 강함'이 붙은 종목은 RS선(주가÷시장 지수)이 50일 평균 위에 있습니다.${pending}`;
   }
 
   // ---------- heatmap
@@ -710,17 +710,18 @@
     // 한 줄 결론: 가장 강한 묶음 2곳과 상승 추세가 하나도 없는 묶음.
     const strong = rows.filter((r) => r.s2 > 0).slice(0, 2), none = rows.filter((r) => r.s2 === 0);
     const unit = mode === "group" ? "분류" : "산업";
+    const [unitTopic, unitSubj] = mode === "group" ? ["분류는", "분류가"] : ["산업은", "산업이"];   // 받침 따라 조사가 갈린다
     const verdict = !rows.length ? "" : (strong.length
-      ? `상승 추세 종목이 가장 많은 ${unit}는 ${strong.map((r) => `<b>${esc(r.name)}</b>(${pct(r.s2)})`).join(", ")}예요.`
-      : `상승 추세 종목이 있는 ${unit}가 없어요.`)
-      + (none.length && strong.length ? ` ${none.length >= 4 ? `${none.length}개 ${unit}` : none.map((r) => esc(r.name)).join(", ")}에는 상승 추세 종목이 하나도 없어요.` : "");
+      ? `상승 추세 종목이 가장 많은 ${unitTopic} ${strong.map((r) => `<b>${esc(r.name)}</b>(${pct(r.s2)})`).join(", ")}입니다.`
+      : `상승 추세 종목이 있는 ${unitSubj} 없습니다.`)
+      + (none.length && strong.length ? ` ${none.length >= 4 ? `${none.length}개 ${unit}` : none.map((r) => esc(r.name)).join(", ")}에는 상승 추세 종목이 하나도 없습니다.` : "");
     const cols = `<div class="sm-cols" aria-hidden="true"><span></span><span>${mode === "group" ? "큰 분류" : "세부 산업"}</span><span>단계 분포</span><span>상승 추세</span><span>종목</span></div>`;
     el.innerHTML = (verdict ? `<p class="sm-verdict">${verdict}</p>` : "") + head + `<div class="sm-all-bar">${bar({ ...all, name: "전체" })}</div>` + legend
       + cols + `<div class="sm-rows">${shown.map((r, k) => `<button type="button" class="sm-row" data-k="${esc(r.key)}" title="${esc(tip(r))}">
           <span class="sm-rk">${k + 1}</span><span class="sm-name"><b>${esc(r.name)}</b>${r.sub ? `<em>${esc(r.sub)}</em>` : ""}</span>
           ${bar(r)}<span class="sm-pct">${pct(r.s2)}</span><span class="sm-n">${r.c["상승 추세"]}/${r.n}</span></button>`).join("")}</div>`
       + (showAll ? "" : `<button class="ex-more" id="smMore">나머지 ${rows.length - LIM}개 더 보기 ›</button>`)
-      + (!rows.length ? `<p class="none">5종목 이상인 세부 산업이 없어요.</p>` : "");
+      + (!rows.length ? `<p class="none">5종목 이상인 세부 산업이 없습니다.</p>` : "");
     $$(".sm-row", el).forEach((b) => b.addEventListener("click", () => {
       if (mode === "item") { openDetail(b.dataset.k); return; }
       state.group = b.dataset.k; const sel = $("#groupSel"); if (sel) sel.value = b.dataset.k;
@@ -736,7 +737,7 @@
   function chartFallback(el, dates, series) {
     const last = (a) => { for (let k = a.length - 1; k >= 0; k--) if (a[k] != null) return a[k]; return null; };
     const prev = (a, n) => { const idx = a.length - 1 - n; return idx >= 0 ? a[idx] : null; };
-    el.innerHTML = `<div class="chart-fallback"><p>차트 라이브러리를 불러오지 못했어요. 최근 값을 숫자로 보여 드려요.</p>
+    el.innerHTML = `<div class="chart-fallback"><p>차트 라이브러리를 불러오지 못해서 최근 값을 숫자로 보여 드립니다.</p>
       <table class="mem-table"><thead><tr><th>항목</th><th class="num">최근</th><th class="num">5일 전</th><th class="num">20일 전</th></tr></thead><tbody>
       ${series.map(([n, a, f]) => `<tr><td><b>${n}</b></td><td class="num">${last(a) == null ? "–" : f(last(a))}</td><td class="num">${prev(a, 5) == null ? "–" : f(prev(a, 5))}</td><td class="num">${prev(a, 20) == null ? "–" : f(prev(a, 20))}</td></tr>`).join("")}
       </tbody></table></div>`;
@@ -832,7 +833,7 @@
       score: it.rs_rating, up: it.rs_above_ma50, hiDist: it.rs_hi_dist, who: "이 산업" });
     try {
       if (!state.series[state.market]) state.series[state.market] = await getJSON(`data/${state.market}_series.json`);
-    } catch (e) { $("#cPrice").textContent = "차트 데이터를 불러오지 못했어요."; return; }
+    } catch (e) { $("#cPrice").textContent = "차트 데이터를 불러오지 못했습니다."; return; }
     if (state.openId !== id) return;
     drawDetail(it);
     if (d._sup && window.__supply) window.__supply.chart(it, d, state.series[state.market]);
@@ -880,8 +881,8 @@
   // 바구니마다 평소 벌어지는 크기가 달라, 지난 1년(시리즈 260거래일) 범위 안에서 지금 자리를 함께 적는다.
   function gapRangeText(lo, hi, p, days) {
     const r1 = (v) => Math.round(v * 10) / 10 || 0;
-    const where = p >= 90 ? " 과거와 견줘 많이 벌어진 편이에요." : p <= 10 ? " 과거와 견줘 많이 눌린 편이에요." : "";
-    return `${days >= 250 ? "지난 1년" : `최근 ${days}거래일`} 범위 ${fmtPct(r1(lo))} ~ ${fmtPct(r1(hi))} · 이 기간 중 지금보다 낮았던 날이 ${Math.round(p)}%예요.${where}`;
+    const where = p >= 90 ? " 과거와 견줘 많이 벌어진 편입니다." : p <= 10 ? " 과거와 견줘 많이 눌린 편입니다." : "";
+    return `${days >= 250 ? "지난 1년" : `최근 ${days}거래일`} 범위 ${fmtPct(r1(lo))} ~ ${fmtPct(r1(hi))} · 이 기간 중 지금보다 낮았던 날이 ${Math.round(p)}%입니다.${where}`;
   }
   function gap200Of(S, id) {
     const s = S && S.items && S.items[id];
@@ -916,8 +917,8 @@
       const sg = (v) => `<b class="ret ${cls(v)}">${fmtPct(v)}</b>`;
       if (k0 >= 0 && k1 > k0) {
         const rt = r(s.close), rb = r(bc), ex = rt - rb;
-        $("#capBench").innerHTML = `${esc(bn)} · 같은 기간 — 대상 ${sg(rt)} · ${esc(bn)} ${sg(rb)} → 지수 대비 <b class="ret ${cls(ex)}">${ex > 0 ? "+" : ""}${ex.toFixed(1)}%p</b>`;
-      } else $("#capBench").textContent = `${bn} · 같은 기간 비교할 값이 부족해요.`;
+        $("#capBench").innerHTML = `${esc(bn)} · 같은 기간, 대상 ${sg(rt)} · ${esc(bn)} ${sg(rb)} → 지수 대비 <b class="ret ${cls(ex)}">${ex > 0 ? "+" : ""}${ex.toFixed(1)}%p</b>`;
+      } else $("#capBench").textContent = `${bn} · 같은 기간 비교할 값이 부족합니다.`;
     }
     if (!hasLW()) {
       $("#lgPrice").innerHTML = ""; $("#lgRs").innerHTML = "";

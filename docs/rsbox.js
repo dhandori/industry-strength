@@ -109,7 +109,7 @@
   };
 
   function whyHtml(kind) {
-    return `<details class="rs-why"><summary>RS가 왜 중요한가요?</summary>${(WHY[kind] || WHY.stock).map(([h, t]) => `<p><b>${esc(h)}</b> ${esc(t)}</p>`).join("")}</details>`;
+    return `<details class="rs-why"><summary>RS가 왜 중요한가</summary>${(WHY[kind] || WHY.stock).map(([h, t]) => `<p><b>${esc(h)}</b> ${esc(t)}</p>`).join("")}</details>`;
   }
 
   // opts: { d, kind, b2, score, up, hiDist, who, scope }

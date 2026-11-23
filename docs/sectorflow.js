@@ -84,7 +84,7 @@
     const vs = p.ret != null && mret != null && kind !== "bench" ? p.ret - mret : null;
     const flags = [];
     if (vs != null) flags.push(`<span class="sf-vs ${cls(vs)}">시장보다 ${fmt(vs, 1)}%p</span>`);
-    if (p.sparse) flags.push(`<span class="sf-flag" title="오늘 거래가 적어서(체결된 분 ${p.traded}/391) 선이 계단처럼 보여요. 흐름보다는 끝 숫자를 보세요.">거래 적음</span>`);
+    if (p.sparse) flags.push(`<span class="sf-flag" title="오늘은 거래가 적어서(체결된 분 ${p.traded}/391) 선이 계단처럼 보입니다. 선의 흐름보다 끝 숫자를 보십시오.">거래 적음</span>`);
     if (p.coarse) flags.push(`<span class="sf-flag">일봉으로 그림</span>`);
     if (p.missing) flags.push(`<span class="sf-flag">장중 자료 없음</span>`);
     const stocks = (s.stocks || []).map((x) => {
@@ -131,7 +131,7 @@
     $("#sfBench").innerHTML = d.bench.map((s) => card(s, period, mret, "bench")).join("");
     $("#sfGrid").innerHTML = d.sectors.map((s) => card(s, period, mret, "sector")).join("");
     const mas = { "20d": "주황 = 5일선", "60d": "주황 = 20일선", "200d": "초록 = 50일선, 보라 = 200일선" }[period];
-    $("#sfLegend").innerHTML = `선은 ${BASE_NAME[period]}를 0%로 놓고 그린 흐름이에요. 점선 위로 올라간 부분은 빨강, 아래는 파랑이고 점은 기간 중 최고·최저예요.${mas ? ` ${mas}.` : ""} ${HOT[period]}% 이상 움직이면 칸을 칠해요. 숫자는 모두 정규장 종가 기준이라 장 마감 뒤 애프터마켓 가격과 다를 수 있어요.${market === "US" ? " 이 카드는 위 섹터 워치(큰 업종 11개)보다 잘게 나눈 세부 업종 ETF예요. 장중 시각은 뉴욕 시각이에요." : ""} 카드를 누르면 큰 차트가 열려요.`;
+    $("#sfLegend").innerHTML = `선은 ${BASE_NAME[period]}를 0%로 놓고 그렸습니다. 점선 위로 올라간 부분은 빨강, 아래는 파랑이고, 점은 기간 중 최고·최저입니다.${mas ? ` ${mas}.` : ""} ${HOT[period]}% 이상 움직이면 칸을 칠합니다. 숫자는 모두 정규장 종가 기준이라 장 마감 뒤 애프터마켓 가격과 다를 수 있습니다.${market === "US" ? " 이 카드들은 위 섹터 워치(큰 업종 11개)보다 잘게 나눈 세부 업종 ETF이고, 장중 시각은 뉴욕 시각입니다." : ""} 카드를 누르면 큰 차트가 열립니다.`;
   }
 
   // ---------- 큰 차트
@@ -186,7 +186,7 @@
     const LW = window.LightweightCharts;
     const line = p.line || [];
     if (!LW || !LW.createChart || line.length < 2) {
-      el.innerHTML = `<div class="sf-empty">${line.length < 2 ? "이 기간 그림 자료가 없어요." : "차트 도구를 불러오지 못했어요."}</div>`;
+      el.innerHTML = `<div class="sf-empty">${line.length < 2 ? "이 기간은 그림 자료가 없습니다." : "차트 도구를 불러오지 못했습니다."}</div>`;
     } else {
       const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
       const intraday = period === "1d" || (period === "5d" && !p.coarse);
@@ -222,7 +222,7 @@
     }
     const mas = Object.keys(p.ma || {});
     $("#sfmLegend").innerHTML = `<span><i class="lg up"></i>점선(0%) 위</span><span><i class="lg down"></i>점선 아래</span>` +
-      mas.map((w) => `<span><i class="lg ${MA_CLS[w]}"></i>${MA_NAME[w]}</span>`).join("") + (p.sparse ? `<span class="sf-flag">거래 적음: 선이 계단처럼 보일 수 있어요</span>` : "");
+      mas.map((w) => `<span><i class="lg ${MA_CLS[w]}"></i>${MA_NAME[w]}</span>`).join("") + (p.sparse ? `<span class="sf-flag">거래 적음: 선이 계단처럼 보일 수 있습니다</span>` : "");
     const stocks = s.stocks || [];
     $("#sfmStocks").innerHTML = stocks.length ? `<h4>소속 종목 시가총액 상위 5 <span class="sub">정규장 종가 기준</span></h4>
       <table class="sf-tbl"><thead><tr><th>종목</th>${PERIODS.map(([k, n]) => `<th${k === period ? ' class="on"' : ""}>${n}</th>`).join("")}</tr></thead>

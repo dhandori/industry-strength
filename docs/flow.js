@@ -72,9 +72,9 @@
     const alive = rise.filter((m) => ALIVE.includes(m.it.stage)).length;
     const r = rise.length ? alive / rise.length : 0;
     const q = !rise.length ? ""
-      : r >= 0.5 ? `<p class="fl-q good">강해진 세부 산업 ${rise.length}개 중 <b>${alive}개</b>는 가격도 오르고 있어요. 실제로 돈이 들어오는 <b>진짜 강세</b>에 가까워요.</p>`
-      : alive ? `<p class="fl-q mid">강해진 세부 산업 ${rise.length}개 중 가격까지 오르는 곳은 <b>${alive}개</b>뿐이에요. 순환의 초입일 수 있으니 <b>추세↑</b> 표시가 붙은 산업부터 보세요.</p>`
-      : `<p class="fl-q warn">강해진 세부 산업 ${rise.length}개 모두 가격 추세는 아직 약해요. 실제로 올랐다기보다 <b>덜 빠져서</b> 순위만 오른 것일 수 있어요.</p>`;
+      : r >= 0.5 ? `<p class="fl-q good">강해진 세부 산업 ${rise.length}개 중 <b>${alive}개</b>는 가격도 오르고 있습니다. 돈이 실제로 들어오는 <b>진짜 강세</b>에 가깝습니다.</p>`
+      : alive ? `<p class="fl-q mid">강해진 세부 산업 ${rise.length}개 중 가격까지 오르는 곳은 <b>${alive}개</b>뿐입니다. 순환이 막 시작되는 단계일 수 있으니 <b>추세↑</b> 표시가 붙은 산업부터 보시면 됩니다.</p>`
+      : `<p class="fl-q warn">강해진 세부 산업 ${rise.length}개 모두 가격 추세는 아직 약합니다. 값이 실제로 올랐다기보다 <b>덜 빠져서</b> 순위만 올라간 것일 수 있습니다.</p>`;
     return `<div class="fl-head">
       <div class="fl-side"><span class="fl-lab">힘이 빠지는 곳</span><div class="fl-chips">${side(dns, "down", "뚜렷한 곳 없음")}</div></div>
       <div class="fl-arrow" aria-hidden="true">→</div>
@@ -98,7 +98,7 @@
     for (const g of gf) (by[zoneOf(g)] || (by[zoneOf(g)] = [])).push(g);
     const line = (g) => {
       const z = zoneOf(g), a = g.then ?? g.now, b = g.now, x = cross(g);
-      const tip = `${g.g} · ${st.k}일 전 강도 ${Math.round(a)} → 지금 ${Math.round(b)} (${sgn(g.delta ?? 0)}) · 상위 25% ${g.top}/${g.n}개 · 누르면 아래 순위표를 이 분류로 걸러요`;
+      const tip = `${g.g} · ${st.k}일 전 강도 ${Math.round(a)} → 지금 ${Math.round(b)} (${sgn(g.delta ?? 0)}) · 상위 25% ${g.top}/${g.n}개 · 누르면 아래 순위표에 이 분류만 남습니다`;
       return `<button class="mv-row z-${z}" type="button" data-group="${esc(g.g)}" title="${esc(tip)}" aria-label="${esc(tip)}">
         <span class="mv-name">${esc(g.g)}${x ? `<em class="mv-x ${x}">${x === "in" ? "강세 진입" : "강세 이탈"}</em>` : ""}</span>
         <span class="mv-track" aria-hidden="true"><i class="mv-mid"></i>
@@ -127,11 +127,11 @@
   const mapHelp = () => `<details class="fl-help"${helpOpen ? " open" : ""}>
       <summary>강도 이동판 읽는 법</summary>
       <ul>
-        <li><b>한 줄 = 큰 분류 하나</b>예요. 강도는 그 분류 세부 산업의 순위를 점수로 바꿔 평균 낸 값이에요(1위 = 100, 꼴찌 = 0${smoothOf(st.k) > 1 ? `, ${smoothOf(st.k)}일 평균` : ""}).</li>
-        <li><b>빈 점 = ${st.k}일 전, 화살촉 = 지금</b>이에요(조금만 움직였으면 빈 점은 화살촉에 가려 안 보여요). 화살표가 길수록 많이 움직였고, 가운데 세로선(50)보다 오른쪽이면 지금 시장에서 강한 쪽이에요.</li>
-        <li><b>주도</b>(강하고 더 강해짐) → <b>식는 중</b>(강하지만 약해짐) → <b>소외</b>(약하고 더 약해짐) → <b>부상</b>(약하지만 강해짐) → 다시 주도, 이렇게 돌아요.</li>
-        <li>추세추종이라면 <b>주도</b>와 <b>강세 진입</b> 표시가 붙은 분류를 먼저 보고, <b>강세 이탈</b>·<b>식는 중</b>은 보유 비중을 점검하는 신호로 보세요.</li>
-        <li>줄을 누르면 아래 순위표가 그 분류로 걸러져요.</li>
+        <li><b>줄 하나가 큰 분류 하나</b>입니다. 강도는 그 분류에 든 세부 산업들의 순위를 점수로 바꿔 평균 낸 값입니다(1위 = 100, 꼴찌 = 0${smoothOf(st.k) > 1 ? `, ${smoothOf(st.k)}일 평균` : ""}).</li>
+        <li><b>빈 점은 ${st.k}일 전, 화살촉은 지금</b> 자리입니다. 조금만 움직였으면 빈 점이 화살촉에 가려 보이지 않습니다. 화살표가 길수록 많이 움직인 것이고, 가운데 세로선(50)보다 오른쪽에 있으면 지금 시장에서 강한 쪽입니다.</li>
+        <li>분류는 <b>주도</b>(강하고 더 강해짐)에서 <b>식는 중</b>(강하지만 약해짐), <b>소외</b>(약하고 더 약해짐), <b>부상</b>(약하지만 강해짐)을 차례로 거쳐 다시 주도로 돌아옵니다.</li>
+        <li>추세추종으로 매매하신다면 <b>주도</b>와 <b>강세 진입</b> 표시가 붙은 분류를 먼저 보시고, <b>강세 이탈</b>·<b>식는 중</b>은 들고 있는 비중을 점검하라는 신호로 받아들이시면 됩니다.</li>
+        <li>줄을 누르면 아래 순위표에 그 분류만 남습니다.</li>
       </ul>
     </details>`;
 
@@ -177,7 +177,7 @@
   function row(m, d) {
     const it = m.it, up = m.chg > 0;
     const tag = ALIVE.includes(it.stage) ? `<em class="fl-ok" title="가격도 ${esc(it.stage)}">추세↑</em>`
-      : up ? `<em class="fl-warn" title="순위는 올랐지만 가격 추세는 아직 ${esc(it.stage)}예요. 덜 빠져서 오른 순위일 수 있어요.">가격↓</em>` : "";
+      : up ? `<em class="fl-warn" title="순위는 올랐지만 가격 추세는 아직 ${esc(it.stage)}입니다. 덜 빠져서 오른 순위일 수 있습니다.">가격↓</em>` : "";
     return `<button class="fl-row" type="button" data-id="${it.id}" aria-label="${esc(it.name)} ${m.was}위에서 ${m.now}위">
       <span class="fl-name"><b>${esc(it.name)}</b>${tag}<small>${esc(it.group)}${perLine(m.per, 0)}</small></span>
       ${track(m, d)}
@@ -214,7 +214,7 @@
     const el = $("#flow");
     if (!el || !d || !d.history || !d.history.rank) return;
     const T = d.history.dates.length;
-    if (T <= st.k + smoothOf(st.k)) { el.innerHTML = `<p class="none">기록이 아직 ${st.k}거래일만큼 쌓이지 않아 그릴 수 없어요.</p>`; return; }
+    if (T <= st.k + smoothOf(st.k)) { el.innerHTML = `<p class="none">기록이 아직 ${st.k}거래일만큼 쌓이지 않아 그릴 수 없습니다.</p>`; return; }
     $("#flow-h .sub").textContent = `${md(d.history.dates[T - 1 - st.k])} → ${md(d.basis_date)} · ${st.k}거래일 동안`;
 
     const gf = groupFlow(d);
@@ -228,7 +228,7 @@
     const amp = Math.max(5, ...gf.map((g) => { const b = g.line.find((x) => x != null); return Math.max(...g.line.map((x) => x == null || b == null ? 0 : Math.abs(x - b))); })) * 1.08;
     const gRows = fold("g", gf.map((g) => {
       const c = dir(g.delta);
-      return `<button class="fl-g" type="button" data-group="${esc(g.g)}" title="${esc(g.g)} · 상위 25% ${g.top}/${g.n}개 · 누르면 아래 순위표를 이 분류로 걸러요">
+      return `<button class="fl-g" type="button" data-group="${esc(g.g)}" title="${esc(g.g)} · 상위 25% ${g.top}/${g.n}개 · 누르면 아래 순위표에 이 분류만 남습니다">
         <span class="fl-gn"><span class="fl-gt">${esc(g.g)} <em>${g.top}/${g.n}</em></span>${perLine(g.per, FLAT)}</span>
         ${spark(g.line, g.delta, amp)}
         <span class="fl-gv ${c}"><b>${Math.round(g.now)}</b><span>${g.delta == null ? "" : c === "up" ? "▲" + Math.round(g.delta) : c === "down" ? "▼" + Math.abs(Math.round(g.delta)) : Math.round(g.delta) === 0 ? "0" : (g.delta > 0 ? "+" : "−") + Math.abs(Math.round(g.delta))}</span></span></button>`;
@@ -250,11 +250,11 @@
         <div class="fl-col">
           <h3><span class="dot" style="color:var(--up)"></span>순위가 오른 세부 산업 <span class="sub">많이 오른 순</span>
             <button class="toggle fl-alive" type="button" aria-pressed="${st.alive}" title="가격도 상승 추세·상승 전환 시도인 산업만">가격도 오르는 산업만</button></h3>
-          ${rise.length ? scale + fold("r", rise.map((m) => row(m, d)), 5) : `<p class="none">${st.alive ? "순위가 오른 산업 중 가격까지 오르고 있는 곳은 없어요." : "해당 없음"}</p>`}
+          ${rise.length ? scale + fold("r", rise.map((m) => row(m, d)), 5) : `<p class="none">${st.alive ? "순위가 오른 산업 중 가격까지 오르고 있는 곳은 없습니다." : "해당 없음"}</p>`}
         </div>
         <div class="fl-col">
           <h3><span class="dot" style="color:var(--down)"></span>상위권에서 밀려난 세부 산업 <span class="sub">${st.k}일 전 상위 25%였던 산업 중</span></h3>
-          ${fall.length ? scale + fold("f", fall.map((m) => row(m, d)), 4) : `<p class="none">상위권에서 밀린 산업이 없어요.</p>`}
+          ${fall.length ? scale + fold("f", fall.map((m) => row(m, d)), 4) : `<p class="none">상위권에서 밀린 산업이 없습니다.</p>`}
         </div>
       </div>`;
     $$(".fl-row", el).forEach((b) => b.addEventListener("click", () => window.__isBoard && window.__isBoard().open(b.dataset.id)));

@@ -144,36 +144,36 @@ def analyze(fred):
         checks.append({"t": t, "on": bool(on), "v": v, "why": why})
 
     c3, c6 = official["core_ann3"], official["core_ann6"]
-    chk("근원이 3개월 이상 연속 0.3% 넘게 올랐다", streak >= 3, f"{streak}개월 연속", "한 달은 우연일 수 있지만 석 달 연속이면 추세로 봐요. 0.3%를 1년 내내 이어 가면 연 3.7%예요.")
-    chk("근원 3개월 연율이 6개월 연율보다 높다(가속)", c3 is not None and c6 is not None and c3 > c6 + 0.2, f"3개월 {c3}% · 6개월 {c6}%", "최근 석 달 속도가 반년 속도보다 빠르면 물가가 다시 빨라지는 중이에요.")
+    chk("근원이 3개월 이상 연속 0.3% 넘게 올랐다", streak >= 3, f"{streak}개월 연속", "한 달은 우연일 수 있지만 석 달 연속이면 추세로 봅니다. 매달 0.3%씩 1년 내내 오르면 연 3.7%가 됩니다.")
+    chk("근원 3개월 연율이 6개월 연율보다 높다(가속)", c3 is not None and c6 is not None and c3 > c6 + 0.2, f"3개월 {c3}% · 6개월 {c6}%", "최근 석 달 속도가 반년 속도보다 빠르면 물가가 다시 빨라지고 있습니다.")
     sx = by.get("svc_x_shelter", {})
-    chk("주거 뺀 서비스가 연 3.5% 넘게 오른다", (sx.get("ann3") or 0) > 3.5, f"3개월 연율 {sx.get('ann3')}%", "임금과 가장 가깝게 움직이는 항목이라 연준이 가장 끈질긴 물가로 봐요.")
+    chk("주거 뺀 서비스가 연 3.5% 넘게 오른다", (sx.get("ann3") or 0) > 3.5, f"3개월 연율 {sx.get('ann3')}%", "임금과 가장 가깝게 움직이는 항목이라 연준이 가장 끈질긴 물가로 봅니다.")
     st = fb.get("sticky", {})
     chk("경직 물가가 전년 대비보다 빠르게 오른다", st.get("m3") is not None and st.get("yoy") is not None and st["m3"] > st["yoy"] + 0.3,
-        f"최근 3개월 연율 {st.get('m3')}% · 전년 대비 {st.get('yoy')}%", "가격을 자주 안 바꾸는 품목(보험·학비·병원비 등)이 오르면 한번 오른 값이 오래가요.")
+        f"최근 3개월 연율 {st.get('m3')}% · 전년 대비 {st.get('yoy')}%", "가격을 자주 바꾸지 않는 품목(보험·학비·병원비 등)은 한번 오르면 그 값이 오래갑니다.")
     md = fb.get("median", {})
-    chk("중위 CPI가 연 3%를 넘는다", (md.get("m3") or 0) > 3.0, f"최근 3개월 연율 {md.get('m3')}%", "가운데 품목의 오름폭이라 일부 품목이 튄 것인지, 전체가 오르는 것인지 가려 줘요.")
+    chk("중위 CPI가 연 3%를 넘는다", (md.get("m3") or 0) > 3.0, f"최근 3개월 연율 {md.get('m3')}%", "가운데 품목의 오름폭이라, 일부 품목만 튄 것인지 전체가 오르는 것인지 가려 줍니다.")
     hot_share = round(sum(1 for r in leaf if r["hot"]) / len(leaf) * 100) if leaf else 0
-    chk("평소보다 빨리 오른 항목이 절반을 넘는다(확산)", hot_share > 50, f"{hot_share}%", "많은 항목이 동시에 빨라지면 특정 품목 문제가 아니라 전반적인 물가 압력이에요.")
+    chk("평소보다 빨리 오른 항목이 절반을 넘는다(확산)", hot_share > 50, f"{hot_share}%", "많은 항목이 한꺼번에 빨라지면 특정 품목 문제가 아니라 물가 전반에 압력이 걸린 것입니다.")
     vol_drv = [r for r in drivers if r["volatile"]]
     chk("오름을 이끈 항목이 변동성 큰 품목(항공료·중고차·의류)이 아니다", drivers and not vol_drv,
-        ", ".join(r["name"] for r in drivers) or "없음", "튀기 쉬운 품목이 이끈 오름은 다음 달 되돌려지는 경우가 많아요.")
+        ", ".join(r["name"] for r in drivers) or "없음", "튀기 쉬운 품목 때문에 오른 경우는 다음 달 되돌려질 때가 많습니다.")
     score = sum(1 for c in checks if c["on"])
     verdict = ("지속될 위험 큼", "hi") if score >= 5 else ("지켜봐야 함", "mid") if score >= 3 else ("일시적일 가능성", "lo")
 
     # ---------- 한 줄 해설(화면용 문장)
     lines = []
     if official["core_mom"] is not None:
-        lines.append(f"근원 CPI는 전월보다 {official['core_mom']:+.1f}% 올랐어요(직전 달 {official['core_prev']:+.1f}%). "
-                     f"이 속도를 1년 이어 가면 연 {c3}%(최근 3개월 기준)예요.")
+        lines.append(f"근원 CPI는 전월보다 {official['core_mom']:+.1f}% 올랐습니다(직전 달 {official['core_prev']:+.1f}%). "
+                     f"최근 3개월 속도가 1년 동안 이어지면 연 {c3}%입니다.")
     if drivers:
-        lines.append("평소보다 많이 오른 항목은 " + ", ".join(f"{r['name']} {r['now']:+.2f}%(평소 {r['norm']:+.2f}%)" for r in drivers) + "였어요.")
+        lines.append("평소보다 많이 오른 항목은 " + ", ".join(f"{r['name']} {r['now']:+.2f}%(평소 {r['norm']:+.2f}%)" for r in drivers) + "였습니다.")
     if easing:
-        lines.append("반대로 평소보다 덜 올라 물가를 누른 항목도 있어요. " + ", ".join(f"{r['name']} {r['now']:+.2f}%(평소 {r['norm']:+.2f}%)" for r in easing) + "예요.")
+        lines.append("반대로 평소보다 덜 올라 물가를 누른 건 " + ", ".join(f"{r['name']} {r['now']:+.2f}%(평소 {r['norm']:+.2f}%)" for r in easing) + "입니다.")
     sh = by.get("shelter", {})
     if sh.get("ann3") is not None:
-        lines.append(f"주거비는 3개월 연율 {sh['ann3']}%로 6개월 연율 {sh['ann6']}%보다 {'빨라졌어요' if sh['ann3'] > sh['ann6'] + 0.2 else '느려졌어요' if sh['ann3'] < sh['ann6'] - 0.2 else '비슷해요'}.")
-    lines.append(f"지속성 점검 {len(checks)}가지 중 {score}가지가 '오래간다' 쪽이라 '{verdict[0]}'으로 봐요.")
+        lines.append(f"주거비는 3개월 연율 {sh['ann3']}%로, 6개월 연율 {sh['ann6']}%{'보다 빨라졌습니다' if sh['ann3'] > sh['ann6'] + 0.2 else '보다 느려졌습니다' if sh['ann3'] < sh['ann6'] - 0.2 else '와 비슷합니다'}.")
+    lines.append(f"지속성 점검 {len(checks)}가지 가운데 {score}가지가 '오래간다' 쪽이어서 '{verdict[0]}'으로 봅니다.")
 
     return {"date": last, "months": months, "official": official, "rows": rows, "fed": fed,
             "drivers": [r["key"] for r in drivers], "easing": [r["key"] for r in easing],

@@ -58,7 +58,7 @@
   function memChart(series, w) {
     const mobile = w < 520, H = Math.round(Math.max(260, Math.min(400, w * 0.48))), P = { l: 10, r: mobile ? 66 : 78, t: 12, b: 40 };
     const on = series.filter((s) => s.on && s.rows.length);
-    if (!on.length) return "<p class='none'>보여 줄 품목을 하나 이상 골라 주세요.</p>";
+    if (!on.length) return "<p class='none'>보여 줄 품목을 하나 이상 골라 주십시오.</p>";
     const tEnd = Math.max(...on.map((s) => Date.parse(s.rows.at(-1).d))), tMin = Math.min(...on.map((s) => Date.parse(s.rows[0].d)));
     let t0 = Math.max(tMin, tEnd - st.range * 864e5), t1 = tEnd + Math.max(3, (tEnd - t0) / 864e5 * 0.02) * 864e5;
     if (t1 - t0 < 20 * 864e5) t0 = t1 - 20 * 864e5;
@@ -228,27 +228,27 @@
       <div class="card-head wrap"><h2>반도체 가격 <span class="sub">메모리 현물가, 계약가 전망, CPU 가격 인상</span></h2></div>
       <p class="ai-meta">갱신 ${esc(d.updated_at)} · 평일 12:40·16:40 KST 자동 수집${bad.length ? ` · <b class="ai-bad">이번 수집 실패: ${bad.join(", ")} (지난 값 표시)</b>` : ""}</p>
 
-      ${pr.length ? `<p class="ai-lead">${esc(pName)} 현물가는 <b>${usd(pr.at(-1).avg)}</b>${pm != null ? `로 한 달 전보다 <b class="${pm >= 0 ? "up" : "down"}">${sgn(pm)}%</b>예요` : "예요"}.${mc[0] ? ` 트렌드포스는 ${esc((mc[0].qtr || "").replace(/^20(\d\d)Q(\d)$/, "$1년 $2분기"))} ${esc(mc[0].product)} 계약가를 <b class="${mc[0].pct_hi < 0 ? "down" : "up"}">${mc[0].pct_lo === mc[0].pct_hi ? sgn(mc[0].pct_hi, 0) : `${sgn(mc[0].pct_lo, 0)}~${Math.abs(mc[0].pct_hi)}`}%</b>로 내다봐요.` : ""}</p>` : ""}
+      ${pr.length ? `<p class="ai-lead">${esc(pName)} 현물가는 <b>${usd(pr.at(-1).avg)}</b>${pm != null ? `로 한 달 전보다 <b class="${pm >= 0 ? "up" : "down"}">${sgn(pm)}%</b>입니다` : "입니다"}.${mc[0] ? ` 트렌드포스는 ${esc((mc[0].qtr || "").replace(/^20(\d\d)Q(\d)$/, "$1년 $2분기"))} ${esc(mc[0].product)} 계약가를 <b class="${mc[0].pct_hi < 0 ? "down" : "up"}">${mc[0].pct_lo === mc[0].pct_hi ? sgn(mc[0].pct_hi, 0) : `${sgn(mc[0].pct_lo, 0)}~${Math.abs(mc[0].pct_hi)}`}%</b>로 내다봅니다.` : ""}</p>` : ""}
       <h3 class="ai-h3">메모리 현물가 <span class="sub">DRAMeXchange 공개 시세 · 칩·모듈 한 개 값(달러)</span></h3>
       <div class="tiles ai-tiles">${tiles}</div>
       <div class="cp-ctl"><div class="cp-tabs">${gtabs}</div><div class="cp-tabs">${rtabs}<button class="toggle" aria-pressed="${st.ma}" data-ma="1">20일 이동평균</button></div></div>
       <div class="cp-lgs">${lg}</div>
       <div id="cpPrice"></div>
       <h3 class="ai-h3">메모리 계약가 전망 <span class="sub">트렌드포스 발표 · 전 분기 대비 상승률</span></h3>
-      ${mcRows ? `<div class="cp-crows">${mcRows}</div>` : "<p class='none'>아직 읽어 온 발표가 없어요.</p>"}
-      <p class="foot-note">삼성전자, SK하이닉스, 마이크론의 실제 판매가는 이 계약가를 따라가요. 트렌드포스가 새 분기 전망을 내면 구글 뉴스에서 자동으로 읽어 추가해요.</p>
+      ${mcRows ? `<div class="cp-crows">${mcRows}</div>` : "<p class='none'>아직 읽어 온 발표가 없습니다.</p>"}
+      <p class="foot-note">삼성전자, SK하이닉스, 마이크론이 실제로 파는 값은 이 계약가를 따라갑니다. 트렌드포스가 새 분기 전망을 내면 구글 뉴스에서 자동으로 읽어 여기에 더합니다.</p>
 
       <details class="ai-more" data-more="chips"${st.more ? " open" : ""}><summary>자세히 보기 · 품목별 표, CPU 가격 인상 타임라인, 자료 기준</summary><div class="ai-more-b">
-      <p class="cp-sub">품목 이름표를 누르면 선을 켜고 끌 수 있어요. 오른쪽 꼬리표는 마지막 값이에요. 시세가 바뀐 날에만 값이 달라져서 선이 계단 모양이에요.${maxLen < 20 ? " 이동평균은 기록이 20일 이상인 품목부터 보여요." : ""}</p>
+      <p class="cp-sub">품목 이름표를 누르면 그 선을 켜고 끌 수 있습니다. 오른쪽 꼬리표에 적힌 숫자가 마지막 값입니다. 시세가 바뀐 날에만 값이 달라져서 선이 계단 모양이 됩니다.${maxLen < 20 ? " 이동평균은 기록이 20일 이상 쌓인 품목부터 나옵니다." : ""}</p>
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>분류</th><th>품목</th><th class="num">평균가</th><th class="num">전일 대비</th><th class="num">그날 범위</th><th>기준일</th><th class="num">기록</th></tr></thead><tbody>${tbl}</tbody></table></div>
-      <p class="foot-note">현물가는 대리점·중개상 사이 즉석 거래 값이라 대형 고객이 분기마다 정하는 계약가보다 먼저 움직여요. DRAMeXchange는 표마다 갱신 주기가 달라서 D램 칩은 매일, 모듈과 낸드는 대개 주 1회 바뀌어요.</p>
+      <p class="foot-note">현물가는 대리점과 중개상이 그때그때 사고파는 값이라, 대형 고객이 분기마다 정하는 계약가보다 먼저 움직입니다. DRAMeXchange는 표마다 갱신 주기가 달라서 D램 칩은 매일, 모듈과 낸드는 대개 주 1회 바뀝니다.</p>
 
       <h3 class="ai-h3">CPU 가격 인상 타임라인 <span class="sub">인텔·AMD·퀄컴 인상 소식 · ${yr}년</span></h3>
-      <div class="chart-legend"><span><i class="cp-pill on"></i>실제로 올림</span><span><i class="cp-pill"></i>올릴 예정·보도</span><span>이름표에 마우스를 올리거나 누르면 기사 내용이 보여요</span></div>
+      <div class="chart-legend"><span><i class="cp-pill on"></i>실제로 올림</span><span><i class="cp-pill"></i>올릴 예정·보도</span><span>이름표에 마우스를 올리거나 누르면 기사 내용이 보입니다</span></div>
       <div id="cpCpu"></div>
-      <p class="foot-note">CPU는 D램처럼 매일 공개되는 시세가 없어요. 인텔과 AMD가 값을 정해 고객사에 통보하는 구조라서, 가격 인상 기사로 흐름을 따라가요. 올해 확인된 인텔 인상(실시)만 <b>${nIntel}번</b>이에요. 이름표는 기사 날짜 자리에 붙고, 같은 회사 소식이 몰리면 아래로 쌓여요.</p>
+      <p class="foot-note">CPU에는 D램처럼 매일 공개되는 시세가 없습니다. 인텔과 AMD가 값을 정해 고객사에 알리는 식이라, 가격 인상 기사로 흐름을 따라갑니다. 올해 확인된 인텔 인상은 실제로 올린 것만 세어도 <b>${nIntel}번</b>입니다. 이름표는 기사 날짜 자리에 붙고, 같은 회사 소식이 몰리면 아래로 쌓입니다.</p>
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>날짜</th><th>회사</th><th>구분</th><th class="num">인상률</th><th>상태</th><th>내용</th><th>출처</th></tr></thead><tbody>${cpuRows}</tbody></table></div>
-      <p class="foot-note">자동 판독 기준: 기사 제목에 회사, 'price·hike', 인상률(%)이 함께 있고, 같은 숫자를 두 곳 이상 또는 주요 매체 한 곳이 쓴 것만 채택해요. 제목에 숫자가 없던 큰 사건은 출처를 확인해 직접 넣었어요. 자료: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange</a>, <a href="https://www.trendforce.com/news/" target="_blank" rel="noopener">TrendForce</a>, 구글 뉴스.</p>
+      <p class="foot-note">자동으로 고르는 기사는 제목에 회사, 'price·hike', 인상률(%)이 함께 들어 있어야 합니다. 그중에서도 같은 숫자를 두 곳 이상이 썼거나 주요 매체 한 곳이 쓴 것만 받습니다. 제목에 숫자가 없던 큰 사건은 출처를 확인해 직접 넣었습니다. 자료: <a href="https://www.dramexchange.com/" target="_blank" rel="noopener">DRAMeXchange</a>, <a href="https://www.trendforce.com/news/" target="_blank" rel="noopener">TrendForce</a>, 구글 뉴스.</p>
       </div></details>
     </section>`;
     $("#cpPrice").innerHTML = memChart(series, W($("#cpPrice")));
@@ -265,7 +265,7 @@
     if (!$("#chipBody")) return;
     if (!st.data || force) {
       if (!st.loading || force) st.loading = fetch("data/chip_prices.json?v=" + Date.now(), { cache: "no-store" }).then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); });
-      try { st.data = await st.loading; } catch (e) { st.loading = null; $("#chipBody").innerHTML = "<p class='ai-meta'>반도체 가격 자료를 불러오지 못했어요. 잠시 후 새로고침해 주세요.</p>"; return; }
+      try { st.data = await st.loading; } catch (e) { st.loading = null; $("#chipBody").innerHTML = "<p class='ai-meta'>반도체 가격 자료를 불러오지 못했습니다. 잠시 후 새로고침해 주십시오.</p>"; return; }
     }
     render();
   }

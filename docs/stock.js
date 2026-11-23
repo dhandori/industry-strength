@@ -34,11 +34,11 @@
     return cache[path];
   }
   const STAGE = {
-    "상승 추세": ["s2", "이동평균선이 50일·150일·200일 순서로 가지런하고 200일선도 오르고 있어요. 가장 좋은 상태예요."],
-    "상승 전환 시도": ["s2t", "가격이 50일선·200일선 위로 올라왔지만 이동평균선 정렬은 아직이에요. 오르기 시작하는 초입일 수 있어요."],
-    "상승 둔화": ["", "가격이 50일선 아래로 내려왔지만 200일선은 아직 오르고 있어요. 힘이 빠지는 구간이에요."],
-    "하락 추세": ["s4", "가격이 200일선 아래에 있고 200일선도 내려가고 있어요. 피하는 게 좋아요."],
-    "바닥 다지기": ["", "뚜렷한 방향 없이 횡보하는 구간이에요."],
+    "상승 추세": ["s2", "이동평균선이 50일·150일·200일 순서로 가지런하고 200일선도 오르고 있습니다. 가장 좋은 상태입니다."],
+    "상승 전환 시도": ["s2t", "가격이 50일선과 200일선 위로 올라왔지만 이동평균선은 아직 순서대로 늘어서지 않았습니다. 막 오르기 시작하는 단계일 수 있습니다."],
+    "상승 둔화": ["", "가격은 50일선 아래로 내려왔지만 200일선은 아직 오르고 있습니다. 힘이 빠지는 구간입니다."],
+    "하락 추세": ["s4", "가격이 200일선 아래에 있고 200일선도 내려가고 있습니다. 피하는 게 좋습니다."],
+    "바닥 다지기": ["", "뚜렷한 방향 없이 횡보하는 구간입니다."],
   };
   // 흐름판의 다섯 단계를 와인스타인 Stage 1~4 번호로(레이더 배지와 같은 이름). 상승 전환 시도는 1에서 2로 넘어가는 중.
   const STAGE_NO = { "상승 추세": "Stage 2", "상승 전환 시도": "Stage 1→2", "상승 둔화": "Stage 3", "하락 추세": "Stage 4", "바닥 다지기": "Stage 1" };
@@ -264,22 +264,22 @@
     if (m) {
       const sg = STAGE[m.stage] || ["", ""];
       if (m.stage) stat.push(["추세 단계", `<span class="stage ${sg[0]}">${esc(stageText(m.stage))}</span>`, sg[1]]);
-      if (m.rs_rating != null) stat.push(["RS 지수 (1~99)", `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}">${m.rs_rating}</b>`, "1년 수익률(최근 3개월 비중이 가장 큼)을 시장 안 모든 종목과 비교한 등수예요. 위 RS 상자의 시장 기준선보다 높으면 주도주 후보예요."]);
-      if (m.atr_pct != null) stat.push(["ATR(14일) 평균 변동폭", `<b>${m.atr == null ? "" : money(m.atr) + " "}(${m.atr_pct.toFixed(1)}%)</b>`, `최근 14거래일 동안 하루에 보통 ${m.atr_pct.toFixed(1)}% 움직였어요(고가−저가, 전날 종가와의 갭 포함). 손절 폭·목표가를 잡는 기준으로 써요.`]);
+      if (m.rs_rating != null) stat.push(["RS 지수 (1~99)", `<b class="rs-num ${m.rs_rating >= 80 ? "hi" : m.rs_rating < 40 ? "lo" : ""}">${m.rs_rating}</b>`, "1년 수익률(최근 3개월 비중이 가장 큼)을 시장 안 모든 종목과 견준 등수입니다. 위 RS 상자의 시장 기준선보다 높으면 주도주 후보로 칩니다."]);
+      if (m.atr_pct != null) stat.push(["ATR(14일) 평균 변동폭", `<b>${m.atr == null ? "" : money(m.atr) + " "}(${m.atr_pct.toFixed(1)}%)</b>`, `최근 14거래일 동안 하루에 보통 ${m.atr_pct.toFixed(1)}%씩 움직였습니다(고가−저가, 전날 종가와의 갭 포함). 손절 폭과 목표가를 잡을 때 이 값을 기준으로 씁니다.`]);
       // 손절 기준 두 가지: −8% 한도(미너비니 최대 손절)와 2×ATR(그 종목의 보통 흔들림 밖). 종가를 매수가로 가정.
       if (m.close != null && m.close > 0) {
-        stat.push(["기준 손절 −8%", `<b>${money(m.close * 0.92)}</b>`, "종가에 샀다고 봤을 때 −8% 가격이에요. 어떤 종목이든 이 아래로는 들고 가지 않아요."]);
+        stat.push(["기준 손절 −8%", `<b>${money(m.close * 0.92)}</b>`, "종가에 샀다고 치면 거기서 −8% 내려간 가격입니다. 어떤 종목이든 이 밑으로는 들고 가지 않습니다."]);
         if (m.atr != null && m.atr_pct != null) {
           const p = m.atr_pct * 2, over = p > 8, used = Math.min(p, 8);
-          stat.push(["ATR 손절 (2×ATR)", `<b class="${over ? "no" : "ok"}">${money(m.close - m.atr * 2)} (−${p.toFixed(1)}%)</b>`, over ? "8%보다 넓어서 8% 한도에서 잘라요. 변동성이 크니 비중을 줄이거나 손절 폭이 더 좁은 자리에서만 사요." : "8% 안에 들어와요. 이 폭을 손절로 쓰면 평소 흔들림에는 안 털려요."]);
-          stat.push(["적용 최대 손절폭", `<b class="ok">−${used.toFixed(1)}%</b> <small>${money(over ? m.close * 0.92 : m.close - m.atr * 2)}</small>`, over ? "2×ATR이 8%보다 넓어서 8% 한도로 잘랐어요." : "2×ATR이 8% 안이라 2×ATR 손절가를 그대로 써요."]);
+          stat.push(["ATR 손절 (2×ATR)", `<b class="${over ? "no" : "ok"}">${money(m.close - m.atr * 2)} (−${p.toFixed(1)}%)</b>`, over ? "8%보다 넓어서 8% 한도에서 자릅니다. 변동성이 큰 종목이니 비중을 줄이거나, 손절 폭이 더 좁아지는 자리에서만 삽니다." : "8% 안에 들어옵니다. 이 폭을 손절로 쓰면 평소 흔들림에는 털리지 않습니다."]);
+          stat.push(["적용 최대 손절폭", `<b class="ok">−${used.toFixed(1)}%</b> <small>${money(over ? m.close * 0.92 : m.close - m.atr * 2)}</small>`, over ? "2×ATR이 8%보다 넓어서 8% 한도로 잘랐습니다." : "2×ATR이 8% 안에 들어와서 2×ATR 손절가를 그대로 씁니다."]);
           const capAtr = 8 / m.atr_pct, tight = capAtr < 1.5;
-          stat.push(["8% = 몇 ATR", `<b class="${tight ? "sk-warn" : capAtr >= 2 ? "ok" : ""}">${capAtr.toFixed(1)} ATR</b>`, tight ? `8%가 하루 평균 흔들림의 ${capAtr.toFixed(1)}배뿐이라 평소 움직임에도 털리기 쉬워요. 매수를 미루거나 비중을 줄여요.` : capAtr >= 2 ? "8% 한도가 평소 흔들림보다 넉넉해요." : "8% 한도가 빠듯한 편이에요."]);
-          stat.push(["계좌 위험 2% 기준 비중", `<b>${Math.round(200 / used)}%</b>`, `손절 폭이 ${used.toFixed(1)}%일 때 한 번에 계좌의 2%만 잃도록 살 수 있는 최대 비중이에요.`]);
+          stat.push(["8% = 몇 ATR", `<b class="${tight ? "sk-warn" : capAtr >= 2 ? "ok" : ""}">${capAtr.toFixed(1)} ATR</b>`, tight ? `8%가 하루 평균 흔들림의 ${capAtr.toFixed(1)}배밖에 안 돼서 평소 움직임에도 털리기 쉽습니다. 매수를 미루거나 비중을 줄입니다.` : capAtr >= 2 ? "8% 한도가 평소 흔들림보다 넉넉합니다." : "8% 한도가 빠듯한 편입니다."]);
+          stat.push(["계좌 위험 2% 기준 비중", `<b>${Math.round(200 / used)}%</b>`, `손절 폭이 ${used.toFixed(1)}%일 때, 한 번에 계좌의 2%만 잃도록 살 수 있는 최대 비중입니다.`]);
         }
       }
-      if (m.dist_high != null) stat.push(["52주 고점 대비", `<b>${m.dist_high.toFixed(1)}%</b>`, m.dist_high >= -5 ? "고점 근처(신고가권)예요." : m.dist_high >= -15 ? "고점에서 크게 멀지 않아요." : "고점에서 꽤 내려와 있어요."]);
-      if (m.rs_up != null) stat.push(["시장 대비", m.rs_up ? '<span class="ok">강함</span>' : '<span class="no">약함</span>', "주가를 시장 지수로 나눈 선(RS선)이 50일 평균 위에 있는지 봐요."]);
+      if (m.dist_high != null) stat.push(["52주 고점 대비", `<b>${m.dist_high.toFixed(1)}%</b>`, m.dist_high >= -5 ? "고점 근처(신고가권)입니다." : m.dist_high >= -15 ? "고점에서 크게 멀지 않습니다." : "고점에서 꽤 내려와 있습니다."]);
+      if (m.rs_up != null) stat.push(["시장 대비", m.rs_up ? '<span class="ok">강함</span>' : '<span class="no">약함</span>', "주가를 시장 지수로 나눈 선(RS선)이 50일 평균 위에 있는지를 봅니다."]);
     }
     const statHtml = stat.length ? `<div class="sk-stats">${stat.map(([k, v, h]) => `<div title="${esc(h)}"><div class="k">${k}</div><div class="v">${v}</div><div class="h">${esc(h)}</div></div>`).join("")}</div>` : "";
 
@@ -290,7 +290,7 @@
       const rows = hx.list.slice().reverse().slice(0, 8).map((dd) => { const h = hx.hit[dd]; return `<tr><td>${mdw(dd)}</td><td class="num"><span class="ret ${cls(h.chg)}">${pct(h.chg, 2)}</span></td><td class="num">${h.close == null ? "–" : KR ? Math.round(h.close).toLocaleString("ko-KR") : h.close.toFixed(2)}</td></tr>`; }).join("");
       hxHtml = `<section class="sk-sec" id="skHigh"><h4>🚀 52주 신고가 기록 <span class="sub">최근 ${hx.days.length}거래일 · 칸이 칠해진 날이 신고가 · 52주 신고가 탭과 같은 자료</span></h4>
         <div class="sk-hstrip">${cells}</div>
-        ${hx.list.length ? `<div class="sk-tw"><table class="mem-table sk-ht"><thead><tr><th>신고가 낸 날</th><th class="num">그날 등락률</th><th class="num">종가</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="sk-none">이 기간에는 52주 신고가를 내지 않았어요.</p>`}
+        ${hx.list.length ? `<div class="sk-tw"><table class="mem-table sk-ht"><thead><tr><th>신고가 낸 날</th><th class="num">그날 등락률</th><th class="num">종가</th></tr></thead><tbody>${rows}</tbody></table></div>` : `<p class="sk-none">이 기간에는 52주 신고가를 내지 않았습니다.</p>`}
         ${hx.info ? `<p class="sk-note">신고가 탭 업종: ${esc(hx.info[1])}${hx.info[2] && hx.info[2] !== hx.info[1] ? ` (${esc(hx.info[2])})` : ""}</p>` : ""}</section>`;
     }
 
@@ -320,7 +320,7 @@
     let secHtml = "";
     if (secs.length) {
       const PER = [["1d", "당일"], ["5d", "5일"], ["20d", "20일"], ["60d", "60일"], ["200d", "200일"]];
-      secHtml = `<section class="sk-sec" id="skSec"><h4>🧭 섹터 워치 <span class="sub">업종 ETF의 시가총액 상위 종목에 들어 있어요 · 종목과 ETF 수익률 비교</span></h4>
+      secHtml = `<section class="sk-sec" id="skSec"><h4>🧭 섹터 워치 <span class="sub">업종 ETF의 시가총액 상위 종목에 들어 있습니다 · 종목과 ETF 수익률 비교</span></h4>
         <div class="sk-tw"><table class="mem-table sk-cmp"><thead><tr><th></th>${PER.map(([, t]) => `<th class="num">${t}</th>`).join("")}</tr></thead><tbody>
         ${secs.map(({ s, x }) => `<tr class="me"><td><b>${esc(name)}</b></td>${PER.map(([k]) => `<td class="num"><span class="ret ${cls(x.ret && x.ret[k])}">${pct(x.ret && x.ret[k])}</span></td>`).join("")}</tr>
           <tr><td>${esc(s.name)} <small class="muted">${esc(s.etf)}</small></td>${PER.map(([k]) => { const v = s.periods && s.periods[k] ? s.periods[k].ret : null; return `<td class="num"><span class="ret ${cls(v)}">${pct(v)}</span></td>`; }).join("")}</tr>`).join("")}
@@ -335,9 +335,9 @@
       const runs = sup ? [sup.fs ? `외국인 ${runDays(sup.fs)} ${sup.fs > 0 ? "순매수" : "순매도"}` : "", sup.is ? `기관 ${runDays(sup.is)} ${sup.is > 0 ? "순매수" : "순매도"}` : ""].filter(Boolean).join(" · ") : "";
       const rkHtml = rk.length ? `<div class="sk-rk">${rk.map((r) => `<span class="sk-bd ${r.side === "buy" ? "hot" : "no"}">${r.who} ${r.n === "1" ? "하루" : r.n + "일"} ${r.side === "buy" ? "순매수" : "순매도"} ${r.k}위 <small>${r.mk === "KOSPI" ? "코스피" : "코스닥"} · 시총 대비 ${pct(r.who === "외국인" ? r.r.fp : r.r.ip, 2)}${r.who === "외국인" && r.r.dh != null ? ` · 보유 ${r.r.hold?.toFixed(1)}% (${r.r.dh > 0 ? "+" : ""}${r.r.dh.toFixed(2)}%p)` : ""}</small></span>`).join("")}</div>` : "";
       supHtml = `<section class="sk-sec" id="skSup"><h4>💰 투자자별 수급 <span class="sub">억 원 · 순매수 수량 × 종가 추정${sup ? " · " + esc(sup.asof || S.basis_date) : ""}</span></h4>
-        ${rk.length ? `<p class="sk-note sk-note-top">외국인·기관 보유 변화 카드(산업 강도 탭)의 상위 10 명단에 들어 있어요.</p>${rkHtml}` : ""}
+        ${rk.length ? `<p class="sk-note sk-note-top">외국인·기관 보유 변화 카드(산업 강도 탭)의 상위 10 명단에 들어 있습니다.</p>${rkHtml}` : ""}
         ${sup ? `<div class="sk-tw"><table class="mem-table"><thead><tr><th>투자자</th><th class="num">하루</th><th class="num">5일</th><th class="num">20일</th><th class="num">60일</th></tr></thead><tbody>${row("외국인", "f")}${row("기관", "i")}${row("개인", "p")}</tbody></table></div>
-        <p class="sk-note">${[runs, sup.pct20 != null ? `20일 외국인+기관 순매수 = 시가총액의 ${pct(sup.pct20, 2)}` : "", sup.hold != null ? `외국인 지분율 ${sup.hold}%` : "", sup.blk && sup.blk.length ? `⚑ 블록거래일(${sup.blk.map(md).join(", ")})은 수급 강도 계산에서 뺐어요` : ""].filter(Boolean).join(" · ")}</p>` : ""}
+        <p class="sk-note">${[runs, sup.pct20 != null ? `20일 외국인+기관 순매수 = 시가총액의 ${pct(sup.pct20, 2)}` : "", sup.hold != null ? `외국인 지분율 ${sup.hold}%` : "", sup.blk && sup.blk.length ? `⚑ 블록거래일(${sup.blk.map(md).join(", ")})은 수급 강도 계산에서 뺐습니다` : ""].filter(Boolean).join(" · ")}</p>` : ""}
         <div id="skFlowWrap" hidden><h4 class="sk-h5">누적 순매수 흐름 <span class="sub">첫날부터 매일 순매수를 더한 값(억 원) · 선이 오르면 계속 사는 중</span></h4>
           <div class="chart-legend" id="skLgFlow"></div><div id="skFlow" class="chart sm"></div>
           <div class="chart-legend" id="skLgHold"></div><div id="skHold" class="chart xs"></div></div>
@@ -399,8 +399,8 @@
       ${m ? `<section class="sk-sec" id="skTrend"><h4>✅ 추세 점검 <span class="sub">미너비니 추세 템플릿 · 종가 기준</span></h4><div id="skChecks"><p class="sk-load">계산 중…</p></div></section>` : ""}
       ${m ? `<section class="sk-sec" id="skStat"><h4>🛡️ 상태와 위험 관리</h4>${statHtml}</section>` : ""}
       ${hxHtml}${supHtml}${indHtml}${secHtml}${prHtml}
-      ${!m ? `<p class="sk-note">이 종목은 산업 강도판의 세부 산업(바구니)에 들어 있지 않아서 수익률·추세·RS 값이 없어요.${KR ? " 수급 표도 바구니 종목만 모아요." : ""}</p>` : ""}
-      ${none ? `<p class="sk-none">이 종목은 흐름판에 모인 정보가 많지 않아요. 아래 링크에서 더 보세요.</p>` : ""}
+      ${!m ? `<p class="sk-note">이 종목은 산업 강도판의 세부 산업(바구니)에 들어 있지 않아서 수익률·추세·RS 값이 없습니다.${KR ? " 수급 표도 바구니에 든 종목만 모읍니다." : ""}</p>` : ""}
+      ${none ? `<p class="sk-none">이 종목은 흐름판에 모인 정보가 많지 않습니다. 아래 링크에서 더 보실 수 있습니다.</p>` : ""}
       <section class="sk-sec" id="skLinks"><h4>🔗 바깥에서 더 보기</h4><div class="sk-links">${links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${t} ↗</a>`).join("")}</div></section>`;
     $$(".sk-ind[data-ind]", box).forEach((b) => b.addEventListener("click", () => {
       const bd = window.__isBoard && window.__isBoard();
@@ -492,7 +492,7 @@
       { n: "52주 최고 종가", c: css("--good"), s: hiS, f: fmtP, last: lv(hi52), dash: 1 },
       { n: "거래량", c: up + "88", s: vs, f: (x, t) => { const k = t ? ix[t] : lastIdx(v); const r = vma[k] ? x / vma[k] : null; return `${volFmt(x)}${r ? ` <em class="${r >= 1.5 ? "up" : ""}">(${r.toFixed(1)}배)</em>` : ""}`; }, last: v[lastIdx(v)] },
     ], ch, (t) => t ? mdw(t) : "최근");
-    if (!$(".sk-cap-note", box)) $(".sk-price", box).insertAdjacentHTML("afterend", `<p class="sk-cap sk-cap-note">굵은 선이 종가, 색 선이 이동평균(주황 20일·파랑 50일·회색 150일·보라 200일), 초록 점선이 52주 최고 종가예요. 아래 막대는 거래량이고 점선은 50일 평균 거래량이에요.${hx && hx.list.length ? " 빨간 ▼는 52주 신고가 탭에 기록된 날이에요." : ""} 차트를 누르거나 손가락으로 움직이면 그날 값이 위에 보여요.</p>`);
+    if (!$(".sk-cap-note", box)) $(".sk-price", box).insertAdjacentHTML("afterend", `<p class="sk-cap sk-cap-note">굵은 선이 종가, 색 선이 이동평균(주황 20일·파랑 50일·회색 150일·보라 200일), 초록 점선이 52주 최고 종가입니다. 아래 막대는 거래량이고 점선은 50일 평균 거래량입니다.${hx && hx.list.length ? " 빨간 ▼는 52주 신고가 탭에 기록된 날을 가리킵니다." : ""} 차트를 누르거나 손가락으로 움직이면 그날 값이 위에 나옵니다.</p>`);
 
     // 2) 산업·시장과 비교 (기간 시작 = 100)
     const useB2 = rec.b && X.bench2;
@@ -520,7 +520,7 @@
       const r = (a) => a ? a[lastIdx(a)] - 100 : null;
       const rs = r(nS), rb = r(nB), ri = r(nI);
       const lab = (RANGES.find(([k]) => k === range) || RANGES[2])[1];
-      $("#skCapCmp", box).innerHTML = `${md(dates[k0])}부터 ${lab} — 종목 <b class="ret ${cls(rs)}">${pct(rs)}</b>${ri != null ? ` · 산업 <b class="ret ${cls(ri)}">${pct(ri)}</b>` : ""} · ${esc(bName)} <b class="ret ${cls(rb)}">${pct(rb)}</b> → 시장 대비 <b class="ret ${cls(rs - rb)}">${rs - rb > 0 ? "+" : ""}${(rs - rb).toFixed(1)}%p</b>${ri != null ? `, 산업 대비 <b class="ret ${cls(rs - ri)}">${rs - ri > 0 ? "+" : ""}${(rs - ri).toFixed(1)}%p</b>` : ""}`;
+      $("#skCapCmp", box).innerHTML = `${md(dates[k0])}부터 ${lab}, 종목 <b class="ret ${cls(rs)}">${pct(rs)}</b>${ri != null ? ` · 산업 <b class="ret ${cls(ri)}">${pct(ri)}</b>` : ""} · ${esc(bName)} <b class="ret ${cls(rb)}">${pct(rb)}</b> → 시장 대비 <b class="ret ${cls(rs - rb)}">${rs - rb > 0 ? "+" : ""}${(rs - rb).toFixed(1)}%p</b>${ri != null ? `, 산업 대비 <b class="ret ${cls(rs - ri)}">${rs - ri > 0 ? "+" : ""}${(rs - ri).toFixed(1)}%p</b>` : ""}`;
       // RS선 (종목 ÷ 시장, 시작 100) + 50일 평균
       const bf = ffill(bench);
       const rsl = c.map((x, k) => x != null && bf[k] ? x / bf[k] : null);
@@ -566,7 +566,7 @@
         const g = []; for (let k = Math.max(0, last - 251); k <= last; k++) if (cc[k] != null && m[k]) g.push((cc[k] / m[k] - 1) * 100);
         if (g.length < 20 || cc[last] == null || !m[last]) return "";
         const cur = g[g.length - 1], past = g.slice(0, -1), r1 = (v) => Math.round(v * 10) / 10 || 0;
-        return ` · ${g.length >= 250 ? "지난 1년" : `최근 ${g.length}거래일`} 범위 ${pct(r1(Math.min(...g)))} ~ ${pct(r1(Math.max(...g)))} 가운데 ${Math.round(past.filter((v) => v < cur).length / past.length * 100)}% 날보다 높아요`;
+        return ` · ${g.length >= 250 ? "지난 1년" : `최근 ${g.length}거래일`} 범위 ${pct(r1(Math.min(...g)))} ~ ${pct(r1(Math.max(...g)))} 가운데 ${Math.round(past.filter((v) => v < cur).length / past.length * 100)}%의 날보다 높습니다`;
       };
       const x = c[L], a50 = ma[50][L], a150 = ma[150][L], a200 = ma[200][L], a200p = L >= 20 ? ma[200][L - 20] : null;
       const w = c.slice(Math.max(0, L - 251), L + 1).filter((y) => y != null);
@@ -582,7 +582,7 @@
         ["RS 지수 70 이상", m && m.rs_rating != null ? m.rs_rating >= 70 : null, m && m.rs_rating != null ? `RS ${m.rs_rating}` : ""],
       ];
       const ok = T.filter((t) => t[1] === true).length, known = T.filter((t) => t[1] != null).length;
-      ck.innerHTML = `<p class="sk-score"><b class="${ok === known && known ? "ok" : ok >= known - 2 ? "" : "no"}">${ok}/${known}</b> 통과 <span class="muted">· 8개를 모두 통과하면 교과서적인 ‘2단계 상승 추세’예요</span></p>
+      ck.innerHTML = `<p class="sk-score"><b class="${ok === known && known ? "ok" : ok >= known - 2 ? "" : "no"}">${ok}/${known}</b> 통과 <span class="muted">· 8개를 모두 통과하면 교과서에 나오는 ‘2단계 상승 추세’입니다</span></p>
         <ul class="sk-checks">${T.map(([t, o, s]) => `<li class="${o == null ? "na" : o ? "ok" : "no"}"><i>${o == null ? "–" : o ? "✓" : "✕"}</i><span>${t}</span><em>${esc(s)}</em></li>`).join("")}</ul>`;
     }
 
@@ -623,14 +623,14 @@
   function fallback(ctx) {
     const el = $("#skPrice", box);
     $("#skRange", box).hidden = true;
-    const ck = $("#skChecks", box); if (ck) ck.innerHTML = `<p class="sk-none">차트 자료가 없어 계산하지 못했어요.</p>`;
+    const ck = $("#skChecks", box); if (ck) ck.innerHTML = `<p class="sk-none">차트 자료가 없어 계산하지 못했습니다.</p>`;
     if (ctx.KR) {
       const KINDS = [["day", "일봉"], ["week", "주봉"], ["month", "월봉"]];
       const img = (k) => `https://ssl.pstatic.net/imgfinance/chart/item/candle/${k}/${encodeURIComponent(ctx.code)}.png?sidcode=${Date.now()}`;
       el.classList.add("sk-img");
       el.innerHTML = `<div class="seg small sk-imgseg" role="group" aria-label="차트 종류">${KINDS.map(([k, t], i) => `<button type="button" data-k="${k}" aria-pressed="${i === 0}">${t}</button>`).join("")}</div>
-        <img src="${img("day")}" alt="${esc(ctx.name)} 캔들 차트(네이버)" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('p'),{className:'sk-none',textContent:'차트 그림을 불러오지 못했어요.'}))">
-        <p class="sk-cap">이 종목은 산업 강도판 바구니에 없어서 네이버 증권 차트 그림으로 대신 보여 줘요(이동평균선 포함).</p>`;
+        <img src="${img("day")}" alt="${esc(ctx.name)} 캔들 차트(네이버)" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('p'),{className:'sk-none',textContent:'차트 그림을 불러오지 못했습니다.'}))">
+        <p class="sk-cap">이 종목은 산업 강도판 바구니에 없어서 네이버 증권 차트 그림으로 대신 보여 드립니다(이동평균선 포함).</p>`;
       $$(".sk-imgseg button", el).forEach((b) => b.addEventListener("click", () => {
         $$(".sk-imgseg button", el).forEach((x) => x.setAttribute("aria-pressed", x === b));
         const im = $("img", el); if (im) im.src = img(b.dataset.k);
@@ -640,7 +640,7 @@
       const dark = root.dataset.theme === "dark" || (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
       el.classList.add("sk-img");
       el.innerHTML = `<iframe class="sk-tv" title="${esc(ctx.name)} TradingView 차트" loading="lazy" src="https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(sym)}&interval=D&hidesidetoolbar=1&symboledit=0&saveimage=0&toolbarbg=f1f3f6&studies=%5B%22MASimple%40tv-basicstudies%22%5D&theme=${dark ? "dark" : "light"}&style=1&timezone=Asia%2FSeoul&locale=kr&range=12M"></iframe>
-        <p class="sk-cap">이 종목은 산업 강도판 바구니에 없어서 TradingView 차트로 대신 보여 줘요.</p>`;
+        <p class="sk-cap">이 종목은 산업 강도판 바구니에 없어서 TradingView 차트로 대신 보여 드립니다.</p>`;
     }
   }
 
