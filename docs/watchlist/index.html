@@ -154,6 +154,8 @@ main > h2 .sfold.shut{background:var(--pud);border-color:var(--pud);color:#fff}
 #panel .sgr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 4px;padding:7px 10px;border-top:1px solid #fde3cc}
 #panel .sgh{flex:none;border:0;border-radius:8px;padding:5px 9px;margin-right:4px;font-size:13px;font-weight:700;background:#ffedd5;color:#9a3412}
 #panel .sgh b{margin-left:5px;font-variant-numeric:tabular-nums}
+#panel .sgi{flex:none;border:0;background:none;color:#c2410c;font-size:15px;line-height:1;padding:4px 6px 4px 0;margin-left:-4px;cursor:help}
+#panel .sgr.bad .sgi{color:#64748b}
 #panel .sgr.bad .sgh{background:#e2e8f0;color:#334155}
 #panel .sgr .sgl{display:contents}
 #panel .sgl button{border:0;background:none;padding:4px 4px;font-size:13px;color:var(--ink);text-decoration:underline;text-decoration-color:#d6d9df;text-underline-offset:3px}
@@ -249,6 +251,7 @@ canvas.rl{height:352px}
 .lg .lw{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .lg .lw i{display:inline-block;width:14px;height:0;border-top:2.5px solid;border-radius:2px}
 .lg .lw i.bx{width:8px;height:10px;border:0;border-radius:1px;opacity:.75}
+.lg .lpp{cursor:help;text-decoration:underline dotted;text-decoration-color:rgba(55,65,81,.45);text-underline-offset:3px}
 .lg .lw i.pp{width:7px;height:7px;border:0;border-radius:50%;background:#7c3aed}
 .lg .lr{margin-left:auto;color:var(--sub);white-space:nowrap}
 /* 표 형태 목록 보기 */
@@ -839,8 +842,9 @@ function card(it, idx, rank){
     `<canvas data-i="${idx}"${it.rl ? ' class="rl"' : ""}></canvas>` +
     `<div class="lg"><span>지수이동평균(EMA)</span>${EMA.map(([k,c]) => `<span class="lw"><i style="border-color:${c}"></i>${k}일</span>`).join("")}` +
     `<span class="lw">거래량 <i class="bx" style="background:${UP}"></i>오른 날 <i class="bx" style="background:${DN}"></i>내린 날</span>` +
-    (it.k && it.v.some(v => v > 0) ? `<span class="lw"><i class="pp"></i>포켓 피봇</span>` : "") +
+    (it.k && it.v.some(v => v > 0) ? `<span class="lw lpp"><i class="pp"></i>포켓 피봇</span>` : "") +
     `<span class="lr">${+ld.slice(2,4)}/${+ld.slice(4,6)} 종가 기준</span></div>`;
+  const lpp = el.querySelector(".lpp"); if (lpp) lpp.title = DEF.pp;
   const nm = el.querySelector(".nm");
   if (rank) nm.appendChild(span("rk", rank));
   nm.appendChild(document.createTextNode(it.n));
@@ -1342,6 +1346,7 @@ function sigBox(pn, data){
     const pick = () => { ST.c = [r.k]; openPanel("grid"); apply(); };
     const hb = document.createElement("button"); hb.className = "sgh"; hb.textContent = r.name; hb.title = DEF[r.k]; hb.onclick = pick;
     const cnt = document.createElement("b"); cnt.textContent = r.items.length; hb.appendChild(cnt);
+    const ib = document.createElement("button"); ib.className = "sgi"; ib.textContent = "ⓘ"; ib.title = DEF[r.k]; ib.setAttribute("aria-label", r.name + " 뜻 보기");
     const ls = document.createElement("span"); ls.className = "sgl";
     r.items.slice(0, SIGMAX).forEach(it => {
       const b = document.createElement("button"); b.textContent = knOf(it); b.dataset.y = it.y;
@@ -1350,7 +1355,7 @@ function sigBox(pn, data){
       ls.appendChild(b);
     });
     if (r.items.length > SIGMAX){ const mb = document.createElement("button"); mb.className = "more"; mb.textContent = `외 ${r.items.length - SIGMAX}개 모두 보기`; mb.onclick = pick; ls.appendChild(mb); }
-    row.append(hb, ls); d.appendChild(row);
+    row.append(hb, ib, ls); d.appendChild(row);
   });
   pn.appendChild(d);
 }
@@ -1575,7 +1580,7 @@ $("sq").addEventListener("keydown", ev => {
 document.addEventListener("keydown", ev => { if (ev.key === "/" && $("srch").hidden && document.activeElement.tagName !== "INPUT"){ ev.preventDefault(); sopen(); } });
 // 딱지(.bd span)·표의 RS 칸을 누르면 그 풀이(title)를 아래 상자에 띄운다. 다시 누르거나 아무 데나 누르면 닫힌다.
 document.addEventListener("click", ev => {
-  const tg = ev.target.closest && ev.target.closest(".bd span[title], .kv span[title], .tr .s[title], .biz .tg[title]"), tip = $("tip");
+  const tg = ev.target.closest && ev.target.closest(".bd span[title], .kv span[title], .lg span[title], .sgi[title], .tr .s[title], .biz .tg[title]"), tip = $("tip");
   if (!tg){ tip.hidden = true; return; }
   ev.stopPropagation();
   if (!tip.hidden && tip.dataset.for === tg.title){ tip.hidden = true; return; }

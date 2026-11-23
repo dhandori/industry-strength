@@ -282,6 +282,27 @@ def check_signals(b, url, label, w, h):
     old = (DAY0 + dt.timedelta(days=248))
     if pg.inner_text("#panel .sgl button[data-y='6501.T'] >> nth=0") != f"히타치{old.month}/{old.day}":
         problems.append(f"{label} 하루 앞선 종목 이름 옆 날짜 '{pg.inner_text('#panel .sgl button[data-y=\"6501.T\"] >> nth=0')}'")
+    # 줄 옆 ⓘ 를 누르면 판이 열린 채로 그 신호의 뜻이 아래 상자에 뜬다(줄 제목은 걸러 보기라서)
+    for i, name in enumerate(r[0] for r in exp_rows):
+        pg.click(f"#panel .sgr >> nth={i} >> .sgi")
+        if not pg.is_visible("#tip") or len(pg.inner_text("#tip")) < 30 or pg.is_hidden("#panel") or pg.locator("#chips .chip").count():
+            problems.append(f"{label} 새 신호 ⓘ '{name}': 뜻이 안 뜨거나 판이 닫힘")
+    pg.click("#panel .sgs .nn")
+    if pg.is_visible("#tip"):
+        problems.append(f"{label} 새 신호 ⓘ 풀이 상자가 안 닫힘")
+    pg.click("#gbtn")
+    # 카드의 새 딱지·숫자 줄·범례(포켓 피봇)는 누르면 뜻이 뜬다
+    targets = pg.locator(".card[data-y=UPCO] .bd span, .card[data-y=UPCO] .kv span, .card[data-y=UPCO] .lg .lpp, .card[data-y=DNCO] .bd span.wn")
+    for i in range(targets.count()):
+        t = targets.nth(i)
+        txt = t.inner_text()
+        t.scroll_into_view_if_needed()
+        t.click()
+        if not pg.is_visible("#tip") or len(pg.inner_text("#tip")) < 30:
+            problems.append(f"{label} '{txt}' 를 눌러도 뜻이 안 뜸")
+        pg.click("main > h2 >> nth=0")
+    pg.evaluate("window.scrollTo(0, 0)")
+    pg.click("#gbtn")
     # 줄 제목을 누르면 그 신호로 걸러 본다
     pg.locator("#panel .sgh", has_text="정배열 이탈").click()
     pg.wait_for_timeout(300)
