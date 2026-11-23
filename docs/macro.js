@@ -33,6 +33,8 @@
   const isDD = (r) => /_dd$/.test(r.key);
   const nm = (r) => (TXT[r.key] || [])[0] || r.name;
   const short = (r) => nm(r).split(" (")[0];
+  // 받침에 맞춰 조사를 고른다. 숫자·영문으로 끝나는 이름(코스피200, S&P500)은 읽는 소리로 본다.
+  const batchim = (s) => { const ch = String(s).replace(/[\s)\]'"’”]+$/, "").slice(-1), c = ch.charCodeAt(0); return c >= 0xac00 && c <= 0xd7a3 ? (c - 0xac00) % 28 !== 0 : /\d/.test(ch) ? "013678".includes(ch) : /[lmnr]/i.test(ch); };
   const hp = (r) => (TXT[r.key] || [])[1] || r.help;
   // 어느 쪽으로 움직이면 위험한지 — 카드 이름 옆에 꼬리표로 붙인다
   const DIR = { high: "📈 오를수록 위험", low: "📉 줄어들수록 위험", both: "↕ 너무 좁거나 넓으면 위험", fng: "📉 낮을수록 공포" };
@@ -98,9 +100,9 @@
     let g = "";
     for (let k = 0; k <= 4; k++) {
       const v = lo + (hi - lo) * k / 4, yy = y(v).toFixed(1);
-      g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${num(v, r.unit)}</text>`;
+      g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="12" fill="var(--muted)">${num(v, r.unit)}</text>`;
     }
-    const tick = (i, label) => { const xx = x(i).toFixed(1), end = W - R - x(i) < 18; return `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${end ? W - R : xx}" y="${H - 8}" text-anchor="${end ? "end" : "middle"}" font-size="11" fill="var(--muted)">${label}</text>`; };
+    const tick = (i, label) => { const xx = x(i).toFixed(1), end = W - R - x(i) < 18; return `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${end ? W - R : xx}" y="${H - 8}" text-anchor="${end ? "end" : "middle"}" font-size="12" fill="var(--muted)">${label}</text>`; };
     let xt = "";
     if (s.length <= 80) {
       // 짧은 기간: 날짜(월/일) 눈금을 끝에서부터 고르게
@@ -155,7 +157,7 @@
     const worse = r.risk === "high" ? r.change1m > 0 : r.risk === "low" || r.risk === "fng" ? r.change1m < 0 : (r.speedZ ?? 0) > 0;
     const c = Math.abs(r.change1m) < 1e-9 ? "flat" : worse ? "worse" : "better";
     const word = c === "flat" ? "변화 없음" : worse ? "▲ 나빠짐" : "▼ 좋아짐";
-    return `<span class="mx-chg ${c}"><small>한 달 전보다</small>${esc(r.changeText)} <em>${word}</em></span>`;
+    return `<span class="mx-chg ${c}"><small>한 달 전보다</small> ${esc(r.changeText)} <em>${word}</em></span>`;
   }
 
   // 2026-10-25: 초록→빨강 그라데이션 대신 칸 5개(왼쪽 안전 → 오른쪽 위험). 지금 칸만 진하게, 나머지는 흐리게, 위에 '지금' 핀.
@@ -177,7 +179,7 @@
       : `최근 5년 중 지금보다 안전했던 날이 <b>${p.toFixed(0)}%</b>예요`;
     const base = LV[RISK_ZONES[idx][2]];
     const floor = r.floor ? `<div class="mx-zb-note">📌 위치만 보면 ${base[0]} ${base[1]}이지만, 값이 ${r.floor} 이상이면 5년 중 위치와 상관없이 ${r.emoji} ${esc(r.label)}보다 좋게 매기지 않아요. 공포지수가 오래 높으면 ‘최근 5년과 비교한 위치’가 무뎌지기 때문이에요.</div>` : "";
-    const note = floor || !r.speedBump ? floor : `<div class="mx-zb-note">⚡ 위치만 보면 ${LV[RISK_ZONES[idx][2]][0]} ${LV[RISK_ZONES[idx][2]][1]}이지만, 최근 한 달 사이 평소보다 빠르게 나빠져서 ${r.speedBump}단계 올려 ${r.emoji} ${esc(r.label)}로 매겼어요.</div>`;
+    const note = floor || !r.speedBump || base[1] === r.label ? floor : `<div class="mx-zb-note">⚡ 위치만 보면 ${LV[RISK_ZONES[idx][2]][0]} ${LV[RISK_ZONES[idx][2]][1]}이지만, 최근 한 달 사이 평소보다 빠르게 나빠져서 ${r.speedBump}단계 올려 ${r.emoji} ${esc(r.label)}로 매겼어요.</div>`;
     return `<div class="mx-pos"><div class="mx-pos-l"><span>${what}</span></div>${zoneBar(zones, idx, (p - a) / (Math.min(100, b) - a), "안전", "위험", `지금 ${p.toFixed(0)}%`)}${note}</div>`;
   }
 
@@ -302,7 +304,7 @@
     const bad = rows.filter((r) => r.level <= 2), fast = rows.filter((r) => r.speedBump > 0);
     const out = [bad.length ? `지표 ${rows.length}개 중 ${bad.length}개가 🟠경계 이상이에요.` : `지표 ${rows.length}개 모두 🟠경계보다 아래예요.`];
     if (m) { const a = axisSentence(m, mk); if (a) out.unshift(a); }
-    if (fast.length) out.push(`최근 한 달 사이 빠르게 나빠진 지표는 ${fast.map(short).join(", ")}예요.`);
+    if (fast.length) out.push(`최근 한 달 사이 빠르게 나빠진 지표는 ${fast.map(short).join(", ")}${batchim(short(fast.at(-1))) ? "이에요" : "예요"}.`);
     const f = rows.find((r) => r.key === "fng");
     if (f) out.push(`투자자 분위기는 '${f.zone}'(${f.value}점)이에요.`);
     const o = !m || mk === "US" ? duoInfo(d) : null;

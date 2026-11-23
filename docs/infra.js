@@ -72,7 +72,7 @@
         base += s.v;
       });
       if (c.label && (o.sparse || i % every === 0 || c.sub)) g += `<text class="ai-tk" x="${x + bw / 2}" y="${H - P.b + 14}" text-anchor="middle">${esc(c.label)}</text>`;
-      if (c.sub) g += `<line x1="${x}" x2="${x}" y1="${H - P.b}" y2="${H - 6}" stroke="var(--ink-2)" opacity=".5"/><text x="${x + 4}" y="${H - 6}" font-size="11" font-weight="700" fill="var(--ink-2)">${esc(c.sub)}</text>`;
+      if (c.sub) g += `<line x1="${x}" x2="${x}" y1="${H - P.b}" y2="${H - 6}" stroke="var(--ink-2)" opacity=".5"/><text x="${x + 4}" y="${H - 6}" font-size="12" font-weight="700" fill="var(--ink-2)">${esc(c.sub)}</text>`;
       g += `<rect class="cp-hov" x="${x}" y="${P.t}" width="${bw}" height="${H - P.t - P.b}" ${tipAttr(c.tip)}/>`;
     });
     if (o.line) {
@@ -83,7 +83,7 @@
     if (o.log) g += `<text class="ai-tk" x="${P.l + 4}" y="${P.t + 10}">로그 눈금</text>`;
     // 마지막 값 꼬리표
     const lv = tot[tot.length - 1 - (cats.at(-1).faded ? 1 : 0)];
-    if (lv) { const y = Y(lv), x = w - P.r + 1, tw = P.r - 4; g += `<path d="M${x},${y} l6,-8 h${tw - 6} v16 h-${tw - 6} z" fill="var(--ink)"/><text x="${x + 8}" y="${y + 4}" font-size="11" font-weight="700" fill="var(--surface)">${o.fmt(lv)}</text>`; }
+    if (lv) { const y = Y(lv), x = w - P.r + 1, tw = P.r - 4; g += `<path d="M${x},${y} l6,-8 h${tw - 6} v16 h-${tw - 6} z" fill="var(--ink)"/><text x="${x + 8}" y="${y + 4}" font-size="12" font-weight="700" fill="var(--surface)">${o.fmt(lv)}</text>`; }
     return `<svg class="ai-svg" viewBox="0 0 ${w} ${H}" width="${w}" height="${H}" role="img" aria-label="${esc(o.aria)}">${g}</svg>`;
   }
 
@@ -117,7 +117,7 @@
     for (let k = 1; k < tags.length; k++) if (tags[k].y - tags[k - 1].y < 17) tags[k].y = tags[k - 1].y + 17;
     const over = tags.length ? tags.at(-1).y - (H - P.b - 8) : 0;
     if (over > 0) tags.forEach((t) => (t.y -= over));
-    tags.forEach(({ s, v, y }) => { const x = w - P.r + 1, tw = P.r - 4; g += `<path d="M${x},${y} l6,-8 h${tw - 6} v16 h-${tw - 6} z" fill="${s.c}"/><text x="${x + 8}" y="${y + 4}" font-size="11" font-weight="700" fill="#fff">${s.k} ${hr(v).slice(1)}</text>`; });
+    tags.forEach(({ s, v, y }) => { const x = w - P.r + 1, tw = P.r - 4; g += `<path d="M${x},${y} l6,-8 h${tw - 6} v16 h-${tw - 6} z" fill="${s.c}"/><text x="${x + 8}" y="${y + 4}" font-size="12" font-weight="700" fill="#fff">${s.k} ${hr(v).slice(1)}</text>`; });
     days.forEach((d, i) => {
       const x = X(d.d), xp = i ? (X(days[i - 1].d) + x) / 2 : P.l, xn = i < days.length - 1 ? (x + X(days[i + 1].d)) / 2 : w - P.r;
       g += `<rect class="cp-hov" x="${xp}" y="${P.t}" width="${Math.max(2, xn - xp)}" height="${H - P.t - P.b}" ${tipAttr(`${ymd(d.d)} · ` + on.map((s) => d.vast?.[s.k]?.med ? `${s.k} ${hr(d.vast[s.k].med)}` : null).filter(Boolean).join(", "))}/>`;
@@ -197,7 +197,7 @@
         <div class="cp-tabs"><button class="toggle" aria-pressed="${st.tlog}" data-tlog="1">로그 눈금</button></div></div>
       <div id="inTok"></div>
       <p class="cp-sub">${prev4 && last ? `4주 전(${ymd(prev4.week)} 주 ${tok(prev4.total)})보다 <b class="${last.total >= prev4.total ? "up" : "down"}">${sgn((last.total / prev4.total - 1) * 100)}%</b>예요. ` : ""}로그 눈금을 켜면 같은 배수로 늘어난 구간이 같은 높이로 보여서, 증가 속도가 빨라지는지 느려지는지 읽기 쉬워요.</p>
-      <p class="foot-note">OpenRouter는 여러 AI 모델을 한 창구에서 파는 중개 서비스라, 여기 숫자는 시장 전체가 아니라 그중 일부예요. 오픈AI·구글·앤트로픽이 자기 API로 직접 판 양은 빠져 있고, 값싼 중국 모델 비중이 높아요. 그래도 같은 기준으로 매주 재기 때문에 수요가 늘어나는 속도를 보기에는 좋은 지표예요. 1조는 10<sup>12</sup>, 1경은 10<sup>16</sup>이에요.</p>
+      <p class="foot-note">OpenRouter는 여러 AI 모델을 한 창구에서 파는 중개 서비스라, 여기 숫자는 시장 전체가 아니라 그중 일부예요. OpenAI·구글·Anthropic이 자기 API로 직접 판 양은 빠져 있고, 값싼 중국 모델 비중이 높아요. 그래도 같은 기준으로 매주 재기 때문에 수요가 늘어나는 속도를 보기에는 좋은 지표예요. 1조는 10<sup>12</sup>, 1경은 10<sup>16</sup>이에요.</p>
 
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>회사</th><th>최근 분기</th><th class="num">설비투자</th><th class="num">1년 전 대비</th><th class="num">최근 4분기 합</th><th>공시일</th></tr></thead><tbody>${cTbl}</tbody></table></div>
       <p class="foot-note">SEC에 낸 분기·연간 보고서의 현금흐름표 '유형자산 취득' 금액이에요(아마존은 '생산 자산 취득'). 분기 보고서는 연초부터 쌓인 값이라 앞 분기를 빼서 분기 값을 구했어요. 마이크로소프트와 오라클은 회계연도가 달라서 분기 끝 날짜에 가장 가까운 달력 분기로 맞췄어요. 리스로 빌린 데이터센터는 이 금액에 들어가지 않아서 실제 투자 규모는 더 커요.</p>
@@ -219,7 +219,7 @@
     </section>`;
     if (tw.length) $("#inTok").innerHTML = barChart(tCats, W($("#inTok")), { line: tLine, log: st.tlog, fmt: tok, aria: "OpenRouter 주간 토큰 총량" });
     if (cShow.length) $("#inCap").innerHTML = barChart(cCats, W($("#inCap")), { line: cShow.map((t) => c4map[t.q]), lineDash: "5 3", fmt: bnAx, aria: "빅테크 5사 분기 설비투자", sparse: true });
-    if ($("#inSpend")) $("#inSpend").innerHTML = barChart(sCats, W($("#inSpend")), { line: ma(sw.map((h) => h.usd), 4), fmt: (v) => `$${Math.round(v / 1e6)}M`, aria: "OpenRouter 주간 지출 추정", H: 220 });
+    if ($("#inSpend")) $("#inSpend").innerHTML = barChart(sCats, W($("#inSpend")), { line: ma(sw.map((h) => h.usd), 4), fmt: (v) => !v ? "0" : v >= 1e8 ? `${+(v / 1e8).toFixed(2)}억` : `${Math.round(v / 1e4).toLocaleString("ko-KR")}만`, aria: "OpenRouter 주간 지출 추정", H: 220 });
     if (gd.length) $("#inGpu").innerHTML = gpuChart(gd, W($("#inGpu")));
     box.querySelector('[data-more="infra"]')?.addEventListener("toggle", (e) => { if (e.target.open === !!st.more) return; st.more = e.target.open; render(); });
     box.querySelectorAll("[data-tlog]").forEach((el) => el.addEventListener("click", () => { st.tlog = !st.tlog; render(); }));

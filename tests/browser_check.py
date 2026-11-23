@@ -38,7 +38,7 @@ PROBE = """() => {
   }
   const shown = [...document.querySelectorAll('main')].filter(m => !m.hidden && m.getBoundingClientRect().height > 0);
   const tiny = [...document.querySelectorAll('main *')].filter(e => e.children.length === 0 && e.textContent.trim()
-    && !e.closest('svg') && e.getBoundingClientRect().width > 0 && parseFloat(getComputedStyle(e).fontSize) < 11).length;
+    && !e.closest('svg') && e.getBoundingClientRect().width > 0 && parseFloat(getComputedStyle(e).fontSize) < 12).length;
   return { scrollW: de.scrollWidth, vw, over, tiny, mains: shown.map(m => m.id), text: shown.map(m => m.innerText).join('\\n') };
 }"""
 
@@ -76,7 +76,7 @@ def check(page, base, market, view, label):
     if bad:
         problems.append("깨진 값: " + " | ".join(b.replace("\n", " ") for b in bad))
     if got["tiny"]:
-        problems.append(f"11px보다 작은 글씨 {got['tiny']}곳")
+        problems.append(f"12px보다 작은 글씨 {got['tiny']}곳")
     selected = page.evaluate("() => [...document.querySelectorAll('.view-tabs [aria-selected=\"true\"]')].map(b => b.dataset.view)")
     if selected != [view]:
         problems.append(f"선택된 탭이 {selected} (기대 {view})")

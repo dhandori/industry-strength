@@ -80,7 +80,7 @@
       const x = X(+d), m = d.getMonth();
       if (m % stepM === 0) {
         g += `<line class="ai-grid mid" x1="${x}" x2="${x}" y1="${P.t}" y2="${H - P.b}"/><text class="ai-tk" x="${x}" y="${H - P.b + 14}" text-anchor="middle">${m + 1}월</text>`;
-        if (m === 0) g += `<line x1="${x}" x2="${x}" y1="${H - P.b}" y2="${H - 6}" stroke="var(--ink-2)" opacity=".5"/><text x="${x + 4}" y="${H - 6}" font-size="11" font-weight="700" fill="var(--ink-2)">${d.getFullYear()}</text>`;
+        if (m === 0) g += `<line x1="${x}" x2="${x}" y1="${H - P.b}" y2="${H - 6}" stroke="var(--ink-2)" opacity=".5"/><text x="${x + 4}" y="${H - 6}" font-size="12" font-weight="700" fill="var(--ink-2)">${d.getFullYear()}</text>`;
       }
       d.setMonth(d.getMonth() + 1);
     }
@@ -107,7 +107,7 @@
     if (over > 0) tags.forEach((t) => (t.y -= over));
     tags.forEach(({ s, y, v }) => {
       const x = w - P.r + 1, tw = P.r - 4;
-      g += `<path d="M${x},${y} l6,-8 h${tw - 6} v16 h-${tw - 6} z" fill="${s.c}"/><text x="${x + 8}" y="${y + 4}" font-size="11.5" font-weight="700" fill="#fff">${usd(v)}</text>`;
+      g += `<path d="M${x},${y} l6,-8 h${tw - 6} v16 h-${tw - 6} z" fill="${s.c}"/><text x="${x + 8}" y="${y + 4}" font-size="12" font-weight="700" fill="#fff">${usd(v)}</text>`;
     });
     // 마우스 올리면 그날 값 전부
     const allD = [...new Set(vis.flatMap((s) => s.pts.map((r) => r.d)))].sort();
@@ -163,7 +163,7 @@
     g += `<line class="cp-axis" x1="${LW}" x2="${w - R}" y1="${y}" y2="${y}"/>`;
     // 오늘
     const xn = X(Date.now());
-    g += `<line x1="${xn}" x2="${xn}" y1="4" y2="${y}" stroke="var(--ink-2)" stroke-width="1.2" stroke-dasharray="2 3"/><text x="${xn}" y="${y + 28}" font-size="10.5" fill="var(--ink-2)" text-anchor="middle">오늘</text>`;
+    g += `<line x1="${xn}" x2="${xn}" y1="4" y2="${y}" stroke="var(--ink-2)" stroke-width="1.2" stroke-dasharray="2 3"/><text x="${xn}" y="${y + 28}" font-size="12" fill="var(--ink-2)" text-anchor="middle">오늘</text>`;
     // 이름표
     lanes.forEach((L) => L.pills.forEach(({ e, x, t, wd, left, r }) => {
       const c = CO[e.company] || "var(--ink-2)", py = L.top + 6 + r * RH, done = e.kind !== "plan";

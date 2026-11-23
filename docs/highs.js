@@ -129,7 +129,7 @@
     el.classList.remove("as-table");
     const ch = LW.createChart(el, {
       autoSize: true,
-      layout: { background: { color: "transparent" }, textColor: css("--muted"), fontSize: 11, fontFamily: getComputedStyle(document.body).fontFamily },
+      layout: { background: { color: "transparent" }, textColor: css("--muted"), fontSize: 12, fontFamily: getComputedStyle(document.body).fontFamily },
       grid: { vertLines: { color: css("--grid") }, horzLines: { color: css("--grid") } },
       rightPriceScale: { borderColor: css("--line"), scaleMargins: { top: 0.1, bottom: 0 } },
       timeScale: { borderColor: css("--line"), fixLeftEdge: true, fixRightEdge: true, tickMarkFormatter: (t) => { const s = typeof t === "string" ? t : `${t.year}-${String(t.month).padStart(2, "0")}-${String(t.day).padStart(2, "0")}`; return md(s); } },

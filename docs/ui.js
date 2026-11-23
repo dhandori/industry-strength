@@ -71,6 +71,7 @@
     if (!box) {
       box = document.createElement("section");
       box.className = "tab-guide";
+      box.addEventListener("click", () => box.classList.toggle("open"));   // 휴대폰에서는 두 줄만 보이고 누르면 편다
       const anchor = m.querySelector(":scope > .ai-meta, :scope > .mx-meta, :scope > .pr-meta, :scope > .hx-meta");
       const first = m.querySelector(":scope > section.card, :scope > div.two-col");
       if (m.id === "viewStrength" || m.id === "viewHighs") (first ? m.insertBefore(box, first) : m.appendChild(box));

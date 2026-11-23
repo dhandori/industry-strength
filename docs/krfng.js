@@ -36,12 +36,12 @@
     let g = "";
     // 바탕: 0~25 극단적 공포, 75~100 극단적 탐욕
     g += `<rect x="${L}" y="${y(25)}" width="${W - L - R}" height="${y(0) - y(25)}" fill="var(--fg1)" opacity=".1"/><rect x="${L}" y="${y(100)}" width="${W - L - R}" height="${y(75) - y(100)}" fill="var(--fg5)" opacity=".1"/>`;
-    for (const v of [0, 25, 50, 75, 100]) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"${v === 50 ? ' stroke-dasharray="3 3"' : ""}/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${v}</text>`;
-    g += `<text x="${L + 4}" y="${y(100) + 12}" font-size="10.5" font-weight="700" fill="var(--fg5)">극단적 탐욕</text><text x="${L + 4}" y="${y(0) - 4}" font-size="10.5" font-weight="700" fill="var(--fg1)">극단적 공포</text>`;
+    for (const v of [0, 25, 50, 75, 100]) g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"${v === 50 ? ' stroke-dasharray="3 3"' : ""}/><text x="${L - 5}" y="${y(v) + 3.5}" text-anchor="end" font-size="12" fill="var(--muted)">${v}</text>`;
+    g += `<text x="${L + 4}" y="${y(100) + 12}" font-size="12" font-weight="700" fill="var(--fg5)">극단적 탐욕</text><text x="${L + 4}" y="${y(0) - 4}" font-size="12" font-weight="700" fill="var(--fg1)">극단적 공포</text>`;
     // 오른쪽 눈금: 코스피
-    for (const k of [0, 0.5, 1]) { const v = klo + (khi - klo) * k; g += `<text x="${W - R + 4}" y="${ky(v) + 3.5}" font-size="10.5" fill="var(--ma50)">${Math.round(v).toLocaleString()}</text>`; }
+    for (const k of [0, 0.5, 1]) { const v = klo + (khi - klo) * k; g += `<text x="${W - R + 4}" y="${ky(v) + 3.5}" font-size="12" fill="var(--ma50)">${Math.round(v).toLocaleString()}</text>`; }
     const yrs = (Date.parse(ds.at(-1)) - Date.parse(ds[0])) / 3.156e10;
-    const tick = (i, s) => { const xx = x(i).toFixed(1), end = W - R - x(i) < 18; return `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${end ? W - R : xx}" y="${H - 8}" text-anchor="${end ? "end" : "middle"}" font-size="11" fill="var(--muted)">${s}</text>`; };
+    const tick = (i, s) => { const xx = x(i).toFixed(1), end = W - R - x(i) < 18; return `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${end ? W - R : xx}" y="${H - 8}" text-anchor="${end ? "end" : "middle"}" font-size="12" fill="var(--muted)">${s}</text>`; };
     let xt = "";
     if (n <= 80) { const j = Math.max(1, Math.ceil(n / (small ? 4 : 7))); for (let i = n - 1; i >= 0; i -= j) if (x(i) - L > 14) xt += tick(i, md(ds[i])); }
     else { let last = ""; const stp = yrs > 1.6 ? (small ? 6 : 3) : (small ? 3 : 2); ds.forEach((d, i) => { const m = d.slice(0, 7); if (m === last) return; if (last && (+d.slice(5, 7) - 1) % stp === 0) xt += tick(i, `${d.slice(2, 4)}.${d.slice(5, 7)}`); last = m; }); }

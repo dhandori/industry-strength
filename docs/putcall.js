@@ -52,10 +52,10 @@
     // 바탕 띠: 위 10% = 겁먹음(빨강), 아래 10% = 들뜸(주황)
     let g = `<rect x="${L}" y="${T}" width="${W - L - R}" height="${Math.max(0, y(S.q90) - T).toFixed(1)}" fill="var(--mx2)" opacity=".09"/>
       <rect x="${L}" y="${y(S.q10).toFixed(1)}" width="${W - L - R}" height="${Math.max(0, H - B - y(S.q10)).toFixed(1)}" fill="var(--mx3)" opacity=".12"/>`;
-    for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4, yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${v.toFixed(2)}</text>`; }
-    g += `<text x="${W - R - 4}" y="${T + 13}" text-anchor="end" font-size="10.5" font-weight="700" fill="var(--mx2)">겁먹음 구간 ${S.q90.toFixed(2)}↑</text><text x="${W - R - 4}" y="${H - B - 5}" text-anchor="end" font-size="10.5" font-weight="700" fill="var(--mx3)">들뜸 구간 ${S.q10.toFixed(2)}↓</text>`;
+    for (let i = 0; i <= 4; i++) { const v = lo + (hi - lo) * i / 4, yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="12" fill="var(--muted)">${v.toFixed(2)}</text>`; }
+    g += `<text x="${W - R - 4}" y="${T + 13}" text-anchor="end" font-size="12" font-weight="700" fill="var(--mx2)">겁먹음 구간 ${S.q90.toFixed(2)}↑</text><text x="${W - R - 4}" y="${H - B - 5}" text-anchor="end" font-size="12" font-weight="700" fill="var(--mx3)">들뜸 구간 ${S.q10.toFixed(2)}↓</text>`;
     const ds = s.map((p) => p[0]), yrs = (Date.parse(ds.at(-1)) - Date.parse(ds[0])) / 3.156e10;
-    const tick = (i, t) => { const xx = x(i).toFixed(1), end = W - R - x(i) < 18; return `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${end ? W - R : xx}" y="${H - 8}" text-anchor="${end ? "end" : "middle"}" font-size="11" fill="var(--muted)">${t}</text>`; };
+    const tick = (i, t) => { const xx = x(i).toFixed(1), end = W - R - x(i) < 18; return `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${end ? W - R : xx}" y="${H - 8}" text-anchor="${end ? "end" : "middle"}" font-size="12" fill="var(--muted)">${t}</text>`; };
     let xt = "";
     if (s.length <= 80) { const j = Math.max(1, Math.ceil(s.length / (small ? 4 : 7))); for (let i = s.length - 1; i >= 0; i -= j) if (x(i) - L > 14) xt += tick(i, md(ds[i])); }
     else { const every = yrs > 12 ? 4 : yrs > 6 ? 2 : yrs > 2.5 ? 1 : 0; let last = "";

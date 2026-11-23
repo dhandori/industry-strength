@@ -745,7 +745,7 @@
     const LW = window.LightweightCharts;
     const ch = LW.createChart(el, {
       autoSize: true,
-      layout: { background: { color: "transparent" }, textColor: css("--muted"), fontSize: 11,
+      layout: { background: { color: "transparent" }, textColor: css("--muted"), fontSize: 12,
                 fontFamily: getComputedStyle(document.body).fontFamily },
       grid: { vertLines: { color: css("--grid") }, horzLines: { color: css("--grid") } },
       rightPriceScale: { borderColor: css("--line"), scaleMargins: { top: 0.08, bottom: 0.06 }, ...(opts.priceScale || {}) },
@@ -881,7 +881,7 @@
   function gapRangeText(lo, hi, p, days) {
     const r1 = (v) => Math.round(v * 10) / 10 || 0;
     const where = p >= 90 ? " 과거와 견줘 많이 벌어진 편이에요." : p <= 10 ? " 과거와 견줘 많이 눌린 편이에요." : "";
-    return `${days >= 250 ? "지난 1년" : `최근 ${days}거래일`} 범위 ${fmtPct(r1(lo))} ~ ${fmtPct(r1(hi))} · 이 기간 중 ${Math.round(p)}%의 날보다 지금이 높아요.${where}`;
+    return `${days >= 250 ? "지난 1년" : `최근 ${days}거래일`} 범위 ${fmtPct(r1(lo))} ~ ${fmtPct(r1(hi))} · 이 기간 중 지금보다 낮았던 날이 ${Math.round(p)}%예요.${where}`;
   }
   function gap200Of(S, id) {
     const s = S && S.items && S.items[id];

@@ -9,6 +9,8 @@
   "use strict";
   const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
   const isNum = (v) => typeof v === "number" && isFinite(v);
+  // 받침에 맞춰 조사를 고른다. 숫자·영문으로 끝나는 이름(코스피200, S&P500)은 읽는 소리로 본다.
+  const batchim = (s) => { const ch = String(s).replace(/[\s)\]'"’”]+$/, "").slice(-1), c = ch.charCodeAt(0); return c >= 0xac00 && c <= 0xd7a3 ? (c - 0xac00) % 28 !== 0 : /\d/.test(ch) ? "013678".includes(ch) : /[lmnr]/i.test(ch); };
 
   // 모양: style.css 대신 여기서 한 번만 넣는다.
   const CSS = `
@@ -29,12 +31,12 @@
 .rsg-lab span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .rsg-lab span.me { font-weight: 700; color: var(--ink); font-size: 13px; }
 .rsg-lab.low span { color: var(--muted); }
-.rsg-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+.rsg-ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
 .rs-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; margin-top: 8px; }
 .rs-facts div { background: var(--surface-2); border-radius: 10px; padding: 8px 10px; display: grid; gap: 2px; }
-.rs-facts em { font-style: normal; font-size: 11.5px; color: var(--muted); }
+.rs-facts em { font-style: normal; font-size: 12px; color: var(--muted); }
 .rs-facts b { font-size: 17px; font-variant-numeric: tabular-nums; }
-.rs-facts small { font-size: 11.5px; color: var(--ink-2); }
+.rs-facts small { font-size: 12px; color: var(--ink-2); }
 .rs-why { margin-top: 10px; }
 .rs-why summary { cursor: pointer; font-weight: 700; font-size: 14px; color: var(--accent); }
 .rs-why p { margin: 8px 0 0; font-size: 14px; line-height: 1.65; color: var(--ink-2); }
@@ -116,7 +118,7 @@
     const v = verdict(o.score, base, o.up, o.who || (o.kind === "industry" ? "이 산업" : "이 종목"));
     const facts = [];
     if (isNum(o.score)) facts.push(`<div><em>RS 점수</em><b>${o.score}</b><small>${esc(o.scope || (o.kind === "industry" ? "시장 안 산업끼리 1~99" : "시장 안 종목끼리 1~99"))}</small></div>`);
-    if (base) facts.push(`<div><em>시장 기준선</em><b>${base.v}</b><small>${esc(base.name)}를 같은 잣대로 잰 점수</small></div>`);
+    if (base) facts.push(`<div><em>시장 기준선</em><b>${base.v}</b><small>${esc(base.name)}${batchim(base.name) ? "을" : "를"} 같은 잣대로 잰 점수</small></div>`);
     if (o.up != null) facts.push(`<div><em>RS선 흐름</em><b class="${o.up ? "ok" : "no"}">${o.up ? "50일 평균 위" : "50일 평균 아래"}</b><small>${o.up ? "최근 시장보다 강해지는 중" : "최근 시장보다 약해지는 중"}</small></div>`);
     if (isNum(o.hiDist)) facts.push(`<div><em>RS선 1년 최고 대비</em><b>${o.hiDist >= -0.05 ? "신고가" : o.hiDist.toFixed(1) + "%"}</b><small>${o.hiDist >= -0.5 ? "시장 대비 강도가 1년 중 최고" : "1년 최고치보다 아래"}</small></div>`);
     return `<section class="rs-box ${v.cls}" aria-label="RS 한눈에">

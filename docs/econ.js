@@ -78,14 +78,14 @@
     const x = opt.days ? (i) => L + (W - L - R) * i / (s.length - 1) : (i) => L + (W - L - R) * (Date.parse(s[i][0]) - t0) / (tN - t0);
     const y = (v) => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
     let g = "";
-    for (const v of ticks) { const yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="11" fill="var(--muted)">${opt.ax(v)}</text>`; }
+    for (const v of ticks) { const yy = y(v).toFixed(1); g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="12" fill="var(--muted)">${opt.ax(v)}</text>`; }
     if (opt.zone != null && opt.zone < hi) g += `<rect x="${L}" y="${T}" width="${W - L - R}" height="${Math.max(0, y(opt.zone) - T).toFixed(1)}" fill="var(--mx1)" opacity=".07"/>`;   // 위험 구간 칠하기
     (opt.ref || []).filter((v) => v > lo && v < hi).forEach((v) => { g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="${opt.refC || "var(--mx2)"}" stroke-dasharray="3 3"/>`; });
     // 가로축: 기간 길이에 맞춰 해(年) 또는 달
     const span = (Date.parse(s.at(-1)[0]) - Date.parse(s[0][0])) / 3.156e10;
     const every = span > 40 ? 10 : span > 15 ? 5 : span > 6 ? 2 : span > 2.5 ? 1 : 0;
     let xt = "", last = "";
-    const tk = (i, t) => { const xx = x(i).toFixed(1), end = W - R - x(i) < 18; return `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${end ? W - R : xx}" y="${H - 7}" text-anchor="${end ? "end" : "middle"}" font-size="11" fill="var(--muted)">${t}</text>`; };
+    const tk = (i, t) => { const xx = x(i).toFixed(1), end = W - R - x(i) < 18; return `<line x1="${xx}" x2="${xx}" y1="${H - B}" y2="${H - B + 4}" stroke="var(--muted)"/><text x="${end ? W - R : xx}" y="${H - 7}" text-anchor="${end ? "end" : "middle"}" font-size="12" fill="var(--muted)">${t}</text>`; };
     // 반년이 안 되는 짧은 기간(20·60거래일 등): 날짜(월/일) 눈금을 끝에서부터 고르게
     if (span < 0.5) { const st2 = Math.max(1, Math.ceil(s.length / (small ? 4 : 6))); for (let i = s.length - 1; i >= 0; i -= st2) if (x(i) - L > 14) xt += tk(i, `${+s[i][0].slice(5, 7)}/${+s[i][0].slice(8, 10)}`); }
     else s.forEach((p, i) => {
@@ -117,7 +117,7 @@
       const i = s.findIndex((p) => p[0] === d);
       if (i < 0) return;
       const xx = x(i), yy = y(v), right = xx > W - 60;
-      body += `<circle cx="${xx.toFixed(1)}" cy="${yy.toFixed(1)}" r="3.5" fill="var(--mx1)" stroke="var(--surface)" stroke-width="1.5"/><text x="${(xx + (right ? -6 : 0)).toFixed(1)}" y="${(below ? yy + 16 : yy - 7).toFixed(1)}" text-anchor="${right ? "end" : "middle"}" font-size="10.5" font-weight="700" fill="var(--mx1)" paint-order="stroke" stroke="var(--surface)" stroke-width="3">${esc(t)}</text>`;
+      body += `<circle cx="${xx.toFixed(1)}" cy="${yy.toFixed(1)}" r="3.5" fill="var(--mx1)" stroke="var(--surface)" stroke-width="1.5"/><text x="${(xx + (right ? -6 : 0)).toFixed(1)}" y="${(below ? yy + 16 : yy - 7).toFixed(1)}" text-anchor="${right ? "end" : "middle"}" font-size="12" font-weight="700" fill="var(--mx1)" paint-order="stroke" stroke="var(--surface)" stroke-width="3">${esc(t)}</text>`;
     });
     const lv = lines[0].v.at(-1);
     if (!opt.bars && lv != null) body += `<circle cx="${x(s.length - 1)}" cy="${y(lv)}" r="4.5" fill="${opt.dot || "var(--price)"}" stroke="var(--surface)" stroke-width="2"/>`;
@@ -393,7 +393,7 @@
   function warnBox(w) {
     if (!w || !w.length) return "";
     const gap = w.filter((x) => x.kind === "gap");
-    return `<div class="ec-warn ${gap.length ? "gap" : ""}"><b>${gap.length ? "⚠️ 반영이 빠진 지표가 있어요" : "⏳ 늦어지는 지표가 있어요"}</b><ul>${w.map((x) => `<li>${esc(x.msg)}</li>`).join("")}</ul></div>`;
+    return `<div class="ec-warn ${gap.length ? "gap" : ""}"><b>${gap.length ? "⚠️ 반영이 빠진 지표가 있어요" : "⏳ 늦어지는 지표가 있어요"}</b><ul>${w.map((x) => `<li>${esc(String(x.msg).replace(/^([a-z_0-9]+): /, (m, k) => (typeof DEF !== "undefined" && DEF[k] ? DEF[k].n.split(" (")[0] : k) + ": ").replace(" — ", ". "))}</li>`).join("")}</ul></div>`;
   }
 
   function render(market) {
