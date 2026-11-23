@@ -133,18 +133,18 @@ def compute(p, close, now_utc):
     if recent.iloc[-1] == 0 and (recent.iloc[:-1] == 1).any():
         flags.append(["200일선 이탈", "down"])
     if not pd.isna(hi.iloc[-1]) and c >= hi.iloc[-1] * 0.999:
-        flags.append(["비율 52주 신고", "up"])
+        flags.append(["비율 52주 신고가", "up"])
     if not pd.isna(lo.iloc[-1]) and c <= lo.iloc[-1] * 1.001:
-        flags.append(["비율 52주 신저", "down"])
+        flags.append(["비율 52주 신저가", "down"])
     rv, zv = rs14.iloc[-1], z.iloc[-1]
     if rv <= 30:
         flags.append(["RSI 과매도", "down"])
     elif rv >= 70:
         flags.append(["RSI 과매수", "up"])
     if zv <= -2:
-        flags.append(["Z점수 -2 아래", "down"])
+        flags.append(["Z점수 -2 이하", "down"])
     elif zv >= 2:
-        flags.append(["Z점수 +2 위", "up"])
+        flags.append(["Z점수 +2 이상", "up"])
 
     m50, m200 = ma[50].iloc[-1], ma[200].iloc[-1]
     if c > m50 > m200:

@@ -331,7 +331,8 @@
     let supHtml = "";
     if (KR && (sup || rk.length)) {
       const row = (n, k) => `<tr><td><b>${n}</b></td>${["1", "5", "20", "60"].map((p) => `<td class="num"><span class="ret ${cls(sup[k + p])}">${eok(sup[k + p])}</span></td>`).join("")}</tr>`;
-      const runs = sup ? [sup.fs ? `외국인 ${Math.abs(sup.fs)}일 연속 ${sup.fs > 0 ? "순매수" : "순매도"}` : "", sup.is ? `기관 ${Math.abs(sup.is)}일 연속 ${sup.is > 0 ? "순매수" : "순매도"}` : ""].filter(Boolean).join(" · ") : "";
+      const runDays = (n) => Math.abs(n) >= 2 ? `${Math.abs(n)}일 연속` : "최근 1일";
+      const runs = sup ? [sup.fs ? `외국인 ${runDays(sup.fs)} ${sup.fs > 0 ? "순매수" : "순매도"}` : "", sup.is ? `기관 ${runDays(sup.is)} ${sup.is > 0 ? "순매수" : "순매도"}` : ""].filter(Boolean).join(" · ") : "";
       const rkHtml = rk.length ? `<div class="sk-rk">${rk.map((r) => `<span class="sk-bd ${r.side === "buy" ? "hot" : "no"}">${r.who} ${r.n === "1" ? "하루" : r.n + "일"} ${r.side === "buy" ? "순매수" : "순매도"} ${r.k}위 <small>${r.mk === "KOSPI" ? "코스피" : "코스닥"} · 시총 대비 ${pct(r.who === "외국인" ? r.r.fp : r.r.ip, 2)}${r.who === "외국인" && r.r.dh != null ? ` · 보유 ${r.r.hold?.toFixed(1)}% (${r.r.dh > 0 ? "+" : ""}${r.r.dh.toFixed(2)}%p)` : ""}</small></span>`).join("")}</div>` : "";
       supHtml = `<section class="sk-sec" id="skSup"><h4>💰 투자자별 수급 <span class="sub">억 원 · 순매수 수량 × 종가 추정${sup ? " · " + esc(sup.asof || S.basis_date) : ""}</span></h4>
         ${rk.length ? `<p class="sk-note sk-note-top">외국인·기관 보유 변화 카드(산업 강도 탭)의 상위 10 명단에 들어 있어요.</p>${rkHtml}` : ""}
@@ -417,7 +418,7 @@
   function baseChart(el, opts = {}) {
     const ch = window.LightweightCharts.createChart(el, {
       autoSize: true,
-      layout: { background: { color: "transparent" }, textColor: css("--muted"), fontSize: 11, fontFamily: getComputedStyle(document.body).fontFamily },
+      layout: { background: { color: "transparent" }, textColor: css("--muted"), fontSize: 12, fontFamily: getComputedStyle(document.body).fontFamily },
       grid: { vertLines: { color: css("--grid") }, horzLines: { color: css("--grid") } },
       rightPriceScale: { borderColor: css("--line"), scaleMargins: { top: 0.08, bottom: 0.06 }, ...(opts.priceScale || {}) },
       timeScale: { borderColor: css("--line"), timeVisible: false, fixLeftEdge: true, fixRightEdge: true },
@@ -459,7 +460,7 @@
 
     // 1) 주가 + 이동평균 + 거래량
     const el = $("#skPrice", box);
-    const ch = baseChart(el, { fmt: fmtP, priceScale: { scaleMargins: { top: 0.06, bottom: 0.26 } } });
+    const ch = baseChart(el, { fmt: (x) => x < 0 ? "" : fmtP(x), priceScale: { scaleMargins: { top: 0.06, bottom: 0.26 } } });   // 아래 거래량 자리까지 내려간 음수 눈금은 지운다
     const vs = ch.addHistogramSeries({ priceScaleId: "vol", priceFormat: { type: "volume" }, lastValueVisible: false, priceLineVisible: false });
     ch.priceScale("vol").applyOptions({ scaleMargins: { top: 0.8, bottom: 0 } });
     const up = css("--up"), dn = css("--down");

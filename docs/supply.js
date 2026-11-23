@@ -116,7 +116,7 @@
       return `<td class="num"><span class="ret ${cls(v)}">${won(v)}</span></td>`;
     }).join("")}</tr>`;
     const j = it.supJ;
-    const runTxt = s.run ? `외국인+기관 합계로 <b>${Math.abs(s.run)}일 연속 ${s.run > 0 ? "순매수" : "순매도"}</b>` : "";
+    const runTxt = s.run ? `외국인+기관 합계로 <b>${Math.abs(s.run) >= 2 ? Math.abs(s.run) + "일 연속" : "최근 1일"} ${s.run > 0 ? "순매수" : "순매도"}</b>` : "";
     const nBuy = s.buy20 == null ? "–" : Math.round(s.buy20 * s.n / 100);
     const blk = (it.members || []).filter((m) => m.sup && m.sup.blk && m.sup.blk.length);
     document.getElementById("dSupHead").innerHTML = `
@@ -163,19 +163,19 @@
     let g = "";
     for (let k = 0; k <= 3; k++) {
       const v = plo + (phi - plo) * k / 3, yy = yP(v).toFixed(1);
-      g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="10.5" fill="var(--muted)">${v.toFixed(0)}</text>`;
+      g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="12" fill="var(--muted)">${v.toFixed(0)}</text>`;
     }
     // 아래 칸 눈금은 0을 지나는 깔끔한 숫자(100억, 500억, 1,000억 …)로
     const raw = (chi - clo) / 4, mag = Math.pow(10, Math.floor(Math.log10(raw || 1)));
     const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((v) => v >= raw) || raw;
     for (let v = Math.ceil(clo / step) * step; v <= chi + 1e-9; v += step) {
       const yy = yC(v).toFixed(1);
-      g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="10.5" fill="var(--muted)">${Math.abs(v) < step / 1e6 ? "0" : won(v).replace("+", "")}</text>`;
+      g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="var(--grid)"/><text x="${L - 6}" y="${+yy + 3.5}" text-anchor="end" font-size="12" fill="var(--muted)">${Math.abs(v) < step / 1e6 ? "0" : won(v).replace("+", "")}</text>`;
     }
     let xt = "", lastM = "";
     dates.forEach((t, k) => {
       const m = t.slice(0, 7);
-      if (m !== lastM && lastM) { const xx = x(k).toFixed(1); xt += `<line x1="${xx}" x2="${xx}" y1="${T1}" y2="${T2 + H2}" stroke="var(--grid)" stroke-dasharray="2 3"/><text x="${xx}" y="${H - 7}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${+t.slice(5, 7)}월</text>`; }
+      if (m !== lastM && lastM) { const xx = x(k).toFixed(1); xt += `<line x1="${xx}" x2="${xx}" y1="${T1}" y2="${T2 + H2}" stroke="var(--grid)" stroke-dasharray="2 3"/><text x="${xx}" y="${H - 7}" text-anchor="middle" font-size="12" fill="var(--muted)">${+t.slice(5, 7)}월</text>`; }
       lastM = m;
     });
     const zero = yC(0).toFixed(1);
@@ -183,8 +183,8 @@
     el.innerHTML = `<div class="chart-legend sup-lg" id="supLg"></div>
       <svg viewBox="0 0 ${W} ${H}" class="sup-svg" role="img" aria-label="${esc(it.name)} 바구니 지수와 투자자별 누적 순매수">
         ${g}${xt}
-        <text x="${L}" y="${T1 + 10}" font-size="11" fill="var(--ink-2)" font-weight="700" dx="4">바구니 지수</text>
-        <text x="${L}" y="${T2 + 10}" font-size="11" fill="var(--ink-2)" font-weight="700" dx="4">누적 순매수 (${md(dates[0])}부터)</text>
+        <text x="${L}" y="${T1 + 10}" font-size="12" fill="var(--ink-2)" font-weight="700" dx="4">바구니 지수</text>
+        <text x="${L}" y="${T2 + 10}" font-size="12" fill="var(--ink-2)" font-weight="700" dx="4">누적 순매수 (${md(dates[0])}부터)</text>
         <line x1="${L}" x2="${W - R}" y1="${zero}" y2="${zero}" stroke="var(--muted)" stroke-width="1"/>
         <line x1="${L}" x2="${L}" y1="${T1}" y2="${T1 + H1}" stroke="var(--muted)"/><line x1="${L}" x2="${L}" y1="${T2}" y2="${T2 + H2}" stroke="var(--muted)"/>
         <line x1="${L}" x2="${W - R}" y1="${T2 + H2}" y2="${T2 + H2}" stroke="var(--muted)"/>
