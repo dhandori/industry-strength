@@ -142,6 +142,28 @@ main > h2 .sfold.shut{background:var(--pud);border-color:var(--pud);color:#fff}
 #panel .gl button b small{font-size:12px;font-weight:400;color:var(--sub);margin-left:5px}
 #panel .gl button span{font-size:12px;color:#4b5563;font-variant-numeric:tabular-nums}
 #panel .gl.weak button{background:var(--soft);color:var(--sub)}
+/* '▦ 전체' 판 맨 위: 마지막 거래일에 새로 생긴 신호. 줄 제목은 그 신호로 걸러 보기, 이름은 그 종목으로 가기 */
+#panel .sgs{margin:12px 0 2px;border:1px solid #fed7aa;border-radius:11px;background:#fffaf5}
+#panel .sgs summary{cursor:pointer;list-style:none;padding:10px 12px;font-size:14px;font-weight:800;color:#9a3412}
+#panel .sgs summary::-webkit-details-marker{display:none}
+#panel .sgs summary::after{content:" ▾";color:#f08c00}
+#panel .sgs[open] summary::after{content:" ▴"}
+#panel .sgs summary small{font-size:12.5px;font-weight:600;color:#4b5563;margin-left:6px}
+#panel .sgs .nn{margin:0 12px 8px;font-size:12px;color:#4b5563;line-height:1.5}
+#panel .sgs .none{margin:0 12px 10px;font-size:13px;color:var(--sub)}
+#panel .sgr{display:flex;flex-wrap:wrap;align-items:center;gap:4px 4px;padding:7px 10px;border-top:1px solid #fde3cc}
+#panel .sgh{flex:none;border:0;border-radius:8px;padding:5px 9px;margin-right:4px;font-size:13px;font-weight:700;background:#ffedd5;color:#9a3412}
+#panel .sgh b{margin-left:5px;font-variant-numeric:tabular-nums}
+#panel .sgi{flex:none;border:0;background:none;color:#c2410c;font-size:15px;line-height:1;padding:4px 6px 4px 0;margin-left:-4px;cursor:help}
+#panel .sgr.bad .sgi{color:#64748b}
+#panel .sgr.bad .sgh{background:#e2e8f0;color:#334155}
+#panel .sgr .sgl{display:contents}
+#panel .sgl button{border:0;background:none;padding:4px 4px;font-size:13px;color:var(--ink);text-decoration:underline;text-decoration-color:#d6d9df;text-underline-offset:3px}
+#panel .sgl button small{font-size:12px;color:var(--sub);margin-left:3px}
+#panel .sgl button.more{color:#9a3412;font-weight:700;text-decoration:none}
+/* '▦ 전체' 단추 오른쪽 위 주황 알림: 새로 좋아진 종목 수. 단추 폭을 늘리지 않게 떠 있게 둔다(섹터 줄이 밀리지 않게) */
+#secs #gbtn{position:relative}
+#secs #gbtn i{position:absolute;top:-7px;right:-5px;font-style:normal;background:#f08c00;color:#fff;border-radius:8px;padding:0 5px;font-size:12px;line-height:16px;font-weight:700;white-space:nowrap;box-shadow:0 0 0 2px var(--card)}
 #dim{position:fixed;inset:0;background:rgba(22,24,29,.28);z-index:4}
 #dim[hidden]{display:none}
 main{max-width:970px;margin:0 auto;padding:8px 8px 60px}
@@ -209,6 +231,16 @@ main > h2 small{font-size:12.5px;font-weight:500;color:#4b5563}
 .bd .rh{background:#e7f0ff;color:#1d4ed8;font-weight:600}
 .bd .vh{background:#f3e8ff;color:#6b21a8;font-weight:600}
 .bd .st{background:#fff4d6;color:#8a5a00}
+/* 마지막 거래일에 새로 생긴 신호(2026-11-23): 좋아진 것은 주황 테두리, 나빠진 것(이탈)은 회색 테두리 */
+.bd span.nw{box-shadow:inset 0 0 0 1.5px #f08c00}
+.bd .hb{background:#fff1e6;color:#9a3412;font-weight:700}
+.bd .pv{background:#6d28d9;color:#fff;font-weight:700}
+.bd .wn{background:#eef2f7;color:#334155;font-weight:600;box-shadow:inset 0 0 0 1px #94a3b8}
+/* 숫자 줄(종목만): 하루 변동폭, 10일 저점·50일선까지 거리, 거래대금. 누르면 풀이가 나온다 */
+.kv{display:flex;flex-wrap:wrap;gap:2px 12px;margin:6px 0 0;font-size:12.5px;color:#4b5563;font-variant-numeric:tabular-nums}
+.kv span{white-space:nowrap;cursor:help;text-decoration:underline dotted;text-decoration-color:rgba(55,65,81,.4);text-underline-offset:3px}
+.kv b{font-weight:700;color:var(--text)}
+.kv .far b{color:#c2410c}
 /* 52주 범위 막대: 왼쪽 끝이 52주 최저 종가, 오른쪽 끝이 최고 종가, 점이 지금 */
 canvas{display:block;width:100%;height:300px;margin-top:4px}
 @media (min-width:900px){ canvas{height:345px} }
@@ -219,6 +251,8 @@ canvas.rl{height:352px}
 .lg .lw{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
 .lg .lw i{display:inline-block;width:14px;height:0;border-top:2.5px solid;border-radius:2px}
 .lg .lw i.bx{width:8px;height:10px;border:0;border-radius:1px;opacity:.75}
+.lg .lpp{cursor:help;text-decoration:underline dotted;text-decoration-color:rgba(55,65,81,.45);text-underline-offset:3px}
+.lg .lw i.pp{width:7px;height:7px;border:0;border-radius:50%;background:#7c3aed}
 .lg .lr{margin-left:auto;color:var(--sub);white-space:nowrap}
 /* 표 형태 목록 보기 */
 .tbl{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:6px}
@@ -331,6 +365,22 @@ let META = null, CUR = null, TAB = null, ITEMS = [], io = null, HEADS = [], HIDX
 
 function fmt(v, dg){ return v.toLocaleString("en-US",{minimumFractionDigits:dg,maximumFractionDigits:dg}); }
 function sign(v, d){ return (v > 0 ? "+" : "") + v.toFixed(d) + "%"; }
+// 카드 가격 자릿수: 원화·엔화 종목(.KS .KQ .T)은 소수점 없이
+const pdg = it => /\.(KS|KQ|T)$/.test(it.y) ? 0 : it.dg;
+const px = (it, v) => fmt(v, pdg(it));
+// 큰 금액을 한국식 단위로: 1.2조, 1,234억, 5,600만
+function money(v){
+  const a = Math.abs(v), loc = x => x.toLocaleString("en-US");
+  if (a >= 9999.5e8){ const t = v / 1e12; return (Math.abs(t) >= 99.95 ? loc(Math.round(t)) : loc(Math.round(t * 10) / 10)) + "조"; }
+  if (a >= 9.995e8) return loc(Math.round(v / 1e8)) + "억";
+  if (a >= 9999.5e4) return loc(Math.round(v / 1e7) / 10) + "억";
+  if (a >= 9999.5) return loc(Math.round(v / 1e4)) + "만";
+  return loc(Math.round(v));
+}
+// 종목 통화: 기호 끝(상장 거래소)으로 정한다. [통화 코드, 한글 이름]. 표에 없는 거래소는 거래대금을 쓰지 않는다
+const CCY = {"": ["USD","달러"], KS: ["KRW","원"], KQ: ["KRW","원"], T: ["JPY","엔"], SS: ["CNY","위안"], SZ: ["CNY","위안"],
+             TW: ["TWD","대만달러"], TWO: ["TWD","대만달러"], HK: ["HKD","홍콩달러"], DE: ["EUR","유로"], AS: ["EUR","유로"], PA: ["EUR","유로"], SW: ["CHF","스위스프랑"]};
+const ccy = y => CCY[y.includes(".") ? y.split(".").pop() : ""] || null;
 
 function niceTicks(lo, hi, n){
   const span = hi - lo, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
@@ -459,7 +509,14 @@ function draw(cv, it0){
       g.fillStyle = it.c[i] >= it.o[i] ? UP : DN;
       g.fillRect(X(i) - bw/2, top + volH - h, bw, h);
     }
-    g.globalAlpha = 1; g.fillStyle = "#6b7280"; g.textAlign = "left"; g.textBaseline = "top";
+    g.globalAlpha = 1;
+    // 포켓 피봇 자리(종목만): 그날 거래량 막대 바로 위에 보라 점
+    if (it0.k){
+      const pf = ppFlags(it0), off = it0.c.length - n;
+      g.fillStyle = PPC;
+      for (let i = 0; i < n; i++) if (pf[off + i]){ g.beginPath(); g.arc(X(i), top + volH - it.v[i] / vmax * volH - 4, 2.4, 0, Math.PI * 2); g.fill(); }
+    }
+    g.fillStyle = "#6b7280"; g.textAlign = "left"; g.textBaseline = "top";
     g.fillText("거래량", pW + 5, top + 2);
   }
   if (rl) drawRs(g, it0, it, rl, X, n, pW, padT + pH + gap + volH + rgap, rsH, rgap);
@@ -510,16 +567,50 @@ function metrics(it){
 }
 // ── 추세추종 지표(2026-11-21). 종목(국가가 있는 것)만. 단순이동평균은 저장된 종가로 여기서 구한다 ──
 const sma = (c, k, end) => { if (end + 1 < k) return null; let t = 0; for (let i = end - k + 1; i <= end; i++) t += c[i]; return t / k; };
+// 미너비니 트렌드 템플릿 8조건(통과 여부 배열). back 거래일 전 기준(0 = 오늘). 1년 치 자료라 200일선 한 달 전 값까지 구할 수 있을 때만.
+// 어제(back 1)의 52주 고점·저점은 그날까지의 종가로 다시 구하고, RS 조건은 어제 등급이 저장돼 있지 않아 오늘 등급으로 본다.
+function ttAt(it, back){
+  const c = it.c, j = c.length - 1 - back, last = c[j];
+  const s50 = sma(c, 50, j), s150 = sma(c, 150, j), s200 = sma(c, 200, j), s200b = sma(c, 200, j - 21);
+  if (s200b == null) return null;
+  let hi = it.hi, lo = it.lo;
+  if (back){ hi = -Infinity; lo = Infinity; for (let i = 0; i <= j; i++){ if (c[i] > hi) hi = c[i]; if (c[i] < lo) lo = c[i]; } }
+  return [last > s150 && last > s200, s150 > s200, s200 > s200b, s50 > s150 && s50 > s200, last > s50,
+          last >= lo * 1.3, last >= hi * 0.75, it.rs != null && it.rs >= 70];
+}
+// 포켓 피봇(길 모랄레스·크리스 캐처): j번째 날 종가가 전날보다 높고, 거래량이 직전 10거래일 가운데 내린 날 거래량의 최대치보다 많고,
+// 종가가 50일 단순이동평균 위(상승 추세 안). 직전 10거래일에 내린 날이 하루도 없으면 보지 않는다.
+function ppAt(it, j){
+  const c = it.c, v = it.v;
+  if (!v || j < 11 || !(v[j] > 0) || !(c[j] > c[j - 1])) return false;
+  const s50 = sma(c, 50, j);
+  if (s50 == null || c[j] <= s50) return false;
+  let mx = -1;
+  for (let i = j - 10; i < j; i++) if (c[i] < c[i - 1] && v[i] > mx) mx = v[i];
+  return mx >= 0 && v[j] > mx;
+}
+// 차트의 포켓 피봇 점: 날마다 한 번만 계산해 둔다(차트를 그릴 때만)
+const ppFlags = it => it._pf || (it._pf = it.c.map((_, i) => ppAt(it, i)));
+const PPC = "#7c3aed";
 function trendMetrics(it){
   const c = it.c, n = c.length, j = n - 1, last = c[j], m = it.m;
-  const s50 = sma(c, 50, j), s150 = sma(c, 150, j), s200 = sma(c, 200, j), s200b = sma(c, 200, j - 21);
-  // 미너비니 트렌드 템플릿 8조건(통과 여부 배열). 1년 치 자료라 200일선 한 달 전 값까지 구할 수 있을 때만
-  if (s200b != null){
-    m.ttc = [last > s150 && last > s200, s150 > s200, s200 > s200b, s50 > s150 && s50 > s200, last > s50,
-             last >= it.lo * 1.3, last >= it.hi * 0.75, it.rs != null && it.rs >= 70];
-    m.tt = m.ttc.filter(Boolean).length;
+  const s50 = sma(c, 50, j), tc = ttAt(it, 0);
+  if (tc){ m.ttc = tc; m.tt = tc.filter(Boolean).length; }
+  if (s50){ m.ext = (last / s50 - 1) * 100; m.s50 = s50; }
+  // 하루 변동폭(ADR%): 최근 20거래일 (고가 ÷ 저가 − 1)의 평균
+  let rsum = 0, rn = 0;
+  for (let i = Math.max(0, n - 20); i < n; i++) if (it.l[i] > 0 && it.h[i] >= it.l[i]){ rsum += it.h[i] / it.l[i] - 1; rn++; }
+  if (rn >= 10) m.adr = rsum / rn * 100;
+  // 10일 저점: 최근 10거래일 가장 낮은 가격(저가)이 오늘 종가보다 몇 % 아래인지(손절 자리 참고)
+  if (n >= 10 && last > 0){ const lo = Math.min(...it.l.slice(n - 10)); if (lo > 0){ m.lo10 = lo; m.sd = Math.max(0, (1 - lo / last) * 100); } }
+  // 거래대금(종가 × 거래량, 그 나라 통화): 오늘 값과 직전 20거래일 평균
+  if (it.v && it.v[j] > 0 && ccy(it.y)){
+    m.tv = last * it.v[j];
+    let ts = 0, tn = 0;
+    for (let i = Math.max(0, n - 21); i < j; i++) if (it.v[i] > 0){ ts += c[i] * it.v[i]; tn++; }
+    if (tn) m.tv20 = ts / tn;
   }
-  if (s50) m.ext = (last / s50 - 1) * 100;
+  m.pp = ppAt(it, j);
   // 변동성 수축: 최근 10거래일 고저 폭 ÷ 최근 50거래일 고저 폭(작을수록 좁게 다지는 중)
   if (n >= 50){
     const rng = k => Math.max(...it.h.slice(n - k)) - Math.min(...it.l.slice(n - k));
@@ -536,6 +627,30 @@ function trendMetrics(it){
   let hi = 0; for (let i = 1; i < n; i++) if (c[i] >= c[hi]) hi = i;
   m.hid = j - hi;
 }
+// ── 새로 생긴 신호(2026-11-23): 종목마다 마지막 거래일을 그 전 거래일과 비교한다 ──
+// [id, 이름, 좋아진 신호면 1]. 걸러 보기 '오늘 새로 생긴 신호' 묶음, 카드 딱지, '▦ 전체' 판 목록이 함께 쓴다
+const SIGS = [["n_al","정배열 진입",1],["n_tt","템플릿 통과",1],["n_rsh","RS선 신고가 돌파",1],["n_hi","52주 신고가 돌파",1],["pp","포켓 피봇",1],
+              ["x_al","정배열 이탈",0],["x_tt","템플릿 이탈",0]];
+// 날짜(yymmdd) ↔ 날 번호(1970-01-01부터 며칠째)
+const dnum = s => Date.UTC(2000 + +s.slice(0, 2), +s.slice(2, 4) - 1, +s.slice(4, 6)) / 864e5;
+const dlab = k => { const d = new Date(k * 864e5); return (d.getUTCMonth() + 1) + "/" + d.getUTCDate(); };
+// a[j]가 그날까지의 최고인지(같으면 최고로 본다). RS선 앞쪽 빈칸(null)은 건너뛴다
+const topAt = (a, j) => { if (j < 1 || a[j] == null) return false; for (let i = 0; i < j; i++) if (a[i] != null && a[i] > a[j]) return false; return true; };
+function signals(it, newest){
+  const m = it.m, c = it.c, j = c.length - 1, out = [];
+  m.sg = out;
+  // 갱신 실패 종목, 마지막 거래일이 가장 최근 종목보다 5일 넘게 앞선 종목(거래 정지 등)은 신호를 내지 않는다
+  if (it.stale || j < 2 || newest - dnum(lastOf(it.d)) > 5) return;
+  if (it.al === true && !alAt(it, 1)) out.push("n_al");
+  const ty = m.ttc ? ttAt(it, 1) : null;
+  if (ty){ const y8 = ty.every(Boolean); if (m.tt === 8 && !y8) out.push("n_tt"); else if (m.tt < 8 && y8) out.push("x_tt"); }
+  if (it.rsh && it.rl && !topAt(it.rl, j - 1)) out.push("n_rsh");
+  // 52주 신고가 돌파: 거래일이 220개(약 11개월)도 안 되는 신규 상장은 1년 최고라 할 수 없어 뺀다
+  if (m.hid === 0 && !topAt(c, j - 1) && j >= 220) out.push("n_hi");
+  if (m.pp) out.push("pp");
+  if (it.al === false && alAt(it, 1)) out.push("x_al");
+}
+const sig = (it, k) => !!(it.m.sg && it.m.sg.includes(k));
 const TT_NAMES = ["종가가 150일선·200일선 위", "150일선이 200일선 위", "200일선이 한 달 전보다 오름", "50일선이 150일선·200일선 위",
                   "종가가 50일선 위", "52주 저점보다 30% 이상 위", "52주 고점에서 25% 안쪽", "RS 등급 70 이상"];
 const ttTip = it => `미너비니 트렌드 템플릿 ${it.m.tt}/8\n` + TT_NAMES.map((t, i) => (it.m.ttc[i] ? "✓ " : "✗ ") + t).join("\n") +
@@ -557,6 +672,8 @@ const SORTS = [
   {id:"rs", g:"강도", name:"RS 등급", lab:"RS", key:it => it.rs, val:it => String(it.rs) + rsArrow(it)},
   {id:"rsd", g:"강도", name:"RS 20일 변화", lab:"RS 변화", key:it => it.rsd, val:it => (it.rsd > 0 ? "+" : "") + it.rsd},
   {id:"vr", g:"강도", name:"거래량 배수", lab:"거래량", key:it => it.m.vr, val:it => it.m.vr.toFixed(1) + "배"},
+  // 거래대금(2026-11-23): 나라마다 통화가 달라 원화로 바꿔 줄 세운다(fx: 고를 때 매크로 탭 환율을 한 번 받는다)
+  {id:"tv", g:"강도", name:"거래대금", lab:"거래대금", key:it => tvKrw(it), val:it => money(tvKrw(it)) + " 원", fx:true},
   {id:"pos", g:"52주 위치", name:"52주 범위 위치", lab:"52주", key:it => it.m.pos, val:it => Math.round(it.m.pos) + "%", hide:true},
   // 추세추종(2026-11-21 사용자 요청). dd = 처음 눌렀을 때 방향(작을수록 좋은 기준은 낮은 순)
   {id:"tt", g:"추세", name:"추세 점수(미너비니)", lab:"추세", key:it => it.m.tt, val:it => it.m.tt + "/8"},
@@ -565,7 +682,24 @@ const SORTS = [
   {id:"vc", g:"추세", name:"변동성 수축", lab:"수축", key:it => it.m.vc, val:it => Math.round(it.m.vc) + "%", dd:"asc"},
   {id:"ud", g:"추세", name:"매집 비율", lab:"매집", key:it => it.m.ud, val:it => it.m.ud.toFixed(2)},
   {id:"ald", g:"추세", name:"정배열 며칠째", lab:"정배열", key:it => it.m.ald, val:it => it.m.ald + "일째"},
-  {id:"hid", g:"추세", name:"신고가 후 며칠", lab:"신고가", key:it => it.m.hid, val:it => it.m.hid ? it.m.hid + "일 전" : "오늘", dd:"asc"}];
+  {id:"hid", g:"추세", name:"신고가 후 며칠", lab:"신고가", key:it => it.m.hid, val:it => it.m.hid ? it.m.hid + "일 전" : "오늘", dd:"asc"},
+  // 변동·손절(2026-11-23). 10일 저점까지는 처음 누르면 가까운 순(낮은 순)
+  {id:"adr", g:"변동·손절", name:"하루 변동폭(ADR)", lab:"하루 변동", key:it => it.m.adr, val:it => it.m.adr.toFixed(1) + "%"},
+  {id:"sd", g:"변동·손절", name:"10일 저점까지", lab:"10일 저점", key:it => it.m.sd, val:it => it.m.sd.toFixed(1) + "% 아래", dd:"asc"}];
+// 거래대금 원화 환산에 쓰는 환율(달러당 그 통화). 거래대금 정렬을 처음 고를 때 매크로 탭 자료에서 마지막 값을 한 번만 받는다.
+// 홍콩달러는 달러에 묶여 있어(달러당 7.75~7.85) 7.8로 두고, 유로·스위스프랑은 매크로 탭에 환율이 없어 환산하지 않는다.
+let FX = null, FXP = null;
+function loadFx(){
+  if (!FXP) FXP = fetch(`${DATA}macro.json?t=${encodeURIComponent(META.updated)}`).then(r => r.json()).then(d => {
+    const last = {};
+    d.sections.forEach(s => s.items.forEach(x => { last[x.y] = x.c[x.c.length - 1]; }));
+    if (last["KRW=X"] > 0) FX = {USD: 1, KRW: last["KRW=X"], JPY: last["JPY=X"], CNY: last["CNY=X"], TWD: last["TWD=X"], HKD: 7.8};
+    if (!FX) FXP = null;
+    return FX;
+  }).catch(() => { FXP = null; return null; });
+  return FXP;
+}
+const tvKrw = it => { const c = ccy(it.y), r = FX && c ? FX[c[0]] : 0; return r > 0 && it.m.tv != null ? it.m.tv / r * FX.KRW : null; };
 const SORT = Object.fromEntries(SORTS.map(x => [x.id, x]));
 const has = (x, it) => { const v = x.key(it); return v != null && isFinite(v); };
 
@@ -581,7 +715,9 @@ const CONDS = [
   ["rsh","RS선 신고가",it => !!it.rsh],
   ["ia","인더스트리 액션",it => !!it.ia],
   ["v2","거래량 2배 이상",it => it.m.vr >= 2],
-  ["up","5% 급등",it => it.chg >= 5,"dn"],["dn","5% 급락",it => it.chg <= -5,"up"]];
+  ["up","5% 급등",it => it.chg >= 5,"dn"],["dn","5% 급락",it => it.chg <= -5,"up"],
+  // 마지막 거래일에 새로 생긴 신호(다섯째 칸 1): 걸러 보기 판에 '오늘 새로 생긴 신호' 묶음으로 따로 보인다
+  ...SIGS.map(([k, name]) => [k, name, it => sig(it, k), {n_al:"x_al", x_al:"n_al", n_tt:"x_tt", x_tt:"n_tt"}[k], 1])];
 const COND = Object.fromEntries(CONDS.map(c => [c[0], c]));
 // 걸러 보기·정렬 기준의 정의(판에서 누르면 아래 상자에 나온다). 계산은 이 페이지와 scripts/watchlist_fetch.py 와 같다
 const DEF = {
@@ -614,7 +750,19 @@ const DEF = {
   vc: "최근 10거래일 고가~저가 폭 ÷ 최근 50거래일 고가~저가 폭. 작을수록 가격이 좁은 폭에서 다져지고 있습니다(변동성 수축). 52주 고점 5% 이내 조건과 함께 낮은 순으로 보면 돌파 직전 후보가 위로 올라옵니다.",
   ud: "최근 50거래일 동안 오른 날 거래량 합 ÷ 내린 날 거래량 합(IBD의 U/D 비율). 1보다 크면 오른 날 거래가 더 많았고, 1.5 이상이면 매집 흔적으로 봅니다.",
   ald: "정배열(종가 > EMA20 > EMA50 > EMA200)이 오늘까지 몇 거래일째 이어졌는지 셉니다. 낮은 순으로 보면 추세가 막 시작된 종목이 먼저 나옵니다. 정배열이 아닌 종목은 맨 뒤로 갑니다.",
-  hid: "마지막 52주 신고가(종가)가 며칠(거래일) 전이었는지 봅니다. 0이면 오늘 신고가입니다. 낮은 순으로 보면 신고가 행진 중인 종목이 먼저 나옵니다."};
+  hid: "마지막 52주 신고가(종가)가 며칠(거래일) 전이었는지 봅니다. 0이면 오늘 신고가입니다. 낮은 순으로 보면 신고가 행진 중인 종목이 먼저 나옵니다.",
+  // 새로 생긴 신호(2026-11-23). 종목마다 마지막 거래일(오늘)을 그 전 거래일(어제)과 비교한다
+  n_al: "어제는 정배열이 아니었는데 오늘 종가 > EMA20 > EMA50 > EMA200이 됐습니다. 상승 추세가 새로 갖춰진 날입니다.",
+  n_tt: "어제는 미너비니 템플릿 8조건 가운데 하나 이상이 빠졌는데 오늘 모두 통과했습니다. RS 조건은 어제 등급이 저장돼 있지 않아 오늘 등급으로 봅니다.",
+  n_rsh: "RS선(종목 종가 ÷ 상장 시장 지수)이 어제는 1년 최고가 아니었는데 오늘 1년 최고를 새로 넘었습니다. 지수가 크게 빠진 날에는 덜 빠진 종목(경기방어주 등)이 여기에 많이 걸립니다.",
+  n_hi: "어제는 신고가가 아니었는데 오늘 종가가 최근 1년 최고 종가를 새로 넘었습니다. 며칠째 신고가를 이어 가는 종목은 첫날에만 걸립니다.",
+  pp: "포켓 피봇(길 모랄레스·크리스 캐처의 매수 신호)입니다. 오늘 종가가 어제보다 높고, 오늘 거래량이 직전 10거래일 가운데 내린 날 거래량의 최대치보다 많고, 종가가 50일 단순이동평균 위에 있습니다. 상승 추세 안에서 큰손이 사들인 흔적으로 봅니다. 50일선에서 멀리 떨어진 자리라면 추격 매수가 되기 쉬우니 정렬의 '50일선 이격도'로 함께 확인하세요. 차트 거래량 칸의 보라 점이 지난 포켓 피봇 자리입니다.",
+  x_al: "어제까지 정배열이었는데 오늘 깨졌습니다. 대개 종가가 20일선(EMA20) 아래로 내려온 경우라 흔한 눌림일 수도 있지만, 추세가 꺾이는 첫날일 수도 있습니다.",
+  x_tt: "어제까지 미너비니 템플릿 8조건을 모두 통과했는데 오늘 하나 이상이 빠졌습니다. 딱지를 누르면 어느 조건이 빠졌는지 나옵니다. RS 조건은 어제 등급이 저장돼 있지 않아 오늘 등급으로 봅니다.",
+  // 변동·손절과 거래대금(2026-11-23)
+  adr: "최근 20거래일 동안 하루 고가 ÷ 저가 − 1의 평균(ADR%)입니다. 높은 순으로 보면 하루에 크게 움직이는 종목이, 낮은 순으로 보면 얌전한 종목이 먼저 나옵니다. 손절폭을 이 값보다 좁게 잡으면 평소 흔들림만으로도 손절이 걸리기 쉽습니다.",
+  sd: "최근 10거래일 가운데 가장 낮은 가격(저가)이 오늘 종가보다 몇 % 아래에 있는지 봅니다. 낮은 순으로 보면 손절 자리가 가까운(잃을 폭이 작은) 종목이 먼저 나옵니다. 올투 기준 손절폭은 7~10%입니다.",
+  tv: "오늘 종가 × 거래량으로 어림한 거래대금입니다. 나라마다 통화가 달라 원화로 바꿔 줄 세웁니다. 달러·엔·위안·대만달러는 매크로 탭의 마지막 환율로, 홍콩달러는 달러당 7.8(고정 환율)로 바꿉니다. 유로·스위스프랑 종목은 환율이 없어 맨 뒤로 갑니다."};
 const KORDER = ["미국","한국","중국","일본","대만","기타"];
 const kgroup = k => !k ? "" : k === "홍콩" ? "중국" : KORDER.includes(k) ? k : "기타";
 
@@ -637,13 +785,21 @@ function tester(data){
 }
 // 같은 회사가 두 곳에 상장돼 둘 다 들어 있으면(TSMC, 토요타, 중국 A·H주 등) 순위를 볼 때 하나만 남긴다.
 // 미국 상장(기호에 점이 없는 것)을 남기고, 둘 다 미국 밖이면 먼저 나온 것을 남긴다.
+// 영문 이름이 같아도 한글 이름이 서로 다르면 다른 회사로 본다(소프트뱅크그룹 9984.T와 통신사 소프트뱅크 9434.T, 2026-11-23).
 function dupSet(data){
-  const by = {}, drop = new Set();
+  const by = {}, drop = new Set(), kn = knMap();
+  drop.of = {};  // 빠지는 상장 → 남기는 상장
   data.sections.forEach(s => s.items.forEach(it => (by[it.n] = by[it.n] || []).push(it)));
   Object.values(by).forEach(list => {
     if (list.length < 2) return;
-    const keep = list.find(it => !it.y.includes(".") && !it.y.startsWith("^")) || list[0];
-    list.forEach(it => { if (it !== keep) drop.add(it.y); });
+    const names = [...new Set(list.map(it => kn[it.y]).filter(Boolean))];
+    const parts = names.length > 1 ? names.map(k => list.filter(it => kn[it.y] === k)) : [list];
+    // 한글 이름으로 회사가 둘 이상 갈리면 한글 이름이 없는 상장은 어느 회사인지 몰라 따로 둔다(빼지 않는다)
+    parts.forEach(p => {
+      if (p.length < 2) return;
+      const keep = p.find(it => !it.y.includes(".") && !it.y.startsWith("^")) || p[0];
+      p.forEach(it => { if (it !== keep){ drop.add(it.y); drop.of[it.y] = keep.y; } });
+    });
   });
   return drop;
 }
@@ -660,9 +816,25 @@ const TIP = {
   rs: it => `RS ${it.rs}: 상장 시장 지수보다 강한 정도가 차트북 주식 중 상위 ${Math.max(1, 100 - it.rs)}% 안에 듭니다.` +
     (it.rsd != null ? ` 20거래일 전에는 ${it.rs - it.rsd}${iyeot(it.rs - it.rsd)}(${it.rsd > 0 ? "+" : ""}${it.rsd}).` : "") + "\n\n" + DEF.rs,
   vr: it => `오늘 거래량이 직전 20거래일 평균의 ${it.m.vr.toFixed(1)}배입니다. 평소보다 거래가 몰렸다는 뜻입니다.`,
+  // 새 신호·숫자 줄(2026-11-23). 숫자 뒤 조사가 받침에 따라 갈리지 않게 '입니다'나 괄호로 끝맺는다
+  pp: it => "오늘 포켓 피봇이 나왔습니다.\n\n" + DEF.pp,
+  adr: it => `최근 20거래일 동안 하루 고가와 저가 차이(고가 ÷ 저가 − 1)의 평균이 ${it.m.adr.toFixed(1)}%입니다. 이 종목은 하루에 보통 이만큼 오르내립니다. ` +
+    "손절폭을 이보다 좁게 잡으면 평소 흔들림만으로도 손절이 걸리기 쉽습니다.",
+  sd: it => { const m = it.m, x = m.adr ? m.sd / m.adr : null;
+    return `최근 10거래일 가운데 가장 낮은 가격(저가 ${px(it, m.lo10)})이 오늘 종가보다 ${m.sd.toFixed(1)}% 아래에 있습니다.` +
+      (x != null ? ` 하루 변동폭의 ${x.toFixed(1)}배입니다.` : "") + "\n\n" +
+      (m.sd > 10 ? "올투 기준 손절폭은 7~10%입니다. 이 저점은 그보다 멀어서, 저점에 닿기 전에 −7~10%에서 먼저 손절하게 됩니다."
+        : x != null && x < 1 ? "저점이 하루 변동폭보다 가까워, 저점 바로 아래에 손절가를 두면 평소 흔들림에도 걸리기 쉽습니다."
+        : "저점이 올투 기준 손절폭(7~10%) 안쪽이라, 저점 바로 아래를 손절가로 삼을 수 있습니다."); },
+  d50: it => { const m = it.m, d = (m.s50 / lastOf(it.c) - 1) * 100;
+    return `50일 단순이동평균(${px(it, m.s50)})이 오늘 종가보다 ${Math.abs(d).toFixed(1)}% ${d <= 0 ? "아래" : "위"}에 있습니다. ` +
+      (d <= 0 ? "추세추종에서는 큰 거래량을 실으며 50일선을 깨면 파는 신호로 봅니다." : "종가가 50일선 아래라 추세가 약해진 상태입니다."); },
+  tv: it => { const m = it.m, u = ccy(it.y)[1];
+    return `오늘 거래대금은 ${money(m.tv)} ${u}입니다(종가 × 거래량으로 어림한 값).` +
+      (m.tv20 ? ` 최근 20거래일 평균(${money(m.tv20)} ${u})의 ${(m.tv / m.tv20).toFixed(1)}배입니다.` : ""); },
 };
 function card(it, idx, rank){
-  const ld = it.d[it.d.length - 1], sk = SORT[EFF], pd = /\.(KS|KQ|T)$/.test(it.y) ? 0 : it.dg;
+  const ld = it.d[it.d.length - 1], sk = SORT[EFF], pd = pdg(it);
   const el = document.createElement("div"); el.className = "card"; el.dataset.y = it.y;
   el.innerHTML =
     `<div class="hd"><div class="nr"><div class="nm"></div><div class="px">${fmt(lastOf(it.c), pd)}${YIELD.has(it.y) ? "%" : ""}<i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></div></div>` +
@@ -670,7 +842,9 @@ function card(it, idx, rank){
     `<canvas data-i="${idx}"${it.rl ? ' class="rl"' : ""}></canvas>` +
     `<div class="lg"><span>지수이동평균(EMA)</span>${EMA.map(([k,c]) => `<span class="lw"><i style="border-color:${c}"></i>${k}일</span>`).join("")}` +
     `<span class="lw">거래량 <i class="bx" style="background:${UP}"></i>오른 날 <i class="bx" style="background:${DN}"></i>내린 날</span>` +
+    (it.k && it.v.some(v => v > 0) ? `<span class="lw lpp"><i class="pp"></i>포켓 피봇</span>` : "") +
     `<span class="lr">${+ld.slice(2,4)}/${+ld.slice(4,6)} 종가 기준</span></div>`;
+  const lpp = el.querySelector(".lpp"); if (lpp) lpp.title = DEF.pp;
   const nm = el.querySelector(".nm");
   if (rank) nm.appendChild(span("rk", rank));
   nm.appendChild(document.createTextNode(it.n));
@@ -685,15 +859,32 @@ function card(it, idx, rank){
   // 정렬 중이면 그 기준 값을 맨 앞에 노랗게(오늘 등락률은 가격 옆에 이미 있으니 뺀다)
   if (sk.key && sk.id !== "chg" && has(sk, it)) bd.appendChild(span("sk", sk.lab + " " + sk.val(it), (sk.id === "tt" ? ttTip(it) : "지금 정렬 기준인 " + sk.name + " 값입니다.\n\n" + (DEF[sk.id] || ""))));
   if (it.ia) bd.appendChild(span("ia", "액션 · " + it.ia.g + " " + it.ia.k + "위/" + it.ia.of + (it.ia.d <= 5 ? " · 새로" : " · " + it.ia.d + "일째"), TIP.ia(it)));
-  if (it.m.tt === 8 && EFF !== "tt") bd.appendChild(span("tt", "템플릿 ✓", ttTip(it)));
-  if (it.al) bd.appendChild(span("al", "정배열", DEF.al));
+  // 마지막 거래일에 새로 생긴 신호: 새로 좋아진 것은 주황 테두리, 나빠진 것은 회색 '이탈' 딱지
+  const nw = k => sig(it, k), ntt = nw("n_tt"), nal = nw("n_al"), nrs = nw("n_rsh");
+  if (nw("n_hi")) bd.appendChild(span("hb nw", "52주 신고가 돌파", DEF.n_hi));
+  if (nw("pp")) bd.appendChild(span("pv nw", "포켓 피봇", TIP.pp(it)));
+  if (it.m.tt === 8 && (EFF !== "tt" || ntt)) bd.appendChild(span(ntt ? "tt nw" : "tt", ntt ? "템플릿 ✓ · 새로" : "템플릿 ✓", ttTip(it) + (ntt ? "\n\n" + DEF.n_tt : "")));
+  if (nw("x_tt")) bd.appendChild(span("wn", "템플릿 이탈", DEF.x_tt + "\n\n" + ttTip(it)));
+  if (it.al) bd.appendChild(span(nal ? "al nw" : "al", nal ? "정배열 · 새로" : "정배열", DEF.al + (nal ? "\n\n" + DEF.n_al : "")));
+  if (nw("x_al")) bd.appendChild(span("wn", "정배열 이탈", DEF.x_al));
   if (CROSS[it.x]) bd.appendChild(span(CROSS[it.x][0], CROSS[it.x][1], DEF[it.x[0] === "g" ? "g" : "d"]));
-  // RS 등급·20일 변화·RS선 신고가를 딱지 하나로(RS로 정렬 중이면 등급은 노란 딱지에 있으니 신고가만)
-  if (it.rs != null && EFF !== "rs") bd.appendChild(span(it.rs >= 80 || it.rsh ? "rh" : "", "RS " + it.rs + rsArrow(it) + (it.rsh ? " · 신고가" : ""),
-    TIP.rs(it) + (it.rsh ? "\n\nRS선 신고가: " + DEF.rsh : "")));
-  else if (it.rsh) bd.appendChild(span("rh", "RS선 신고가", DEF.rsh));
+  // RS 등급·20일 변화·RS선 신고가를 딱지 하나로(RS로 정렬 중이면 등급은 노란 딱지에 있으니 신고가만). 오늘 처음 신고가면 '신고가 돌파'
+  const rsTxt = nrs ? "신고가 돌파" : "신고가", rsDef = nrs ? "RS선 신고가 돌파: " + DEF.n_rsh : "RS선 신고가: " + DEF.rsh;
+  if (it.rs != null && EFF !== "rs") bd.appendChild(span((it.rs >= 80 || it.rsh ? "rh" : "") + (nrs ? " nw" : ""), "RS " + it.rs + rsArrow(it) + (it.rsh ? " · " + rsTxt : ""),
+    TIP.rs(it) + (it.rsh ? "\n\n" + rsDef : "")));
+  else if (it.rsh) bd.appendChild(span(nrs ? "rh nw" : "rh", "RS선 " + rsTxt, rsDef));
   if (it.m.vr >= 2 && EFF !== "vr") bd.appendChild(span("vh", "거래량 " + it.m.vr.toFixed(1) + "배", TIP.vr(it)));
   if (it.stale) bd.appendChild(span("st", "갱신 실패, 이전 자료", "이번 갱신 때 이 종목의 일봉을 받지 못해 직전 회차 자료를 그대로 보여 줍니다."));
+  // 숫자 줄(종목만): 하루 변동폭, 10일 저점·50일선까지 거리, 거래대금. 누르면 그 종목 값이 든 풀이가 나온다
+  if (it.k){
+    const kv = document.createElement("div"), m = it.m; kv.className = "kv";
+    const add = (lab, val, tip, cls) => { const s = span(cls, lab + " ", tip), b = document.createElement("b"); b.textContent = val; s.appendChild(b); kv.appendChild(s); };
+    if (m.adr != null) add("하루 변동", m.adr.toFixed(1) + "%", TIP.adr(it));
+    if (m.sd != null) add("10일 저점", m.sd.toFixed(1) + "% 아래", TIP.sd(it), m.sd > 10 ? "far" : "");
+    if (m.s50){ const d = (m.s50 / lastOf(it.c) - 1) * 100; add("50일선", Math.abs(d).toFixed(1) + "% " + (d <= 0 ? "아래" : "위"), TIP.d50(it)); }
+    if (m.tv != null) add("거래대금", money(m.tv) + " " + ccy(it.y)[1], TIP.tv(it));
+    if (kv.children.length) el.querySelector(".hd").appendChild(kv);
+  }
   return el;
 }
 
@@ -885,7 +1076,13 @@ async function openTab(id, restore){
   catch(e){ main.innerHTML = '<div id="msg">자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.</div>'; return; }
   if (CUR !== id) return;
   data.sections.forEach(s => s.items.forEach(metrics));
+  // 새로 생긴 신호: 종목마다 마지막 거래일을 그 전 거래일과 비교(가장 최근 마지막 거래일보다 5일 넘게 앞선 종목은 빼려고 그날을 먼저 구한다)
+  const days = data.sections.flatMap(s => s.items.filter(it => it.k && it.d.length).map(it => dnum(lastOf(it.d))));
+  data.newest = days.length ? Math.max(...days) : 0;
+  data.sections.forEach(s => s.items.forEach(it => { if (it.k) signals(it, data.newest); }));
   data.dup = dupSet(data);
+  // 거래대금 순으로 보고 있었다면 원화 환산 환율을 먼저 받는다
+  if (SORT[ST.s].fx && !FX){ await loadFx(); if (CUR !== id) return; }
   TAB = data;
   render(restore);
 }
@@ -903,7 +1100,7 @@ function render(restore){
   main.innerHTML = ""; ITEMS = []; HEADS = []; HIDX = []; SCARDS = []; SPY = -1; LOCK = false;
   if (id !== "macro"){
     main.appendChild(guide());
-    const hn = document.createElement("div"); hn.className = "hint"; hn.innerHTML = "카드의 <u>점선 밑줄</u> 딱지를 누르면 뜻이 나옵니다."; main.appendChild(hn);
+    const hn = document.createElement("div"); hn.className = "hint"; hn.innerHTML = "카드의 <u>점선 밑줄</u> 딱지와 숫자를 누르면 뜻이 나옵니다."; main.appendChild(hn);
   }
   const any = active(data) > 0, test = tester(data);
   // 이 탭 자료에 없는 기준(매크로 탭의 RS·거래량 등)으로 정렬돼 있으면 기본 순서로 보여 준다
@@ -914,8 +1111,9 @@ function render(restore){
   const keep = it => !(rk && data.dup.has(it.y));
   const secs = ST.g === "all" ? [{name: "탭 전체", items: data.sections.flatMap(s => s.items)}] : data.sections;
   const row = $("secs"); row.innerHTML = "";
-  const gb = document.createElement("button"); gb.id = "gbtn"; gb.textContent = "▦ 전체 " + (PANEL === "grid" ? "▴" : "▾");
+  const gb = document.createElement("button"); gb.id = "gbtn";
   gb.onclick = () => openPanel("grid"); row.appendChild(gb);
+  NEWN = sigCount(data); gbLabel();
   // 탭의 모든 하부섹터 묶음을 한 번에 접기·펼치기(묶음이 있을 때만 보인다)
   const cb = document.createElement("button"); cb.id = "cbtn"; cb.hidden = true;
   cb.onclick = () => { const shut = !ALLHEADS.every(x => x.classList.contains("shut")); ALLHEADS.forEach(x => setShut(x, shut)); foldLab(); };
@@ -1011,7 +1209,8 @@ function render(restore){
 let SECINFO = [], EFF = "base", ALLHEADS = [];
 // 한글 이름: 검색 색인(meta.json index)의 kn. 없으면 원래 이름
 let KN = null;
-const knOf = it => { if (!KN){ KN = {}; (META.index || []).forEach(r => { if (r[2]) KN[r[0]] = r[2]; }); } return KN[it.y] || it.n; };
+const knMap = () => { if (!KN){ KN = {}; (META.index || []).forEach(r => { if (r[2]) KN[r[0]] = r[2]; }); } return KN; };
+const knOf = it => knMap()[it.y] || it.n;
 // RS선 보는 법(2026-11-21 사용자 요청). 매크로 탭을 뺀 탭 맨 위에 접어 두고, 펼침 여부는 브라우저에 기억한다.
 const GUIDE_RS = `<summary>📈 RS선 보는 법<small>차트 아래 파란 선</small></summary><div class="gb">
 <p class="one"><b>한 줄 요약: 파란 선이 올라가면 시장보다 강한 종목, 내려가면 약한 종목입니다.</b></p>
@@ -1098,9 +1297,67 @@ function openPanel(kind){
   PANEL = PANEL === kind ? null : kind;
   $("panel").hidden = !PANEL; $("dim").hidden = !PANEL;
   ["fbtn","sbtn"].forEach(b => $(b).classList.toggle("open", PANEL === {fbtn:"flt", sbtn:"sort"}[b]));
-  if (PANEL){ setHidden(false); panel(); }
-  const gb = $("gbtn"); if (gb) gb.textContent = "▦ 전체 " + (PANEL === "grid" ? "▴" : "▾");
+  // 판을 새로 열 때는 맨 위부터(다른 판에서 내려 둔 자리가 남지 않게). 열린 판 안에서 단추를 누를 때는 자리를 지킨다
+  if (PANEL){ setHidden(false); panel(); $("panel").scrollTop = 0; }
+  gbLabel();
   prog();
+}
+// ── 새로 생긴 신호 목록('▦ 전체' 판 맨 위, 2026-11-23) ──
+// 이 탭 종목 가운데 신호가 난 것(같은 회사 두 상장은 하나, 국가를 골랐으면 그 나라만). 줄마다 RS 높은 순
+function sigRows(data){
+  const useK = hasK(data) && ST.k.length, rk = it => it.rs == null ? -1 : it.rs;
+  const its = data.sections.flatMap(s => s.items).filter(it => it.m.sg && it.m.sg.length && (!useK || ST.k.includes(kgroup(it.k))));
+  // 같은 회사 두 상장은 장이 닫히는 때가 달라 신호도 따로 난다. 빠지는 상장(대만·일본·홍콩 쪽 등)은 남기는 상장에 같은 신호가 있을 때만 뺀다
+  return SIGS.map(([k, name, good]) => {
+    const has = its.filter(it => it.m.sg.includes(k)), ys = new Set(has.map(it => it.y));
+    return {k, name, good, items: has.filter(it => !(data.dup.has(it.y) && ys.has(data.dup.of[it.y]))).sort((a, b) => rk(b) - rk(a))};
+  }).filter(r => r.items.length);
+}
+// 새로 좋아진 종목 수('▦ 전체' 단추에 띄운다)
+let NEWN = 0;
+const sigCount = data => new Set(sigRows(data).filter(r => r.good).flatMap(r => r.items.map(it => it.y))).size;
+function gbLabel(){
+  const gb = $("gbtn"); if (!gb) return;
+  gb.textContent = "▦ 전체 " + (PANEL === "grid" ? "▴" : "▾");
+  if (NEWN){ const i = document.createElement("i"); i.textContent = "새 " + NEWN; gb.appendChild(i); }
+  gb.title = NEWN ? `마지막 거래일에 새로 좋아진 종목이 ${NEWN}개 있습니다. 누르면 맨 위에 목록이 나옵니다.` : "섹터 강도와 하부섹터 순위를 봅니다.";
+}
+const SIGMAX = 6;  // 줄마다 이름을 몇 개까지 보여 줄지(나머지는 '외 n개 모두 보기'로 걸러 본다)
+function sigBox(pn, data){
+  if (!data.sections.some(s => s.items.some(it => it.m.sg))) return;   // 지수·매크로 탭에는 신호가 없다
+  const rows = sigRows(data), up = new Set(), dn = new Set();
+  rows.forEach(r => r.items.forEach(it => (r.good ? up : dn).add(it.y)));
+  const d = document.createElement("details"); d.className = "sgs"; d.open = store.get("wl.sgs") !== "0";
+  d.addEventListener("toggle", () => store.set("wl.sgs", d.open ? "1" : "0"));
+  const su = document.createElement("summary"); su.textContent = "🆕 새로 생긴 신호";
+  const sm = document.createElement("small"); sm.textContent = rows.length ? `좋아짐 ${up.size} · 나빠짐 ${dn.size}` : "없음"; su.appendChild(sm);
+  d.appendChild(su);
+  // 마지막 거래일이 다른 종목보다 앞선 종목(그 나라 장이 쉰 날 등)은 이름 옆에 날짜를 붙인다
+  const older = it => dnum(lastOf(it.d)) < data.newest;
+  const nn = document.createElement("p"); nn.className = "nn";
+  nn.textContent = `종목마다 마지막 거래일(${dlab(data.newest)}) 종가를 그 전 거래일과 비교했습니다.` +
+    (rows.some(r => r.items.some(older)) ? " 이름 옆 날짜는 그 종목의 마지막 거래일입니다." : "") +
+    (hasK(data) && ST.k.length ? ` 고른 국가(${ST.k.join("·")})만 봅니다.` : "") +
+    " 줄 제목을 누르면 그 종목만 걸러 보고, 이름을 누르면 그 종목으로 갑니다.";
+  d.appendChild(nn);
+  if (!rows.length){ const p = document.createElement("p"); p.className = "none"; p.textContent = "마지막 거래일에 새로 생긴 신호가 없습니다."; d.appendChild(p); }
+  rows.forEach(r => {
+    const row = document.createElement("div"); row.className = "sgr" + (r.good ? "" : " bad"); row.dataset.k = r.k;
+    const pick = () => { ST.c = [r.k]; openPanel("grid"); apply(); };
+    const hb = document.createElement("button"); hb.className = "sgh"; hb.textContent = r.name; hb.title = DEF[r.k]; hb.onclick = pick;
+    const cnt = document.createElement("b"); cnt.textContent = r.items.length; hb.appendChild(cnt);
+    const ib = document.createElement("button"); ib.className = "sgi"; ib.textContent = "ⓘ"; ib.title = DEF[r.k]; ib.setAttribute("aria-label", r.name + " 뜻 보기");
+    const ls = document.createElement("span"); ls.className = "sgl";
+    r.items.slice(0, SIGMAX).forEach(it => {
+      const b = document.createElement("button"); b.textContent = knOf(it); b.dataset.y = it.y;
+      if (older(it)){ const ds = document.createElement("small"); ds.textContent = dlab(dnum(lastOf(it.d))); b.appendChild(ds); }
+      b.onclick = () => { openPanel("grid"); goStock(it.y); };
+      ls.appendChild(b);
+    });
+    if (r.items.length > SIGMAX){ const mb = document.createElement("button"); mb.className = "more"; mb.textContent = `외 ${r.items.length - SIGMAX}개 모두 보기`; mb.onclick = pick; ls.appendChild(mb); }
+    row.append(hb, ib, ls); d.appendChild(row);
+  });
+  pn.appendChild(d);
 }
 function panel(){
   const pn = $("panel"), data = TAB; pn.innerHTML = "";
@@ -1112,14 +1369,22 @@ function panel(){
     // 버튼 옆 숫자: 지금 걸린 다른 조건에 이 버튼을 더했을 때 남는 종목 수
     const would = st => { const keep = ST; ST = st; const t = tester(data), m = all.filter(t).length; ST = keep; return m; };
     const wc = group("조건", "고른 것을 모두 만족");
-    CONDS.forEach(([k, name, f, opp]) => {
+    const one = (w, [k, name, f, opp]) => {
+      const on = ST.c.includes(k);
+      const next = on ? ST.c.filter(x => x !== k) : ST.c.filter(x => x !== opp).concat(k);
+      btn(w, name, on, () => { ST.c = next; apply(); }, on ? null : would({...ST, c: next}));
+    };
+    CONDS.forEach(cd => {
+      const [k, , f, , sg] = cd;
+      if (sg) return;   // 새로 생긴 신호는 아래 묶음에
       // RS·거래량이 없는 탭(매크로)에서는 그 단추를 숨긴다. 인더스트리 액션은 매크로만 빼고 늘 보인다(0개여도)
       if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "rsh" || k === "v2" || k === "tt")) return;
       if (k === "ia" && CUR === "macro" && !ST.c.includes(k)) return;
-      const on = ST.c.includes(k);
-      const next = on ? ST.c.filter(x => x !== k) : ST.c.filter(x => x !== opp).concat(k);
-      btn(wc, name, on, () => { ST.c = next; apply(); }, on ? null : would({...ST, c: next}));
+      one(wc, cd);
     });
+    // 마지막 거래일에 새로 생긴 신호(2026-11-23). 신호를 계산하지 않는 지수·매크로 탭에서는 켜 둔 것만 보인다
+    const sgc = CONDS.filter(cd => cd[4] && (all.some(it => it.m.sg) || ST.c.includes(cd[0])));
+    if (sgc.length){ const ws = group("오늘 새로 생긴 신호", "마지막 거래일을 그 전 거래일과 비교 · 위 조건과 함께 모두 만족"); sgc.forEach(cd => one(ws, cd)); }
     if (hasK(data)){
       const wk = group("국가", "고른 것 가운데 하나");
       KORDER.forEach(k => {
@@ -1155,12 +1420,15 @@ function panel(){
     btn(wg, "탭 전체 한 줄로", ST.g === "all", () => { ST.g = "all"; apply(); });
     const wn = document.createElement("small"); wn.className = "optn"; wn.textContent = "탭 전체 한 줄로 보면 섹터 구분 없이 순위를 매깁니다."; pn.appendChild(wn);
     let w = null, g = null;
-    const NOTE = {"기간 수익률": "그 기간 전 종가 대비", "강도": "RS는 전체 종목 안의 1~99 등급, 거래량은 오늘 ÷ 20일 평균", "추세": "추세추종용 · 누르면 맨 위 '지금' 칸에 계산법이 나옵니다"};
+    const NOTE = {"기간 수익률": "그 기간 전 종가 대비", "강도": "RS는 전체 종목 안의 1~99 등급, 거래량은 오늘 ÷ 20일 평균, 거래대금은 원화로 바꿔 비교",
+                  "추세": "추세추종용 · 누르면 맨 위 '지금' 칸에 계산법이 나옵니다", "변동·손절": "손절 자리를 정할 때 · 누르면 맨 위 '지금' 칸에 계산법이 나옵니다"};
     SORTS.forEach(x => {
       if (((x.id === "rs" || x.id === "rsd") && noRs) || (x.id === "vr" && noVol)) return;
-      if ((x.hide && EFF !== x.id) || (x.key && x.g === "추세" && !all.some(it => has(x, it)))) return;
+      // 종목에만 있는 값(추세·변동·손절, 거래대금)은 그런 종목이 없는 탭(매크로)에서 숨긴다. 거래대금은 환율을 받기 전이라 원래 값으로 본다
+      if ((x.hide && EFF !== x.id) || (x.key && (x.g === "추세" || x.g === "변동·손절") && !all.some(it => has(x, it)))) return;
+      if (x.fx && !all.some(it => it.m.tv != null)) return;
       if (x.g !== g){ g = x.g; w = group(g || "기준", NOTE[g] || ""); }
-      btn(w, x.name, EFF === x.id, () => { if (ST.s !== x.id) ST.d = x.dd || "desc"; ST.s = x.id; apply(); });
+      btn(w, x.name, EFF === x.id, () => { if (ST.s !== x.id) ST.d = x.dd || "desc"; ST.s = x.id; if (x.fx && !FX){ const t0 = TAB; loadFx().then(() => { if (TAB === t0) apply(); }); } else apply(); });
     });
     const ft = document.createElement("div"); ft.className = "foot";
     const rs = document.createElement("button"); rs.textContent = "↺ 정렬 초기화"; rs.disabled = EFF === "base" && ST.g !== "all";
@@ -1169,6 +1437,7 @@ function panel(){
     ft.append(rs, go); pn.appendChild(ft);
   } else if (PANEL === "grid"){
     const any = active(data) > 0;
+    sigBox(pn, data);
     const h = document.createElement("h3"); h.textContent = tabTitle(CUR);
     const hs = document.createElement("small"); hs.textContent = "섹터별 정배열 종목 수 / 전체, 1개월 평균 수익률 · 초록이 짙을수록 정배열 비율이 높습니다"; h.appendChild(hs); pn.appendChild(h);
     const gr = document.createElement("div"); gr.className = "grid"; pn.appendChild(gr);
@@ -1282,7 +1551,11 @@ async function sgo(e){
   if (PANEL) openPanel(PANEL);
   if (CUR !== e.tab || !TAB) await openTab(e.tab, false);
   if (e.grp){ goGroup(e.sec, e.g); return; }
-  const pick = () => [...$("main").querySelectorAll("[data-y]")].find(x => x.dataset.y === e.y);
+  goStock(e.y);
+}
+// 지금 탭에서 그 종목 카드(표 보기면 줄)로 간다. 검색과 '▦ 전체' 판의 새 신호 목록이 쓴다
+function goStock(y){
+  const pick = () => [...$("main").querySelectorAll("[data-y]")].find(x => x.dataset.y === y);
   let el = pick();
   // 걸러 보기·정렬 때문에 안 보이면 조건을 풀고 기본 순서로 다시 그린다
   if (!el){ reset(); save(); render(false); el = pick(); }
@@ -1307,7 +1580,7 @@ $("sq").addEventListener("keydown", ev => {
 document.addEventListener("keydown", ev => { if (ev.key === "/" && $("srch").hidden && document.activeElement.tagName !== "INPUT"){ ev.preventDefault(); sopen(); } });
 // 딱지(.bd span)·표의 RS 칸을 누르면 그 풀이(title)를 아래 상자에 띄운다. 다시 누르거나 아무 데나 누르면 닫힌다.
 document.addEventListener("click", ev => {
-  const tg = ev.target.closest && ev.target.closest(".bd span[title], .tr .s[title], .biz .tg[title]"), tip = $("tip");
+  const tg = ev.target.closest && ev.target.closest(".bd span[title], .kv span[title], .lg span[title], .sgi[title], .tr .s[title], .biz .tg[title]"), tip = $("tip");
   if (!tg){ tip.hidden = true; return; }
   ev.stopPropagation();
   if (!tip.hidden && tip.dataset.for === tg.title){ tip.hidden = true; return; }
