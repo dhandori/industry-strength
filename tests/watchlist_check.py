@@ -312,7 +312,7 @@ def check_signals(b, url, label, w, h):
     chips = pg.evaluate("[...document.querySelectorAll('#chips .chip')].map(c => c.textContent)")
     if cards != ["DNCO"] or chips != ["정배열 이탈"] or not pg.is_hidden("#panel"):
         problems.append(f"{label} 줄 제목 누르기: 카드 {cards}, 칩 {chips}")
-    pg.click("#bar .clr")
+    pg.click("#chips .clr")
     # 이름을 누르면 판이 닫히고 그 종목 카드로 간다
     pg.click("#gbtn")
     pg.locator("#panel .sgr", has_text="템플릿 이탈").locator(".sgl button[data-y=DNCO]").click()
@@ -336,6 +336,7 @@ def check_signals(b, url, label, w, h):
     pg.click("main > h2 >> nth=0")
     # 걸러 보기 판의 '오늘 새로 생긴 신호' 묶음: 포켓 피봇 → UPCO·6501.T
     pg.evaluate("window.scrollTo(0, 0)")
+    pg.evaluate("setHidden(false)")
     pg.click("#fbtn")
     if "오늘 새로 생긴 신호" not in pg.inner_text("#panel"):
         problems.append(f"{label} 걸러 보기 판에 새 신호 묶음 없음")
@@ -344,16 +345,17 @@ def check_signals(b, url, label, w, h):
     cards = pg.evaluate("[...document.querySelectorAll('.card')].map(c => c.dataset.y)")
     if cards != ["UPCO", "6501.T", "1234.HK"]:
         problems.append(f"{label} 포켓 피봇 걸러 보기 {cards}")
-    pg.click("#bar .clr")
+    pg.click("#chips .clr")
     # 거래대금 정렬: 원화로 바꿔 줄 세우고, 환율이 없는 유로 종목은 맨 뒤(노란 딱지 없음)
     def krw(it):
         r = FXR.get(unit(it["y"])[0])
         return it["c"][-1] * it["v"][-1] / r * FXR["KRW"] if r else None
     its = [it for it, _ in SIG_ITEMS if it["y"] not in DROPPED]
     exp = [it["y"] for it in sorted([x for x in its if krw(x) is not None], key=krw, reverse=True)] + ["RHM.DE"]
+    pg.evaluate("setHidden(false)")
     pg.click("#sbtn")
     pg.click("#panel .wrap button:text-is('거래대금')")
-    pg.wait_for_function("document.querySelector('#sbtn').textContent.includes('거래대금')")
+    pg.wait_for_function("(document.querySelector('#chips .sort') || {}).textContent?.includes('거래대금')")
     pg.click("#panel .foot .go")
     got = pg.evaluate("[...document.querySelectorAll('.card')].map(c => c.dataset.y)")
     if got != exp:
@@ -366,6 +368,7 @@ def check_signals(b, url, label, w, h):
     # 하루 변동폭은 높은 순, 10일 저점까지는 처음 누르면 가까운 순(낮은 순). 화면과 같은 순서로 계산해 같은 값이 같게 나오게 한다
     for name, key, rev in (("하루 변동폭(ADR)", lambda it: sum(it["h"][i] / it["l"][i] - 1 for i in range(230, 250)) / 20 * 100, True),
                            ("10일 저점까지", lambda it: max(0, (1 - min(it["l"][-10:]) / it["c"][-1]) * 100), False)):
+        pg.evaluate("setHidden(false)")
         pg.click("#sbtn")
         pg.click(f"#panel .wrap button:text-is('{name}')")
         pg.click("#panel .foot .go")
@@ -374,6 +377,7 @@ def check_signals(b, url, label, w, h):
         if got != want:
             problems.append(f"{label} {name} 정렬 {got} (기대 {want})")
     # 영문 이름이 같아도 한글 이름이 다른 소프트뱅크 둘은 정렬할 때 둘 다 남는다
+    pg.evaluate("setHidden(false)")
     pg.click("#sbtn")
     pg.click("#panel .wrap button:text-is('1개월')")
     pg.click("#panel .foot .go")
@@ -384,14 +388,16 @@ def check_signals(b, url, label, w, h):
         problems.append(f"{label} 신호 화면 가로 넘침 {r['sw']}px")
     if r["bad"]:
         problems.append(f"{label} 신호 화면 깨진 값 '{r['bad']}'")
-    pg.click("#bar .clr")
+    pg.click("#chips .clr")
     pg.screenshot(path=str(SHOTS / f"watchlist-{label}-signals.png"))
     # 매크로 탭: 숫자 줄·새 신호 묶음·알림이 없다
     pg.click("#tabs button[data-id=macro]")
     pg.wait_for_timeout(400)
+    pg.evaluate("setHidden(false)")
     pg.click("#fbtn")
     if pg.locator(".card .kv").count() or pg.locator("#gbtn i").count() or "오늘 새로 생긴 신호" in pg.inner_text("#panel"):
         problems.append(f"{label} 매크로 탭에 종목용 새 기능이 보임")
+    pg.evaluate("setHidden(false)")
     pg.click("#fbtn")
     problems += [f"{label} 신호: {e}" for e in errors]
     pg.close()
@@ -457,6 +463,9 @@ def main():
                 # 기간 단추: 처음엔 폭 600px 미만 3개월·900px 미만 6개월·그 밖에 1년, 다른 기간을 누르면 차트를 다시 그린다
                 want = "3개월" if w < 600 else "6개월" if w < 900 else "1년"
                 other = "1년" if w < 900 else "3개월"
+                # 기간·로그는 제목 줄 '보기' 판 안에 있다(2026-11-24 상단 정비)
+                pg.evaluate("setHidden(false)")
+                pg.click("#vbtn")
                 if pg.inner_text("#per button.on") != want:
                     problems.append(f"{label} 기간 처음 값 {pg.inner_text('#per button.on')} (기대 {want})")
                 pg.click(f"#per button:text-is('{other}')")
@@ -470,6 +479,7 @@ def main():
                 if "on" in (pg.get_attribute("#logb", "class") or "") or not pg.evaluate("document.querySelector('canvas').width > 0"):
                     problems.append(f"{label} 로그 단추를 눌러도 안 바뀜")
                 pg.click("#logb")
+                pg.click("#panel .foot .go")
                 look("기본", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
                              "Micron", "삼성전자", "Sony"])
                 # 묶음 정의 보기: 섹터 제목 아래 접혀 있고, 펼치면 묶음마다 정의와 대표 종목, 줄을 누르면 그 묶음으로
@@ -483,13 +493,15 @@ def main():
                     problems.append(f"{label} 묶음 정의 줄을 눌러도 묶음으로 안 감")
                 pg.evaluate("window.scrollTo(0, 0)")
                 pg.click("main > details.gdef summary")
-                # RS선 보는 법: 탭 맨 위에 접혀 있고, 누르면 펼쳐진다
-                if pg.evaluate("document.querySelector('main > details.guide').open"):
-                    problems.append(f"{label} RS선 보는 법이 처음부터 펼쳐져 있음")
-                pg.click("main > details.guide summary")
-                if "S&P500" not in pg.inner_text("main > details.guide"):
-                    problems.append(f"{label} RS선 보는 법을 눌러도 안 펼쳐짐")
-                pg.click("main > details.guide summary")
+                # RS선 보는 법: 본문 맨 위에는 없고 '보기' 판 → 도움말에서 연다(2026-11-24)
+                if pg.locator("main > details.guide:not(.gdef)").count():
+                    problems.append(f"{label} RS선 보는 법 상자가 본문에 남아 있음")
+                pg.evaluate("setHidden(false)")
+                pg.click("#vbtn")
+                pg.click("#panel .hlp >> nth=0")
+                if "S&P500" not in pg.inner_text("#panel") or "점선 밑줄" not in pg.inner_text("#panel"):
+                    problems.append(f"{label} 도움말 판에 RS선 보는 법·딱지 안내가 없음")
+                pg.click("#panel .foot .go")
                 # 하부섹터 딱지는 설명 앞에, 기본 순서에서는 묶음 소제목이 섹터 안에 붙는다
                 if pg.inner_text(".card .biz .tg >> nth=0") != "파운드리 · CoWoS":
                     problems.append(f"{label} 딱지 글자 '{pg.inner_text('.card .biz .tg >> nth=0')}'")
@@ -515,13 +527,16 @@ def main():
                 pg.click("main > h2 .sfold >> nth=0")
                 if pg.evaluate(vis) != n0 or "shut" in (pg.get_attribute("main > h2 .sfold >> nth=0", "class") or ""):
                     problems.append(f"{label} 섹터 펼치기 단추가 안 됨")
-                # 섹터 줄 '▦ 전체' 옆 '⊟ 묶음 접기': 탭의 모든 묶음을 한 번에 접고 펼친다
+                # '보기' 판의 '하위 묶음 모두 접기' 스위치: 탭의 모든 묶음을 한 번에 접고 펼친다
+                pg.evaluate("setHidden(false)")
+                pg.click("#vbtn")
                 pg.click("#cbtn")
-                if pg.evaluate(vis) != n0 - 5 or pg.inner_text("#cbtn") != "⊞ 묶음 펼치기":
-                    problems.append(f"{label} 묶음 접기 단추: 카드 {pg.evaluate(vis)} (기대 {n0 - 5}), 글자 '{pg.inner_text('#cbtn')}'")
+                if pg.evaluate(vis) != n0 - 5 or "on" not in (pg.get_attribute("#cbtn", "class") or ""):
+                    problems.append(f"{label} 묶음 모두 접기 스위치: 카드 {pg.evaluate(vis)} (기대 {n0 - 5})")
                 pg.click("#cbtn")
-                if pg.evaluate(vis) != n0 or pg.inner_text("#cbtn") != "⊟ 묶음 접기":
-                    problems.append(f"{label} 묶음 펼치기 단추가 안 됨")
+                if pg.evaluate(vis) != n0 or "on" in (pg.get_attribute("#cbtn", "class") or ""):
+                    problems.append(f"{label} 묶음 모두 펼치기가 안 됨")
+                pg.click("#panel .foot .go")
                 # 전체 판: 하부섹터 순위가 나오고, 누르면 그 묶음으로 간다
                 pg.click("#gbtn")
                 gl = pg.locator("#panel .gl button")
@@ -550,14 +565,16 @@ def main():
                 # 인더스트리 액션: 카드에 상황판 업종·순위 딱지, 걸러 보기로 그 종목만
                 if "AI 가속기 3위/70 · 새로" not in pg.inner_text("main .bd .ia >> nth=0"):
                     problems.append(f"{label} 액션 딱지 표시 없음")
+                pg.evaluate("setHidden(false)")
                 pg.click("#fbtn")
                 pg.locator("#panel .wrap button", has_text="인더스트리 액션").first.click()
                 pg.click("#panel .foot .go")
                 look("인더스트리 액션", ["NVIDIA", "Intel"])
-                pg.click("#bar .clr")
+                pg.click("#chips .clr")
                 # 켠 조건의 정의가 걸러 보기 판에 나온다
                 if pg.evaluate("document.querySelector('#tabs button').dataset.id") != "all":
                     problems.append(f"{label} 전체 탭이 맨 앞이 아님")
+                pg.evaluate("setHidden(false)")
                 pg.click("#fbtn")
                 pg.locator("#panel .wrap button", has_text="정배열").first.click()
                 if "EMA20" not in pg.inner_text("#panel .defs"):
@@ -576,6 +593,7 @@ def main():
                 if pg.evaluate("window.scrollY") > 2 or pg.is_visible("#totop"):
                     problems.append(f"{label} 맨 위로 단추를 눌러도 맨 위로 안 감")
                 # 걸러 보기: 정배열 AND RS 80 이상 AND (한국 OR 미국)
+                pg.evaluate("setHidden(false)")
                 pg.click("#fbtn")
                 for t in ("정배열", "RS 80 이상", "한국", "미국"):
                     pg.locator("#panel .wrap button", has_text=t).first.click()
@@ -584,15 +602,17 @@ def main():
                 if pg.inner_text("#secs button[data-s='0'] small") != "2":
                     problems.append(f"{label} 걸러 보기: 섹터 버튼 숫자가 화면 종목 수와 다름")
                 # 모두 지우기: 정렬까지 걸었다가 한 번에 처음으로
+                pg.evaluate("setHidden(false)")
                 pg.click("#sbtn")
                 pg.click("#panel .wrap button:text-is('RS 등급')")
                 pg.click("#panel .foot .go")
-                pg.click("#bar .clr")
+                pg.click("#chips .clr")
                 look("모두 지우기", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
                                   "Micron", "삼성전자", "Sony"])
-                if pg.locator("#bar .clr").count() or pg.locator("#chips .chip").count():
+                if pg.locator("#chips .clr").count() or pg.locator("#chips .chip").count():
                     problems.append(f"{label} 모두 지우기 뒤에도 칩이 남음")
                 # 추세 정렬: 미너비니 점수 높은 순(노란 딱지 'n/8'), 변동성 수축은 처음 누르면 낮은 순
+                pg.evaluate("setHidden(false)")
                 pg.click("#sbtn")
                 pg.click("#panel .wrap button:text-is('추세 점수(미너비니)')")
                 pg.click("#panel .foot .go")
@@ -600,6 +620,7 @@ def main():
                 tts = pg.evaluate("""() => [...document.querySelectorAll('.card .sk')].map(s => parseInt(s.textContent.replace('추세 ', '')))""")
                 if not tts or tts[:4] != sorted(tts[:4], reverse=True):
                     problems.append(f"{label} 추세 점수 정렬 순서 {tts}")
+                pg.evaluate("setHidden(false)")
                 pg.click("#sbtn")
                 pg.click("#panel .wrap button:text-is('변동성 수축')")
                 if "낮은 순" not in pg.inner_text("#panel .now"):
@@ -616,8 +637,9 @@ def main():
                 pg.click("main > h2 >> nth=0")
                 if pg.is_visible("#tip"):
                     problems.append(f"{label} 풀이 상자가 안 닫힘")
-                pg.click("#bar .clr")
+                pg.click("#chips .clr")
                 # 걸러 보기에 '미너비니 템플릿'(8조건 모두)이 있고, 정의에 8조건이 나온다
+                pg.evaluate("setHidden(false)")
                 pg.click("#fbtn")
                 pg.locator("#panel .wrap button", has_text="미너비니 템플릿").first.click()
                 if "150일선" not in pg.inner_text("#panel .defs"):
@@ -626,6 +648,7 @@ def main():
                 pg.click("#panel .foot button >> nth=0")
                 pg.click("#panel .foot .go")
                 # 정렬: 1개월 수익률. 같은 회사(TSM·2330.TW)는 미국 상장 하나만
+                pg.evaluate("setHidden(false)")
                 pg.click("#sbtn")
                 pg.click("#panel .wrap button:text-is('1개월')")
                 pg.click("#panel .foot .go")
@@ -636,8 +659,10 @@ def main():
                 first_sec = ranks[:4]
                 if first_sec != sorted(first_sec, reverse=True):
                     problems.append(f"{label} 1개월 정렬 순서 틀림 {first_sec}")
-                # 표 보기와 차트 펼치기
+                # 표 보기와 차트 펼치기('보기' 판의 카드 모양)
+                pg.evaluate("setHidden(false)")
                 pg.click("#vbtn")
+                pg.click("#vmode button:text-is('표')")
                 r = look("표 보기")
                 if not pg.locator(".tr.it .s svg").count():
                     problems.append(f"{label} 표 보기: RS 작은 선 없음")
@@ -648,27 +673,31 @@ def main():
                 vals = pg.evaluate("""() => [...document.querySelectorAll('.tbl')[0].querySelectorAll('.tr.it')].map(r => parseFloat(r.children[2].textContent))""")
                 if vals != sorted(vals):
                     problems.append(f"{label} 낮은 순 정렬 틀림 {vals}")
-                if "↑" not in pg.inner_text("#sbtn"):
-                    problems.append(f"{label} 정렬 단추에 낮은 순 표시 없음")
+                if "↑" not in pg.inner_text("#chips .sort"):
+                    problems.append(f"{label} 정렬 칩에 낮은 순 표시 없음")
                 pg.click(".tr.it >> nth=0")
                 if not pg.evaluate("(() => { const c = document.querySelector('.tbl .card canvas'); return c && c.width > 0; })()"):
                     problems.append(f"{label} 표 보기: 줄을 눌러도 차트가 안 그려짐")
                 pg.screenshot(path=str(SHOTS / f"watchlist-{label}-table.png"))
                 # 매크로 탭: RS 정렬은 기본 순서로, 칩도 없어야 한다
+                pg.evaluate("setHidden(false)")
                 pg.click("#vbtn")
+                pg.click("#vmode button:text-is('차트 카드')")
                 pg.evaluate("window.scrollTo(0, 0)")
+                pg.evaluate("setHidden(false)")
                 pg.click("#sbtn")
                 pg.click("#panel .wrap button:text-is('RS 등급')")
                 pg.click("#panel .foot .go")
                 pg.click("#tabs button[data-id=macro]")
                 pg.wait_for_timeout(500)
                 look("매크로 RS", ["S&P 500", "나스닥"])
-                if "RS" in pg.inner_text("#sbtn"):
-                    problems.append(f"{label} 매크로: 정렬 단추에 RS가 남음")
+                if pg.locator("#chips .sort").count():
+                    problems.append(f"{label} 매크로: 정렬 칩에 RS가 남음")
                 pg.screenshot(path=str(SHOTS / f"watchlist-{label}.png"))
                 # 종목 검색: 한글·별칭·티커·초성으로 찾고, 누르면 그 탭의 카드로 간다(매크로 탭에서 ai 탭 종목)
                 for q, want in (("엔비디아", "NVDA"), ("하닉", "000660.KS"), ("000660", "000660.KS"),
                                 ("nvidia", "NVDA"), ("ㅅㅅㅈㅈ", "005930.KS"), ("cowos", "TSM")):
+                    pg.evaluate("setHidden(false)")
                     pg.click("#qbtn")
                     pg.fill("#sq", q)
                     first = pg.inner_text("#sres button >> nth=0") if pg.locator("#sres button").count() else ""
@@ -676,10 +705,12 @@ def main():
                         problems.append(f"{label} 검색 '{q}': 첫 결과 '{first[:40]}' (기대 {want})")
                     pg.click("#sx")
                 # 하부섹터 이름으로 찾으면 묶음이 맨 위에 나온다
+                pg.evaluate("setHidden(false)")
                 pg.click("#qbtn"); pg.fill("#sq", "프로세")
                 if "묶음 · 프로세서" not in pg.inner_text("#sres button >> nth=0"):
                     problems.append(f"{label} 묶음 검색 결과 없음")
                 pg.click("#sx")
+                pg.evaluate("setHidden(false)")
                 pg.click("#qbtn"); pg.fill("#sq", "엔비디아"); pg.press("#sq", "Enter")
                 pg.wait_for_selector("#tabs button[data-id=ai].on")
                 pg.wait_for_selector(".hit[data-y=NVDA]")
@@ -697,6 +728,7 @@ def main():
                 heads = pg.evaluate("[...document.querySelectorAll('main > h2')].map(h => h.firstChild.textContent)")
                 if heads != ["AI반도체 › 반도체", "AI반도체 › 메모리"]:
                     problems.append(f"{label} 전체 탭 섹터 {heads}")
+                pg.evaluate("setHidden(false)")
                 pg.click("#sbtn")
                 pg.click("#panel .wrap button:text-is('1개월')")
                 if "21거래일" not in pg.inner_text("#panel .now"):
