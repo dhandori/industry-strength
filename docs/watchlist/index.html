@@ -102,6 +102,16 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* 섹터 제목 줄 오른쪽 동그란 단추: 그 섹터 묶음 접기(▴)·펼치기(▾). 오른쪽 진행 표시와 안 겹치게 안쪽에 */
 main > h2{position:relative;padding-right:92px}
 main > h2 .sfold{position:absolute;right:44px;top:-4px;width:36px;height:36px;border-radius:50%;border:1.5px solid var(--pu);background:var(--card);color:var(--pud);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center}
+main > h2.one{padding-right:150px}
+main > h2 .sone{position:absolute;right:88px;top:-1px;height:30px;border-radius:999px;border:1.5px solid var(--pu);background:var(--card);color:var(--pud);font-size:12.5px;font-weight:700;padding:0 10px;cursor:pointer;white-space:nowrap}
+main > h2 .sfold ~ .sone{right:88px}
+main > h2 .sone.on{background:var(--pud);border-color:var(--pud);color:#fff}
+.subsel{display:flex;gap:6px;overflow-x:auto;margin:-4px 2px 12px;padding-bottom:2px;scrollbar-width:none}
+.subsel::-webkit-scrollbar{display:none}
+.subsel button{flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;font-size:13px;font-weight:600;padding:6px 11px;cursor:pointer}
+.subsel button small{margin-left:4px;color:var(--sub);font-weight:500}
+.subsel button.on{background:var(--pud);border-color:var(--pud);color:#fff}
+.subsel button.on small{color:#e9e3ff}
 main > h2 .sfold svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
 main > h2 .sfold.shut{background:var(--pud);border-color:var(--pud);color:#fff}
 /* 펼침 판(걸러 보기·정렬·섹터 전체) */
@@ -973,6 +983,8 @@ function setShut(sh, shut){
 // 하부섹터 묶음으로 가서 펼친다(액션판·검색에서 씀). 걸러 보기·정렬 중이면 묶음이 없으니 먼저 처음 상태로.
 function goGroup(sec, g){
   if (EFF !== "base" || ST.g === "all" || active(TAB) > 0){ reset(); save(); render(false); }
+  // 한 섹터만 보는 중이면 그 섹터의 그 묶음만 보이게 바꾼다
+  if (ONE != null){ focusSec(sec, g); const si = TAB.sections.findIndex(s => s.name === sec); const t = SECINFO[si] && SECINFO[si].h; if (t){ LOCK = true; light(si); jumpTo(t); } return; }
   const sh = [...$("main").querySelectorAll(".sub")].find(x => x.dataset.sec === sec && x.dataset.g === g);
   const si = TAB.sections.findIndex(s => s.name === sec);
   const tgt = sh || (SECINFO[si] && SECINFO[si].h);
@@ -1064,6 +1076,7 @@ function spy(){
 }, {passive: true}));
 
 async function openTab(id, restore){
+  if (id !== CUR){ ONE = null; ONEG = null; }
   CUR = id; store.set("wl.tab", id);
   [...$("tabs").children].forEach(b => b.classList.toggle("on", b.dataset.id === id));
   const main = $("main"); main.innerHTML = '<div id="msg">불러오는 중입니다.</div>'; $("secs").innerHTML = "";
@@ -1091,6 +1104,12 @@ async function openTab(id, restore){
   render(restore);
 }
 
+// '이 섹터만' 보기: ONE = 보고 있는 섹터 이름(null 이면 탭 전체를 이어서), ONEG = 그 안에서 고른 하위 묶음(첫 딱지)
+let ONE = null, ONEG = null;
+function focusSec(name, g){
+  ONE = name; ONEG = g || null;
+  render(false); setHidden(false);
+}
 function render(restore){
   const main = $("main"), id = CUR, data = TAB;
   if (!data) return;
@@ -1118,6 +1137,7 @@ function render(restore){
   if (sk.key && !data.sections.some(s => s.items.some(it => has(sk, it)))) sk = SORT.base;
   EFF = sk.id;
   const rk = EFF !== "base" || ST.g === "all";
+  const one = ST.g === "all" ? null : ONE;
   const keep = it => !(rk && data.dup.has(it.y));
   const secs = ST.g === "all" ? [{name: "탭 전체", items: data.sections.flatMap(s => s.items)}] : data.sections;
   const row = $("secs"); row.innerHTML = "";
@@ -1143,12 +1163,40 @@ function render(restore){
     const r1m = base.map(it => it.m.r1m).filter(v => v != null);
     SECINFO.push({name: s.name, n, tr, tot: base.length, hit: list.length, r1m: r1m.length ? r1m.reduce((a, c) => a + c, 0) / r1m.length : null, h: null});
     if (!list.length){ b.disabled = true; return; }
+    // 한 섹터만 볼 때 다른 섹터는 그리지 않고, 위 단추를 누르면 그 섹터로 바꾼다
+    if (one != null && s.name !== one){ b.onclick = () => { ROWBUSY = Date.now() + 2500; focusSec(s.name); }; return; }
+    // 하위 묶음(첫 딱지)별 종목: 한 섹터만 볼 때 위 칩 줄을 만들고, 고른 묶음만 남긴다
+    const gcnt = {};
+    if (one != null) list.forEach(it => { const g = (it.t || [])[0]; if (g) (gcnt[g] = gcnt[g] || []).push(it); });
+    if (ONEG && !gcnt[ONEG]) ONEG = null;
+    const allN = list.length;
+    if (one != null && ONEG) list = list.filter(it => (it.t || [])[0] === ONEG);
     const h = document.createElement("h2"); h.id = "s" + si; h.textContent = s.name;
     const c = document.createElement("small");
     c.textContent = !any ? base.length + "개" + (tr ? ", 정배열 " + n + "개" : "") : list.length + "개 (전체 " + base.length + "개)";
     h.appendChild(c);
     main.appendChild(h); HEADS.push(h); HIDX.push(si); SCARDS.push([]); SECINFO[si].h = h;
+    // 섹터 제목 오른쪽: '이 섹터만' ↔ '모두 보기'(탭 전체 한 줄로 볼 때는 섹터가 없으니 안 단다)
+    if (ST.g !== "all" && data.sections.length > 1){
+      const ob = document.createElement("button"); ob.className = "sone" + (one != null ? " on" : "");
+      ob.textContent = one != null ? "모두 보기" : "이 섹터만";
+      ob.title = one != null ? "탭의 모든 섹터를 이어서 봅니다." : "이 섹터만 남기고, 하위 묶음별로 골라 볼 수 있게 합니다.";
+      ob.onclick = e => { e.stopPropagation(); const back = one != null; focusSec(back ? null : s.name); if (back){ const t = SECINFO[si] && SECINFO[si].h; if (t){ LOCK = true; light(si); jumpTo(t); } } };
+      h.appendChild(ob); h.classList.add("one");
+    }
+    if (one != null && Object.keys(gcnt).length > 1){
+      const row2 = document.createElement("div"); row2.className = "subsel";
+      const chip = (lab, n, g) => {
+        const cb = document.createElement("button"); cb.textContent = lab; cb.classList.toggle("on", (g || null) === ONEG);
+        const sm = document.createElement("small"); sm.textContent = n; cb.appendChild(sm);
+        cb.onclick = () => focusSec(s.name, g); row2.appendChild(cb);
+      };
+      chip("전체", allN, null);
+      Object.entries(gcnt).forEach(([g, mem]) => chip(g, mem.length, g));
+      main.appendChild(row2);
+    }
     b.onclick = () => { LOCK = true; ROWBUSY = Date.now() + 2500; light(si); jumpTo(h); };
+    if (one != null) b.classList.add("on");
     let box = main;
     if (ST.v === "list"){ box = document.createElement("div"); box.className = "tbl"; box.appendChild(tableHead()); main.appendChild(box); }
     // 기본 순서로 섹터별로 볼 때는 같은 하부섹터(첫 딱지)끼리 모여 있으므로 묶음마다 작은 소제목을 단다
@@ -1206,8 +1254,12 @@ function render(restore){
     }
   });
   foldLab();
+  if (!shown && one != null){
+    // 걸러 보기로 이 섹터에 남은 종목이 없으면 탭 전체로 돌아간다
+    ONE = null; ONEG = null; render(restore); return;
+  }
   if (!shown){ $("prog").style.display = "none"; main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.<br>걸러 보기 조건을 줄이거나 다른 탭을 열어 보세요.</div>'; }
-  main.appendChild(nextBtn());
+  main.appendChild(one != null ? nextSecBtn(one) : nextBtn());
   main.querySelectorAll("canvas").forEach(cv => io.observe(cv.closest(".card") || cv));
   tools(data, shown, total);
   if (PANEL) panel();
@@ -1259,6 +1311,15 @@ function foldLab(){
 }
 
 // 탭 맨 끝의 '다음 탭' 단추. 마지막 탭에서는 처음 탭으로 돌아간다.
+// 한 섹터만 볼 때 맨 아래: 다음 섹터로(마지막 섹터면 '모두 보기')
+function nextSecBtn(one){
+  const ok = SECINFO.filter(x => x.hit > 0), i = ok.findIndex(x => x.name === one), nx = ok[i + 1];
+  const b = document.createElement("button"); b.id = "next";
+  b.textContent = nx ? "다음 섹터: " + nx.name + " →" : "모두 보기 ↑";
+  const sm = document.createElement("small"); sm.textContent = nx ? (i + 2) + " / " + ok.length + " 섹터" : "탭의 모든 섹터를 이어서 봅니다"; b.appendChild(sm);
+  b.onclick = () => focusSec(nx ? nx.name : null);
+  return b;
+}
 function nextBtn(){
   const ts = META.tabs, i = ts.findIndex(t => t.id === CUR), last = i === ts.length - 1 || i < 0, nx = ts[last ? 0 : i + 1];
   const b = document.createElement("button"); b.id = "next";
@@ -1457,8 +1518,8 @@ function panel(){
       const nb = document.createElement("b"); nb.textContent = s.name; b.appendChild(nb);
       b.insertAdjacentHTML("beforeend", `<span>${any ? "맞는 종목 " + s.hit + " · " : ""}${s.tr ? "정배열 " + s.n + " / " + s.tot : s.tot + "종목"}</span>` +
         `<span>1개월 평균 <b class="${s.r1m >= 0 ? "up" : "dn"}" style="display:inline;font-size:12px">${s.r1m == null ? "–" : pct(s.r1m)}</b></span>${s.tr ? `<i><u style="width:${(r * 100).toFixed(0)}%"></u></i>` : ""}`);
-      b.disabled = !s.h;
-      b.onclick = () => { openPanel("grid"); LOCK = true; light(si); jumpTo(s.h); };
+      b.disabled = !s.h && !(ONE != null && s.hit > 0 && ST.g !== "all");
+      b.onclick = () => { openPanel("grid"); if (!s.h){ focusSec(s.name); return; } LOCK = true; light(si); jumpTo(s.h); };
       gr.appendChild(b);
     });
     // 하부섹터 순위: 강한 묶음, 새로 강해지는 묶음, 약한 묶음(3종목 이상 묶음만)
@@ -1567,6 +1628,8 @@ async function sgo(e){
 function goStock(y){
   const pick = () => [...$("main").querySelectorAll("[data-y]")].find(x => x.dataset.y === y);
   let el = pick();
+  // 한 섹터만 보는 중이면 그 종목이 든 섹터로 바꾼다
+  if (!el && ONE != null){ const s = TAB.sections.find(s => s.items.some(it => it.y === y)); ONE = s ? s.name : null; ONEG = null; render(false); el = pick(); }
   // 걸러 보기·정렬 때문에 안 보이면 조건을 풀고 기본 순서로 다시 그린다
   if (!el){ reset(); save(); render(false); el = pick(); }
   if (!el) return;
