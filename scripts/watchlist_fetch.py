@@ -115,6 +115,7 @@ def build(item, raw, now):
     hi, lo = max(win), min(win)
     return {
         "y": item["y"], "n": item["n"], "b": item.get("b", ""), "t": item.get("t", []), "k": item.get("k", ""), "dg": dg,
+        **({"tv": item["tv"]} if item.get("tv") else {}),  # TradingView 기호(카드의 'TV ↗' 단추)
         "d": [d.strftime("%y%m%d") for d in days[start:]],
         "o": rd([r[1] for r in rows]), "h": rd([r[2] for r in rows]),
         "l": rd([r[3] for r in rows]), "c": rd(closes),
