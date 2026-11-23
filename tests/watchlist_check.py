@@ -6,6 +6,9 @@
 - 정렬: 1개월 수익률 순서가 맞는지, 같은 회사 두 상장(미국·대만)이 미국 하나만 남는지
 - 낮은 순 정렬, '모두 지우기' 한 번에 처음 상태로 돌아가는지
 - 표 보기에서 줄을 누르면 차트가 펼쳐지는지, 매크로 탭(RS 없음)에서 RS 정렬이 기본 순서로 바뀌는지
+- 새로 생긴 신호(2026-11-23, 신호가 반드시 나도록 만든 둘째 자료): 카드 딱지, '▦ 전체' 단추 알림과 판 맨 위 목록,
+  줄 제목·이름 누르기, 걸러 보기 묶음, 갱신 실패·오래된 종목 빼기, 숫자 줄(하루 변동·10일 저점·50일선·거래대금),
+  거래대금 원화 환산 정렬, 하루 변동폭·10일 저점 정렬, 한글 이름이 다른 같은 영문 이름(소프트뱅크 둘)
 
   python tests/watchlist_check.py
 """
@@ -93,6 +96,264 @@ def make_data(folder):
     (folder / "meta.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
 
 
+# ── 새로 생긴 신호·숫자 줄·거래대금 검사용 자료(2026-11-23) ──
+# 신호가 반드시 나도록 만든 종목: UPCO(어제 10% 눌렸다가 오늘 거래량을 실어 신고가) → 정배열 진입·템플릿 통과·
+# RS선 신고가 돌파·52주 신고가 돌파·포켓 피봇, DNCO(오늘 15% 급락) → 정배열 이탈·템플릿 이탈.
+# 6501.T 는 UPCO 와 같은 모양이지만 마지막 거래일이 하루 앞서고(이름 옆에 날짜), STAL(갱신 실패)과
+# OLDD(마지막 거래일이 10일 앞섬)는 같은 모양이어도 신호를 내면 안 된다. 나머지는 신호 없이 천천히 내리는 종목이다.
+DAY0 = dt.date(2025, 11, 19)
+FXR = {"USD": 1.0, "KRW": 1400.0, "JPY": 150.0, "TWD": 32.0}
+UNIT = {"": ("USD", "달러"), "KS": ("KRW", "원"), "T": ("JPY", "엔"), "DE": ("EUR", "유로")}
+
+
+def unit(y):
+    return UNIT[y.rsplit(".", 1)[1] if "." in y else ""]
+
+
+def js_round(x):
+    return math.floor(x + 0.5)
+
+
+def money(v):
+    """화면의 money() 와 같은 한국식 단위(조·억·만)."""
+    def loc(x):
+        return f"{int(x):,}" if float(x).is_integer() else f"{x:,.1f}"
+    a = abs(v)
+    if a >= 9999.5e8:
+        t = v / 1e12
+        return loc(js_round(t) if abs(t) >= 99.95 else js_round(t * 10) / 10) + "조"
+    if a >= 9999.5e4:
+        return loc(js_round(v / 1e8)) + "억"
+    if a >= 1e4:
+        return loc(js_round(v / 1e4)) + "만"
+    return loc(js_round(v))
+
+
+def shape(kind, base, n=250):
+    """up: 어제 10% 눌렸다가 오늘 1년 최고 종가를 2% 넘김, down: 오른 뒤 오늘 15% 급락, flat: 하루 0.1%씩 천천히 내림."""
+    if kind == "flat":
+        return [base * 0.999 ** i for i in range(n)]
+    c = [base * 1.003 ** i * (1 + 0.01 * math.sin(i / 7)) for i in range(n)]
+    if kind == "up":
+        c[-2] = c[-3] * 0.90
+        c[-1] = max(c[:-1]) * 1.02
+    elif kind == "down":
+        c[-1] = c[-2] * 0.85
+    return c
+
+
+def stock(y, n, k, kind, base, vol, last_vol, s, rs=None, stale=False, shift=0):
+    """고가·저가 = 종가 × (1 ± s). shift 만큼 날짜를 앞당겨 마지막 거래일이 다른 종목보다 앞서게 한다."""
+    c = [round(x, 2) for x in shape(kind, base)]
+    e = {"20": ema(c, 20), "50": ema(c, 50), "200": ema(c, 200)}
+    v = [vol] * len(c)
+    v[-1] = last_vol
+    it = {"y": y, "n": n, "b": n + " 사업 설명", "k": k, "dg": 2,
+          "d": [(DAY0 + dt.timedelta(days=i - shift)).strftime("%y%m%d") for i in range(len(c))],
+          "o": c, "h": [round(x * (1 + s), 2) for x in c], "l": [round(x * (1 - s), 2) for x in c], "c": c, "v": v, "e": e,
+          "hi": max(c), "lo": min(c), "chg": round((c[-1] / c[-2] - 1) * 100, 2),
+          "al": c[-1] > e["20"][-1] > e["50"][-1] > e["200"][-1], "x": ""}
+    it["ph"] = round((c[-1] / it["hi"] - 1) * 100, 1)
+    it["pl"] = round((c[-1] / it["lo"] - 1) * 100, 1)
+    if rs is not None:
+        # RS선: up 은 어제 눌렸다가 오늘 1년 최고, 나머지는 신고가가 아님
+        rl = [round(100 + 0.1 * i, 1) for i in range(len(c))]
+        if kind == "up":
+            rl[-2], rl[-1] = rl[-3] - 2, rl[-3] + 1
+        else:
+            rl[-1] = rl[-3] - 3
+        it.update(rs=rs, rsd=0, rl=rl, rb="S&P500", rsh=rl[-1] >= max(rl))
+    if stale:
+        it["stale"] = True
+    return it
+
+
+SIG_ITEMS = [  # (종목, 한글 이름)
+    (stock("UPCO", "Up Corp", "미국", "up", 100, 5_000_000, 20_000_000, 0.01, rs=85), ""),
+    (stock("DNCO", "Down Corp", "미국", "down", 100, 1_000_000, 1_000_000, 0.02, rs=75), ""),
+    (stock("6501.T", "Hitachi", "일본", "up", 3000, 1_000_000, 20_000_000, 0.015, rs=80, shift=1), "히타치"),
+    (stock("STAL", "Stale Corp", "미국", "up", 100, 100_000, 300_000, 0.01, rs=60, stale=True), ""),
+    (stock("OLDD", "Old Corp", "미국", "up", 100, 100_000, 300_000, 0.01, rs=55, shift=10), ""),
+    (stock("005930.KS", "Samsung Electronics", "한국", "flat", 100_000, 20_000_000, 20_000_000, 0.025, rs=50), "삼성전자"),
+    (stock("7203.T", "Toyota Motor", "일본", "flat", 2500, 200_000_000, 200_000_000, 0.005, rs=40), "도요타"),
+    (stock("RHM.DE", "Rheinmetall", "독일", "flat", 1500, 1_000_000, 1_000_000, 0.03), ""),
+    (stock("9984.T", "SoftBank", "일본", "flat", 10_000, 1_000_000, 1_000_000, 0.02, rs=30), "소프트뱅크그룹"),
+    (stock("9434.T", "SoftBank", "일본", "flat", 200, 10_000_000, 10_000_000, 0.01, rs=20), "소프트뱅크"),
+]
+
+
+def make_signal_data(folder):
+    ai = {"id": "ai", "title": "② AI 반도체·하드웨어", "sections": [{"name": "신호", "items": [it for it, _ in SIG_ITEMS]}]}
+    fx = []
+    for y, n, r in (("KRW=X", "원/달러", FXR["KRW"]), ("JPY=X", "엔/달러", FXR["JPY"]), ("TWD=X", "대만달러/달러", FXR["TWD"])):
+        it = item(y, n, "", 0.0, 1, vol=False)
+        flat = [r] * len(it["c"])
+        it.update(o=flat, h=flat, l=flat, c=flat, e={k: flat for k in ("20", "50", "200")}, hi=r, lo=r, chg=0.0, ph=0.0, pl=0.0)
+        fx.append(it)
+    macro = {"id": "macro", "title": "① 지수·매크로", "sections": [
+        {"name": "미국 지수", "items": [item("^GSPC", "S&P 500", "", 0.001, 9, vol=False)]}, {"name": "환율", "items": fx}]}
+    for d in (macro, ai):
+        (folder / f"{d['id']}.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
+    kn = {it["y"]: k for it, k in SIG_ITEMS}
+    index = [[it["y"], it["n"], kn.get(it["y"], ""), "", "", d["id"], sec["name"]]
+             for d in (macro, ai) for sec in d["sections"] for it in sec["items"]]
+    meta = {"updated": dt.datetime.now(dt.timezone(dt.timedelta(hours=9))).strftime("%Y-%m-%d %H:%M"),
+            "tabs": [{"id": "macro", "title": macro["title"]}, {"id": "ai", "title": ai["title"]}], "index": index}
+    (folder / "meta.json").write_text(json.dumps(meta, ensure_ascii=False), encoding="utf-8")
+
+
+def expect_numbers(it):
+    """UPCO 숫자 줄에 나와야 할 글(화면과 같은 계산)."""
+    c, n = it["c"], len(it["c"])
+    adr = sum(it["h"][i] / it["l"][i] - 1 for i in range(n - 20, n)) / 20 * 100
+    sd = (1 - min(it["l"][-10:]) / c[-1]) * 100
+    d50 = (sum(c[-50:]) / 50 / c[-1] - 1) * 100
+    return [f"하루 변동 {adr:.1f}%", f"10일 저점 {sd:.1f}% 아래", f"50일선 {abs(d50):.1f}% {'아래' if d50 <= 0 else '위'}",
+            f"거래대금 {money(c[-1] * it['v'][-1])} {unit(it['y'])[1]}"], sd > 10
+
+
+def check_signals(b, url, label, w, h):
+    problems = []
+    pg = b.new_page(viewport={"width": w, "height": h})
+    errors = []
+    pg.on("pageerror", lambda e: errors.append(str(e)[:200]))
+    pg.on("console", lambda m: errors.append(m.text[:200]) if m.type == "error" else None)
+    pg.goto(url)
+    pg.evaluate("localStorage.clear()")
+    pg.reload()
+    pg.wait_for_selector("#tabs button")
+    pg.click("#tabs button[data-id=ai]")
+    pg.wait_for_selector(".card")
+    badges = lambda y: pg.evaluate(f"[...document.querySelectorAll('.card[data-y=\"{y}\"] .bd span')].map(s => s.textContent)")
+    # 카드 딱지: 새로 좋아진 신호는 '새로'·'돌파'·포켓 피봇, 나빠진 신호는 '이탈'
+    up = badges("UPCO")
+    for want in ("52주 신고가 돌파", "포켓 피봇", "템플릿 ✓ · 새로", "정배열 · 새로"):
+        if want not in up:
+            problems.append(f"{label} 신호: UPCO 딱지에 '{want}' 없음 {up}")
+    if not any(t.startswith("RS 85") and t.endswith("신고가 돌파") for t in up):
+        problems.append(f"{label} 신호: UPCO RS 딱지에 '신고가 돌파' 없음 {up}")
+    if pg.locator(".card[data-y=UPCO] .bd span.nw").count() < 4:
+        problems.append(f"{label} 신호: 새 신호 딱지에 주황 테두리(nw)가 없음")
+    dn = badges("DNCO")
+    for want in ("정배열 이탈", "템플릿 이탈"):
+        if want not in dn:
+            problems.append(f"{label} 신호: DNCO 딱지에 '{want}' 없음 {dn}")
+    for y in ("STAL", "OLDD", "005930.KS", "7203.T"):
+        extra = [t for t in badges(y) if any(k in t for k in ("새로", "돌파", "포켓 피봇", "이탈"))]
+        if extra:
+            problems.append(f"{label} 신호: {y} 에 나오면 안 되는 딱지 {extra}")
+    # 숫자 줄: 하루 변동폭·10일 저점·50일선·거래대금(달러), 10% 넘게 먼 저점은 주황
+    want, far = expect_numbers(SIG_ITEMS[0][0])
+    got = pg.evaluate("[...document.querySelectorAll('.card[data-y=UPCO] .kv span')].map(s => s.textContent)")
+    if got != want:
+        problems.append(f"{label} 숫자 줄 {got} (기대 {want})")
+    if far != ("far" in (pg.get_attribute(".card[data-y=UPCO] .kv span >> nth=1", "class") or "")):
+        problems.append(f"{label} 숫자 줄: 10일 저점 주황 표시가 기대({far})와 다름")
+    eur = pg.locator('.card[data-y="RHM.DE"] .kv span', has_text="거래대금").inner_text()
+    if eur != f"거래대금 {money(SIG_ITEMS[7][0]['c'][-1] * 1_000_000)} 유로":
+        problems.append(f"{label} 숫자 줄: 유로 거래대금 글자 '{eur}'")
+    pg.click(".card[data-y=UPCO] .kv span >> nth=1")
+    if "올투 기준 손절폭은 7~10%" not in pg.inner_text("#tip"):
+        problems.append(f"{label} 숫자 줄: 10일 저점 풀이가 안 뜸")
+    pg.click("main > h2 >> nth=0")
+    if "포켓 피봇" not in pg.inner_text(".card[data-y=UPCO] .lg"):
+        problems.append(f"{label} 범례에 포켓 피봇 없음")
+    if not pg.evaluate("ppFlags(TAB.sections[0].items.find(x => x.y === 'UPCO')).slice(-1)[0] === true"):
+        problems.append(f"{label} 차트 포켓 피봇 자리 계산이 오늘을 못 잡음")
+    # '▦ 전체' 단추 알림: 새로 좋아진 종목 수(UPCO·6501.T)
+    bub = pg.inner_text("#gbtn i") if pg.locator("#gbtn i").count() else ""
+    if bub != "새 2":
+        problems.append(f"{label} 전체 단추 알림 '{bub}' (기대 새 2)")
+    # 전체 판 맨 위 목록: 줄마다 개수, 하루 앞선 종목은 이름 옆에 날짜
+    pg.click("#gbtn")
+    if "좋아짐 2 · 나빠짐 1" not in pg.inner_text("#panel .sgs summary"):
+        problems.append(f"{label} 새 신호 요약 '{pg.inner_text('#panel .sgs summary')}'")
+    rows = pg.evaluate("[...document.querySelectorAll('#panel .sgr')].map(r => [r.querySelector('.sgh').firstChild.textContent, r.querySelector('.sgh b').textContent, [...r.querySelectorAll('.sgl button')].map(b => b.dataset.y)])")
+    exp_rows = [[n, "2", ["UPCO", "6501.T"]] for n in ("정배열 진입", "템플릿 통과", "RS선 신고가 돌파", "52주 신고가 돌파", "포켓 피봇")]
+    exp_rows += [["정배열 이탈", "1", ["DNCO"]], ["템플릿 이탈", "1", ["DNCO"]]]
+    if rows != exp_rows:
+        problems.append(f"{label} 새 신호 목록 {rows} (기대 {exp_rows})")
+    old = (DAY0 + dt.timedelta(days=248))
+    if pg.inner_text("#panel .sgl button[data-y='6501.T'] >> nth=0") != f"히타치{old.month}/{old.day}":
+        problems.append(f"{label} 하루 앞선 종목 이름 옆 날짜 '{pg.inner_text('#panel .sgl button[data-y=\"6501.T\"] >> nth=0')}'")
+    # 줄 제목을 누르면 그 신호로 걸러 본다
+    pg.locator("#panel .sgh", has_text="정배열 이탈").click()
+    pg.wait_for_timeout(300)
+    cards = pg.evaluate("[...document.querySelectorAll('.card')].map(c => c.dataset.y)")
+    chips = pg.evaluate("[...document.querySelectorAll('#chips .chip')].map(c => c.textContent)")
+    if cards != ["DNCO"] or chips != ["정배열 이탈"] or not pg.is_hidden("#panel"):
+        problems.append(f"{label} 줄 제목 누르기: 카드 {cards}, 칩 {chips}")
+    pg.click("#bar .clr")
+    # 이름을 누르면 판이 닫히고 그 종목 카드로 간다
+    pg.click("#gbtn")
+    pg.locator("#panel .sgr", has_text="템플릿 이탈").locator(".sgl button[data-y=DNCO]").click()
+    pg.wait_for_timeout(400)
+    if not pg.is_hidden("#panel") or not pg.locator(".card.hit[data-y=DNCO]").count():
+        problems.append(f"{label} 이름 누르기: 판이 안 닫히거나 그 종목으로 안 감")
+    # 걸러 보기 판의 '오늘 새로 생긴 신호' 묶음: 포켓 피봇 → UPCO·6501.T
+    pg.evaluate("window.scrollTo(0, 0)")
+    pg.click("#fbtn")
+    if "오늘 새로 생긴 신호" not in pg.inner_text("#panel"):
+        problems.append(f"{label} 걸러 보기 판에 새 신호 묶음 없음")
+    pg.locator("#panel .wrap button", has_text="포켓 피봇").first.click()
+    pg.click("#panel .foot .go")
+    cards = pg.evaluate("[...document.querySelectorAll('.card')].map(c => c.dataset.y)")
+    if cards != ["UPCO", "6501.T"]:
+        problems.append(f"{label} 포켓 피봇 걸러 보기 {cards}")
+    pg.click("#bar .clr")
+    # 거래대금 정렬: 원화로 바꿔 줄 세우고, 환율이 없는 유로 종목은 맨 뒤(노란 딱지 없음)
+    def krw(it):
+        r = FXR.get(unit(it["y"])[0])
+        return it["c"][-1] * it["v"][-1] / r * FXR["KRW"] if r else None
+    its = [it for it, _ in SIG_ITEMS]
+    exp = [it["y"] for it in sorted([x for x in its if krw(x) is not None], key=krw, reverse=True)] + ["RHM.DE"]
+    pg.click("#sbtn")
+    pg.click("#panel .wrap button:text-is('거래대금')")
+    pg.wait_for_function("document.querySelector('#sbtn').textContent.includes('거래대금')")
+    pg.click("#panel .foot .go")
+    got = pg.evaluate("[...document.querySelectorAll('.card')].map(c => c.dataset.y)")
+    if got != exp:
+        problems.append(f"{label} 거래대금 정렬 {got} (기대 {exp})")
+    top = max((x for x in its if krw(x) is not None), key=krw)
+    if pg.inner_text(".card .sk >> nth=0") != f"거래대금 {money(krw(top))} 원":
+        problems.append(f"{label} 거래대금 정렬 딱지 '{pg.inner_text('.card .sk >> nth=0')}' (기대 {money(krw(top))} 원)")
+    if pg.locator('.card[data-y="RHM.DE"] .sk').count():
+        problems.append(f"{label} 환율 없는 유로 종목에 거래대금 정렬 딱지가 붙음")
+    # 하루 변동폭은 높은 순, 10일 저점까지는 처음 누르면 가까운 순(낮은 순). 화면과 같은 순서로 계산해 같은 값이 같게 나오게 한다
+    for name, key, rev in (("하루 변동폭(ADR)", lambda it: sum(it["h"][i] / it["l"][i] - 1 for i in range(230, 250)) / 20 * 100, True),
+                           ("10일 저점까지", lambda it: max(0, (1 - min(it["l"][-10:]) / it["c"][-1]) * 100), False)):
+        pg.click("#sbtn")
+        pg.click(f"#panel .wrap button:text-is('{name}')")
+        pg.click("#panel .foot .go")
+        got = pg.evaluate("[...document.querySelectorAll('.card')].map(c => c.dataset.y)")
+        want = [it["y"] for it in sorted(its, key=key, reverse=rev)]
+        if got != want:
+            problems.append(f"{label} {name} 정렬 {got} (기대 {want})")
+    # 영문 이름이 같아도 한글 이름이 다른 소프트뱅크 둘은 정렬할 때 둘 다 남는다
+    pg.click("#sbtn")
+    pg.click("#panel .wrap button:text-is('1개월')")
+    pg.click("#panel .foot .go")
+    if not {"9984.T", "9434.T"} <= set(pg.evaluate("[...document.querySelectorAll('.card')].map(c => c.dataset.y)")):
+        problems.append(f"{label} 소프트뱅크 둘 중 하나가 같은 회사로 빠짐")
+    r = pg.evaluate(PROBE)
+    if r["sw"] > r["vw"] + 2:
+        problems.append(f"{label} 신호 화면 가로 넘침 {r['sw']}px")
+    if r["bad"]:
+        problems.append(f"{label} 신호 화면 깨진 값 '{r['bad']}'")
+    pg.click("#bar .clr")
+    pg.screenshot(path=str(SHOTS / f"watchlist-{label}-signals.png"))
+    # 매크로 탭: 숫자 줄·새 신호 묶음·알림이 없다
+    pg.click("#tabs button[data-id=macro]")
+    pg.wait_for_timeout(400)
+    pg.click("#fbtn")
+    if pg.locator(".card .kv").count() or pg.locator("#gbtn i").count() or "오늘 새로 생긴 신호" in pg.inner_text("#panel"):
+        problems.append(f"{label} 매크로 탭에 종목용 새 기능이 보임")
+    pg.click("#fbtn")
+    problems += [f"{label} 신호: {e}" for e in errors]
+    pg.close()
+    return problems
+
+
 class Handler(SimpleHTTPRequestHandler):
     """docs 를 내보내되 /watchlist/data/ 는 가짜 자료 폴더에서 준다."""
     data_dir = None
@@ -118,8 +379,9 @@ PROBE = """() => ({
 def main():
     SHOTS.mkdir(exist_ok=True)
     problems = []
-    with tempfile.TemporaryDirectory() as tmp:
+    with tempfile.TemporaryDirectory() as tmp, tempfile.TemporaryDirectory() as tmp2:
         make_data(Path(tmp))
+        make_signal_data(Path(tmp2))
         Handler.data_dir = tmp
         srv = ThreadingHTTPServer(("127.0.0.1", 0), partial(Handler, directory=str(ROOT / "docs")))
         threading.Thread(target=srv.serve_forever, daemon=True).start()
@@ -411,6 +673,10 @@ def main():
                     problems.append(f"{label} 다음 탭이 맨 위부터 열리지 않음")
                 problems += [f"{label}: {e}" for e in errors]
                 pg.close()
+            # 새로 생긴 신호·숫자 줄·거래대금(2026-11-23): 신호가 반드시 나도록 만든 자료로 바꿔 다시 연다
+            Handler.data_dir = tmp2
+            for label, w, h in (("phone", 390, 844), ("pc", 1440, 900)):
+                problems += check_signals(b, url, label, w, h)
             b.close()
         srv.shutdown()
     if problems:
