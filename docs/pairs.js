@@ -1,5 +1,5 @@
 /* 페어 트레이딩 탭 (2026-10-26 추가)
-   데이터: docs/data/pairs.json — scripts/pairs.py 가 시장 흐름판 갱신 때 함께 만든다. 목록·해설 문구는 config/pairs.json.
+   데이터: docs/data/pairs.json — scripts/pairs.py 가 시장 상황판 갱신 때 함께 만든다. 목록·해설 문구는 config/pairs.json.
    비율 = A ÷ B (오르면 A가 B보다 강함). 종가끼리의 비율만 쓴다.
    다른 탭과 코드를 섞지 않는다. 공유하는 것은 테마 색뿐이다. */
 (() => {

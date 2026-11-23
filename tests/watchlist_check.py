@@ -545,7 +545,7 @@ def main():
                     problems.append(f"{label} 풀이 없는 딱지 {[x for x, t in tips if not t]}")
                 elif not any("AI 가속기" in t and "70개 업종 중 3위" in t for _, t in tips):
                     problems.append(f"{label} 액션 딱지 풀이에 업종·순위 없음")
-                # 인더스트리 액션: 카드에 흐름판 업종·순위 딱지, 걸러 보기로 그 종목만
+                # 인더스트리 액션: 카드에 상황판 업종·순위 딱지, 걸러 보기로 그 종목만
                 if "AI 가속기 3위/70 · 새로" not in pg.inner_text("main .bd .ia >> nth=0"):
                     problems.append(f"{label} 액션 딱지 표시 없음")
                 pg.click("#fbtn")

@@ -1,4 +1,4 @@
-/* 시장 흐름판 화면 */
+/* 시장 상황판 화면 */
 (() => {
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
