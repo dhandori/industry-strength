@@ -24,6 +24,7 @@
     "module/DDR5 RDIMM 32GB 4800/5600": ["DDR5 서버 모듈 32GB", "RDIMM · 서버에 꽂는 메모리"],
     "module/DDR5 UDIMM 16GB 4800/5600": ["DDR5 PC 모듈 16GB", "UDIMM · PC용 메모리"],
     "module/DDR5 RDIMM 64GB": ["DDR5 서버 모듈 64GB", "RDIMM · 공개 표에 없어 수동 입력"],
+    "module/DDR5 RDIMM 64GB Contract": ["DDR5 서버 모듈 64GB 계약가", "월 단위 · 차트 판독"],
     "module/DDR4 UDIMM 16GB 3200": ["DDR4 PC 모듈 16GB", "UDIMM · 구형 PC용"],
     "wafer/512Gb TLC": ["낸드 512Gb TLC (웨이퍼)", "SSD에 들어가는 저장용 칩"],
     "wafer/256Gb TLC": ["낸드 256Gb TLC (웨이퍼)", "저장용 칩"],
@@ -36,7 +37,7 @@
   const GROUP = { dram: "D램 칩", module: "메모리 모듈", wafer: "낸드", gddr: "그래픽 D램", flash: "구형 낸드 칩" };
   const CO = { Intel: "var(--cp-intel)", AMD: "var(--cp-amd)", Qualcomm: "var(--cp-qc)", Arm: "var(--cp-arm)", "Intel·AMD": "var(--cp-both)" };
   // 수동 입력 값 표시(config/chip_events_manual.json 의 memory_spot)
-  const manTag = (r) => r && r.src === "manual" ? ` <span class="ai-ntag target" ${tipAttr(`수동 입력 · ${r.outlet || ""}${r.note ? " · " + r.note : ""}`)}>수동</span>` : "";
+  const manTag = (r) => r && (r.src === "manual" || r.src === "chart") ? ` <span class="ai-ntag target" ${tipAttr(`${r.src === "chart" ? "그림 차트 판독(근사값)" : "수동 입력"} · ${r.outlet || ""}${r.note ? " · " + r.note : ""}`)}>${r.src === "chart" ? "판독" : "수동"}</span>` : "";
   const SEG = { server: "서버", pc: "PC", all: "전체" };
 
   function bindTip(el) {
@@ -244,7 +245,7 @@
       <details class="ai-more" data-more="chips"${st.more ? " open" : ""}><summary>자세히 보기 · 품목별 표, CPU 가격 인상 타임라인, 자료 기준</summary><div class="ai-more-b">
       <p class="cp-sub">품목 이름표를 누르면 그 선을 켜고 끌 수 있습니다. 오른쪽 꼬리표에 적힌 숫자가 마지막 값입니다. 시세가 바뀐 날에만 값이 달라져서 선이 계단 모양이 됩니다.${maxLen < 20 ? " 이동평균은 기록이 20일 이상 쌓인 품목부터 나옵니다." : ""}</p>
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>분류</th><th>품목</th><th class="num">평균가</th><th class="num">직전 대비</th><th class="num">그날 범위</th><th>기준일</th><th class="num">기록</th></tr></thead><tbody>${tbl}</tbody></table></div>
-      <p class="foot-note">현물가는 대리점과 중개상이 그때그때 사고파는 값이라, 대형 고객이 분기마다 정하는 계약가보다 먼저 움직입니다. DRAMeXchange는 표마다 갱신 주기가 달라서 D램 칩은 매일, 모듈과 낸드는 대개 주 1회 바뀝니다. '수동' 표시가 붙은 값은 공개 첫 화면에 아직 없거나 공개 표에 없는 품목(RDIMM 64GB 등)을 출처를 확인해 직접 넣은 것입니다. 같은 날짜의 공개 값이 올라오면 그 값으로 바뀝니다.</p>
+      <p class="foot-note">현물가는 대리점과 중개상이 그때그때 사고파는 값이라, 대형 고객이 분기마다 정하는 계약가보다 먼저 움직입니다. DRAMeXchange는 표마다 갱신 주기가 달라서 D램 칩은 매일, 모듈과 낸드는 대개 주 1회 바뀝니다. '수동' 표시가 붙은 값은 공개 첫 화면에 아직 없거나 공개 표에 없는 품목(RDIMM 64GB 등)을 출처를 확인해 직접 넣은 것입니다. 같은 날짜의 공개 값이 올라오면 그 값으로 바뀝니다. '판독' 표시는 그림 차트(BADONION RESEARCH)에서 눈금을 읽어 옮긴 근사값으로, 오차가 ±2~3% 안팎입니다. RDIMM 32GB의 2026년 9월 이전과 64GB 현물가·계약가 이력이 여기에 해당합니다.</p>
 
       <h3 class="ai-h3">CPU 가격 인상 타임라인 <span class="sub">인텔·AMD·퀄컴 인상 소식 · ${yr}년</span></h3>
       <div class="chart-legend"><span><i class="cp-pill on"></i>실제로 올림</span><span><i class="cp-pill"></i>올릴 예정·보도</span><span>이름표에 마우스를 올리거나 누르면 기사 내용이 보입니다</span></div>
