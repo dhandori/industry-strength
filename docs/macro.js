@@ -356,7 +356,7 @@
         if (!sr.length) return;
         const sw = worstOf(sr);
         const label = mk === "KR" && s === "신용·금리·유동성" ? "신용·금리" : mk === "JP" && s === "신용·금리·유동성" ? "금리·환율" : s;
-        h += `<div class="mx-group-h"><h3>${label}</h3><span class="sub">${sr.length}개 지표${sw <= 5 ? ` · 가장 위험한 지표: ${LV[sw][0]} ${LV[sw][1]}` : ""}</span></div><div class="mx-grid">${sr.map(card).join("")}${mk === "US" && s === "투자 심리" && window.__pc ? window.__pc.card() : ""}</div>`;   // 풋콜레이시오(putcall.js)
+        h += `<div class="mx-group-h"><h3>${label}</h3><span class="sub">${sr.length}개 지표${sw <= 5 ? ` · 가장 위험한 지표: ${LV[sw][0]} ${LV[sw][1]}` : ""}</span></div><div class="mx-grid">${sr.map(card).join("")}${mk === "US" && s === "투자 심리" && window.__pc ? window.__pc.card() : ""}${mk === "US" && s === "주가" && window.__ud ? window.__ud.card() : ""}</div>`;   // 풋콜레이시오(putcall.js) · 상승·하락 거래량 10:1(updownvol.js)
         if (mk === "US" && s === "투자 심리") h += duo(d);
       });
       h += `</section>`;
