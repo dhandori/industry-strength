@@ -296,6 +296,46 @@ def is_fresh(meta, now):
     return done >= slot_start(now) and len(meta.get("failed") or []) <= 3
 
 
+# ── 저장 모양 줄이기(2026-11-24 사용자 요청: 화면이 가볍게) ──
+# 자료 파일의 40% 넘게가 EMA 세 줄과 날짜였다. 파일에 쓸 때만 줄이고, 화면(index.html 의 unpack)과
+# 다음 회차의 이전자료 읽기(unpack)가 원래 모양으로 되돌린다.
+# - EMA: 첫 값만 es 에 남긴다. 나머지는 e[i] = c[i]·k + e[i-1]·(1-k) 로 종가에서 다시 계산된다(k = 2/(n+1)).
+# - 날짜: 첫날 d0(YYMMDD)과 그 뒤 날마다 며칠 뒤인지(dd)만 남긴다.
+def _ymd(s):
+    return dt.date(2000 + int(s[:2]), int(s[2:4]), int(s[4:6]))
+
+
+def pack(it):
+    out = dict(it)
+    e, d = out.pop("e", None), out.pop("d", None)
+    if e:
+        out["es"] = {k: v[0] for k, v in e.items() if v}
+    if d:
+        days = [_ymd(x) for x in d]
+        out["d0"] = d[0]
+        out["dd"] = [(b - a).days for a, b in zip(days, days[1:])]
+    return out
+
+
+def unpack(it):
+    if "es" in it and "e" not in it:
+        e = {}
+        for k, v0 in it.pop("es").items():
+            a, prev, line = 2 / (int(k) + 1), v0, [v0]
+            for c in it["c"][1:]:
+                prev = c * a + prev * (1 - a)
+                line.append(round(prev, it.get("dg", 2)))
+            e[k] = line
+        it["e"] = e
+    if "d0" in it and "d" not in it:
+        day, out = _ymd(it["d0"]), [it.pop("d0")]
+        for g in it.pop("dd", []):
+            day += dt.timedelta(days=g)
+            out.append(day.strftime("%y%m%d"))
+        it["d"] = out
+    return it
+
+
 def tab_summary(sections):
     its = [it for s in sections for it in s["items"]]
     return {"al": sum(1 for x in its if x.get("al")),
@@ -329,7 +369,7 @@ def main():
             p = os.path.join(prev_dir, f"{tab['id']}.json")
             if os.path.exists(p):
                 for s in json.load(open(p, encoding="utf-8"))["sections"]:
-                    prev.update({it["y"]: it for it in s["items"]})
+                    prev.update({it["y"]: unpack(it) for it in s["items"]})
         sections = []
         for sec in tab["sections"]:
             items = []
@@ -354,7 +394,8 @@ def main():
     print("인더스트리 액션 종목", add_ia(tabs_out))
     for tab, (_, sections) in zip(tabs, tabs_out):
         with open(os.path.join(out_dir, f"{tab['id']}.json"), "w", encoding="utf-8") as f:
-            json.dump({"id": tab["id"], "title": tab["title"], "sections": sections}, f,
+            json.dump({"id": tab["id"], "title": tab["title"],
+                       "sections": [{**s, "items": [pack(it) for it in s["items"]]} for s in sections]}, f,
                       ensure_ascii=False, separators=(",", ":"))
         summary.append({"id": tab["id"], "title": tab["title"],
                         "count": sum(len(s["items"]) for s in sections), **tab_summary(sections)})
