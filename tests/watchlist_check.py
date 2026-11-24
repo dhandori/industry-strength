@@ -6,7 +6,7 @@
 - 정렬: 1개월 수익률 순서가 맞는지, 같은 회사 두 상장(미국·대만)이 미국 하나만 남는지
 - 낮은 순 정렬, '모두 지우기' 한 번에 처음 상태로 돌아가는지
 - 표 보기에서 줄을 누르면 차트가 펼쳐지는지, 매크로 탭(RS 없음)에서 RS 정렬이 기본 순서로 바뀌는지
-- '이 섹터만' 보기(2026-11-23): 한 섹터만 남기, 하위 묶음 칩, 다음 섹터·모두 보기 단추
+- 섹터 하나만 보기(2026-11-23, 2026-11-24 섹터 줄 단추로 바꿈): 한 섹터만 남기, 머리의 하부섹터 줄, 다음 섹터·전체 섹터 보기 단추
 - 새로 생긴 신호(2026-11-23, 신호가 반드시 나도록 만든 둘째 자료): 카드 딱지, '▦ 전체' 단추 알림과 판 맨 위 목록,
   줄 제목·이름 누르기, 걸러 보기 묶음, 갱신 실패·오래된 종목 빼기, 숫자 줄(하루 변동·10일 저점·50일선·거래대금),
   거래대금 원화 환산 정렬, 하루 변동폭·10일 저점 정렬, 한글 이름이 다른 같은 영문 이름(소프트뱅크 둘)
@@ -529,12 +529,15 @@ def main():
                 gtxt = pg.inner_text("main > details.gdef")
                 if "AI 서버의 두뇌" not in gtxt or "대표:" not in gtxt:
                     problems.append(f"{label} 묶음 정의 표가 안 보임")
+                # 줄을 누르면 그 섹터의 그 묶음만 남고, 머리의 하부섹터 줄에서 그 묶음이 켜진다(2026-11-24). '전체'로 돌아간다
                 pg.click("main > details.gdef .gr >> nth=1")
                 pg.wait_for_timeout(300)
-                if not pg.locator("main > .sub.hit").count():
-                    problems.append(f"{label} 묶음 정의 줄을 눌러도 묶음으로 안 감")
-                pg.evaluate("window.scrollTo(0, 0)")
-                pg.click("main > details.gdef summary")
+                ys = sorted(pg.eval_on_selector_all(".card", "cs => cs.map(c => c.dataset.y)"))
+                if ys != ["000660.KS", "INTC", "NVDA"] or pg.inner_text("#subs button.on") != "프로세서3":
+                    problems.append(f"{label} 묶음 정의 줄을 눌러도 그 묶음만 안 남음: {ys}")
+                pg.evaluate("setHidden(false)")
+                pg.click("#secs button.all")
+                pg.wait_for_timeout(300)
                 # RS선 보는 법: 본문 맨 위에는 없고 '보기' 판 → 도움말에서 연다(2026-11-24)
                 if pg.locator("main > details.guide:not(.gdef)").count():
                     problems.append(f"{label} RS선 보는 법 상자가 본문에 남아 있음")
@@ -585,10 +588,13 @@ def main():
                 if not gl.count() or "프로세서" not in gl.first.inner_text():
                     problems.append(f"{label} 하부섹터 순위 없음")
                 else:
+                    # 누르면 그 섹터의 그 묶음만 남는다(2026-11-24). 확인 뒤 '전체'로 돌아간다
                     gl.first.click()
                     pg.wait_for_timeout(300)
-                    if not pg.locator("main > .sub.hit").count():
-                        problems.append(f"{label} 하부섹터 순위를 눌러도 묶음으로 안 감")
+                    if pg.inner_text("#subs button.on") != "프로세서3":
+                        problems.append(f"{label} 하부섹터 순위를 눌러도 그 묶음만 안 남음")
+                    pg.evaluate("setHidden(false)")
+                    pg.click("#secs button.all")
                 pg.evaluate("window.scrollTo(0, 0)")
                 pg.wait_for_timeout(300)
                 # RS: 등급·20일 변화·RS선 신고가를 딱지 하나로, 차트 아래 RS선 칸(캔버스가 그만큼 높다)
@@ -789,29 +795,37 @@ def main():
                 pg.wait_for_timeout(300)
                 if pg.evaluate("window.scrollY") > 2:
                     problems.append(f"{label} 다음 탭이 맨 위부터 열리지 않음")
-                # '이 섹터만'(2026-11-23): 반도체만 남고, 하위 묶음 칩으로 고르고, 맨 아래 단추로 다음 섹터·모두 보기
+                # 섹터 하나만 보기(2026-11-24): '전체'로 이어 볼 때는 하부섹터 줄이 없고, 섹터 줄의 섹터를 누르면
+                # 그 섹터만 남고 머리에 하부섹터 줄이 생긴다. 하부섹터를 고르고, 맨 아래 단추로 다음 섹터·전체 섹터 보기
                 heads = lambda: pg.eval_on_selector_all("main > h2", "hs => hs.map(h => h.firstChild.textContent)")
-                pg.click("#s0 .sone")
+                pg.evaluate("setHidden(false)")
+                if not pg.locator("#secs button.all.on").count() or pg.is_visible("#subs"):
+                    problems.append(f"{label} 전체 보기: '전체' 단추가 안 켜졌거나 하부섹터 줄이 보임")
+                if pg.locator("main h2 .sone").count():
+                    problems.append(f"{label} 옛 '이 섹터만' 단추가 남아 있음")
+                pg.click("#secs button[data-s='0']")
                 pg.wait_for_timeout(300)
-                chips = pg.eval_on_selector_all(".subsel button", "bs => bs.map(b => b.textContent)")
-                if heads() != ["반도체"] or chips != ["전체5", "파운드리1", "프로세서3"]:
-                    problems.append(f"{label} 이 섹터만: 섹터 {heads()}, 칩 {chips}")
-                pg.click(".subsel button:has-text('프로세서')")
+                chips = pg.eval_on_selector_all("#subs button", "bs => bs.map(b => b.textContent)")
+                if heads() != ["반도체"] or chips != ["전체5", "파운드리1", "프로세서3"] or not pg.is_visible("#subs"):
+                    problems.append(f"{label} 섹터 단추: 섹터 {heads()}, 하부섹터 줄 {chips}")
+                if pg.locator("#secs button.all.on").count() or not pg.locator("#secs button[data-s='0'].on").count():
+                    problems.append(f"{label} 섹터 단추: 섹터 줄 강조가 고른 섹터로 안 옮겨짐")
+                pg.click("#subs button:has-text('프로세서')")
                 pg.wait_for_timeout(300)
                 ys = pg.eval_on_selector_all(".card", "cs => cs.map(c => c.dataset.y)")
                 if sorted(ys) != ["000660.KS", "INTC", "NVDA"]:
                     problems.append(f"{label} 하위 묶음 칩 '프로세서': 카드 {ys}")
-                look("이 섹터만·프로세서")
+                look("섹터·하부섹터 프로세서")
                 if not pg.inner_text("#next").startswith("다음 섹터: 메모리"):
-                    problems.append(f"{label} 이 섹터만 끝 단추 글자 '{pg.inner_text('#next')}'")
+                    problems.append(f"{label} 한 섹터 끝 단추 글자 '{pg.inner_text('#next')}'")
                 pg.click("#next")
                 pg.wait_for_timeout(300)
                 if heads() != ["메모리"] or pg.locator(".card").count() != 3:
                     problems.append(f"{label} 다음 섹터: 섹터 {heads()}, 카드 {pg.locator('.card').count()}")
                 pg.click("#next")
                 pg.wait_for_timeout(300)
-                if heads() != ["반도체", "메모리"]:
-                    problems.append(f"{label} 모두 보기로 안 돌아옴: {heads()}")
+                if heads() != ["반도체", "메모리"] or pg.is_visible("#subs"):
+                    problems.append(f"{label} 전체 섹터 보기로 안 돌아옴: {heads()}")
                 problems += [f"{label}: {e}" for e in errors]
                 pg.close()
             problems += check_lazy(b, url)
