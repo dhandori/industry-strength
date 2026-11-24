@@ -34,8 +34,8 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* 큰 섹터 탭: 아래 섹터 줄보다 크고 굵게. 한 줄에 다 안 들어가면(일반 휴대폰·폴드 바깥 화면) 옆으로 민다 */
 #tabs{display:flex;gap:2px;padding:0 6px;border-bottom:1px solid var(--line);max-width:1100px;margin:0 auto;overflow-x:auto;scrollbar-width:none}
 #tabs::-webkit-scrollbar{display:none}
-#tabs button{flex:0 0 auto;border:0;background:none;color:var(--sub);font-size:16px;font-weight:700;letter-spacing:-.3px;padding:11px 9px 10px;white-space:nowrap}
-#tabs button.on{color:var(--text);font-weight:800;box-shadow:inset 0 -4px 0 var(--up)}
+#tabs button{flex:0 0 auto;border:0;background:none;color:#374151;font-size:16px;font-weight:700;letter-spacing:-.3px;padding:11px 9px 10px;white-space:nowrap}
+#tabs button.on{color:var(--text);font-weight:900;box-shadow:inset 0 -4px 0 var(--up)}
 /* 걸린 조건 줄: 조건·정렬이 처음 상태가 아닐 때만 섹터 줄 아래에. 칩을 누르면 그것만 풀린다 */
 #chips{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:0 12px 9px;scrollbar-width:none;max-width:1100px;margin:0 auto}
 #chips::-webkit-scrollbar{display:none}
@@ -50,11 +50,11 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* 섹터 줄·하부섹터 줄: 큰 섹터 탭과 같은 모양(글자, 고른 것은 진한 글자 + 녹색 밑줄). 단계마다 글자를 한 단계씩 작게
    (큰 섹터 16px > 섹터 14px > 하부섹터 13px). 2026-11-24 사용자 요청: 세 줄 UI 통일 */
 #secs,#subs{gap:2px;padding:0 6px;align-items:center;border-bottom:1px solid var(--line)}
-#secs button,#subs button{flex:none;border:0;background:none;color:var(--sub);font-weight:600;letter-spacing:-.2px;white-space:nowrap;cursor:pointer;user-select:none;-webkit-user-select:none}
+#secs button,#subs button{flex:none;border:0;background:none;color:#374151;font-weight:700;letter-spacing:-.2px;white-space:nowrap;cursor:pointer;user-select:none;-webkit-user-select:none}
 #secs button{font-size:14px;padding:10px 8px 9px}
 #subs button{font-size:13px;padding:8px 8px 7px}
-#secs button small,#subs button small{font-size:11.5px;font-weight:500;color:#9ca3af;margin-left:3px}
-#secs button.on,#subs button.on{color:var(--text);font-weight:800;box-shadow:inset 0 -4px 0 var(--up)}
+#secs button small,#subs button small{font-size:11.5px;font-weight:600;color:#6b7280;margin-left:3px}
+#secs button.on,#subs button.on{color:var(--text);font-weight:900;box-shadow:inset 0 -4px 0 var(--up)}
 #secs button.on small,#subs button.on small{color:var(--up)}
 #secs button:disabled{opacity:.35}
 /* 하부섹터 줄: 섹터 하나를 골랐을 때만 섹터 줄 아래에 나온다(옛 '이 섹터만' 단추를 대신함) */
@@ -226,7 +226,7 @@ main > h2 small{display:block;margin:4px 0 0;font-size:12.5px;font-weight:500;co
 .bd .al{background:var(--up);color:#fff;font-weight:600}
 .bd .tt{background:#0f5132;color:#fff;font-weight:700}
 /* 딱지를 누르면 뜨는 풀이 상자(휴대폰은 마우스를 올릴 수 없어서) */
-#tip{position:fixed;left:12px;right:12px;bottom:16px;z-index:60;max-width:520px;margin:0 auto;background:#1f2430;color:#fff;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.55;white-space:pre-line;box-shadow:0 6px 24px rgba(0,0,0,.25)}
+#tip{position:fixed;left:12px;right:12px;bottom:16px;z-index:60;max-width:520px;max-height:38vh;overflow-y:auto;margin:0 auto;background:#1f2430;color:#fff;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.55;white-space:pre-line;box-shadow:0 6px 24px rgba(0,0,0,.25)}
 #tip small{display:block;margin-top:6px;color:#aab1bf;font-size:12px}
 .bd .xg{background:var(--risebg);color:var(--risetx);box-shadow:inset 0 0 0 1px var(--risetx);font-weight:600}
 .bd .xd{background:var(--fallbg);color:var(--falltx);box-shadow:inset 0 0 0 1px var(--falltx);font-weight:600}
@@ -600,13 +600,19 @@ function ttAt(it, back){
   return [last > s150 && last > s200, s150 > s200, s200 > s200b, s50 > s150 && s50 > s200, last > s50,
           last >= lo * 1.3, last >= hi * 0.75, it.rs != null && it.rs >= 70];
 }
-// 포켓 피봇(길 모랄레스·크리스 캐처): j번째 날 종가가 전날보다 높고, 거래량이 직전 10거래일 가운데 내린 날 거래량의 최대치보다 많고,
-// 종가가 50일 단순이동평균 위(상승 추세 안). 직전 10거래일에 내린 날이 하루도 없으면 보지 않는다.
+// 포켓 피봇(길 모랄레스·크리스 캐처): j번째 날이 아래를 모두 만족할 때. 직전 10거래일에 내린 날이 하루도 없으면 보지 않는다.
+//  ① 종가가 전날보다 높고, 그날 고가·저가 폭의 위쪽 절반에서 마감(힘 있게 끝남)
+//  ② 거래량이 직전 10거래일 가운데 내린 날 거래량의 최대치보다 많음
+//  ③ 종가가 50일 단순이동평균 위이고, 50일선이 10거래일 전보다 높음(상승 추세 안)
+//  ④ 종가가 10일선보다 5%, 50일선보다 15% 넘게 위가 아님(이미 많이 오른 자리는 뺀다)
+// 2026-11-24 사용자 요청으로 ①의 마감 위치, ③의 50일선 기울기, ④를 더했다. 1,450종목 실측: 하루 53개 → 7개, 종목당 1년 13.5회 → 2.9회
 function ppAt(it, j){
   const c = it.c, v = it.v;
   if (!v || j < 11 || !(v[j] > 0) || !(c[j] > c[j - 1])) return false;
-  const s50 = sma(c, 50, j);
-  if (s50 == null || c[j] <= s50) return false;
+  if (it.h && it.l && it.h[j] > it.l[j] && c[j] < it.l[j] + (it.h[j] - it.l[j]) / 2) return false;
+  const s50 = sma(c, 50, j), s50b = sma(c, 50, j - 10), s10 = sma(c, 10, j);
+  if (s50 == null || s50b == null || c[j] <= s50 || s50 <= s50b) return false;
+  if (c[j] > s10 * 1.05 || c[j] > s50 * 1.15) return false;
   let mx = -1;
   for (let i = j - 10; i < j; i++) if (c[i] < c[i - 1] && v[i] > mx) mx = v[i];
   return mx >= 0 && v[j] > mx;
@@ -778,7 +784,7 @@ const DEF = {
   n_tt: "어제는 미너비니 템플릿 8조건 가운데 하나 이상이 빠졌는데 오늘 모두 통과했습니다. RS 조건은 어제 등급이 저장돼 있지 않아 오늘 등급으로 봅니다.",
   n_rsh: "RS선(종목 종가 ÷ 상장 시장 지수)이 어제는 1년 최고가 아니었는데 오늘 1년 최고를 새로 넘었습니다. 지수가 크게 빠진 날에는 덜 빠진 종목(경기방어주 등)이 여기에 많이 걸립니다.",
   n_hi: "어제는 신고가가 아니었는데 오늘 종가가 최근 1년 최고 종가를 새로 넘었습니다. 며칠째 신고가를 이어 가는 종목은 첫날에만 걸립니다.",
-  pp: "포켓 피봇(길 모랄레스·크리스 캐처의 매수 신호)입니다. 오늘 종가가 어제보다 높고, 오늘 거래량이 직전 10거래일 가운데 내린 날 거래량의 최대치보다 많고, 종가가 50일 단순이동평균 위에 있습니다. 상승 추세 안에서 큰손이 사들인 흔적으로 봅니다. 50일선에서 멀리 떨어진 자리라면 추격 매수가 되기 쉬우니 정렬의 '50일선 이격도'로 함께 확인하세요. 차트 거래량 칸의 보라 점이 지난 포켓 피봇 자리입니다.",
+  pp: "포켓 피봇: 큰손(기관)이 주가가 박스권을 뚫기 전에 조용히 사들이기 시작한 흔적입니다. 오닐의 제자 길 모랄레스·크리스 캐처의 매수 신호로, 돌파하는 날보다 먼저 들어갈 자리를 찾는 데 씁니다.\n\n조건(모두 만족): ① 어제보다 오르고 그날 고저폭의 위쪽 절반에서 마감 ② 거래량이 직전 10거래일 중 내린 날의 최대 거래량보다 많음 ③ 50일선 위, 50일선이 2주 전보다 높음 ④ 10일선보다 5%, 50일선보다 15% 넘게 위가 아님(많이 오른 자리는 뺌)\n\n왜 표시하나: 정배열·템플릿·RS가 좋은 종목에 이 신호가 붙으면 큰손 매수가 확인되어 후보를 좁히기 좋습니다. 혼자서는 매수 신호로 쓰지 마세요. 차트 거래량 칸의 보라 점이 지난 1년의 포켓 피봇 자리입니다.",
   x_al: "어제까지 정배열이었는데 오늘 깨졌습니다. 대개 종가가 20일선(EMA20) 아래로 내려온 경우라 흔한 눌림일 수도 있지만, 추세가 꺾이는 첫날일 수도 있습니다.",
   x_tt: "어제까지 미너비니 템플릿 8조건을 모두 통과했는데 오늘 하나 이상이 빠졌습니다. 딱지를 누르면 어느 조건이 빠졌는지 나옵니다. RS 조건은 어제 등급이 저장돼 있지 않아 오늘 등급으로 봅니다.",
   // 변동·손절과 거래대금(2026-11-23)
