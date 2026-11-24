@@ -23,6 +23,7 @@ on:
     branches: [main]
     paths:
       - "config/watchlist_tabs.json"
+      - "config/watchlist_tags.json"
       - "config/watchlist_wake.txt"
       - "scripts/watchlist_fetch.py"
       - ".github/workflows/watchlist.yml"

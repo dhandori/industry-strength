@@ -580,6 +580,12 @@ function drawRs(g, it0, it, rl, X, n, pW, top, rsH, rgap){
 const p2 = n => (n < 10 ? "0" : "") + n;
 // 섹터의 하부섹터 설명(config/watchlist_tabs.json 의 groups). 없으면 빈 글자
 function gdesc(s, g){ return (g && s.groups && s.groups[g]) || ""; }
+// 카드 딱지 풀이: 첫 딱지(하부섹터) 설명 + 둘째 이후 세부 딱지 설명(config/watchlist_tags.json → 자료의 tagd)을 줄마다
+function tagTip(s, t){
+  if (!t || !t.length) return "";
+  const rows = t.map((x, i) => { const d = i ? (s.tagd && s.tagd[x]) : gdesc(s, x); return d ? x + ": " + d : ""; }).filter(Boolean);
+  return rows.join("\n\n");
+}
 function unpack(it){
   if (it.es && !it.e){
     const e = {}, c = it.c;
@@ -916,7 +922,7 @@ function fillCard(el){
   const sm = document.createElement("small"); sm.textContent = it.y; nm.after(sm);
   if (it.k){ const em = document.createElement("em"); em.textContent = it.k; sm.after(em); }
   const bz = el.querySelector(".biz");
-  if (it.t && it.t.length) bz.appendChild(span("tg", it.t.join(" · "), it.gd ? it.t[0] + ": " + it.gd : "하부섹터 딱지입니다. 첫 딱지가 같은 종목끼리 섹터 안에서 한 묶음으로 모입니다."));
+  if (it.t && it.t.length) bz.appendChild(span("tg", it.t.join(" · "), it.td ? it.td : "하부섹터 딱지입니다. 첫 딱지가 같은 종목끼리 섹터 안에서 한 묶음으로 모입니다."));
   if (it.b) bz.appendChild(document.createTextNode(it.b));
   if (!bz.childNodes.length) bz.remove();
   const bd = el.querySelector(".bd");
@@ -1143,7 +1149,7 @@ async function openTab(id, restore){
     if (k && k.u === META.updated) return k.d;
     const d = await (await fetch(`${DATA}${t}.json?t=${encodeURIComponent(META.updated)}`)).json();
     // 하부섹터(첫 딱지) 설명을 종목에 붙여 둔다. 카드의 보라색 딱지를 누르면 이 설명이 뜬다(2026-11-24)
-    d.sections.forEach(s => s.items.forEach(it => { unpack(it); it.gd = gdesc(s, (it.t || [])[0]); }));
+    d.sections.forEach(s => s.items.forEach(it => { unpack(it); it.td = tagTip(s, it.t); }));
     TABC[t] = {u: META.updated, d};
     return d;
   };
