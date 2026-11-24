@@ -4,7 +4,7 @@
 - 스크립트 오류·가로 넘침·undefined/NaN 같은 깨진 값이 없는지
 - 걸러 보기: 조건 둘(교집합)과 국가 둘(합집합)을 함께 걸면 맞는 종목만 남는지
 - 정렬: 1개월 수익률 순서가 맞는지, 같은 회사 두 상장(미국·대만)이 미국 하나만 남는지
-- 낮은 순 정렬, '모두 지우기' 한 번에 처음 상태로 돌아가는지
+- 낮은 순 정렬, '조건 초기화' 한 번에 처음 상태로 돌아가는지
 - 표 보기에서 줄을 누르면 차트가 펼쳐지는지, 매크로 탭(RS 없음)에서 RS 정렬이 기본 순서로 바뀌는지
 - 섹터 하나만 보기(2026-11-23, 2026-11-24 섹터 줄 단추로 바꿈): 한 섹터만 남기, 머리의 하부섹터 줄, 다음 섹터·전체 섹터 보기 단추
 - 새로 생긴 신호(2026-11-23, 신호가 반드시 나도록 만든 둘째 자료): 카드 딱지, '▦ 전체' 단추 알림과 판 맨 위 목록,
@@ -514,6 +514,16 @@ def main():
                 if pg.inner_text("#per button.on") != other or not pg.evaluate("document.querySelector('canvas').width > 0"):
                     problems.append(f"{label} {other} 단추가 안 먹음")
                 pg.click(f"#per button:text-is('{want}')")
+                # 기간 단추는 섹터 줄 오른쪽 끝, 기본이 아닌 기간은 조건 줄에 '기간' 칩(2026-11-24)
+                if not pg.locator("#srow > #per").is_visible():
+                    problems.append(f"{label} 섹터 줄 오른쪽 기간 단추가 안 보임")
+                # 새 자료 알림: 지금보다 새 meta.json 이 있으면 주황 줄과 '새로 받기'
+                pg.evaluate("META.updated = '2000-01-01 00:00'")
+                pg.evaluate("checkNew()")
+                pg.wait_for_timeout(300)
+                if pg.is_hidden("#newbar") or "새로 받기" not in pg.inner_text("#newbar"):
+                    problems.append(f"{label} 새 자료 알림 줄이 안 뜸")
+                pg.evaluate("document.getElementById('newbar').hidden = true; pad()")
                 # 로그 단추: 처음엔 켜져 있고, 누르면 꺼진다(차트는 계속 그려져야 한다)
                 if "on" not in (pg.get_attribute("#logb", "class") or ""):
                     problems.append(f"{label} 로그 단추가 처음에 꺼져 있음")
@@ -649,13 +659,13 @@ def main():
                 look("걸러 보기", ["NVIDIA", "SK하이닉스"])
                 if pg.inner_text("#secs button[data-s='0'] small") != "2":
                     problems.append(f"{label} 걸러 보기: 섹터 버튼 숫자가 화면 종목 수와 다름")
-                # 모두 지우기: 정렬까지 걸었다가 한 번에 처음으로
+                # 조건 초기화: 정렬까지 걸었다가 한 번에 처음으로
                 pg.evaluate("setHidden(false)")
                 pg.click("#sbtn")
                 pg.click("#panel .wrap button:text-is('RS 등급')")
                 pg.click("#panel .foot .go")
                 pg.click("#chips .clr")
-                look("모두 지우기", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
+                look("조건 초기화", ["Taiwan Semiconductor", "NVIDIA", "Intel", "SK하이닉스", "Taiwan Semiconductor",
                                   "Micron", "삼성전자", "Sony"])
                 if pg.locator("#chips .clr").count() or pg.locator("#chips .chip").count():
                     problems.append(f"{label} 모두 지우기 뒤에도 칩이 남음")

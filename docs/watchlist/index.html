@@ -37,14 +37,36 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 #tabs button{flex:0 0 auto;border:0;background:none;color:#374151;font-size:16px;font-weight:700;letter-spacing:-.3px;padding:11px 9px 10px;white-space:nowrap}
 #tabs button.on{color:var(--text);font-weight:900;box-shadow:inset 0 -4px 0 var(--up)}
 /* 걸린 조건 줄: 조건·정렬이 처음 상태가 아닐 때만 섹터 줄 아래에. 칩을 누르면 그것만 풀린다 */
-#chips{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:0 12px 9px;scrollbar-width:none;max-width:1100px;margin:0 auto}
+#chips{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:8px 12px 8px;scrollbar-width:none;max-width:1100px;margin:0 auto}
 #chips::-webkit-scrollbar{display:none}
 #chips[hidden]{display:none}
 #chips .chip{flex:none;border:0;background:var(--upbg);color:#05584a;border-radius:999px;font-size:12.5px;font-weight:600;padding:6px 10px}
 #chips .chip::after{content:" ✕";color:#4b7d72;font-size:12px;font-weight:400}
 #chips em{flex:none;margin-left:auto;font-style:normal;font-size:12.5px;color:var(--sub);white-space:nowrap;padding-left:4px}
 #chips em b{color:var(--text)}
-#chips .clr{flex:none;border:0;background:none;color:var(--sub);font-size:12.5px;text-decoration:underline;text-underline-offset:3px;padding:6px 2px}
+/* 조건 초기화: 회색 테두리 + ✕(새로 받기의 주황 ⤓ 단추와 일부러 다르게) */
+#chips .clr{flex:none;display:inline-flex;align-items:center;gap:4px;border:1px solid #d1d5db;background:var(--card);color:var(--ink);border-radius:999px;font-size:12.5px;font-weight:600;padding:5px 11px;margin-left:6px}
+#chips .clr{position:sticky;right:0;box-shadow:-12px 0 10px -4px var(--card)}
+@media (max-width:420px){ #chips em{display:none} #chips .clr{margin-left:auto} }
+#chips .clr svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round}
+/* 갱신 시각 옆 ↻: 최신 화면·자료 다시 받기 */
+#rfb{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin:0 0 0 2px;padding:0;border:0;border-radius:50%;background:none;color:#4b5563;vertical-align:-6px}
+#rfb svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+#rfb:active{background:var(--soft)}
+@media (max-width:420px){ #cnt{display:none} }
+/* 새 자료 알림 줄: 지금 보는 것보다 새 자료가 나오면 탭 아래에 주황으로(스크롤해도 남는다) */
+#newbar{display:flex;align-items:center;gap:8px;max-width:1100px;margin:0 auto;padding:7px 12px;background:#fff7ed;border-top:1px solid #fed7aa;border-bottom:1px solid #fed7aa;font-size:13px;color:#9a3412}
+#newbar[hidden]{display:none}
+#newbar button{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:5px;border:0;background:#ea580c;color:#fff;border-radius:8px;font-size:13px;font-weight:700;padding:7px 12px}
+#newbar button svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+/* 섹터 줄 + 오른쪽 끝 고정 기간 단추(3개월·6개월·1년) */
+#srow{display:flex;align-items:center;max-width:1100px;margin:0 auto;border-bottom:1px solid var(--line)}
+#srow #secs{flex:1;min-width:0;margin:0;border-bottom:0}
+#per{flex:none;display:flex;margin:0 10px 0 4px;border:1px solid #d1d5db;border-radius:9px;overflow:hidden;background:var(--card)}
+#per button{border:0;border-left:1px solid var(--line);background:var(--card);color:#4b5563;font-size:12.5px;font-weight:600;padding:6px 8px;white-space:nowrap}
+#per button:first-child{border-left:0}
+#per button.on{background:var(--ink);color:#fff}
+@media (max-width:420px){ #per button{padding:6px 6px;font-size:12px} }
 .row{display:flex;gap:6px;overflow-x:auto;padding:7px 12px;scrollbar-width:none;touch-action:pan-x;overscroll-behavior:contain;max-width:1100px;margin:0 auto}
 .row::-webkit-scrollbar{display:none}
 /* 섹터 줄·하부섹터 줄: 큰 섹터 탭과 같은 모양(글자, 고른 것은 진한 글자 + 녹색 밑줄). 단계마다 글자를 한 단계씩 작게
@@ -314,7 +336,7 @@ canvas.rl{height:352px}
 <header id="hdr">
   <div id="hide">
     <div class="top">
-      <div class="ttl"><b>와모 차트북</b><small id="upd"></small><small id="cnt"></small></div>
+      <div class="ttl"><b>와모 차트북</b><small id="upd"></small><button id="rfb" aria-label="새로 받기" title="최신 화면과 자료를 다시 받습니다. 보던 탭과 설정은 그대로입니다."><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg></button><small id="cnt"></small></div>
       <div class="ic"><button id="qbtn" aria-label="종목 검색" hidden><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><span>검색</span></button>
       <button id="fbtn" aria-label="걸러 보기"><svg viewBox="0 0 24 24"><path d="M4 5h16l-6 7v6l-4 2v-8z"/></svg><span>걸러보기</span><i></i></button>
       <button id="sbtn" aria-label="정렬"><svg viewBox="0 0 24 24"><path d="M8 4v16M8 20l-3-3M8 20l3-3M16 20V4M16 4l-3 3M16 4l3 3"/></svg><span>정렬</span><i></i></button>
@@ -322,7 +344,8 @@ canvas.rl{height:352px}
     </div>
     <nav id="tabs"></nav>
   </div>
-  <div class="row" id="secs"></div>
+  <div id="newbar" hidden><span>새 자료가 나왔습니다 · <b id="newt"></b></span><button id="newb"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>새로 받기</button></div>
+  <div id="srow"><div class="row" id="secs"></div><div id="per" aria-label="차트 기간"></div></div>
   <div class="row" id="subs" hidden></div>
   <div id="chips" hidden></div>
   <div id="panel" hidden></div>
@@ -804,7 +827,8 @@ ST.c = (ST.c || []).filter(c => COND[c]); ST.k = (ST.k || []).filter(k => KORDER
 { const old = store.get("wl.flt"); if (old && COND[old] && !store.get("wl.st")) ST.c = [old]; }
 const save = () => store.set("wl.st", JSON.stringify(ST));
 // 기간을 고른 적이 없으면 화면 폭 600px 미만(휴대폰) 3개월, 900px 미만 6개월, 그 밖에 1년. 고른 기간은 브라우저에 기억해 그쪽이 먼저
-const period = () => PERIODS.some(p => p[0] === ST.p) ? ST.p : (window.innerWidth < 600 ? "3m" : window.innerWidth < 900 ? "6m" : "1y");
+const autoPeriod = () => window.innerWidth < 600 ? "3m" : window.innerWidth < 900 ? "6m" : "1y";
+const period = () => PERIODS.some(p => p[0] === ST.p) ? ST.p : autoPeriod();
 const hasK = data => data.sections.some(s => s.items.some(it => it.k));
 const active = data => ST.c.length + (hasK(data) ? ST.k.length : 0);
 function tester(data){
@@ -1376,18 +1400,29 @@ function tools(data, shown, total){
   $("fbtn").classList.toggle("on", n > 0); $("fbtn").querySelector("i").textContent = n || "";
   $("sbtn").classList.toggle("on", sorted); $("sbtn").querySelector("i").classList.toggle("dot", sorted);
   $("sbtn").title = sorted ? "정렬 · " + (EFF === "base" ? "탭 전체 한 줄" : SORT[EFF].lab + (ST.d === "asc" ? " ↑" : " ↓")) : "정렬";
-  const add = (box, cls, txt, fn, tip) => { const b = document.createElement("button"); b.className = cls; b.textContent = txt; if (tip) b.title = tip; b.onclick = () => { fn(); apply(); }; box.appendChild(b); };
+  const add = (box, cls, txt, fn, tip) => { const b = document.createElement("button"); b.className = cls; b.textContent = txt; if (tip) b.title = tip; b.onclick = () => { fn(); apply(); }; box.appendChild(b); return b; };
+  LAST = [shown, total];
   $("cnt").textContent = total + "종목";
+  perSeg();
   const ch = $("chips"); ch.innerHTML = "";
   ST.c.forEach(c => add(ch, "chip", COND[c][1], () => { ST.c = ST.c.filter(x => x !== c); }, "누르면 이 조건만 풉니다."));
   if (hasK(data)) ST.k.forEach(k => add(ch, "chip", k, () => { ST.k = ST.k.filter(x => x !== k); }, "누르면 이 나라만 뺍니다."));
   if (EFF !== "base") add(ch, "chip sort", "정렬 · " + SORT[EFF].lab + (ST.d === "asc" ? " ↑" : " ↓"), () => { ST.s = "base"; ST.d = "desc"; }, "누르면 기본 순서로 돌아갑니다.");
   if (ST.g === "all") add(ch, "chip", "탭 전체 한 줄", () => { ST.g = "sec"; });
+  if (period() !== autoPeriod()) add(ch, "chip", "기간 " + PERIODS.find(x => x[0] === period())[1], () => { ST.p = ""; }, "누르면 화면 크기에 맞는 기본 기간으로 돌아갑니다.");
   ch.hidden = !ch.children.length;
   if (!ch.hidden){
     const em = document.createElement("em"); em.innerHTML = n ? `<b>${shown}</b> / ${total}종목` : `${shown}종목`; ch.appendChild(em);
-    add(ch, "clr", "모두 지우기", reset);
+    const cb = add(ch, "clr", "조건 초기화", () => { reset(); ST.p = ""; ONE = null; ONEG = null; }, "걸러보기·정렬·기간·고른 섹터를 모두 처음 상태로 되돌리고 맨 위부터 봅니다.");
+    cb.insertAdjacentHTML("afterbegin", '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>');
   }
+}
+// 섹터 줄 오른쪽 끝 기간 단추. 바꾸면 그려진 차트만 다시 그리고 스크롤 자리는 그대로
+let LAST = [0, 0];
+function perSeg(){
+  const pe = $("per"); pe.innerHTML = "";
+  PERIODS.forEach(([k, t]) => { const b = document.createElement("button"); b.textContent = t; b.classList.toggle("on", period() === k);
+    b.onclick = () => { ST.p = k === autoPeriod() ? "" : k; save(); redraw(); if (TAB) tools(TAB, LAST[0], LAST[1]); }; pe.appendChild(b); });
 }
 function apply(){ save(); render(false); }
 // 기간을 바꾸면 지금 그려져 있는 차트만 새 기간으로 다시 그린다(표 보기에서 펼친 차트 포함)
@@ -1483,7 +1518,6 @@ function panel(){
       b.onclick = fn; r.appendChild(b); pn.appendChild(r);
     };
     seg("카드 모양", "vmode", [["chart","차트 카드"],["list","표"]], ST.v === "list" ? "list" : "chart", k => { ST.v = k; save(); openPanel(PANEL); render(false); });
-    seg("차트 기간", "per", PERIODS.map(([k, t]) => [k, t]), period(), k => { ST.p = k; save(); panel(); redraw(); });
     const h = document.createElement("h3"); h.style.marginBottom = "0"; pn.appendChild(h);
     sw("로그 축", "logb", ST.log !== false, () => { ST.log = ST.log === false; save(); panel(); redraw(); }, "가격 축을 로그 눈금으로 그립니다. 오른 폭·내린 폭을 비율로 비교하기 좋습니다.");
     if (ALLHEADS.length){
@@ -1764,8 +1798,8 @@ $("main").addEventListener("click", e => {
   try { META = await (await fetch(DATA + "meta.json?t=" + Date.now())).json(); }
   catch(e){ $("msg").textContent = "자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요."; return; }
   $("qbtn").hidden = !(META.index && META.index.length);
-  const up = $("upd"); up.textContent = META.updated.slice(5).replace("-", "/") + " 갱신";
-  up.title = "한국 시간(KST) 기준";
+  const up = $("upd"); up.textContent = META.updated.slice(5).replace("-", "/") + " 기준";
+  up.title = "이 시각(한국 시간) 자료입니다.";
   const age = (Date.now() - new Date(META.updated.replace(" ", "T") + ":00+09:00")) / 36e5;
   if (age > 80) { up.classList.add("old"); up.textContent += " (오래됨)"; }
   [ALL, ...META.tabs].forEach(t => {
@@ -1776,7 +1810,23 @@ $("main").addEventListener("click", e => {
   pad();
   const saved = store.get("wl.tab");
   openTab(saved === "all" || META.tabs.some(t => t.id === saved) ? saved : META.tabs[0].id, true);
+  // 새 자료 알림: 10분마다, 그리고 다른 앱에 갔다가 돌아올 때 meta.json 만 받아 더 새 자료가 있는지 본다
+  setInterval(checkNew, 10 * 60 * 1000);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkNew(); });
 })();
+// 새로 받기: 화면(HTML)과 자료를 캐시 없이 다시 받는다. 보던 탭·설정·스크롤 자리는 브라우저에 저장돼 있어 그대로 돌아온다
+function reloadFresh(){ location.replace(location.pathname + "?r=" + Date.now() + location.hash); }
+async function checkNew(){
+  if (!META) return;
+  try {
+    const m = await (await fetch(DATA + "meta.json?t=" + Date.now(), {cache: "no-store"})).json();
+    if (!m.updated || m.updated <= META.updated) return;
+    $("newt").textContent = m.updated.slice(5).replace("-", "/");
+    if ($("newbar").hidden){ $("newbar").hidden = false; pad(); }
+  } catch(e){}
+}
+$("rfb").onclick = reloadFresh;
+$("newb").onclick = reloadFresh;
 </script>
 </body>
 </html>
