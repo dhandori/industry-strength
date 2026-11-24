@@ -1,7 +1,7 @@
 {
- "updated_at": "2026-11-24 17:40 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/45358111447",
- "trigger": "workflow_dispatch",
+ "updated_at": "2026-11-24 18:50 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/45368947245",
+ "trigger": "push",
  "markets": {
   "KR": {
    "ok": true,
@@ -26,7 +26,9 @@
     "asked": 316,
     "got": 314,
     "filled": 1,
-    "fixed": []
+    "fixed": [
+     "COST 1098→1068"
+    ]
    }
   },
   "JP": {
