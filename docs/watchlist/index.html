@@ -556,6 +556,28 @@ function drawRs(g, it0, it, rl, X, n, pW, top, rsH, rgap){
   g.font = "12px -apple-system,BlinkMacSystemFont,sans-serif";
 }
 
+// ── 줄여 저장한 자료를 원래 모양으로(2026-11-24, 수집 스크립트 watchlist_fetch.py 의 pack 과 짝) ──
+// EMA 는 첫 값(es)에서 종가로 다시 계산하고(e[i] = c[i]·k + e[i-1]·(1-k), k = 2/(n+1)),
+// 날짜는 첫날(d0)과 날마다 며칠 뒤인지(dd)로 되살린다. 옛 모양(e·d 가 그대로 든 자료)은 손대지 않는다.
+const p2 = n => (n < 10 ? "0" : "") + n;
+function unpack(it){
+  if (it.es && !it.e){
+    const e = {}, c = it.c;
+    for (const k in it.es){
+      const a = 2 / (+k + 1), ln = new Array(c.length);
+      let p = it.es[k]; ln[0] = p;
+      for (let i = 1; i < c.length; i++){ p = c[i] * a + p * (1 - a); ln[i] = p; }
+      e[k] = ln;
+    }
+    it.e = e; delete it.es;
+  }
+  if (it.d0 && !it.d){
+    const s = it.d0, out = [s];
+    let t = Date.UTC(2000 + +s.slice(0, 2), +s.slice(2, 4) - 1, +s.slice(4, 6));
+    (it.dd || []).forEach(g => { t += g * 864e5; const x = new Date(t); out.push(p2(x.getUTCFullYear() % 100) + p2(x.getUTCMonth() + 1) + p2(x.getUTCDate())); });
+    it.d = out; delete it.d0; delete it.dd;
+  }
+}
 // ── 종목별 계산값: 기간 수익률, 거래량 배수, 52주 범위 위치 ──
 function metrics(it){
   const c = it.c, n = c.length, last = c[n - 1];
@@ -838,9 +860,19 @@ const TIP = {
     return `오늘 거래대금은 ${money(m.tv)} ${u}입니다(종가 × 거래량으로 어림한 값).` +
       (m.tv20 ? ` 최근 20거래일 평균(${money(m.tv20)} ${u})의 ${(m.tv / m.tv20).toFixed(1)}배입니다.` : ""); },
 };
-function card(it, idx, rank){
+// 카드는 처음엔 빈 껍데기만 만든다(높이는 .card 의 contain-intrinsic-size 로 어림). 화면 가까이 오면 fillCard 가 속을 채운다.
+// 누를 때마다 카드 수백~천여 장의 딱지·숫자 줄을 한꺼번에 다시 만들던 것이 버벅임의 큰 원인이었다(2026-11-24)
+function card(it, idx, rank, now){
+  const el = document.createElement("div"); el.className = "card"; el.dataset.y = it.y; el.dataset.i = idx;
+  if (rank) el.dataset.r = rank;
+  el._it = it;
+  if (now || window.WL_EAGER) fillCard(el);   // WL_EAGER: 화면 검사(tests/watchlist_check.py)가 먼 카드 글자를 바로 읽을 때만
+  return el;
+}
+function fillCard(el){
+  if (el._f) return; el._f = 1;
+  const it = el._it, idx = +el.dataset.i, rank = +(el.dataset.r || 0);
   const ld = it.d[it.d.length - 1], sk = SORT[EFF], pd = pdg(it);
-  const el = document.createElement("div"); el.className = "card"; el.dataset.y = it.y;
   el.innerHTML =
     `<div class="hd"><div class="nr"><div class="nm"></div><div class="px">${fmt(lastOf(it.c), pd)}${YIELD.has(it.y) ? "%" : ""}<i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></div></div>` +
     `<div class="biz"></div><div class="bd"></div></div>` +
@@ -933,7 +965,7 @@ function tableRow(it, idx, rank){
   r.onclick = () => {
     const nx = r.nextElementSibling;
     if (nx && nx.classList.contains("card")){ nx.remove(); r.classList.remove("open"); prog(); return; }
-    const el = card(it, idx, 0); r.after(el); r.classList.add("open");
+    const el = card(it, idx, 0, true); r.after(el); r.classList.add("open");
     const cv = el.querySelector("canvas"); draw(cv, it); cv.dataset.w = cv.clientWidth; prog();
   };
   return r;
@@ -978,7 +1010,7 @@ function setShut(sh, shut){
   if (sh.lab) sh.lab();
   foldLab();
   // 펼친 묶음의 차트는 화면에 들어올 때 다시 그리게 관찰을 새로 건다
-  if (!shut && io) grp.querySelectorAll("canvas").forEach(cv => { const t = cv.closest(".card") || cv; io.unobserve(t); io.observe(t); });
+  if (!shut && io) grp.querySelectorAll(".card").forEach(t => { io.unobserve(t); io.observe(t); });
   prog();
 }
 // 하부섹터 묶음으로 가서 펼친다(액션판·검색에서 씀). 걸러 보기·정렬 중이면 묶음이 없으니 먼저 처음 상태로.
@@ -1076,6 +1108,7 @@ function spy(){
   if (!(e.target.closest && e.target.closest("#secs"))) LOCK = false;
 }, {passive: true}));
 
+const TABC = {};
 async function openTab(id, restore){
   if (id !== CUR){ ONE = null; ONEG = null; }
   CUR = id; store.set("wl.tab", id);
@@ -1084,18 +1117,26 @@ async function openTab(id, restore){
   { const tb = $("tabs"), on = tb.querySelector("button.on"); if (on && tb.scrollWidth > tb.clientWidth) tb.scrollLeft = on.offsetLeft - (tb.clientWidth - on.offsetWidth) / 2; }
   const main = $("main"); main.innerHTML = '<div id="msg">불러오는 중입니다.</div>'; $("secs").innerHTML = "";
   let data;
-  const get = async t => (await fetch(`${DATA}${t}.json?t=${encodeURIComponent(META.updated)}`)).json();
+  // 한 번 받은 탭은 기억해 둔다(같은 회차 자료일 때). 탭을 오가거나 '전체'를 열 때 다시 받거나 다시 해석하지 않는다(2026-11-24)
+  const get = async t => {
+    const k = TABC[t];
+    if (k && k.u === META.updated) return k.d;
+    const d = await (await fetch(`${DATA}${t}.json?t=${encodeURIComponent(META.updated)}`)).json();
+    d.sections.forEach(s => s.items.forEach(unpack));
+    TABC[t] = {u: META.updated, d};
+    return d;
+  };
   try {
     if (id === "all"){
       const ids = META.tabs.map(t => t.id).filter(t => t !== "macro");
-      main.innerHTML = `<div id="msg">${ids.length}개 탭을 모두 불러오는 중입니다.<br>처음 한 번은 몇 초 걸립니다.</div>`;
+      if (ids.some(t => !TABC[t] || TABC[t].u !== META.updated)) main.innerHTML = `<div id="msg">${ids.length}개 탭을 모두 불러오는 중입니다.<br>처음 한 번은 몇 초 걸립니다.</div>`;
       const ds = await Promise.all(ids.map(get));
       data = {id: "all", title: ALL.title, sections: ds.flatMap(d => d.sections.map(s => ({...s, name: (SHORT[d.id] || d.id) + " › " + s.name})))};
     } else data = await get(id);
   }
   catch(e){ main.innerHTML = '<div id="msg">자료를 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요.</div>'; return; }
   if (CUR !== id) return;
-  data.sections.forEach(s => s.items.forEach(metrics));
+  data.sections.forEach(s => s.items.forEach(it => { if (!it.m) metrics(it); }));
   // 새로 생긴 신호: 종목마다 마지막 거래일을 그 전 거래일과 비교(가장 최근 마지막 거래일보다 5일 넘게 앞선 종목은 빼려고 그날을 먼저 구한다)
   const days = data.sections.flatMap(s => s.items.filter(it => it.k && it.d.length).map(it => dnum(lastOf(it.d))));
   data.newest = days.length ? Math.max(...days) : 0;
@@ -1121,7 +1162,9 @@ function render(restore){
   // (속에 든 차트를 지켜보면 브라우저가 위치를 알려고 미뤄 둔 카드 1,100장을 모두 배치해 전체 탭이 몇 초 멈췄다)
   // 다가온 카드만 미루기를 풀어 차트를 그리고, 멀어지면 차트를 비우고 다시 미룬다
   io = new IntersectionObserver(es => es.forEach(e => {
-    const t = e.target, cv = t.tagName === "CANVAS" ? t : t.querySelector("canvas");
+    const t = e.target;
+    if (e.isIntersecting && t._it) fillCard(t);
+    const cv = t.tagName === "CANVAS" ? t : t.querySelector("canvas");
     if (!cv) return;
     const cd = cv.closest(".card");
     if (!e.isIntersecting){ if (cv.width){ cv.width = 0; cv.height = 0; } if (cd) cd.style.contentVisibility = ""; return; }
@@ -1258,7 +1301,7 @@ function render(restore){
   }
   if (!shown){ $("prog").style.display = "none"; main.innerHTML = '<div id="msg">이 탭에는 조건에 맞는 종목이 없습니다.<br>걸러 보기 조건을 줄이거나 다른 탭을 열어 보세요.</div>'; }
   main.appendChild(one != null ? nextSecBtn(one) : nextBtn());
-  main.querySelectorAll("canvas").forEach(cv => io.observe(cv.closest(".card") || cv));
+  main.querySelectorAll(".card").forEach(c => io.observe(c));
   tools(data, shown, total);
   if (PANEL) panel();
   pad();

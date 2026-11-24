@@ -26,6 +26,8 @@ import threading
 from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+from watchlist_fetch import pack  # noqa: E402
 SHOTS = ROOT / "test-results"
 
 
@@ -87,6 +89,8 @@ def make_data(folder):
         {"name": "미국 지수", "items": [item("^GSPC", "S&P 500", "", 0.001, 9, vol=False),
                                      item("^IXIC", "나스닥", "", 0.002, 10, vol=False)]}]}
     for d in (macro, ai):
+        # 수집 스크립트처럼 줄여 쓴다(EMA 첫 값·날짜 간격, 2026-11-24). 신호 자료(make_signal_data)는 옛 모양 그대로 둬서 둘 다 읽히는지 본다
+        d = {**d, "sections": [{**s, "items": [pack(it) for it in s["items"]]} for s in d["sections"]]}
         (folder / f"{d['id']}.json").write_text(json.dumps(d, ensure_ascii=False), encoding="utf-8")
     kn = {"NVDA": ("엔비디아", ""), "000660.KS": ("SK하이닉스", "하닉|하이닉스"), "TSM": ("TSMC", "대만반도체"),
           "005930.KS": ("삼성전자", "삼전")}
@@ -222,6 +226,7 @@ def expect_numbers(it):
 def check_signals(b, url, label, w, h):
     problems = []
     pg = b.new_page(viewport={"width": w, "height": h})
+    pg.add_init_script("window.WL_EAGER = true")   # 화면 밖 카드 속도 바로 채워 DOM 글자로 확인한다(늦게 채우기는 check_lazy)
     errors = []
     pg.on("pageerror", lambda e: errors.append(str(e)[:200]))
     pg.on("console", lambda m: errors.append(m.text[:200]) if m.type == "error" else None)
@@ -426,6 +431,42 @@ PROBE = """() => ({
 })"""
 
 
+def check_lazy(b, url):
+    """카드 늦게 채우기(2026-11-24): 화면에서 먼 카드는 빈 껍데기이고, 그 자리로 가면 속과 차트가 채워진다."""
+    problems = []
+    pg = b.new_page(viewport={"width": 390, "height": 844})
+    errors = []
+    pg.on("pageerror", lambda e: errors.append(str(e)[:200]))
+    pg.goto(url)
+    pg.evaluate("localStorage.clear()")
+    pg.reload()
+    pg.wait_for_selector("#tabs button")
+    pg.click("#tabs button[data-id=all]")
+    pg.wait_for_selector(".card")
+    pg.wait_for_timeout(500)
+    n = pg.locator(".card").count()
+    empty = pg.evaluate("[...document.querySelectorAll('.card')].filter(c => !c.querySelector('canvas')).length")
+    if n < 8 or not empty:
+        problems.append(f"늦게 채우기: 카드 {n}장 가운데 빈 껍데기 {empty}장(먼 카드는 비어 있어야 함)")
+    pg.evaluate("document.querySelectorAll('.card')[document.querySelectorAll('.card').length - 1].scrollIntoView()")
+    pg.wait_for_timeout(600)
+    last = pg.evaluate("(() => { const c = [...document.querySelectorAll('.card')].pop(), cv = c.querySelector('canvas'); return [!!c.querySelector('.hd'), cv ? cv.width : 0]; })()")
+    if not last[0] or not last[1]:
+        problems.append(f"늦게 채우기: 맨 끝 카드로 가도 속이나 차트가 안 채워짐 {last}")
+    # 같은 회차 자료로 다른 탭을 다녀오면 다시 받지 않는다
+    req = []
+    pg.on("request", lambda r: req.append(r.url) if r.url.endswith(".json") or ".json?" in r.url else None)
+    pg.evaluate("window.scrollTo(0, 0)")
+    pg.wait_for_timeout(300)
+    pg.evaluate("document.querySelector('#tabs button[data-id=ai]').click()")
+    pg.wait_for_timeout(400)
+    if any("/ai.json" in u for u in req):
+        problems.append("탭 기억: 한 번 받은 탭을 다시 받음")
+    problems += [f"늦게 채우기: {e}" for e in errors]
+    pg.close()
+    return problems
+
+
 def main():
     SHOTS.mkdir(exist_ok=True)
     problems = []
@@ -440,6 +481,7 @@ def main():
             b = p.chromium.launch()
             for label, w, h in (("phone", 390, 844), ("pc", 1440, 900)):
                 pg = b.new_page(viewport={"width": w, "height": h})
+                pg.add_init_script("window.WL_EAGER = true")
                 errors = []
                 pg.on("pageerror", lambda e: errors.append(str(e)[:200]))
                 pg.on("console", lambda m: errors.append(m.text[:200]) if m.type == "error" else None)
@@ -772,6 +814,7 @@ def main():
                     problems.append(f"{label} 모두 보기로 안 돌아옴: {heads()}")
                 problems += [f"{label}: {e}" for e in errors]
                 pg.close()
+            problems += check_lazy(b, url)
             # 새로 생긴 신호·숫자 줄·거래대금(2026-11-23): 신호가 반드시 나도록 만든 자료로 바꿔 다시 연다
             Handler.data_dir = tmp2
             for label, w, h in (("phone", 390, 844), ("pc", 1440, 900)):
