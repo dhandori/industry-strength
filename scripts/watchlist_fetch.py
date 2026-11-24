@@ -360,6 +360,9 @@ def main():
             pass
     os.makedirs(out_dir, exist_ok=True)
     tabs = json.load(open(tabs_path, encoding="utf-8"))
+    # 세부 딱지(둘째 이후 딱지) 설명: 딱지 → 한 문장. 섹터마다 그 섹터에 쓰인 것만 붙인다(2026-11-24)
+    tags_path = os.path.join(os.path.dirname(tabs_path), "watchlist_tags.json")
+    tagdesc = json.load(open(tags_path, encoding="utf-8")) if os.path.exists(tags_path) else {}
     session = requests.Session()
     now = int(time.time())
     failed, summary, total, tabs_out = [], [], 0, []
@@ -387,7 +390,9 @@ def main():
                     print("실패", item["y"], e, file=sys.stderr)
                 time.sleep(0.25)
             # 하부섹터 묶음 정의(딱지 첫 단어 → 한두 문장). 화면의 '묶음 정의 보기' 표에 쓴다(2026-11-21)
-            sections.append({"name": sec["name"], "items": items, **({"groups": sec["groups"]} if sec.get("groups") else {})})
+            used = {t for it in sec["items"] for t in (it.get("t") or [])[1:] if t in tagdesc}
+            sections.append({"name": sec["name"], "items": items, **({"groups": sec["groups"]} if sec.get("groups") else {}),
+                             **({"tagd": {t: tagdesc[t] for t in sorted(used)}} if used else {})})
         tabs_out.append((tab["id"], sections))
     # RS 등급은 모든 탭을 다 받은 뒤 전체 종목 안에서 한 번에 매긴다
     print("RS 등급 대상", add_rs(tabs_out))

@@ -75,7 +75,8 @@ def item(y, n, k, drift, seed, rs=None, al=False, vol=True, t=None, ia=None):
 
 def make_data(folder):
     ai = {"id": "ai", "title": "② AI 반도체·하드웨어", "sections": [
-        {"name": "반도체", "groups": {"파운드리": "칩을 대신 만들어 주는 공장들입니다.", "프로세서": "컴퓨터와 AI 서버의 두뇌를 설계하는 회사들입니다."}, "items": [
+        {"name": "반도체", "groups": {"파운드리": "칩을 대신 만들어 주는 공장들입니다.", "프로세서": "컴퓨터와 AI 서버의 두뇌를 설계하는 회사들입니다."},
+         "tagd": {"CoWoS": "TSMC의 첨단 패키징 공정입니다."}, "items": [
             item("TSM", "Taiwan Semiconductor", "대만", 0.004, 1, rs=95, al=True, t=["파운드리", "CoWoS"]),
             item("NVDA", "NVIDIA", "미국", 0.003, 2, rs=90, al=True, t=["프로세서", "GPU"], ia={"m": "US", "g": "AI 가속기", "k": 3, "of": 70, "d": 2}),
             item("INTC", "Intel", "미국", -0.002, 3, rs=20, t=["프로세서"], ia={"m": "US", "g": "AI 가속기", "k": 3, "of": 70, "d": 2}),
@@ -560,9 +561,9 @@ def main():
                 # 하부섹터 딱지는 설명 앞에, 기본 순서에서는 묶음 소제목이 섹터 안에 붙는다
                 if pg.inner_text(".card .biz .tg >> nth=0") != "파운드리 · CoWoS":
                     problems.append(f"{label} 딱지 글자 '{pg.inner_text('.card .biz .tg >> nth=0')}'")
-                # 딱지를 누르면 그 하부섹터 설명(config groups)이 뜬다(2026-11-24, 예전엔 딱지 일반 안내문)
+                # 딱지를 누르면 하부섹터 설명(groups)과 세부 딱지 설명(tagd)이 줄마다 뜬다(2026-11-24)
                 tgt = pg.get_attribute(".card .biz .tg >> nth=0", "title") or ""
-                if not tgt.startswith("파운드리: 칩을 대신 만들어 주는 공장들입니다."):
+                if tgt != "파운드리: 칩을 대신 만들어 주는 공장들입니다.\n\nCoWoS: TSMC의 첨단 패키징 공정입니다.":
                     problems.append(f"{label} 딱지 풀이가 하부섹터 설명이 아님: '{tgt[:40]}'")
                 subs = pg.evaluate("[...document.querySelectorAll('main > .sub')].map(e => e.firstChild.textContent)")
                 if subs != ["파운드리", "프로세서"]:
