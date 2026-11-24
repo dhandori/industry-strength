@@ -59,10 +59,11 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* 하부섹터 줄: 섹터 하나를 골랐을 때만 섹터 줄 아래에 나온다(2026-11-24, 옛 '이 섹터만' 단추를 대신함) */
 #subs{padding:0 12px 8px;gap:6px}
 #subs[hidden]{display:none}
-#subs button{flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;font-size:12.5px;font-weight:600;padding:5px 10px;white-space:nowrap;cursor:pointer;user-select:none;-webkit-user-select:none}
-#subs button small{margin-left:4px;color:var(--sub);font-weight:500}
-#subs button.on{background:var(--pud);border-color:var(--pud);color:#fff}
-#subs button.on small{color:#e9e3ff}
+/* 모양과 켜짐 색은 섹터 줄과 같게, 한 단계 아래라 조금 작게(2026-11-24 사용자 요청: 섹터와 UI 통일) */
+#subs button{flex:none;border:0;background:var(--soft);color:#4b5563;font-size:12.5px;padding:5px 9px;border-radius:8px;white-space:nowrap;cursor:pointer;user-select:none;-webkit-user-select:none}
+#subs button small{font-size:11.5px;font-weight:400;color:#9ca3af;margin-left:4px}
+#subs button.on{background:var(--upbg);color:#05584a;font-weight:700;box-shadow:inset 0 0 0 1.5px var(--up)}
+#subs button.on small{color:var(--up)}
 /* 섹터 판: 섹터 강도·하위 묶음 순위·새 신호 목록. 새 신호가 있으면 주황 점(개수는 판 맨 위에) */
 #secs #gbtn{position:relative;background:var(--card);box-shadow:inset 0 0 0 1px #d1d5db;color:var(--text);font-weight:600;padding:6px 12px 6px 10px}
 #secs #gbtn.open{background:var(--soft)}
