@@ -560,6 +560,10 @@ def main():
                 # 하부섹터 딱지는 설명 앞에, 기본 순서에서는 묶음 소제목이 섹터 안에 붙는다
                 if pg.inner_text(".card .biz .tg >> nth=0") != "파운드리 · CoWoS":
                     problems.append(f"{label} 딱지 글자 '{pg.inner_text('.card .biz .tg >> nth=0')}'")
+                # 딱지를 누르면 그 하부섹터 설명(config groups)이 뜬다(2026-11-24, 예전엔 딱지 일반 안내문)
+                tgt = pg.get_attribute(".card .biz .tg >> nth=0", "title") or ""
+                if not tgt.startswith("파운드리: 칩을 대신 만들어 주는 공장들입니다."):
+                    problems.append(f"{label} 딱지 풀이가 하부섹터 설명이 아님: '{tgt[:40]}'")
                 subs = pg.evaluate("[...document.querySelectorAll('main > .sub')].map(e => e.firstChild.textContent)")
                 if subs != ["파운드리", "프로세서"]:
                     problems.append(f"{label} 묶음 소제목 {subs} (기대 ['파운드리', '프로세서'])")
