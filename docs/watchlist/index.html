@@ -578,6 +578,8 @@ function drawRs(g, it0, it, rl, X, n, pW, top, rsH, rgap){
 // EMA 는 첫 값(es)에서 종가로 다시 계산하고(e[i] = c[i]·k + e[i-1]·(1-k), k = 2/(n+1)),
 // 날짜는 첫날(d0)과 날마다 며칠 뒤인지(dd)로 되살린다. 옛 모양(e·d 가 그대로 든 자료)은 손대지 않는다.
 const p2 = n => (n < 10 ? "0" : "") + n;
+// 섹터의 하부섹터 설명(config/watchlist_tabs.json 의 groups). 없으면 빈 글자
+function gdesc(s, g){ return (g && s.groups && s.groups[g]) || ""; }
 function unpack(it){
   if (it.es && !it.e){
     const e = {}, c = it.c;
@@ -914,7 +916,7 @@ function fillCard(el){
   const sm = document.createElement("small"); sm.textContent = it.y; nm.after(sm);
   if (it.k){ const em = document.createElement("em"); em.textContent = it.k; sm.after(em); }
   const bz = el.querySelector(".biz");
-  if (it.t && it.t.length) bz.appendChild(span("tg", it.t.join(" · "), "하부섹터 딱지입니다. 첫 딱지가 같은 종목끼리 섹터 안에서 한 묶음으로 모입니다."));
+  if (it.t && it.t.length) bz.appendChild(span("tg", it.t.join(" · "), it.gd ? it.t[0] + ": " + it.gd : "하부섹터 딱지입니다. 첫 딱지가 같은 종목끼리 섹터 안에서 한 묶음으로 모입니다."));
   if (it.b) bz.appendChild(document.createTextNode(it.b));
   if (!bz.childNodes.length) bz.remove();
   const bd = el.querySelector(".bd");
@@ -1012,7 +1014,7 @@ function grpStat(mem){
   const r = mem.map(x => x.m.r1m).filter(v => v != null);
   return {n: mem.length, al: mem.filter(x => x.al).length, r1m: r.length ? r.reduce((a, c) => a + c, 0) / r.length : null};
 }
-function subHead(sec, g, mem){
+function subHead(sec, g, mem, desc){
   const st = grpStat(mem), sh = document.createElement("div"); sh.className = "sub";
   sh.dataset.sec = sec; sh.dataset.g = g; sh.dataset.k = CUR + "|" + sec + "|" + g;
   sh.appendChild(document.createTextNode(g));
@@ -1024,7 +1026,7 @@ function subHead(sec, g, mem){
   if (st.r1m != null) part.push(`1개월 <b class="${st.r1m >= 0 ? "up" : "dn"}">${pct(st.r1m)}</b>`);
   t.innerHTML = part.join(" · ");
   sh.appendChild(t);
-  sh.title = "누르면 이 묶음을 접거나 펼칩니다.";
+  sh.title = (desc ? g + ": " + desc + "\n\n" : "") + "누르면 이 묶음을 접거나 펼칩니다.";
   return sh;
 }
 function setShut(sh, shut){
@@ -1140,7 +1142,8 @@ async function openTab(id, restore){
     const k = TABC[t];
     if (k && k.u === META.updated) return k.d;
     const d = await (await fetch(`${DATA}${t}.json?t=${encodeURIComponent(META.updated)}`)).json();
-    d.sections.forEach(s => s.items.forEach(unpack));
+    // 하부섹터(첫 딱지) 설명을 종목에 붙여 둔다. 카드의 보라색 딱지를 누르면 이 설명이 뜬다(2026-11-24)
+    d.sections.forEach(s => s.items.forEach(it => { unpack(it); it.gd = gdesc(s, (it.t || [])[0]); }));
     TABC[t] = {u: META.updated, d};
     return d;
   };
@@ -1247,7 +1250,7 @@ function render(restore){
     h.appendChild(c);
     main.appendChild(h); HEADS.push(h); HIDX.push(si); SCARDS.push([]); SECINFO[si].h = h;
     // 섹터 하나를 골랐으면 머리(섹터 줄 아래)에 하부섹터 줄을 만든다: 전체 · 묶음마다 종목 수
-    if (one != null && Object.keys(gcnt).length > 1) SUBROW = {name: s.name, all: allN, groups: Object.entries(gcnt).map(([g, mem]) => [g, mem.length])};
+    if (one != null && Object.keys(gcnt).length > 1) SUBROW = {name: s.name, all: allN, desc: s.groups || {}, groups: Object.entries(gcnt).map(([g, mem]) => [g, mem.length])};
     if (one != null) b.classList.add("on");
     let box = main;
     if (ST.v === "list"){ box = document.createElement("div"); box.className = "tbl"; box.appendChild(tableHead()); main.appendChild(box); }
@@ -1260,7 +1263,7 @@ function render(restore){
     list.forEach((it, i) => {
       const g = (it.t || [])[0];
       if (multi && g && g !== lastSub){
-        const sh = subHead(s.name, g, cnt[g]); box.appendChild(sh);
+        const sh = subHead(s.name, g, cnt[g], gdesc(s, g)); box.appendChild(sh);
         grp = document.createElement("div"); grp.className = "grp"; box.appendChild(grp);
         if (SHUT.has(sh.dataset.k)){ grp.hidden = true; sh.classList.add("shut"); }
         sh.onclick = () => setShut(sh, !sh.classList.contains("shut"));
@@ -1311,7 +1314,7 @@ function render(restore){
     const chip = (lab, n, g) => {
       const cb = document.createElement("button"); cb.textContent = lab; cb.classList.toggle("on", (g || null) === ONEG);
       const sm = document.createElement("small"); sm.textContent = n; cb.appendChild(sm);
-      cb.title = g ? g + " 묶음만 봅니다." : SUBROW.name + " 섹터의 모든 묶음을 봅니다.";
+      cb.title = g ? (SUBROW.desc[g] ? g + ": " + SUBROW.desc[g] : g + " 묶음만 봅니다.") : SUBROW.name + " 섹터의 모든 묶음을 봅니다.";
       cb.onclick = () => focusSec(SUBROW.name, g); sr.appendChild(cb);
     };
     chip("전체", SUBROW.all, null);
