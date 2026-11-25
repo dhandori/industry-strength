@@ -205,7 +205,139 @@
     const latest = M[0];
     const sub = latest && latest.release ? `BofA 펀드매니저 설문(FMS) · ${esc(ym(latest.month))} 설문, ${esc(mdw(latest.release))} 발표` : "BofA 펀드매니저 설문(FMS) · 한 달에 한 번";
     return sec("po-sec-fms", "펀드매니저는 얼마나 사 뒀나", sub,
-      `${lead && lead.meaning ? `<p class="po-lead">${esc(lead.meaning)}</p>` : ""}${gauge}<div class="po-fts">${tiles}</div>${table}${eq}${guide}${terms("fms", "flow-fms")}`);
+      `${lead && lead.meaning ? `<p class="po-lead">${esc(lead.meaning)}</p>` : ""}${gauge}<div class="po-fts">${tiles}</div>${fmsQuestions()}${table}${eq}${guide}${terms("fms", "flow-fms")}`);
+  }
+
+  // ---------- 7-1. 설문 문항 한눈에 (2026-11-25 사용자 요청: 다채롭게, 가시성, 무엇보다 한눈에 이해되게) ----------
+  // 자료: fms_questions(한 줄 = 어느 달 설문의 한 문항, say = 쉬운 풀이 문장), fms_take(설문 결론·주제별 한 줄 풀이).
+  // 순서: ① 결론 한 문장 ② 눈에 띄는 숫자(쉬운 문장 + 그림) ③ 주제별: 한 줄 풀이 → 막대 ④ 문항별 달마다 표(추세선).
+  // item 이 '질문: 선택지' 모양이면 한 상자에 순위 막대로 묶고, '(늘림−줄임)' 같은 괄호는 막대 양 끝 글자로 옮긴다.
+  const FQ_GROUPS = ["투자 심리", "자산·지역 비중", "AI·빅테크", "경기·금리", "가장 큰 위험", "가장 쏠린 거래"];
+  const FQ_ICON = { "투자 심리": "🌡️", "자산·지역 비중": "🧺", "AI·빅테크": "🤖", "경기·금리": "🏦", "가장 큰 위험": "⚠️", "가장 쏠린 거래": "👥" };
+  const FQ_IN_CARDS = ["tech_net", "crowded_semis"]; // 위 카드에 이미 크게 나오는 문항은 타일에서 뺀다
+  const fqFmt = (v, u) => (u === "%p" ? sgn(v, (x) => f0.format(x)) + "%p" : u === "점" ? f1.format(v) + "점" : f0.format(v) + "%");
+  const fqShort = (m) => `${Number(String(m).split("-")[1])}월`;
+  const fqRecord = (r) => /역대 최고|역대 최저|처음으로/.test(`${r.say || ""} ${r.note || ""}`);
+  const fqSides = (item) => { const m = String(item).match(/\(([^()−]+)−([^()]+)\)\s*$/); return m ? { label: item.slice(0, m.index).trim(), pos: m[1], neg: m[2] } : { label: item, pos: null, neg: null }; };
+  function fmsQuestions() {
+    const Q = ds("fms_questions").filter((r) => r && r.month && r.key && num(r.value) != null);
+    if (!Q.length) return "";
+    const months = [...new Set(Q.map((r) => r.month))].sort();
+    const last = months[months.length - 1];
+    const T = ds("fms_take").filter((r) => r.month === last);
+    const take = (g) => (T.find((r) => r.group === g) || {}).text || "";
+    const byKey = {};
+    Q.forEach((r) => { (byKey[r.key] = byKey[r.key] || {})[r.month] = r; });
+    const prevOf = (r) => {
+      if (num(r.prev) != null) return { v: num(r.prev), label: r.prev_label || "이전" };
+      const ms = months.filter((m) => m < r.month && byKey[r.key][m]);
+      const m = ms[ms.length - 1];
+      return m ? { v: num(byKey[r.key][m].value), label: fqShort(m) } : null;
+    };
+    const delta = (r) => { const p = prevOf(r); return p && p.v != null ? num(r.value) - p.v : null; };
+    const dTxt = (r, d) => (d == null ? "" : Math.abs(d) < 0.05 ? "변화 없음" : `${d > 0 ? "▲" : "▼"}${r.unit === "점" ? f1.format(Math.abs(d)) + "점" : f0.format(Math.abs(d)) + "%p"}`);
+    const big = (r, d) => d != null && (r.unit === "점" ? Math.abs(d) >= 0.5 : Math.abs(d) >= 10);
+    const cur = Q.filter((r) => r.month === last);
+    const span = Math.max(50, ...cur.filter((r) => r.unit === "%p").map((r) => Math.abs(num(r.value))));
+    const bar = (r) => {
+      const v = num(r.value);
+      if (r.unit === "%p") {
+        const s = fqSides(r.item), w = Math.min(50, (Math.abs(v) / span) * 50);
+        return `<div class="po-fq-net"><span class="po-fq-end">${esc(s.neg || "−")}</span><div class="po-fq-bar"><i class="${v < 0 ? "po-fq-neg" : ""}" style="${v < 0 ? "right" : "left"}:50%;width:${w}%"></i><b></b></div><span class="po-fq-end">${esc(s.pos || "+")}</span></div>`;
+      }
+      const w = r.unit === "점" ? Math.min(100, v * 10) : Math.min(100, Math.max(0, v));
+      return `<div class="po-fq-bar"><i style="left:0;width:${w}%"></i></div>`;
+    };
+    // 타일 그림: % 는 10명 중 몇 명, %p 는 줄다리기, 점은 10점 눈금
+    const pict = (r) => {
+      const v = num(r.value);
+      if (r.unit === "%") {
+        const n = Math.round(v / 10);
+        return `<div class="po-fq-ppl" aria-label="10명 중 ${n}명">${Array.from({ length: 10 }, (_, i) => `<i class="${i < n ? "on" : ""}"></i>`).join("")}<span>10명 중 <b>${n}명</b></span></div>`;
+      }
+      if (r.unit === "%p") {
+        const s = fqSides(r.item);
+        return `<div class="po-fq-tug">${bar(r)}<span>${v === 0 ? "양쪽이 같음" : `<b>${esc(v > 0 ? s.pos || "그렇다" : s.neg || "아니다")}</b> 쪽이 ${f0.format(Math.abs(v))}%p 많음`}</span></div>`;
+      }
+      return `<div class="po-fq-tug">${bar(r)}<span>10점 만점에 <b>${f1.format(v)}점</b></span></div>`;
+    };
+
+    // ① 결론
+    const lead = take("한눈에");
+    const leadHtml = lead ? `<div class="po-fq-lead"><span>${esc(fqShort(last))} 설문 한 줄 정리</span><p>${esc(lead)}</p></div>` : "";
+
+    // ② 눈에 띄는 숫자: 기록(역대 최고·처음으로) 먼저, 그다음 지난달보다 크게 바뀐 순, 최대 6개
+    const cand = cur.filter((r) => !FQ_IN_CARDS.includes(r.key) && r.unit !== "점");
+    const rec = cand.filter(fqRecord);
+    const moved = cand.filter((r) => !fqRecord(r) && delta(r) != null).sort((a, b) => Math.abs(delta(b)) - Math.abs(delta(a)));
+    const hot = rec.concat(moved).slice(0, 6);
+    const tile = (r) => {
+      const p = prevOf(r), d = delta(r), s = fqSides(r.item);
+      const tag = fqRecord(r) ? `<span class="po-fq-tag po-fq-rec">기록</span>` : d != null ? `<span class="po-fq-tag">${esc(dTxt(r, d))}</span>` : "";
+      return `<article class="po-fq-hot"><div class="po-fq-ht"><small>${esc(s.label)}</small>${tag}</div>
+        <p class="po-fq-say">${esc(r.say || r.item)}</p>
+        <div class="po-fq-hv"><b>${esc(fqFmt(num(r.value), r.unit))}</b>${p ? `<span>${esc(p.label)} ${esc(fqFmt(p.v, r.unit))}에서</span>` : ""}</div>
+        ${pict(r)}${r.note ? `<p class="po-fq-n">${esc(r.note)}</p>` : ""}</article>`;
+    };
+    const hotHtml = hot.length ? `<h4 class="po-fq-sub">이번 달 눈에 띄는 숫자 ${hot.length}개</h4><div class="po-fq-hots">${hot.map(tile).join("")}</div>` : "";
+
+    // ③ 주제별: 한 줄 풀이 → 막대
+    const line = (r, label) => {
+      const d = delta(r), p = prevOf(r);
+      return `<li><div class="po-fq-lh"><span class="po-fq-i">${esc(label)}${fqRecord(r) ? ` <span class="po-fq-tag po-fq-rec">기록</span>` : ""}</span><b class="po-fq-v">${esc(fqFmt(num(r.value), r.unit))}</b></div>
+        ${bar(r)}<div class="po-fq-p">${p ? `${esc(p.label)} ${esc(fqFmt(p.v, r.unit))}` : "지난 값 없음"}${d != null ? ` <em class="${big(r, d) ? "po-fq-big" : ""}">${esc(dTxt(r, d))}</em>` : ""}</div></li>`;
+    };
+    const groupHtml = (g, rs) => {
+      const blocks = [];
+      rs.forEach((r) => {
+        const i = r.item.indexOf(": ");
+        const q = i > 0 ? r.item.slice(0, i) : null;
+        const lb = blocks[blocks.length - 1];
+        if (q && lb && lb.q === q) lb.rows.push(r); else blocks.push({ q, rows: [r] });
+      });
+      const body = blocks.map((b) => {
+        if (!b.q) return `<ul class="po-fq">${b.rows.map((r) => line(r, fqSides(r.item).label)).join("")}</ul>`;
+        const rows = b.rows.slice().sort((a, c) => num(c.value) - num(a.value));
+        return `<div class="po-fq-q">${b.q !== g ? `<h4>${esc(b.q)}</h4>` : ""}<ul class="po-fq">${rows.map((r, i) => line(r, `${i + 1}위 ${r.item.slice(b.q.length + 2)}`)).join("")}</ul></div>`;
+      }).join("");
+      const says = rs.filter((r) => r.say || r.note);
+      const srcs = [...new Set(rs.map((r) => r.src).filter(Boolean))];
+      const detail = says.length || srcs.length ? more("문항마다 풀어 보기", `${says.length ? `<ul class="po-fq-says">${says.map((r) => `<li><b>${esc(fqSides(r.item).label)}</b> ${esc(r.say || "")}${r.note ? ` <span>${esc(r.note)}</span>` : ""}</li>`).join("")}</ul>` : ""}${srcs.length ? `<p class="po-fq-src">출처: ${srcs.map(esc).join(" / ")}</p>` : ""}`) : "";
+      const t = take(g);
+      return `<section class="po-fq-g"><h3><span aria-hidden="true">${FQ_ICON[g] || "•"}</span>${esc(g)}</h3>${t ? `<p class="po-fq-take">${esc(t)}</p>` : ""}${body}${detail}</section>`;
+    };
+    const groups = FQ_GROUPS.concat([...new Set(cur.map((r) => r.group))].filter((g) => !FQ_GROUPS.includes(g)))
+      .map((g) => [g, cur.filter((r) => r.group === g)]).filter(([, rs]) => rs.length)
+      .map(([g, rs]) => groupHtml(g, rs)).join("");
+
+    // ④ 문항별 달마다(두 달 이상 기록이 있는 문항만, 최근 6개 달) + 추세선
+    const cols = months.slice(-6);
+    const keys = Object.keys(byKey).filter((k) => cols.filter((m) => byKey[k][m]).length >= 2);
+    const gi = (k) => { const r = byKey[k][last] || Object.values(byKey[k]).pop(); return FQ_GROUPS.indexOf(r.group); };
+    const ci = (k) => { const i = cur.indexOf(byKey[k][last]); return i < 0 ? 1e9 : i; };
+    keys.sort((a, b) => gi(a) - gi(b) || ci(a) - ci(b));
+    const spark = (k) => {
+      const pts = cols.map((m, i) => [i, byKey[k][m] ? num(byKey[k][m].value) : null]).filter((p) => p[1] != null);
+      const vs = pts.map((p) => p[1]), lo = Math.min(...vs), hi = Math.max(...vs), W = 64, H = 20;
+      const xy = pts.map(([i, v]) => [(i / Math.max(1, cols.length - 1)) * (W - 4) + 2, hi === lo ? H / 2 : H - 3 - ((v - lo) / (hi - lo)) * (H - 6)]);
+      const lp = xy[xy.length - 1];
+      return `<svg class="po-fq-sp" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" aria-hidden="true"><polyline points="${xy.map((p) => p.map((x) => x.toFixed(1)).join(",")).join(" ")}"/><circle cx="${lp[0].toFixed(1)}" cy="${lp[1].toFixed(1)}" r="2.6"/></svg>`;
+    };
+    let prevG = null;
+    const trs = keys.map((k) => {
+      const any = byKey[k][last] || Object.values(byKey[k]).pop();
+      const head = any.group !== prevG ? `<tr class="po-fq-tg"><th colspan="${cols.length + 2}">${FQ_ICON[any.group] || ""} ${esc(any.group)}</th></tr>` : "";
+      prevG = any.group;
+      return `${head}<tr><td>${esc(any.item)}</td><td>${spark(k)}</td>${cols.map((m) => `<td class="${m === last ? "po-fq-last" : ""}">${byKey[k][m] ? esc(fqFmt(num(byKey[k][m].value), byKey[k][m].unit)) : "—"}</td>`).join("")}</tr>`;
+    }).join("");
+    const hist = keys.length ? more(`📈 문항별 달마다 바뀐 숫자 (${keys.length}개 문항, ${fqShort(cols[0])}~${fqShort(last)})`, `<div class="po-tw"><table class="po-t po-fq-t"><thead><tr><th>문항</th><th>흐름</th>${cols.map((m) => `<th class="${m === last ? "po-fq-last" : ""}">${esc(fqShort(m))}</th>`).join("")}</tr></thead><tbody>${trs}</tbody></table></div><p class="po-foot">—는 그달 기사에서 숫자를 확인하지 못한 곳입니다. 흐름 선의 점이 이번 달입니다.</p>`) : "";
+
+    return `<div class="po-fq-w">
+      <div class="po-fq-hd"><h3>📋 설문 문항 한눈에</h3><span>${esc(ym(last))} 설문 · ${cur.length}개 문항</span></div>
+      ${leadHtml}${hotHtml}
+      <h4 class="po-fq-sub">주제별로 보기</h4>
+      <p class="po-fq-how"><b>%</b> 그렇게 답한 펀드매니저 비율 · <b>%p</b> 막대 양 끝에 적힌 두 답의 차이(가운데 선에서 막대가 뻗은 쪽이 많음) · <b>▲▼</b> 지난달보다 오르고 내린 폭, 10%p 넘게 바뀌면 굵게</p>
+      <div class="po-fq-gs">${groups}</div>${hist}</div>`;
   }
 
   // ---------- 8. 선물 포지션(CFTC) ----------
