@@ -205,7 +205,63 @@
     const latest = M[0];
     const sub = latest && latest.release ? `BofA 펀드매니저 설문(FMS) · ${esc(ym(latest.month))} 설문, ${esc(mdw(latest.release))} 발표` : "BofA 펀드매니저 설문(FMS) · 한 달에 한 번";
     return sec("po-sec-fms", "펀드매니저는 얼마나 사 뒀나", sub,
-      `${lead && lead.meaning ? `<p class="po-lead">${esc(lead.meaning)}</p>` : ""}${gauge}<div class="po-fts">${tiles}</div>${table}${eq}${guide}${terms("fms", "flow-fms")}`);
+      `${lead && lead.meaning ? `<p class="po-lead">${esc(lead.meaning)}</p>` : ""}${gauge}<div class="po-fts">${tiles}</div>${fmsQuestions()}${table}${eq}${guide}${terms("fms", "flow-fms")}`);
+  }
+
+  // ---------- 7-1. 설문 문항 한눈에 (2026-11-25 사용자 요청: 설문 내용을 더 다채롭게) ----------
+  // 자료: fms_questions(한 줄 = 어느 달 설문의 한 문항). 최신 달을 주제별로 보여 주고,
+  // 같은 key 가 두 달 이상 있으면 '문항별 달마다' 표로 잇는다. 자료가 없으면 아무것도 그리지 않는다.
+  const FQ_GROUPS = ["투자 심리·배분", "AI·빅테크", "경기·금리", "위험·쏠림"];
+  const fqFmt = (v, u) => (u === "%p" ? sgn(v, (x) => f0.format(x)) + "%p" : u === "점" ? f1.format(v) + "점" : f0.format(v) + "%");
+  const fqShort = (m) => `${Number(String(m).split("-")[1])}월`;
+  function fmsQuestions() {
+    const Q = ds("fms_questions").filter((r) => r && r.month && r.key && num(r.value) != null);
+    if (!Q.length) return "";
+    const months = [...new Set(Q.map((r) => r.month))].sort();
+    const last = months[months.length - 1];
+    const byKey = {};
+    Q.forEach((r) => { (byKey[r.key] = byKey[r.key] || {})[r.month] = r; });
+    const prevOf = (r) => {
+      if (num(r.prev) != null) return { v: num(r.prev), label: r.prev_label || "이전" };
+      const ms = months.filter((m) => m < r.month && byKey[r.key][m]);
+      const m = ms[ms.length - 1];
+      return m ? { v: num(byKey[r.key][m].value), label: fqShort(m) } : null;
+    };
+    const cur = Q.filter((r) => r.month === last);
+    const span = Math.max(50, ...cur.filter((r) => r.unit === "%p").map((r) => Math.abs(num(r.value))));
+    const bar = (r) => {
+      const v = num(r.value);
+      if (r.unit === "%p") {
+        const w = Math.min(50, (Math.abs(v) / span) * 50);
+        return `<div class="po-fq-bar po-fq-net"><i class="${v < 0 ? "po-fq-neg" : ""}" style="${v < 0 ? `right:50%` : `left:50%`};width:${w}%"></i><b></b></div>`;
+      }
+      const w = r.unit === "점" ? Math.min(100, v * 10) : Math.min(100, Math.max(0, v));
+      return `<div class="po-fq-bar"><i style="left:0;width:${w}%"></i></div>`;
+    };
+    const row = (r) => {
+      const p = prevOf(r), v = num(r.value);
+      let ch = "";
+      if (p && p.v != null) {
+        const d = v - p.v, du = r.unit === "점" ? "점" : "%p";
+        const dt = r.unit === "점" ? f1.format(Math.abs(d)) : f0.format(Math.abs(d));
+        ch = `<span class="po-fq-p">${esc(p.label)} ${esc(fqFmt(p.v, r.unit))}${Math.abs(d) < 0.05 ? " · 같음" : ` · ${d > 0 ? "▲" : "▼"}${dt}${du}`}</span>`;
+      }
+      return `<li><div class="po-fq-h"><span class="po-fq-i">${esc(r.item)}</span><b class="po-fq-v">${esc(fqFmt(v, r.unit))}</b></div>${bar(r)}${ch}
+        ${r.note || r.src ? `<p class="po-fq-n">${esc(r.note || "")}${r.src ? ` <small>출처: ${esc(r.src)}</small>` : ""}</p>` : ""}</li>`;
+    };
+    const groups = FQ_GROUPS.concat([...new Set(cur.map((r) => r.group))].filter((g) => !FQ_GROUPS.includes(g)))
+      .map((g) => [g, cur.filter((r) => r.group === g)]).filter(([, rs]) => rs.length)
+      .map(([g, rs]) => `<div class="po-fq-g"><h3>${esc(g)} <small>${rs.length}개</small></h3><ul class="po-fq">${rs.map(row).join("")}</ul></div>`).join("");
+    // 문항별 달마다(두 달 이상 기록이 있는 문항만, 최근 6개 달)
+    const cols = months.slice(-6);
+    const keys = Object.keys(byKey).filter((k) => cols.filter((m) => byKey[k][m]).length >= 2);
+    const order = (k) => { const r = byKey[k][last] || Object.values(byKey[k]).pop(); return [FQ_GROUPS.indexOf(r.group), cur.indexOf(byKey[k][last])]; };
+    keys.sort((a, b) => { const x = order(a), y = order(b); return x[0] - y[0] || (x[1] < 0) - (y[1] < 0) || x[1] - y[1]; });
+    const hist = keys.length ? more(`문항별 달마다 바뀐 숫자 (${keys.length}개 문항)`, `<div class="po-tw"><table class="po-t po-fq-t"><thead><tr><th>문항</th>${cols.map((m) => `<th>${esc(fqShort(m))}</th>`).join("")}</tr></thead><tbody>${keys.map((k) => {
+      const any = Object.values(byKey[k]).pop();
+      return `<tr><td>${esc((byKey[k][last] || any).item)}</td>${cols.map((m) => `<td>${byKey[k][m] ? esc(fqFmt(num(byKey[k][m].value), byKey[k][m].unit)) : "—"}</td>`).join("")}</tr>`;
+    }).join("")}</tbody></table></div><p class="po-foot">빈칸(—)은 그달 기사에서 숫자를 확인하지 못한 곳입니다. %p는 '그렇다(늘림)'에서 '아니다(줄임)'를 뺀 값입니다.</p>`) : "";
+    return `<div class="po-fq-w"><div class="po-fq-hd"><h3>설문 문항 한눈에 · ${esc(ym(last))} 설문</h3><p>막대는 응답 비율입니다. %p 문항은 가운데 선에서 오른쪽이 '그렇다·늘림' 우세, 왼쪽이 '아니다·줄임' 우세입니다. 점수 문항은 10점 만점입니다.</p></div><div class="po-fq-gs">${groups}</div>${hist}</div>`;
   }
 
   // ---------- 8. 선물 포지션(CFTC) ----------

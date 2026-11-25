@@ -214,3 +214,28 @@
 #po .po-src{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:15px}
 #po .po-src a{color:var(--accent);word-break:break-all}
 #po .po-src small{color:var(--muted)}
+
+/* 7-1. 설문 문항 한눈에 (2026-11-25) */
+#po .po-fq-w{display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--line);padding-top:14px;min-width:0}
+#po .po-fq-hd h3{font-size:18px;font-weight:800}
+#po .po-fq-hd p{font-size:14px;color:var(--muted);margin-top:2px}
+#po .po-fq-gs{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;min-width:0}
+@media (min-width:900px){#po .po-fq-gs{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start}}
+#po .po-fq-g{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;min-width:0}
+#po .po-fq-g h3{font-size:16px;font-weight:800;margin-bottom:4px}
+#po .po-fq-g h3 small{font-size:13px;color:var(--muted);font-weight:600}
+#po .po-fq{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+#po .po-fq li{padding:9px 0;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:4px;min-width:0}
+#po .po-fq li:first-child{border-top:0}
+#po .po-fq-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+#po .po-fq-i{font-size:15px;color:var(--ink);font-weight:600}
+#po .po-fq-v{font-size:19px;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+#po .po-fq-bar{position:relative;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+#po .po-fq-bar i{position:absolute;top:0;bottom:0;background:var(--accent);border-radius:4px}
+#po .po-fq-bar i.po-fq-neg{background:var(--muted)}
+#po .po-fq-net b{position:absolute;left:50%;top:-2px;bottom:-2px;width:2px;margin-left:-1px;background:var(--ink-2)}
+#po .po-fq-p{font-size:13.5px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+#po .po-fq-n{font-size:14px;color:var(--ink-2);line-height:1.6}
+#po .po-fq-n small{font-size:12.5px;color:var(--muted)}
+#po .po-fq-t td:first-child{white-space:normal;min-width:12em}
+#po .po-fq-t td:not(:first-child),#po .po-fq-t th:not(:first-child){text-align:right;white-space:nowrap}
