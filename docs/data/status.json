@@ -1,6 +1,6 @@
 {
- "updated_at": "2026-11-25 17:40 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/45578283576",
+ "updated_at": "2026-11-26 07:30 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/45713729686",
  "trigger": "workflow_dispatch",
  "markets": {
   "KR": {
@@ -18,14 +18,14 @@
   },
   "US": {
    "ok": true,
-   "basis_date": "2026-11-24",
+   "basis_date": "2026-11-25",
    "n": 70,
    "warnings": [],
    "tradingview": {
-    "date": "2026-11-24",
+    "date": "2026-11-25",
     "asked": 316,
     "got": 314,
-    "filled": 1,
+    "filled": 0,
     "fixed": []
    }
   },
