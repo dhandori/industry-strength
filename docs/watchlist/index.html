@@ -62,6 +62,13 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* 섹터 줄 + 오른쪽 끝 고정 기간 단추(3개월·6개월·1년) */
 #srow{display:flex;align-items:center;max-width:1100px;margin:0 auto;border-bottom:1px solid var(--line)}
 #srow #secs{flex:1;min-width:0;margin:0;border-bottom:0}
+/* 신고가 임박 단추: 1년 최고 종가 5% 이내 종목만 고점에 가까운 순으로(2026-11-25 사용자 요청) */
+#nhb{flex:none;margin-left:4px;border:1px solid #d1d5db;border-radius:9px;background:var(--card);color:#4b5563;font-size:12.5px;font-weight:600;padding:6px 8px;white-space:nowrap}
+#nhb.on{background:var(--ink);border-color:var(--ink);color:#fff}
+#nhb[hidden]{display:none}
+.tr .nh{color:var(--text);font-weight:700}
+.tr .nh0{color:#b45309;font-weight:700}
+@media (max-width:420px){ .tr{column-gap:4px;padding-left:8px;padding-right:8px} #nhb{padding:6px 6px;font-size:12px} }
 #per{flex:none;display:flex;margin:0 10px 0 4px;border:1px solid #d1d5db;border-radius:9px;overflow:hidden;background:var(--card)}
 #per button{border:0;border-left:1px solid var(--line);background:var(--card);color:#4b5563;font-size:12.5px;font-weight:600;padding:6px 8px;white-space:nowrap}
 #per button:first-child{border-left:0}
@@ -280,7 +287,7 @@ canvas.rl{height:352px}
 .lg .lr{margin-left:auto;color:var(--sub);white-space:nowrap}
 /* 표 형태 목록 보기 */
 .tbl{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:6px}
-.tr{display:grid;grid-template-columns:minmax(0,1fr) 62px 58px 44px 46px;align-items:center;column-gap:6px;padding:9px 10px;border-top:1px solid var(--soft);font-variant-numeric:tabular-nums;font-size:13px}
+.tr{display:grid;grid-template-columns:minmax(0,1fr) 58px 52px 42px 48px 44px;align-items:center;column-gap:6px;padding:9px 10px;border-top:1px solid var(--soft);font-variant-numeric:tabular-nums;font-size:13px}
 .tr:first-child{border-top:0}
 .tr.th{background:#f8f9fb;color:var(--sub);font-size:12px;padding:7px 10px;position:static}
 .tr.th button{border:0;background:none;color:inherit;font-size:inherit;padding:0;text-align:right}
@@ -345,7 +352,7 @@ canvas.rl{height:352px}
     <nav id="tabs"></nav>
   </div>
   <div id="newbar" hidden><span>새 자료가 나왔습니다 · <b id="newt"></b></span><button id="newb"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>새로 받기</button></div>
-  <div id="srow"><div class="row" id="secs"></div><div id="per" aria-label="차트 기간"></div></div>
+  <div id="srow"><div class="row" id="secs"></div><button id="nhb" hidden title="1년 최고 종가에서 5% 안쪽에 있는 종목만 고점에 가까운 순으로 봅니다. 다시 누르면 풉니다."></button><div id="per" aria-label="차트 기간"></div></div>
   <div class="row" id="subs" hidden></div>
   <div id="chips" hidden></div>
   <div id="panel" hidden></div>
@@ -966,8 +973,8 @@ function fillCard(el){
   return el;
 }
 
-// ── 표 형태 목록: 종목 | 오늘 | 1개월 | 52주 위치 | RS. 칸 제목을 누르면 그 기준으로 정렬, 줄을 누르면 차트를 편다 ──
-const COLS = [["종목","base"],["오늘","chg"],["1개월","r1m"],["52주","pos"],["RS","rs"]];
+// ── 표 형태 목록: 종목 | 오늘 | 1개월 | 52주 위치 | 고점까지 | RS. 칸 제목을 누르면 그 기준으로 정렬, 줄을 누르면 차트를 편다 ──
+const COLS = [["종목","base"],["오늘","chg"],["1개월","r1m"],["52주","pos"],["고점","ph"],["RS","rs"]];
 function tableHead(){
   const th = document.createElement("div"); th.className = "tr th";
   COLS.forEach(([t, id]) => {
@@ -993,6 +1000,7 @@ function tableRow(it, idx, rank){
     `<span><i class="pill ${it.chg >= 0 ? "up" : "dn"}">${sign(it.chg,1)}</i></span>` +
     `<span class="s ${it.m.r1m >= 0 ? "up" : "dn"}">${it.m.r1m == null ? "–" : pct(it.m.r1m)}</span>` +
     `<span>${Math.round(it.m.pos)}%<i class="mb"><u style="left:calc(${Math.max(0, Math.min(100, it.m.pos))}% - 1px)"></u></i></span>` +
+    phCell(it) +
     `<span class="s">${it.rs == null ? "–" : it.rs + rsArrow(it)}${spark(it)}</span>`);
   if (it.rs != null) r.lastElementChild.title = TIP.rs(it);
   r.onclick = () => {
@@ -1004,6 +1012,12 @@ function tableRow(it, idx, rank){
   return r;
 }
 
+// 표의 '고점' 칸: 1년 최고 종가까지 남은 %. 오늘 신고가면 '신고가', 5% 안쪽(신고가 임박)은 굵게
+function phCell(it){
+  if (it.ph == null || !isFinite(it.ph)) return '<span class="s">–</span>';
+  if (it.ph >= 0) return '<span class="s nh0" title="오늘 종가가 1년 최고 종가입니다.">신고가</span>';
+  return `<span class="s${it.ph >= -5 ? " nh" : ""}" title="1년 최고 종가까지 ${(-it.ph).toFixed(1)}% 남았습니다.">${it.ph.toFixed(1)}%</span>`;
+}
 // 표의 RS 칸 아래 작은 선: 최근 63거래일 RS선(오르면 시장보다 강해지는 중)
 function spark(it){
   const v = (it.rl || []).slice(-63).filter(x => x != null);
@@ -1412,7 +1426,7 @@ function tools(data, shown, total){
   const add = (box, cls, txt, fn, tip) => { const b = document.createElement("button"); b.className = cls; b.textContent = txt; if (tip) b.title = tip; b.onclick = () => { fn(); apply(); }; box.appendChild(b); return b; };
   LAST = [shown, total];
   $("cnt").textContent = total + "종목";
-  perSeg();
+  perSeg(); nhSeg(data);
   const ch = $("chips"); ch.innerHTML = "";
   ST.c.forEach(c => add(ch, "chip", COND[c][1], () => { ST.c = ST.c.filter(x => x !== c); }, "누르면 이 조건만 풉니다."));
   if (hasK(data)) ST.k.forEach(k => add(ch, "chip", k, () => { ST.k = ST.k.filter(x => x !== k); }, "누르면 이 나라만 뺍니다."));
@@ -1432,6 +1446,21 @@ function perSeg(){
   const pe = $("per"); pe.innerHTML = "";
   PERIODS.forEach(([k, t]) => { const b = document.createElement("button"); b.textContent = t; b.classList.toggle("on", period() === k);
     b.onclick = () => { ST.p = k === autoPeriod() ? "" : k; save(); redraw(); if (TAB) tools(TAB, LAST[0], LAST[1]); }; pe.appendChild(b); });
+}
+// 신고가 임박 단추: 걸러 보기 '52주 고점 5% 이내' + '52주 고점 대비' 높은 순. 숫자는 지금 탭(국가 선택 반영)의 해당 종목 수
+const nhOn = () => ST.c.includes("hi") && ST.s === "ph";
+function nhSeg(data){
+  const b = $("nhb"), its = data.sections.flatMap(s => s.items).filter(it => it.ph != null && isFinite(it.ph));
+  b.hidden = !its.length; if (b.hidden) return;
+  // 눌렀을 때 보이는 수와 같게: 정렬하면 같은 회사의 두 번째 상장(data.dup)은 빠지고, 여러 섹터에 든 같은 종목은 한 번만 센다
+  const useK = hasK(data) && ST.k.length, seen = new Set();
+  const n = its.filter(it => it.ph >= -5 && (!useK || ST.k.includes(kgroup(it.k))) && !data.dup.has(it.y) && !seen.has(it.y) && seen.add(it.y)).length;
+  b.textContent = "신고가 임박 " + n; b.classList.toggle("on", nhOn());
+  b.onclick = () => {
+    if (nhOn()){ ST.c = ST.c.filter(x => x !== "hi"); ST.s = "base"; ST.d = "desc"; }
+    else { ST.c = ST.c.filter(x => x !== "hi").concat("hi"); ST.s = "ph"; ST.d = "desc"; }
+    apply();
+  };
 }
 function apply(){ save(); render(false); }
 // 기간을 바꾸면 지금 그려져 있는 차트만 새 기간으로 다시 그린다(표 보기에서 펼친 차트 포함)
