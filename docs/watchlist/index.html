@@ -62,13 +62,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--card);bord
 /* 섹터 줄 + 오른쪽 끝 고정 기간 단추(3개월·6개월·1년) */
 #srow{display:flex;align-items:center;max-width:1100px;margin:0 auto;border-bottom:1px solid var(--line)}
 #srow #secs{flex:1;min-width:0;margin:0;border-bottom:0}
-/* 신고가 임박 단추: 1년 최고 종가 5% 이내 종목만 고점에 가까운 순으로(2026-11-25 사용자 요청) */
-#nhb{flex:none;margin-left:4px;border:1px solid #d1d5db;border-radius:9px;background:var(--card);color:#4b5563;font-size:12.5px;font-weight:600;padding:6px 8px;white-space:nowrap}
-#nhb.on{background:var(--ink);border-color:var(--ink);color:#fff}
-#nhb[hidden]{display:none}
+/* 표 '고점' 칸: 오늘 신고가·신고가 임박(5% 안쪽) 강조 */
 .tr .nh{color:var(--text);font-weight:700}
 .tr .nh0{color:#b45309;font-weight:700}
-@media (max-width:420px){ .tr{column-gap:4px;padding-left:8px;padding-right:8px} #nhb{padding:6px 6px;font-size:12px} }
+@media (max-width:420px){ .tr{column-gap:4px;padding-left:8px;padding-right:8px} }
 #per{flex:none;display:flex;margin:0 10px 0 4px;border:1px solid #d1d5db;border-radius:9px;overflow:hidden;background:var(--card)}
 #per button{border:0;border-left:1px solid var(--line);background:var(--card);color:#4b5563;font-size:12.5px;font-weight:600;padding:6px 8px;white-space:nowrap}
 #per button:first-child{border-left:0}
@@ -352,7 +349,7 @@ canvas.rl{height:352px}
     <nav id="tabs"></nav>
   </div>
   <div id="newbar" hidden><span>새 자료가 나왔습니다 · <b id="newt"></b></span><button id="newb"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>새로 받기</button></div>
-  <div id="srow"><div class="row" id="secs"></div><button id="nhb" hidden title="1년 최고 종가에서 5% 안쪽에 있는 종목만 고점에 가까운 순으로 봅니다. 다시 누르면 풉니다."></button><div id="per" aria-label="차트 기간"></div></div>
+  <div id="srow"><div class="row" id="secs"></div><div id="per" aria-label="차트 기간"></div></div>
   <div class="row" id="subs" hidden></div>
   <div id="chips" hidden></div>
   <div id="panel" hidden></div>
@@ -776,7 +773,7 @@ const CONDS = [
   ["tt","미너비니 템플릿",it => it.m.tt === 8],
   ["g","골든크로스",it => it.x === "gc" || it.x === "gs","d"],["d","데드크로스",it => it.x === "dc" || it.x === "ds","g"],
   ["a2","200일선 위",it => lastOf(it.c) > lastOf(it.e["200"]),"b2"],["b2","200일선 아래",it => lastOf(it.c) <= lastOf(it.e["200"]),"a2"],
-  ["hi","52주 고점 5% 이내",it => it.ph >= -5],
+  ["hi","신고가 임박",it => it.ph >= -5],
   ["rs8","RS 80 이상",it => it.rs >= 80],
   ["rsh","RS선 신고가",it => !!it.rsh],
   ["ia","인더스트리 액션",it => !!it.ia],
@@ -793,7 +790,7 @@ const DEF = {
   d: "EMA50이 EMA200을 최근 5거래일 안에 아래로 넘었거나(발생), 아직 위지만 두 선 간격이 EMA200의 1.5% 이내로 좁혀지는 중(임박)입니다.",
   a2: "오늘 종가가 200일 지수이동평균(EMA200)보다 높습니다. 차트의 보라색 선 기준이며, 미너비니 템플릿의 200일선(단순이동평균)과는 다른 선입니다.",
   b2: "오늘 종가가 200일 지수이동평균(EMA200) 이하입니다. 차트의 보라색 선 기준이며, 미너비니 템플릿의 200일선(단순이동평균)과는 다른 선입니다.",
-  hi: "오늘 종가가 최근 1년 최고 종가에서 5% 안쪽에 있습니다.",
+  hi: "신고가 임박: 오늘 종가가 최근 1년 최고 종가(52주 고점)에서 5% 안쪽에 있습니다. 정렬을 '52주 고점 대비' 높은 순으로 두면 고점에 가까운 종목부터 봅니다.",
   rs8: "RS 등급 80 이상(차트북 전체 주식 중 상위 약 20%). RS 등급은 종목이 자기 상장 시장 지수(코스피·코스닥·S&P500·닛케이·가권·항셍·상하이)보다 얼마나 강했는지를 1~99로 매긴 값이라, 나라 장세와 상관없이 비교할 수 있습니다.",
   rsh: "RS선(종목 종가 ÷ 상장 시장 지수)이 오늘 지난 1년 중 가장 높습니다. 주가는 아직 신고가가 아니어도 시장보다 강해졌다는 뜻이라, 주도주가 될 종목이 여기서 먼저 드러나는 경우가 많습니다.",
   ia: "이 종목이 속한 업종이 시장 상황판(한국·미국·일본 세부 산업 강도 순위)에서 상위 25% 안에 있습니다. 상황판은 업종마다 차트북보다 많은 종목으로 5·20·60일 수익률을 비교해 순위를 매깁니다. 딱지에는 업종 이름, 순위, 상위권에 머문 거래일 수가 나오고, 5거래일 이내에 새로 들어왔으면 '새로'가 붙습니다. 상황판에 없는 종목(중국·대만 전부, 미국 일부)은 판정하지 않습니다.",
@@ -813,7 +810,7 @@ const DEF = {
   pos: "(오늘 종가 − 52주 최저 종가) ÷ (52주 최고 − 최저). 0%는 1년 최저, 100%는 1년 최고 자리입니다.",
   ph: "오늘 종가 ÷ 52주 최고 종가 − 1. 0%면 오늘이 신고가이고, 높은 순으로 보면 고점에 가까운 종목부터 나옵니다. 추세추종은 고점 근처에서 사는 쪽이 성공률이 높습니다.",
   ext: "오늘 종가 ÷ 50일 단순이동평균 − 1. 정배열·템플릿 조건과 함께 낮은 순으로 보면 50일선까지 눌린 종목(눌림목)이, 높은 순으로 보면 50일선에서 너무 멀어져 추격 매수가 위험한 종목이 먼저 나옵니다.",
-  vc: "최근 10거래일 고가~저가 폭 ÷ 최근 50거래일 고가~저가 폭. 작을수록 가격이 좁은 폭에서 다져지고 있습니다(변동성 수축). 52주 고점 5% 이내 조건과 함께 낮은 순으로 보면 돌파 직전 후보가 위로 올라옵니다.",
+  vc: "최근 10거래일 고가~저가 폭 ÷ 최근 50거래일 고가~저가 폭. 작을수록 가격이 좁은 폭에서 다져지고 있습니다(변동성 수축). 신고가 임박 조건과 함께 낮은 순으로 보면 돌파 직전 후보가 위로 올라옵니다.",
   ud: "최근 50거래일 동안 오른 날 거래량 합 ÷ 내린 날 거래량 합(IBD의 U/D 비율). 1보다 크면 오른 날 거래가 더 많았고, 1.5 이상이면 매집 흔적으로 봅니다.",
   ald: "정배열(종가 > EMA20 > EMA50 > EMA200)이 오늘까지 몇 거래일째 이어졌는지 셉니다. 낮은 순으로 보면 추세가 막 시작된 종목이 먼저 나옵니다. 정배열이 아닌 종목은 맨 뒤로 갑니다.",
   hid: "마지막 52주 신고가(종가)가 며칠(거래일) 전이었는지 봅니다. 0이면 오늘 신고가입니다. 낮은 순으로 보면 신고가 행진 중인 종목이 먼저 나옵니다.",
@@ -1426,7 +1423,7 @@ function tools(data, shown, total){
   const add = (box, cls, txt, fn, tip) => { const b = document.createElement("button"); b.className = cls; b.textContent = txt; if (tip) b.title = tip; b.onclick = () => { fn(); apply(); }; box.appendChild(b); return b; };
   LAST = [shown, total];
   $("cnt").textContent = total + "종목";
-  perSeg(); nhSeg(data);
+  perSeg();
   const ch = $("chips"); ch.innerHTML = "";
   ST.c.forEach(c => add(ch, "chip", COND[c][1], () => { ST.c = ST.c.filter(x => x !== c); }, "누르면 이 조건만 풉니다."));
   if (hasK(data)) ST.k.forEach(k => add(ch, "chip", k, () => { ST.k = ST.k.filter(x => x !== k); }, "누르면 이 나라만 뺍니다."));
@@ -1446,21 +1443,6 @@ function perSeg(){
   const pe = $("per"); pe.innerHTML = "";
   PERIODS.forEach(([k, t]) => { const b = document.createElement("button"); b.textContent = t; b.classList.toggle("on", period() === k);
     b.onclick = () => { ST.p = k === autoPeriod() ? "" : k; save(); redraw(); if (TAB) tools(TAB, LAST[0], LAST[1]); }; pe.appendChild(b); });
-}
-// 신고가 임박 단추: 걸러 보기 '52주 고점 5% 이내' + '52주 고점 대비' 높은 순. 숫자는 지금 탭(국가 선택 반영)의 해당 종목 수
-const nhOn = () => ST.c.includes("hi") && ST.s === "ph";
-function nhSeg(data){
-  const b = $("nhb"), its = data.sections.flatMap(s => s.items).filter(it => it.ph != null && isFinite(it.ph));
-  b.hidden = !its.length; if (b.hidden) return;
-  // 눌렀을 때 보이는 수와 같게: 정렬하면 같은 회사의 두 번째 상장(data.dup)은 빠지고, 여러 섹터에 든 같은 종목은 한 번만 센다
-  const useK = hasK(data) && ST.k.length, seen = new Set();
-  const n = its.filter(it => it.ph >= -5 && (!useK || ST.k.includes(kgroup(it.k))) && !data.dup.has(it.y) && !seen.has(it.y) && seen.add(it.y)).length;
-  b.textContent = "신고가 임박 " + n; b.classList.toggle("on", nhOn());
-  b.onclick = () => {
-    if (nhOn()){ ST.c = ST.c.filter(x => x !== "hi"); ST.s = "base"; ST.d = "desc"; }
-    else { ST.c = ST.c.filter(x => x !== "hi").concat("hi"); ST.s = "ph"; ST.d = "desc"; }
-    apply();
-  };
 }
 function apply(){ save(); render(false); }
 // 기간을 바꾸면 지금 그려져 있는 차트만 새 기간으로 다시 그린다(표 보기에서 펼친 차트 포함)
