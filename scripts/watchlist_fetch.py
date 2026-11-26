@@ -19,6 +19,9 @@ EMAS = (20, 50, 200)
 # 추세 딱지(정배열·크로스)를 붙이지 않는 항목: 변동성지수, 금리, 달러인덱스, 환율(=X)
 NO_TREND = {"^VIX", "2YY=F", "^TNX", "^TYX", "DX-Y.NYB"}
 HOSTS = ("query1.finance.yahoo.com", "query2.finance.yahoo.com")
+# 일봉이 이보다 적으면 '자료 부족'으로 뺀다. 다만 상장 NEW_DAYS일 안의 신규 상장은 일봉 2개부터 차트를 그리고,
+# 기간이 모자라 뜻이 없는 정배열·크로스 딱지는 붙이지 않는다(2026-11-26 사용자 요청, 11/19 상장한 Anthropic).
+MIN_ROWS, NEW_DAYS = 30, 90
 
 
 def fetch_raw(sym, session):
@@ -49,9 +52,9 @@ def ema(values, span):
     return out
 
 
-def trend_flags(sym, closes, emas, hi, lo):
-    """정배열: 종가 > EMA20 > EMA50 > EMA200 (차트에 그린 선 기준)."""
-    if sym in NO_TREND or sym.endswith("=X"):
+def trend_flags(sym, closes, emas, hi, lo, new=False):
+    """정배열: 종가 > EMA20 > EMA50 > EMA200 (차트에 그린 선 기준). 신규 상장(new)은 EMA200이 설익어 붙이지 않는다."""
+    if new or sym in NO_TREND or sym.endswith("=X"):
         return {}
     c = closes[-1]
     al = c > emas[20][-1] > emas[50][-1] > emas[200][-1]
@@ -94,12 +97,16 @@ def build(item, raw, now):
             h = min(h, max(o, c) * 1.025)
             l = max(l, min(o, c) * 0.975)
         rows.append((ts, o, h, l, c, v or 0))
-    if len(rows) < 30:
+    first = meta.get("firstTradeDate")
+    new = bool(first) and now - first < NEW_DAYS * 86400 and len(rows) < MIN_ROWS
+    if len(rows) < (2 if new else MIN_ROWS):
         raise RuntimeError("자료 부족")
     # 진행 중인 봉 제거: 정규장이 열려 있고 마지막 봉이 그 장에 속하면 뺀다
     reg = (meta.get("currentTradingPeriod") or {}).get("regular") or {}
     if reg and reg.get("start", 0) <= now < reg.get("end", 0) and rows[-1][0] >= reg["start"]:
         rows.pop()
+    if len(rows) < 2:
+        raise RuntimeError("자료 부족")
     closes = [r[4] for r in rows]
     emas = {n: ema(closes, n) for n in EMAS}
     last_day = dt.datetime.fromtimestamp(rows[-1][0] + off, dt.timezone.utc).date()
@@ -124,7 +131,8 @@ def build(item, raw, now):
         "hi": round(hi, dg), "lo": round(lo, dg),
         "ph": round((win[-1] / hi - 1) * 100, 1), "pl": round((win[-1] / lo - 1) * 100, 1),
         "chg": round((win[-1] / win[-2] - 1) * 100, 2),
-        **trend_flags(item["y"], closes, emas, hi, lo),
+        **({"nl": len(rows)} if new else {}),  # 신규 상장: 상장 뒤 거래일 수
+        **trend_flags(item["y"], closes, emas, hi, lo, new),
     }
 
 
