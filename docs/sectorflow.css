@@ -2,6 +2,8 @@
 :root { --sf-ma-s: var(--ma20); --sf-ma-m: var(--good); --sf-ma-l: var(--ma200); }
 
 .sector-card .card-head { gap: 8px; }
+.sec-per[hidden] { display: none; }
+.sec-per button:disabled { opacity: .4; cursor: default; }
 .sf-toggle { margin-left: auto; font-weight: 650; color: var(--accent); background: transparent; border-color: var(--accent); padding: 5px 12px; }
 .sf[hidden], .sf-toggle[hidden] { display: none; }
 .sf { margin-top: 12px; }

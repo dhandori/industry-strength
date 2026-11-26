@@ -822,7 +822,8 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
 
 
 def sector_watch(m: dict, close: pd.DataFrame, basis: str) -> list[dict]:
-    """큰 업종 11개(섹터 ETF)의 당일·5일·20일 등락. 기준일 가격이 없으면 stale 로 표시."""
+    """큰 업종(섹터 ETF)의 당일·5일·20일·60일·200일 등락. 기준일 가격이 없으면 stale 로 표시.
+    spark 는 최근 201거래일 종가다. 화면이 고른 기간만큼 잘라 작은 선을 그린다(2026-11-26 사용자 요청)."""
     out = []
     for sec in m.get("sectors") or []:
         col = "__sec_" + sec["ticker"]
@@ -836,7 +837,9 @@ def sector_watch(m: dict, close: pd.DataFrame, basis: str) -> list[dict]:
         out.append({"ticker": sec["ticker"], "name": sec["name"], "en": sec["en"], "items": sec["items"],
                     "close": r(last), "chg1": r((last / c.iloc[-2] - 1) * 100),
                     "ret5": r((last / c.iloc[-6] - 1) * 100), "ret20": r((last / c.iloc[-21] - 1) * 100),
-                    "spark": [r(x) for x in c.iloc[-20:].values],
+                    "ret60": r((last / c.iloc[-61] - 1) * 100) if len(c) > 60 else None,
+                    "ret200": r((last / c.iloc[-201] - 1) * 100) if len(c) > 200 else None,
+                    "spark": [r(x) for x in c.iloc[-201:].values],
                     "date": c.index[-1].strftime("%Y-%m-%d"), "stale": c.index[-1].strftime("%Y-%m-%d") != basis})
     out.sort(key=lambda x: (x["chg1"] is None, -(x["chg1"] or 0)))
     return out

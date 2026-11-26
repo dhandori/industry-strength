@@ -199,7 +199,11 @@
     renderTiles(d); renderSectors(d); window.__flow && window.__flow.render(d); renderSignals(d); window.__supply && window.__supply.renderForeign(d); renderExplore(d); renderTable(); renderRsStocks(d); renderHeat(d); renderGroups(d); renderStageMix(d); renderBreadth(d);
   }
 
-  // ---------- 섹터 워치: 큰 업종 11개 당일 등락. 칸을 누르면 순위표를 그 업종 소속으로 거른다.
+  // ---------- 섹터 워치: 큰 업종 칸. 위 단추로 당일·5일·20일·60일·200일 가운데 기간을 고르면
+  // 막대·큰 숫자·정렬·작은 선이 그 기간을 따른다(2026-11-26 사용자 요청). 칸을 누르면 순위표를 그 업종 소속으로 거른다.
+  const SEC_PER = { chg1: { l: "당일", n: 20 }, ret5: { l: "5일", n: 5 }, ret20: { l: "20일", n: 20 }, ret60: { l: "60일", n: 60 }, ret200: { l: "200일", n: 200 } };
+  try { const v = localStorage.getItem("is-sec-per"); if (SEC_PER[v]) state.secPer = v; } catch (e) {}
+  if (!state.secPer) state.secPer = "chg1";
   function sparkSvg(vals) {
     const v = (vals || []).filter((x) => x != null);
     if (v.length < 2) return "";
@@ -208,28 +212,37 @@
     return `<svg class="sec-spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${pts}"/></svg>`;
   }
   function renderSectors(d) {
-    const card = $("#sectorCard"), list = d && d.sectors;
+    const card = $("#sectorCard"), all = d && d.sectors;
     window.__secflow && window.__secflow.show(state.market);
     $("#secNote").textContent = state.market === "KR"
-      ? "한국 업종 20개를 대표 업종 ETF(KODEX 반도체, PLUS K방산 등) 종가로 봅니다. 칸을 누르면 아래 세부 산업 순위에 그 업종에 묶인 산업만 남습니다. 원전, 전자부품, 통신, 리츠는 아직 칸이 없습니다."
+      ? "한국 업종 20개를 대표 업종 ETF(KODEX 반도체, PLUS K방산 등) 종가로 봅니다. 위 단추로 당일·5일·20일·60일·200일 등락을 골라 볼 수 있습니다. 칸을 누르면 아래 세부 산업 순위에 그 업종에 묶인 산업만 남습니다. 원전, 전자부품, 통신, 리츠는 아직 칸이 없습니다."
       : state.market === "JP"
-      ? "도쿄 증시 TOPIX-17 업종을 노무라 NEXT FUNDS 업종 ETF(1617~1633) 종가로 봅니다. 칸을 누르면 아래 세부 산업 순위에 그 업종에 묶인 산업만 남습니다. 업종 ETF는 거래가 적어서 하루 등락이 지수와 조금 다를 수 있습니다."
-      : "S&P 500 큰 업종 11개를 섹터 ETF(XLK, XLE 등) 종가로 봅니다. 칸을 누르면 아래 세부 산업 순위에 그 업종에 속한 산업만 남습니다. 세부 산업은 저마다 가장 가까운 큰 업종 하나에 넣어 묶었습니다.";
-    $("#sectors").hidden = !(list && list.length);
-    card.hidden = !(list && list.length) && !(window.__secflow && window.__secflow.has(state.market));
-    if (!(list && list.length)) { $("#secSub").textContent = ""; return; }
-    const max = Math.max(...list.map((x) => Math.abs(x.chg1 || 0)), 0.5);
-    const up = list.filter((x) => (x.chg1 || 0) > 0).length;
+      ? "도쿄 증시 TOPIX-17 업종을 노무라 NEXT FUNDS 업종 ETF(1617~1633) 종가로 봅니다. 위 단추로 당일·5일·20일·60일·200일 등락을 골라 볼 수 있습니다. 칸을 누르면 아래 세부 산업 순위에 그 업종에 묶인 산업만 남습니다. 업종 ETF는 거래가 적어서 하루 등락이 지수와 조금 다를 수 있습니다."
+      : "S&P 500 큰 업종 11개를 섹터 ETF(XLK, XLE 등) 종가로 봅니다. 위 단추로 당일·5일·20일·60일·200일 등락을 골라 볼 수 있습니다. 칸을 누르면 아래 세부 산업 순위에 그 업종에 속한 산업만 남습니다. 세부 산업은 저마다 가장 가까운 큰 업종 하나에 넣어 묶었습니다.";
+    $("#sectors").hidden = !(all && all.length);
+    $("#secPer").hidden = !(all && all.length);
+    card.hidden = !(all && all.length) && !(window.__secflow && window.__secflow.has(state.market));
+    if (!(all && all.length)) { $("#secSub").textContent = ""; return; }
+    // 자료에 아직 없는 기간(60일·200일 칸이 생기기 전 자료)은 단추를 끄고 당일로 돌린다.
+    const has = (k) => all.some((x) => x[k] != null);
+    $$("#secPer button").forEach((b) => { b.disabled = !has(b.dataset.k); });
+    const k = has(state.secPer) ? state.secPer : "chg1", P = SEC_PER[k];
+    $$("#secPer button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.k === k));
+    const list = [...all].sort((a, b) => (a[k] == null) - (b[k] == null) || (b[k] ?? 0) - (a[k] ?? 0));
+    const max = Math.max(...list.map((x) => Math.abs(x[k] || 0)), k === "chg1" ? 0.5 : 2);
+    const up = list.filter((x) => (x[k] || 0) > 0).length, down = list.filter((x) => (x[k] || 0) < 0).length;
     const stale = list.some((x) => x.stale);
-    $("#secSub").textContent = `${list[0].date.slice(5).replace("-", "/")} 종가 · 오른 업종 ${up}개, 내린 업종 ${list.length - up}개${stale ? " · 일부 최신 아님" : ""}`;
+    $("#secSub").textContent = `${list[0].date.slice(5).replace("-", "/")} 종가 · ${k === "chg1" ? "" : P.l + " 동안 "}오른 업종 ${up}개, 내린 업종 ${down}개${stale ? " · 일부 최신 아님" : ""}`;
+    const sk = k === "chg1" ? "ret20" : "chg1", SL = k === "chg1" ? "20일" : "당일";   // 아래 줄은 비교용 다른 기간 하나
     $("#sectors").innerHTML = list.map((x) => {
-      const w = Math.max(3, Math.abs(x.chg1 || 0) / max * 50);
+      const v = x[k], w = Math.max(3, Math.abs(v || 0) / max * 50);
       const on = state.sector === x.ticker;
-      return `<button type="button" role="listitem" class="sec-cell ${cls(x.chg1)}${on ? " on" : ""}${x.stale ? " stale" : ""}" data-sec="${esc(x.ticker)}" aria-pressed="${on}"
-        title="${esc(x.name)} (${esc(x.en)}, ${esc(x.ticker)}) · 종가 ${x.close} · 5일 ${fmtPct(x.ret5)} · 20일 ${fmtPct(x.ret20)} · 소속 세부 산업 ${x.items.length}개 · 작은 선 = 최근 20거래일">
-        <span class="sec-top"><b>${esc(x.name)}</b><em class="${cls(x.chg1)}-t">${fmtPct(x.chg1, 2)}</em></span>
-        <span class="sec-bar"><i class="${(x.chg1 || 0) >= 0 ? "pos" : "neg"}" style="width:${w.toFixed(1)}%"></i></span>
-        <span class="sec-bottom"><small>20일 <span class="${cls(x.ret20)}-t">${fmtPct(x.ret20)}</span></small>${sparkSvg(x.spark)}</span>
+      const sp = (x.spark || []).slice(-(P.n + 1));
+      return `<button type="button" role="listitem" class="sec-cell ${cls(v)}${on ? " on" : ""}${x.stale ? " stale" : ""}" data-sec="${esc(x.ticker)}" aria-pressed="${on}"
+        title="${esc(x.name)} (${esc(x.en)}, ${esc(x.ticker)}) · 종가 ${x.close} · 당일 ${fmtPct(x.chg1, 2)} · 5일 ${fmtPct(x.ret5)} · 20일 ${fmtPct(x.ret20)} · 60일 ${fmtPct(x.ret60)} · 200일 ${fmtPct(x.ret200)} · 소속 세부 산업 ${x.items.length}개 · 작은 선 = 최근 ${Math.max(0, sp.length - 1)}거래일">
+        <span class="sec-top"><b>${esc(x.name)}</b><em class="${cls(v)}-t">${fmtPct(v, k === "chg1" ? 2 : 1)}</em></span>
+        <span class="sec-bar"><i class="${(v || 0) >= 0 ? "pos" : "neg"}" style="width:${w.toFixed(1)}%"></i></span>
+        <span class="sec-bottom"><small>${SL} <span class="${cls(x[sk])}-t">${fmtPct(x[sk], sk === "chg1" ? 2 : 1)}</span></small>${sparkSvg(sp)}</span>
       </button>`;
     }).join("");
     $("#sectors").querySelectorAll("[data-sec]").forEach((b) => b.addEventListener("click", () => {
@@ -238,6 +251,13 @@
       renderSectors(d); renderTable();
       if (state.sector) document.getElementById("rank-h").closest("section").scrollIntoView({ behavior: "smooth", block: "start" });
     }));
+    $("#secPer").onclick = (e) => {
+      const b = e.target.closest("button[data-k]");
+      if (!b || b.disabled) return;
+      state.secPer = b.dataset.k;
+      try { localStorage.setItem("is-sec-per", state.secPer); } catch (err) {}
+      renderSectors(d);
+    };
   }
 
   // ---------- tiles

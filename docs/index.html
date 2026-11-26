@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="pairs.css?v=20aaadff0e">
 <link rel="stylesheet" href="positioning.css?v=610181b871">
 <link rel="stylesheet" href="supply.css?v=2ff10a6c5d">
-<link rel="stylesheet" href="sectorflow.css?v=fc214d0298">
+<link rel="stylesheet" href="sectorflow.css?v=2707236736">
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"></script>
 <script>window.LightweightCharts || document.write('<script src="https://unpkg.com/lightweight-charts@4.2.3/dist/lightweight-charts.standalone.production.js"><\/script>');</script>
 <script data-goatcounter="https://wamo-dhandori.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
@@ -63,6 +63,13 @@
   <section class="card sector-card" id="sectorCard" aria-labelledby="sec-h" hidden>
     <div class="card-head wrap">
       <h2 id="sec-h">섹터 워치 <span class="sub" id="secSub"></span></h2>
+      <div class="seg small sec-per" id="secPer" aria-label="요약 기간">
+        <button type="button" data-k="chg1" aria-pressed="true">당일</button>
+        <button type="button" data-k="ret5" aria-pressed="false">5일</button>
+        <button type="button" data-k="ret20" aria-pressed="false">20일</button>
+        <button type="button" data-k="ret60" aria-pressed="false">60일</button>
+        <button type="button" data-k="ret200" aria-pressed="false">200일</button>
+      </div>
       <button type="button" class="chip sf-toggle" id="secExpand" aria-expanded="false" aria-controls="secFlow" hidden>차트로 펼치기 ▾</button>
     </div>
     <div id="sectors" class="sectors" role="list"></div>
@@ -493,7 +500,7 @@
 <script src="rsbox.js?v=37d9da78c2"></script>
 <script src="stock.js?v=fb6e46c2a4"></script>
 <script src="supply.js?v=cbf1392cdc"></script>
-<script src="app.js?v=a2b13ffd13"></script>
+<script src="app.js?v=c1adc0b776"></script>
 <script src="sectorflow.js?v=0badd2955b"></script>
 <script src="highs.js?v=df8f5a5d9e"></script>
 <script src="econ.js?v=464aac9c0d"></script>
