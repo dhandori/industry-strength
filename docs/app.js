@@ -281,7 +281,7 @@
         <div class="v big ${tone}">${s2}<span class="of"> / ${d.items.length}</span></div>
         <div class="tile-bar" role="img" aria-label="상승 추세 ${s2}개, 상승 전환 시도 ${s2t}개, 전체 ${d.items.length}개"><i class="s2" style="width:${(s2 / n * 100).toFixed(1)}%"></i><i class="s2t" style="width:${(s2t / n * 100).toFixed(1)}%"></i></div>
         <div class="d">상승 전환 시도 ${s2t}개까지 합치면 ${s2 + s2t}개</div></div>
-      <div class="tile"><div class="k">시장 국면${help(regHelp, "시장 국면")}${state.market === "JP" ? "" : `<a class="tile-link" href="https://dhandori.github.io/wamo-choochoo-dashboard/radar.html?market=${state.market}&tab=trend">레이더 날씨 ↗</a>`}</div>
+      <div class="tile"><div class="k">시장 국면${help(regHelp, "시장 국면")}</div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span>${reg(x)}</div>
         <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}${x.gap200 != null ? ` · 이격 <b class="ret ${cls(x.gap200)}">${fmtPct(x.gap200)}</b>` : ""}</div>${x.gap200_lo != null && x.gap200_pct != null ? `<div class="d">${gapRangeText(x.gap200_lo, x.gap200_hi, x.gap200_pct, x.gap200_days)}</div>` : ""}`).join("")}</div>
       <div class="tile"><div class="k">지수 20일 수익률</div>
