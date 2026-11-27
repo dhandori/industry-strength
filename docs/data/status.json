@@ -1,6 +1,6 @@
 {
- "updated_at": "2026-11-28 03:26 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/46049411081",
+ "updated_at": "2026-11-28 03:54 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/46052856668",
  "trigger": "schedule",
  "markets": {
   "KR": {
@@ -35,9 +35,9 @@
      "__sec_XLY 117.5→120",
      "__sec_XLC 105.4→107.5",
      "AVGO 300.9→312.3",
-     "AMD 406→424.8",
+     "AMD 406→424.5",
      "MRVL 130.9→140.5",
-     "MU 601.2→653.5",
+     "MU 601.2→647",
      "STX 472.3→509.7",
      "WDC 272.5→292.1",
      "ASML 1303→1326",
