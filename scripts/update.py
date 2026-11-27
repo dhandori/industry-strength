@@ -456,7 +456,7 @@ def stage_of(close, ma50, ma150, ma200, ma200_up, dist_high) -> str:
         return "데이터 부족"
     if pd.isna(ma150):
         ma150 = ma200
-    if close > ma50 > ma150 > ma200 and ma200_up and dist_high >= -0.25:
+    if close > ma50 > ma150 > ma200 and ma200_up and dist_high >= -0.15:
         return "상승 추세"
     if close < ma200 and not ma200_up:
         return "하락 추세"
@@ -644,7 +644,7 @@ def compute(mkey: str, m: dict, close: pd.DataFrame, volume: pd.DataFrame, sourc
     rs_rating = np.ceil(rs_perf.rank(axis=1, pct=True) * 99).clip(1, 99)
 
     above50 = (px > ma[50]).where(ma[50].notna())
-    stage2 = (px > ma[50]) & (ma[50] > ma[150].fillna(ma[200])) & (ma[150].fillna(ma[200]) > ma[200]) & ma200_up & (dist_hi >= -0.25)
+    stage2 = (px > ma[50]) & (ma[50] > ma[150].fillna(ma[200])) & (ma[150].fillna(ma[200]) > ma[200]) & ma200_up & (dist_hi >= -0.15)
     stage2 = stage2.where(ma[200].notna())
 
     hist_idx = cal[-HISTORY_DAYS:]

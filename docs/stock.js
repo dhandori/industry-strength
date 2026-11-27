@@ -578,7 +578,7 @@
         ["50일선이 150일·200일선 위", a50 != null && a150 != null && a200 != null ? a50 > a150 && a50 > a200 : null, ""],
         ["가격이 50일선 위", a50 != null ? x > a50 : null, a50 ? `50일선 대비 ${pct((x / a50 - 1) * 100)}` : ""],
         ["52주 저점보다 30% 이상 위", w.length > 60 ? x >= lo * 1.3 : null, `저점 대비 ${pct((x / lo - 1) * 100)}`],
-        ["52주 고점에서 25% 이내", w.length > 60 ? x >= hi * 0.75 : null, `고점 대비 ${pct((x / hi - 1) * 100)}`],
+        ["52주 고점에서 15% 이내", w.length > 60 ? x >= hi * 0.85 : null, `고점 대비 ${pct((x / hi - 1) * 100)}`],
         ["RS 지수 70 이상", m && m.rs_rating != null ? m.rs_rating >= 70 : null, m && m.rs_rating != null ? `RS ${m.rs_rating}` : ""],
       ];
       const ok = T.filter((t) => t[1] === true).length, known = T.filter((t) => t[1] != null).length;
