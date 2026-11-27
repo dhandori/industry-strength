@@ -1,7 +1,7 @@
 {
- "updated_at": "2026-11-28 04:33 KST",
- "run_url": "https://github.com/dhandori/industry-strength/actions/runs/46057504429",
- "trigger": "schedule",
+ "updated_at": "2026-11-28 06:12 KST",
+ "run_url": "https://github.com/dhandori/industry-strength/actions/runs/46068741213",
+ "trigger": "workflow_dispatch",
  "markets": {
   "KR": {
    "ok": true,
@@ -18,36 +18,15 @@
   },
   "US": {
    "ok": true,
-   "basis_date": "2026-11-25",
+   "basis_date": "2026-11-27",
    "n": 70,
    "warnings": [],
    "tradingview": {
-    "date": "2026-11-25",
+    "date": "2026-11-27",
     "asked": 316,
     "got": 314,
-    "filled": 1,
-    "fixed": [
-     "__bench__ 716.7→728.3",
-     "__bench2__ 633.9→651",
-     "__sec_XLK 155.8→160.2",
-     "__sec_XLB 51.21→52.15",
-     "__sec_XLI 162.9→165.6",
-     "__sec_XLY 117.5→120",
-     "__sec_XLC 105.4→107.5",
-     "AVGO 300.9→312.3",
-     "AMD 406→424.5",
-     "MRVL 130.9→140.5",
-     "MU 601.2→647",
-     "STX 472.3→509.7",
-     "WDC 272.5→292.1",
-     "ASML 1303→1326",
-     "AMAT 311.2→322",
-     "LRCX 185→192.7",
-     "ACMR 40.28→43.42",
-     "KLAC 134.2→140.9",
-     "NVMI 295.1→306.9",
-     "ONTO 172.1→178.4"
-    ]
+    "filled": 0,
+    "fixed": []
    }
   },
   "JP": {
