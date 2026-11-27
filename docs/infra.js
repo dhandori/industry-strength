@@ -206,14 +206,14 @@
       ${sl.usd ? `<div class="ai-run"><span>${sl.week ? `${ymd(sl.week)} 주` : "최근 7일"} 추정 지출</span><b>${dol(sl.usd)}</b><em>유료 토큰 100만 개당 평균 $${sl.usd_per_m}${sl.approx ? " · 월요일 확정 전 근사값" : ""}</em></div>` : ""}
       ${sw.length > 1 ? `<div id="inSpend"></div>` : `<p class="cp-sub">지출 추정은 2026년 11월 첫 주부터 쌓기 시작했습니다. 매주 월요일 09:40에 지난주 값이 한 칸씩 늘어나고, 4주가 모이면 이동평균선도 함께 그립니다.</p>`}
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th class="num">#</th><th>모델</th><th class="num">추정 지출</th><th class="num">비중</th><th class="num">토큰</th><th class="num">100만 토큰당</th></tr></thead><tbody>${sTop}</tbody></table></div>
-      <p class="foot-note">OpenRouter는 금액 합계를 공개하지 않습니다. 그래서 모델마다 그 주에 쓰인 입력·출력·캐시 토큰에 OpenRouter 정가를 곱해 더했습니다. 무료판은 0원으로 쳤고, 대량 할인이나 개인 키(BYOK) 정산 차이는 반영하지 못해서 실제 금액과는 차이가 납니다. 토큰은 값싼 모델에서 많이 쓰이지만 돈은 비싼 상위 모델에 몰립니다.</p>
+      <p class="foot-note">OpenRouter는 금액 합계를 공개하지 않습니다. 그래서 모델마다 그 주에 쓰인 입력·출력·캐시 토큰에 OpenRouter 정가를 곱해 더했습니다. 무료판은 0원으로 쳤고, 대량 할인이나 개인 키(BYOK) 정산 차이는 반영하지 못해서 실제 금액과는 차이가 납니다. 토큰은 값싼 모델에서 많이 쓰이지만 지출은 비싼 상위 모델에 몰립니다.</p>
 
       <h3 class="ai-h3">GPU 시간당 임대료 <span class="sub">GPU 1장을 1시간 빌리는 값(달러)</span></h3>
       <div class="cp-lgs">${gBtns}</div>
       <div id="inGpu"></div>
       <p class="cp-sub">${gd.length < 7 ? `GPU 임대료는 공개된 과거 기록이 없어서 ${ymd(g0.d || "2026-11-03")}부터 매일 한 줄씩 쌓고 있습니다. 7일이 모이면 이동평균(점선)도 그립니다. ` : "점선은 7일 이동평균입니다. "}이름표를 누르면 선을 켜고 끌 수 있습니다.</p>
       <div class="ai-tw"><table class="ai-rep cp-tbl"><thead><tr><th>GPU</th><th class="num">시장 중앙값</th><th class="num">중간 50% 범위</th><th class="num">빌릴 수 있는 수</th><th class="num">RunPod 정가</th><th class="num">RunPod 커뮤니티</th>${gd.length > 1 ? `<th class="num">기록 시작 대비</th>` : ""}</tr></thead><tbody>${gRows}</tbody></table></div>
-      <p class="foot-note">시장 중앙값은 Vast.ai 공개 마켓에서 지금 빌릴 수 있는 매물의 1장당 값을 GPU 수로 가중해 가운데 값을 잡은 것입니다. 개인과 소형 업체가 내놓은 매물이 많아서 대형 클라우드 정가보다 싸게 나옵니다. 빌릴 수 있는 수가 줄면서 값이 오르면 공급이 빠듯하다는 신호입니다. RunPod 정가는 회사가 공개한 정찰가라 자주 바뀌지 않는데, 바뀌었다면 가격 인상이 확정된 것입니다. 참고로 공개 보도를 보면 H100 1년 계약가는 2025년 10월 시간당 1.70달러에서 2026년 3월 2.35달러로 약 40% 올랐습니다(SemiAnalysis).</p>
+      <p class="foot-note">시장 중앙값은 Vast.ai 공개 마켓에서 지금 빌릴 수 있는 매물의 1장당 값을 GPU 수로 가중한 중앙값입니다. 개인과 소형 업체가 내놓은 매물이 많아서 대형 클라우드 정가보다 싸게 나옵니다. 빌릴 수 있는 수가 줄면서 값이 오르면 공급이 빠듯하다는 신호입니다. RunPod 정가는 회사가 공개한 정찰가라 자주 바뀌지 않는데, 바뀌었다면 가격 인상이 확정된 것입니다. 공개 보도에 따르면 H100 1년 계약가는 2025년 10월 시간당 1.70달러에서 2026년 3월 2.35달러로 약 40% 올랐습니다(SemiAnalysis).</p>
       <p class="foot-note">자료: <a href="https://openrouter.ai/rankings" target="_blank" rel="noopener">OpenRouter</a>(CC BY 4.0), <a href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC EDGAR</a>, <a href="https://vast.ai/" target="_blank" rel="noopener">Vast.ai</a>, <a href="https://www.runpod.io/pricing" target="_blank" rel="noopener">RunPod</a>. 투자 판단에 참고할 자료입니다.</p>
       </div></details>
     </section>`;

@@ -38,7 +38,7 @@
       why: "한 주 동안 실업수당을 새로 신청한 사람 수입니다. 해고가 늘면 가장 먼저 오르는 숫자이고, 흐름은 4주 평균으로 봅니다.",
       lv: (v, i) => { const a = i.extra; return a < 230000 ? [5, "낮음(해고 적음)"] : a < 270000 ? [4, "보통"] : a < 320000 ? [3, "늘어나는 중"] : [2, "높음"]; }, extra: (x) => `4주 평균 ${MAN(x)} 건` },
     cont_claims: { n: "계속 실업수당 청구 (주간)", g: "고용", f: (v) => `${MAN(v)} 명`, ref: [], daily: true,
-      why: "실업수당을 계속 받고 있는 사람 수입니다. 이 숫자가 오르면 일자리를 잃은 사람들이 새 일을 찾기 어려워졌다고 보면 됩니다.",
+      why: "실업수당을 계속 받고 있는 사람 수입니다. 이 숫자가 오르면 일자리를 잃은 사람들이 새 일을 잘 찾지 못하고 있다는 얘기입니다.",
       lv: (v, i) => { const y = i.year_ago ? v / i.year_ago - 1 : 0; return y > 0.15 ? [2, "1년 새 크게 늘어남"] : y > 0.05 ? [3, "늘어나는 중"] : [5, "안정"]; } },
     vu: { n: "구인 건수 ÷ 실업자 수", g: "고용", f: (v) => v.toFixed(2) + "배", ref: [1],
       why: "실업자 한 명에게 돌아가는 빈 일자리 수입니다. 1보다 크면 일자리가 사람보다 많아 임금이 오르기 쉽고, 1 아래로 내려가면 노동시장이 식고 있습니다.",
@@ -211,7 +211,7 @@
       <div class="mx-val"><b>${v.toFixed(0)}</b><span class="ec-date">${ymK(h.date)}</span>${est}<span class="ec-formula">= 휘발유 <b>${h.gas_idx.toFixed(0)}</b>($${h.gas.toFixed(2)}) · 집 부담 <b>${h.house_idx.toFixed(0)}</b>(30년 대출 ${h.rate.toFixed(2)}%)의 평균</span></div>
       <div class="ec-hero-b">
         <div class="ec-hero-l"><p>${dir}. ${rankTxt}. 1년 전에는 ${h.year_ago != null ? h.year_ago.toFixed(0) : "–"}였습니다.</p>
-          <p class="ec-why"><b>지표 풀이</b> 미국 가정이 매달 피부로 느끼는 큰 지출 두 가지, 기름값과 집값 부담을 한 숫자로 묶은 지수입니다. 100이면 지난 16년 평균만큼이고, 150이면 그보다 절반쯤 더 빠듯합니다. 위의 고통지수가 물가 '오름폭'과 실업을 본다면, 이 지수는 지금 내야 하는 '값 자체'를 봅니다. 그래서 물가 상승이 멈춰도 쉽게 내려오지 않습니다.</p>
+          <p class="ec-why"><b>지표 풀이</b> 미국 가정이 매달 피부로 느끼는 큰 지출 두 가지, 기름값과 집값 부담을 한 숫자로 묶은 지수입니다. 100이면 지난 16년 평균만큼이고, 150이면 그보다 절반쯤 더 빠듯합니다. 위의 고통지수는 물가 상승률과 실업률을 보지만 이 지수는 지금 내야 하는 가격 수준을 봐서, 물가 상승이 멈춰도 쉽게 내려오지 않습니다.</p>
           <p class="ec-why"><b>만든 방법</b> 웰스파고 투자연구소가 EIA 휘발유 값과 NAR 주택구입능력지수로 만든 지수를 따라 만들었습니다. 웰스파고가 계산식을 공개하지 않았고 NAR 과거 자료는 유료라서, 집 사는 부담은 직접 계산했습니다. 케이스-실러 집값으로 30년 고정 대출을 받을 때 매달 갚는 돈을 평균 주급으로 나눈 값입니다. 웰스파고 그래프와 견주면 평균 5포인트쯤 차이가 나고, 2026년 10월은 둘 다 150입니다.</p></div>
         <div class="ec-hero-r"><div class="mx-chart">${pick("household", false)}${svg}<div class="chart-legend"><span><i style="background:var(--price)"></i>생활비 부담 지수</span><span><i style="background:var(--ma20)"></i>휘발유</span><span><i style="background:var(--ma50)"></i>집 사는 부담</span><span><i style="background:var(--muted)"></i>평균 100</span></div></div></div>
       </div>
@@ -219,9 +219,9 @@
   }
 
   // ---------- 미국 국채 금리 2년·10년·30년 (매일)
-  const TR = [["2년", "var(--ma20)", "연준 기준금리 예상을 가장 잘 따라갑니다. 이 금리가 내려가면 시장이 금리 인하를 기대하고 있는 것입니다."],
-    ["10년", "var(--price)", "주택담보대출·회사채 금리의 기준이 되는 대표 금리입니다. 오르면 주식, 특히 성장주 값에 부담이 됩니다."],
-    ["30년", "var(--ma200)", "만기가 가장 긴 국채 금리입니다. 나라 빚이나 장기 물가 걱정이 커지면 많이 오릅니다."]];
+  const TR = [["2년", "var(--ma20)", "연준 기준금리 예상을 가장 잘 따라갑니다. 이 금리가 내려가면 시장이 금리 인하를 더 기대하고 있습니다."],
+    ["10년", "var(--price)", "주택담보대출·회사채 금리의 기준이 되는 대표 금리입니다. 오르면 주식, 특히 성장주 주가에 부담이 됩니다."],
+    ["30년", "var(--ma200)", "만기가 가장 긴 국채 금리입니다. 재정 적자나 장기 물가 우려가 커지면 많이 오릅니다."]];
   function treasury(t) {
     if (!t || !t.series || t.series.length < 30) return "";
     const s = t.series, f = (v) => v == null ? "–" : v.toFixed(2) + "%";
@@ -258,8 +258,8 @@
     const svg = chart(m.series, { ...spOpt("margin", false, "m0"), ref: [0, 50], zone: 50, ax: (x) => x.toFixed(0) + "%", dot: col(lv[0]), marks, W: 1000, h: innerWidth < 640 ? 210 : 300 });
     const story = peakOut
       ? `증가율은 ${ymK(p12[0])} <b>${pk.toFixed(0)}%</b>로 정점을 찍은 뒤 <b>${m.falls}개월 연속 내려와</b> 지금 ${v.toFixed(0)}%입니다. 과거에는 이렇게 <b>정점에서 꺾일 때</b> 주가도 고점인 경우가 많았습니다.`
-      : v >= 50 ? `빚을 내 주식을 사는 돈이 1년 새 ${v.toFixed(0)}% 늘었습니다. 역대 고점권(50% 이상)이라, 여기서 증가율이 꺾이기 시작하면 고점 신호로 봅니다.`
-      : `빚투 증가율은 ${v.toFixed(0)}%입니다. 지켜볼 것은 50%를 넘었다가 꺾이는지입니다.`;
+      : v >= 50 ? `빚투 잔고가 1년 새 ${v.toFixed(0)}% 늘었습니다. 역대 고점권(50% 이상)이라, 여기서 증가율이 꺾이기 시작하면 고점 신호로 봅니다.`
+      : `빚투 증가율은 ${v.toFixed(0)}%이고, 50%를 넘었다가 꺾이는지를 지켜봅니다.`;
     return `<article class="card mx-card ec-mg" style="--c:${col(lv[0])}">
       <div class="mx-head"><div><div class="mx-name">미국 빚투 (신용융자 잔고, 전년 대비 증가율)</div><div class="mx-dir">📈 50% 넘었다가 꺾이면 위험</div></div><span class="mx-chip" style="--c:${col(lv[0])}">${lv[1]}</span></div>
       <div class="mx-val"><b>${v.toFixed(1)}%</b><span class="ec-date">${ymK(m.date)}</span></div>
@@ -267,7 +267,7 @@
       <p class="ec-story">${story}</p>
       <div class="mx-chart">${pick("margin", false, "m0")}<div class="mx-chart-t">1998년부터 흐름 <span>빨간 칠 = 50% 넘는 과열 구간 · 빨간 점 = 과거 큰 고점</span></div>${svg}</div>
       ${peaks.length ? `<div class="ec-peaks">${peaks.map((p) => `<span><b>${p[0].slice(0, 4)}.${+p[0].slice(5, 7)}</b> ${p[1].toFixed(0)}%${MPEAK[p[0].slice(0, 4)] ? ` · ${MPEAK[p[0].slice(0, 4)]}` : ""}</span>`).join("")}</div>` : ""}
-      <div class="mx-why"><b>지표 풀이</b> 미국 증권사 고객들이 증권사에서 돈을 빌려 주식을 산 금액(신용융자 잔고)이 1년 전보다 몇 % 늘었는지 계산한 값입니다. 빚투가 빠르게 늘면 시장이 들뜬 상태이고, 증가세가 정점에서 꺾이면 더 사 줄 돈이 줄어들어 고점 신호가 되곤 했습니다. 자료: FINRA 신용거래 통계(매월, 다음 달 셋째 주쯤 발표).</div></article>`;
+      <div class="mx-why"><b>지표 풀이</b> 미국 증권사 고객들이 증권사에서 돈을 빌려 주식을 산 금액(신용융자 잔고)이 1년 전보다 몇 % 늘었는지 계산한 값입니다. 빚투가 빠르게 늘면 시장이 과열된 상태이고, 증가세가 정점에서 꺾이면 추가 매수 여력이 줄어 고점 신호가 되곤 했습니다. 자료: FINRA 신용거래 통계(매월, 다음 달 셋째 주쯤 발표).</div></article>`;
   }
 
   // ---------- 빚투 보조: 투자자 순신용, 빚투 ÷ GDP (미국, 매월)
@@ -290,7 +290,7 @@
       out.push(miniCard({ n: "투자자 순신용 (여유 현금 − 빚투)", dir: "📉 낮을수록(음수 클수록) 위험", lv, v: jo(v), date: ymK(nc.at(-1)[0]),
         chs: [`${nc[0][0].slice(0, 4)}년 이후 지금보다 낮았던 달 ${lower}%`, `가장 낮았던 때 ${ym(low[0])} ${jo(low[1])}`],
         pick: pick("netcredit", false, "m0"), svg: chart(nc, { ...spOpt("netcredit", false, "m0"), ref: [0], ax: (x) => (x / 1000).toFixed(1) + "조", dot: col(lv[0]), W: 600 }), title: `${nc[0][0].slice(0, 4)}년부터 흐름(FINRA가 여유 현금을 이때부터 공개)`,
-        why: "투자자들이 증권계좌에 넣어 둔 여유 현금에서 신용융자(빚)를 뺀 값입니다. 0 아래로 깊이 내려갈수록 현금보다 빚이 많아집니다. 이럴 때 시장이 흔들리면 반대매매로 더 크게 떨어질 수 있습니다. 자료: FINRA." }));
+        why: "투자자들이 증권계좌에 넣어 둔 여유 현금에서 신용융자(빚)를 뺀 값입니다. 0 아래로 깊이 내려갈수록 현금보다 빚이 많은데, 이럴 때 시장이 흔들리면 반대매매가 나와 더 크게 떨어질 수 있습니다. 자료: FINRA." }));
     }
     const gr = m.gdp_ratio || [];
     if (gr.length > 24) {
@@ -343,7 +343,7 @@
         <p class="ec-story">${story}</p>
         <div class="mx-chart">${pick("kr_credit", true)}<div class="mx-chart-t">신용융자 잔고와 고객예탁금 <span>예탁금은 ¼로 줄여 같은 눈금에 그렸습니다</span></div>${lvSvg}
           <div class="chart-legend"><span><i style="background:var(--price)"></i>신용융자 잔고</span><span><i style="background:var(--ma50)"></i>고객예탁금 × ¼ (지금 ${jo(k.deposit)})</span></div></div>
-        <div class="mx-why"><b>지표 풀이</b> 개인이 증권사에서 돈을 빌려 산 주식 금액(신용거래융자 잔고)입니다. 빚투가 빠르게 늘면 시장이 들뜬 상태이고, 주가가 떨어지면 반대매매(강제 처분)로 하락이 커질 수 있습니다. 고객예탁금은 주식을 사려고 증권계좌에 넣어 둔 현금입니다.</div>
+        <div class="mx-why"><b>지표 풀이</b> 개인이 증권사에서 돈을 빌려 산 주식 금액(신용거래융자 잔고)입니다. 빚투가 빠르게 늘면 시장이 과열된 상태이고, 주가가 떨어지면 반대매매(강제 처분)로 하락이 커질 수 있습니다. 고객예탁금은 주식을 사려고 증권계좌에 넣어 둔 현금입니다.</div>
       </article>
       <div class="mx-grid">
         ${miniCard({ n: "한국 빚투 증가율 (1년 전 대비)", dir: "📈 50% 넘었다가 꺾이면 위험", lv, v: (k.yoy > 0 ? "+" : "") + k.yoy.toFixed(1) + "%", date: `${+k.date.slice(5, 7)}/${+k.date.slice(8, 10)}`,
@@ -351,7 +351,7 @@
           pick: pick("kr_yoy", true, "m0"), svg: yoSvg, title: "2010년부터 흐름 · 빨간 칠 = 50% 넘는 과열", why: "신용융자 잔고가 1년 전보다 몇 % 늘었는지 나타냅니다. 미국 빚투 증가율과 같은 방식으로, 정점을 찍고 꺾일 때를 고점 신호로 봅니다." })}
         ${miniCard({ n: "신용융자 ÷ 고객예탁금", dir: "📈 오를수록 빚 비중 큼", lv: rRank >= 90 ? [2, "빚 비중 높음"] : rRank >= 70 ? [3, "높은 편"] : [5, "보통"], v: k.ratio.toFixed(1) + "%", date: `${+k.date.slice(5, 7)}/${+k.date.slice(8, 10)}`,
           chs: [`2002년 이후 지금보다 낮았던 날 ${rRank}%`, `예탁금 ${jo(k.deposit)} · 1년 전 ${k.y1 ? jo(k.y1[2]) : "–"}`],
-          pick: pick("kr_ratio", true), svg: rtSvg, title: "", why: "주식 살 현금(예탁금)에 비해 빚(신용융자)이 얼마나 되는지 봅니다. 높을수록 빚에 기대 오른 시장이라 충격에 약합니다. 예탁금이 줄면서 비율이 오를 때는 더 조심해야 합니다." })}
+          pick: pick("kr_ratio", true), svg: rtSvg, title: "", why: "주식 살 현금(예탁금)에 비해 빚(신용융자)이 얼마나 되는지 봅니다. 높을수록 빚에 기대 오른 시장이라 충격에 약하고, 예탁금이 줄면서 비율이 오르는 경우가 더 위험합니다." })}
       </div>
     </section>`;
   }
@@ -388,7 +388,7 @@
       <ul class="cc-checks">${c.checks.map((k) => `<li class="${k.on ? "on" : ""}"><i>${k.on ? "✔" : "·"}</i><div><b>${esc(k.t)}</b> <span class="muted">${esc(k.v)}</span><small>${esc(k.why)}</small></div></li>`).join("")}</ul>
       ${fed ? `<h4 class="cc-h">연준이 보는 끈질긴 물가 <span class="sub">연율 % · 일부 품목이 튄 것과 전체 흐름을 가려 보는 지표</span></h4>
       <div class="table-wrap"><table class="mem-table cc-tbl cc-fed"><thead><tr><th>지표</th><th class="num">이번 달</th><th class="num">최근 3개월 평균</th><th class="num">전년 대비</th></tr></thead><tbody>${fed}</tbody></table></div>` : ""}
-      <div class="mx-why"><b>계산 방법</b> 전월 대비는 BLS가 매달 공식 발표하는 계절조정 수치와 같은 방식으로 FRED 지수에서 계산했습니다(반올림 차이 ±0.1%p). ‘어디가 문제였는지’는 이번 달 오름폭을 그 항목이 지난 12개월 동안 보통 오르던 폭과 견줘 골랐습니다. ‘지속될지’는 연속성, 가속, 주거 뺀 서비스, 경직 물가, 중위 물가, 확산, 변동성 품목 쏠림 7가지로 판단했습니다. 경직 물가는 애틀랜타 연준, 중위·절사평균 CPI는 클리블랜드 연준 자료입니다.</div></article>`;
+      <div class="mx-why"><b>계산 방법</b> 전월 대비는 BLS가 매달 공식 발표하는 계절조정 수치와 같은 방식으로 FRED 지수에서 계산했습니다(반올림 차이 ±0.1%p). 문제 항목은 이번 달 상승폭을 그 항목이 지난 12개월 동안 보통 오르던 폭과 견줘 골랐고, 지속 여부는 연속성, 가속, 주거 뺀 서비스, 경직 물가, 중위 물가, 확산, 변동성 품목 쏠림 7가지로 판단했습니다. 경직 물가는 애틀랜타 연준, 중위·절사평균 CPI는 클리블랜드 연준 자료입니다.</div></article>`;
   }
   function warnBox(w) {
     if (!w || !w.length) return "";

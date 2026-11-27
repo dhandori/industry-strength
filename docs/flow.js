@@ -72,9 +72,9 @@
     const alive = rise.filter((m) => ALIVE.includes(m.it.stage)).length;
     const r = rise.length ? alive / rise.length : 0;
     const q = !rise.length ? ""
-      : r >= 0.5 ? `<p class="fl-q good">강해진 세부 산업 ${rise.length}개 중 <b>${alive}개</b>는 가격도 오르고 있습니다. 돈이 실제로 들어오는 <b>진짜 강세</b>에 가깝습니다.</p>`
-      : alive ? `<p class="fl-q mid">강해진 세부 산업 ${rise.length}개 중 가격까지 오르는 곳은 <b>${alive}개</b>뿐입니다. 순환이 막 시작되는 단계일 수 있으니 <b>추세↑</b> 표시가 붙은 산업부터 보시면 됩니다.</p>`
-      : `<p class="fl-q warn">강해진 세부 산업 ${rise.length}개 모두 가격 추세는 아직 약합니다. 값이 실제로 올랐다기보다 <b>덜 빠져서</b> 순위만 올라간 것일 수 있습니다.</p>`;
+      : r >= 0.5 ? `<p class="fl-q good">강해진 세부 산업 ${rise.length}개 중 <b>${alive}개</b>는 가격도 오르고 있어서, 자금이 실제로 들어오는 <b>진짜 강세</b>에 가깝습니다.</p>`
+      : alive ? `<p class="fl-q mid">강해진 세부 산업 ${rise.length}개 중 가격까지 오르는 곳은 <b>${alive}개</b>뿐입니다. 순환매가 막 시작되는 단계일 수 있어서 <b>추세↑</b> 표시가 붙은 산업부터 보는 편이 낫습니다.</p>`
+      : `<p class="fl-q warn">강해진 세부 산업 ${rise.length}개 모두 가격 추세는 아직 약합니다. 가격이 실제로 올랐다기보다 <b>덜 빠져서</b> 순위만 올라갔을 수 있습니다.</p>`;
     return `<div class="fl-head">
       <div class="fl-side"><span class="fl-lab">힘이 빠지는 곳</span><div class="fl-chips">${side(dns, "down", "뚜렷한 곳 없음")}</div></div>
       <div class="fl-arrow" aria-hidden="true">→</div>
@@ -130,7 +130,7 @@
         <li><b>줄 하나가 큰 분류 하나</b>입니다. 강도는 그 분류에 든 세부 산업들의 순위를 점수로 바꿔 평균 낸 값입니다(1위 = 100, 꼴찌 = 0${smoothOf(st.k) > 1 ? `, ${smoothOf(st.k)}일 평균` : ""}).</li>
         <li><b>빈 점은 ${st.k}일 전, 화살촉은 지금</b> 자리입니다. 조금만 움직였으면 빈 점이 화살촉에 가려 보이지 않습니다. 화살표가 길수록 많이 움직인 것이고, 가운데 세로선(50)보다 오른쪽에 있으면 지금 시장에서 강한 쪽입니다.</li>
         <li>분류는 <b>주도</b>(강하고 더 강해짐)에서 <b>식는 중</b>(강하지만 약해짐), <b>소외</b>(약하고 더 약해짐), <b>부상</b>(약하지만 강해짐)을 차례로 거쳐 다시 주도로 돌아옵니다.</li>
-        <li>추세추종으로 매매하신다면 <b>주도</b>와 <b>강세 진입</b> 표시가 붙은 분류를 먼저 보시고, <b>강세 이탈</b>·<b>식는 중</b>은 들고 있는 비중을 점검하라는 신호로 받아들이시면 됩니다.</li>
+        <li>추세추종 매매라면 <b>주도</b>와 <b>강세 진입</b> 표시가 붙은 분류를 먼저 보고, <b>강세 이탈</b>·<b>식는 중</b>은 보유 비중을 점검하는 신호로 봅니다.</li>
         <li>줄을 누르면 아래 순위표에 그 분류만 남습니다.</li>
       </ul>
     </details>`;

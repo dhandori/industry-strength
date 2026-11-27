@@ -23,8 +23,8 @@
     lev: ["레버리지 ETF 거래대금 ÷ (레버리지 + 인버스) · 최근 5일", (v) => `${v.toFixed(0)}%`, "개인이 상승 2배에 몰릴수록 탐욕, 인버스(하락 베팅)에 몰릴수록 공포(미국 풋콜레이시오의 한국판)"],
     vol: ["VKOSPI(한국 공포지수)가 50일 평균보다 몇 % 높나", (v) => `${v > 0 ? "+" : ""}${v.toFixed(0)}%`, "변동성이 평소보다 높을수록 공포"],
     safe: ["코스피 20일 수익률 − 국고채10년 ETF 20일 수익률", (v) => `${v > 0 ? "+" : ""}${v.toFixed(1)}%p`, "주식이 채권보다 잘 나갈수록 탐욕, 채권(안전자산)으로 피할수록 공포"],
-    junk: ["신용등급 낮은 회사채(BBB−)와 우량 회사채(AA−) 금리 차이", (v) => `${Math.round(v)}bp`, "벌어질수록 돈줄이 마르는 신호라 공포"],
-    crd: ["신용융자(빚투) 잔고 20거래일 증가율", (v) => `${v > 0 ? "+" : ""}${v.toFixed(1)}%`, "빚내서 사는 돈이 빨리 늘수록 탐욕(한국에만 넣은 재료)"],
+    junk: ["신용등급 낮은 회사채(BBB−)와 우량 회사채(AA−) 금리 차이", (v) => `${Math.round(v)}bp`, "벌어질수록 자금 경색 신호라 공포"],
+    crd: ["신용융자(빚투) 잔고 20거래일 증가율", (v) => `${v > 0 ? "+" : ""}${v.toFixed(1)}%`, "빚투 잔고가 빨리 늘수록 탐욕(한국에만 넣은 재료)"],
   };
 
   function chart(D) {
@@ -77,11 +77,11 @@
     const z = zoneOf(v);
     const ago = (k) => { const j = i - k; return j >= 0 && D.total[j] != null ? D.total[j] : null; };
     const cmp = [["어제", 1], ["1주 전", 5], ["1개월 전", 21], ["1년 전", 250]].map(([t, k]) => { const a = ago(k); return a == null ? "" : `<div><b style="color:${zoneOf(a)[2]}">${Math.round(a)}</b><span>${t}</span></div>`; }).join("");
-    const say = v < 25 ? "투자자들이 <b>몹시 겁먹은</b> 상태입니다. 모두가 팔고 싶어 할 때라 과거에는 <b>바닥 근처</b>였던 경우가 많아서, 역발상 매수를 생각해 볼 구간으로 봅니다. 다만 급락이 더 이어질 수도 있으니 나눠서 사는 게 기본입니다."
-      : v < 45 ? "<b>겁이 많은 쪽</b>입니다. 조심하는 분위기라서 좋은 소식이 나오면 반등할 여지가 있습니다."
+    const say = v < 25 ? "투자 심리가 <b>극단적 공포</b> 상태입니다. 모두가 팔고 싶어 할 때라 과거에는 <b>바닥 근처</b>였던 경우가 많았고, 역발상 매수를 생각해 볼 구간입니다. 급락이 더 이어질 수도 있어서 나눠서 사는 편이 낫습니다."
+      : v < 45 ? "<b>공포 쪽</b>입니다. 조심하는 분위기라 좋은 소식이 나오면 반등할 여지가 있습니다."
       : v < 55 ? "공포도 탐욕도 아닌 <b>중립</b>입니다. 심리가 어느 한쪽으로 쏠리지 않았습니다."
-      : v < 75 ? "<b>들뜬 쪽</b>입니다. 추세가 좋을 땐 자연스러운 일이지만, 더 달아오르는지는 지켜봐야 합니다."
-      : "투자자들이 <b>몹시 들뜬(탐욕)</b> 상태입니다. 모두가 사고 싶어 할 때라 과거에는 <b>단기 고점 근처</b>였던 경우가 많아서, 새로 사기보다 이익 관리를 생각해 볼 구간입니다.";
+      : v < 75 ? "<b>탐욕 쪽</b>입니다. 추세가 좋을 때는 자연스러운 수준인데, 여기서 더 과열되는지는 지켜봐야 합니다."
+      : "투자 심리가 <b>극단적 탐욕</b> 상태입니다. 모두가 사고 싶어 할 때라 과거에는 <b>단기 고점 근처</b>였던 경우가 많았고, 신규 매수보다 이익 관리를 생각해 볼 구간입니다.";
     const rows = D.comps.map((c) => {
       const raw = D.raw[c.key][i], sc = D.score[c.key][i], inf = INFO[c.key];
       if (sc == null) return `<li class="kf-c"><div class="kf-c1"><b>${esc(c.name)}</b><span class="muted">자료 모으는 중</span></div><p>${inf[0]}</p></li>`;
@@ -90,7 +90,7 @@
         <div class="kf-bar"><i style="left:${sc}%;background:${zz[2]}"></i></div><p>${inf[0]}. <span class="muted">${inf[2]}.</span></p></li>`;
     }).join("");
     const bt = backtest(D);
-    const btTxt = bt.length ? `<h4>지난 기록: '극단적 공포'(25 미만)가 나온 뒤 코스피는?</h4><div class="ai-tw"><table class="mem-table kf-bt"><thead><tr><th>날짜</th><th class="num">점수</th><th class="num">20거래일 뒤 코스피</th></tr></thead><tbody>${bt.map((b) => `<tr><td>${b.d.slice(2).replace(/-/g, ".")}</td><td class="num">${Math.round(b.v)}</td><td class="num"><b class="${b.r >= 0 ? "up" : "down"}">${b.r >= 0 ? "+" : ""}${b.r.toFixed(1)}%</b>${b.full ? "" : ' <span class="muted">(아직 진행 중)</span>'}</td></tr>`).join("")}</tbody></table></div><p class="muted">같은 공포가 20거래일 안에 다시 나오면 한 번으로 셌습니다. 기록이 짧아서(${D.dates[0].slice(0, 4)}년부터) 참고용으로만 보면 됩니다.</p>` : "";
+    const btTxt = bt.length ? `<h4>지난 기록: '극단적 공포'(25 미만)가 나온 뒤 코스피는?</h4><div class="ai-tw"><table class="mem-table kf-bt"><thead><tr><th>날짜</th><th class="num">점수</th><th class="num">20거래일 뒤 코스피</th></tr></thead><tbody>${bt.map((b) => `<tr><td>${b.d.slice(2).replace(/-/g, ".")}</td><td class="num">${Math.round(b.v)}</td><td class="num"><b class="${b.r >= 0 ? "up" : "down"}">${b.r >= 0 ? "+" : ""}${b.r.toFixed(1)}%</b>${b.full ? "" : ' <span class="muted">(아직 진행 중)</span>'}</td></tr>`).join("")}</tbody></table></div><p class="muted">같은 공포가 20거래일 안에 다시 나오면 한 번으로 셌습니다. 기록이 짧아서(${D.dates[0].slice(0, 4)}년부터) 참고용입니다.</p>` : "";
     return `<article class="card mx-card kf-card" style="--c:${z[2]}">
       <div class="mx-head"><div><div class="mx-name">한국 공포탐욕지수 (CNN 방식 한국판)</div><div class="mx-dir">0 = 극단적 공포 · 100 = 극단적 탐욕 · 재료 8가지 평균</div></div><span class="mx-chip" style="--c:${z[2]}">${z[1]}</span></div>
       <div class="mx-val"><b style="color:${z[2]}">${Math.round(v)}</b><span class="ec-date">${md(D.dates[i])} 장 마감 기준</span></div>
@@ -114,7 +114,7 @@
         </ul>
         <h4>주의할 점</h4>
         <ul>
-          <li>심리 지표는 <b>언제 바뀔지</b>까지는 알려 주지 않습니다. 극단적 공포가 몇 주씩 이어지면서 더 빠지기도 하니, 추세(산업 강도 탭)와 같이 보는 게 좋습니다.</li>
+          <li>심리 지표는 <b>언제 바뀔지</b>까지는 알려 주지 않습니다. 극단적 공포가 몇 주씩 이어지면서 더 빠지기도 하니, 추세(산업 강도 탭)와 같이 보는 편이 낫습니다.</li>
           <li>점수는 '최근 2년과 비교한' 상대값입니다. 그래서 2년 내내 오른 장이면 평범한 날도 공포 쪽으로 나올 수 있습니다.</li>
         </ul>
       </div>

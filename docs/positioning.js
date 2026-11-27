@@ -199,9 +199,9 @@
     const table = M.length ? `<div class="po-tw"><table class="po-t"><thead><tr><th>설문</th><th>현금 비중</th><th>기술주(늘림−줄임)</th><th>돈이 가장 쏠린 곳</th></tr></thead><tbody>${M.map((r) => `<tr><td>${esc(ym(r.month))}</td><td class="${num(r.cash) != null && r.cash <= 4 ? "po-neg" : ""}">${r.cash == null ? "—" : f1.format(r.cash) + "%"}</td><td>${r.tech_net == null ? "—" : sgn(r.tech_net, f0.format) + "%p"}</td><td>${r.crowded ? esc(r.crowded) + (r.crowded_pct != null ? " " + r.crowded_pct + "%" : "") : "—"}</td></tr>`).join("")}</tbody></table></div>` : "";
     const eq = M.some((r) => r.equity_net != null) ? `<p class="po-foot">주식 전체 비중(늘림−줄임): ${M.filter((r) => r.equity_net != null).map((r) => `${ym(r.month)} ${sgn(r.equity_net, f0.format)}%p`).join(", ")}.</p>` : "";
     const guide = more("다음 설문이 나오면 이렇게 읽습니다", `<dl class="po-dl">
-      <dt>현금 비중이 4.0% 위로 올라오고, 쏠린 곳의 응답 비율도 줄었다</dt><dd>매물이 상당 부분 소화됐고 쏠림이 풀리고 있습니다. 주가가 진정되는지, CTA 매도가 멈추는지를 함께 확인합니다.</dd>
-      <dt>현금 비중이 여전히 4.0% 이하이고, 쏠린 곳과 비율도 그대로다</dt><dd>급락을 겪고도 덜 판 상태입니다. 반등이 나와도 매물이 다시 나오기 쉽습니다.</dd>
-      <dt>현금 비중이 5.0% 이상으로 뛰었다</dt><dd>BofA 기준 매수 신호입니다. 비관이 지나치면 오히려 살 때라고 해석하지만, 신호 직후에도 주가가 더 내릴 수 있어 진정되는지를 확인하는 편이 안전합니다.</dd></dl>`);
+      <dt>현금 비중이 4.0% 위로 올라오고, 쏠린 곳의 응답 비율도 줄었을 때</dt><dd>매물이 상당 부분 소화됐고 쏠림이 풀리고 있습니다. 주가가 진정되는지, CTA 매도가 멈추는지를 함께 확인합니다.</dd>
+      <dt>현금 비중이 여전히 4.0% 이하이고, 쏠린 곳과 비율도 그대로일 때</dt><dd>급락을 겪고도 덜 판 상태입니다. 반등이 나와도 매물이 다시 나오기 쉽습니다.</dd>
+      <dt>현금 비중이 5.0% 이상으로 뛰었을 때</dt><dd>BofA 기준 매수 신호입니다. 비관이 지나치면 오히려 살 때라고 해석하지만, 신호 직후에도 주가가 더 내릴 수 있어 진정되는지를 확인하는 편이 안전합니다.</dd></dl>`);
     const latest = M[0];
     const sub = latest && latest.release ? `BofA 펀드매니저 설문(FMS) · ${esc(ym(latest.month))} 설문, ${esc(mdw(latest.release))} 발표` : "BofA 펀드매니저 설문(FMS) · 한 달에 한 번";
     return sec("po-sec-fms", "펀드매니저는 얼마나 사 뒀나", sub,
@@ -372,7 +372,7 @@
     const ty = last.ty_hf != null ? `<p class="po-foot">10년물 국채 선물: 헤지펀드 ${f0.format(last.ty_hf)}계약, 자산운용사 ${f0.format(last.ty_am)}계약(${esc(md(last.cftc_date))} 기준).</p>` : "";
     const first = H.length ? `${dt(H[0].date).getFullYear()}년 ${md(H[0].date)}` : "";
     return sec("po-sec-cftc", "선물 포지션, 지난 3년과 비교", `미국 선물 감독 기관(CFTC) 자료 · ${last.cftc_date ? esc(mdw(last.cftc_date)) + " 기준" : ""} · 3년 이력 ${esc(first)}부터 ${H.length}주`,
-      `<p class="po-note">막대 위 진한 점이 지금 값, 흐린 선이 3년 중간값입니다. 90% 위면 평소보다 훨씬 많이 사 둔 것이고, 10% 아래면 훨씬 많이 판 것입니다. 헤지펀드의 S&amp;P500 선물은 평소에도 순매도라, 순매도 자체를 하락 베팅으로 보지 않습니다.</p><div class="po-cfs">${cards}</div>${ty}`);
+      `<p class="po-note">막대 위 진한 점이 지금 값, 흐린 선이 3년 중간값입니다. 90% 위면 평소보다 훨씬 많이 사 둔 상태이고, 10% 아래면 훨씬 많이 판 상태입니다. 헤지펀드의 S&amp;P500 선물은 평소에도 순매도라, 순매도 자체를 하락 베팅으로 보지 않습니다.</p><div class="po-cfs">${cards}</div>${ty}`);
   }
 
   // ---------- 9. 해설 ----------
@@ -405,7 +405,7 @@
       <tr><td>AAII 개인투자자 설문</td><td>매주 목요일</td><td>${last.aaii_bear != null ? "약세 응답 " + f1.format(last.aaii_bear) + "%" : "—"}</td></tr>
       <tr><td>지수 종가</td><td>매 거래일</td><td>${last.price_date ? esc(md(last.price_date)) + " 종가" : "—"}</td></tr></tbody></table></div>`;
     const rules = `<dl class="po-dl">
-      <dt>이 화면을 보는 이유</dt><dd>다른 탭은 주가가 어떻게 움직였는지를 보여 줍니다. 이 탭은 그 뒤에서 누가 주식을 얼마나 사 뒀고, 누가 지금 팔고 있고, 누가 더 살 돈이 있는지를 봅니다. 같은 하락이라도 팔 사람이 많이 남아 있으면 길어지고, 이미 다 팔았으면 빨리 끝나는 경우가 많기 때문입니다.</dd>
+      <dt>이 화면을 보는 이유</dt><dd>다른 탭은 주가가 어떻게 움직였는지를 보여 주고, 이 탭은 그 뒤에서 누가 주식을 얼마나 사 뒀고 누가 지금 팔고 있고 누가 더 살 돈이 있는지를 봅니다. 같은 하락이라도 팔 사람이 많이 남아 있으면 길어지고, 이미 다 팔았으면 빨리 끝나는 경우가 많습니다.</dd>
       <dt>팔고 있음 · 사고 있음</dt><dd>은행이 추정한 CTA의 다음 1주 매매가 매도면 '팔고 있음', 매수면 '사고 있음'입니다. 은행 추정이 엇갈리면 더 최근 추정을 씁니다.</dd>
       <dt>더 팔 수 있음</dt><dd>선물 순매수가 지난 3년 중 90% 위치를 넘거나, 새 설문에서 펀드매니저 현금 비중이 4.0% 이하일 때입니다.</dd>
       <dt>더 살 수 있음</dt><dd>헤지펀드 순 레버리지가 최근 몇 년 중 낮을 때, 개인 비관 응답이 장기 평균보다 10%p 넘게 높을 때, 선물 순매수가 3년 중 10% 위치에 못 미칠 때, 새 설문에서 현금 비중이 5% 이상일 때입니다.</dd>
