@@ -281,7 +281,7 @@
         <div class="v big ${tone}">${s2}<span class="of"> / ${d.items.length}</span></div>
         <div class="tile-bar" role="img" aria-label="상승 추세 ${s2}개, 상승 전환 시도 ${s2t}개, 전체 ${d.items.length}개"><i class="s2" style="width:${(s2 / n * 100).toFixed(1)}%"></i><i class="s2t" style="width:${(s2t / n * 100).toFixed(1)}%"></i></div>
         <div class="d">상승 전환 시도 ${s2t}개까지 합치면 ${s2 + s2t}개</div></div>
-      <div class="tile"><div class="k">시장 국면${help(regHelp, "시장 국면")}${state.market === "JP" ? "" : `<a class="tile-link" href="https://dhandori.github.io/wamo-choochoo-dashboard/radar.html?market=${state.market}&tab=trend">레이더 날씨 ↗</a>`}</div>
+      <div class="tile"><div class="k">시장 국면${help(regHelp, "시장 국면")}</div>
         ${idxs.map((x) => `<div class="idx-row"><span class="idx-n">${esc(x.name)}</span>${reg(x)}</div>
         <div class="d">${x.above50 ? "50일선 위" : "50일선 아래"} · ${x.above200 ? "200일선 위" : "200일선 아래"} · 200일선 ${x.ma200_up ? "상승" : "하락"}${x.gap200 != null ? ` · 이격 <b class="ret ${cls(x.gap200)}">${fmtPct(x.gap200)}</b>` : ""}</div>${x.gap200_lo != null && x.gap200_pct != null ? `<div class="d">${gapRangeText(x.gap200_lo, x.gap200_hi, x.gap200_pct, x.gap200_days)}</div>` : ""}`).join("")}</div>
       <div class="tile"><div class="k">지수 20일 수익률</div>
@@ -296,7 +296,7 @@
 
   // ---------- signals
   const SHOW = 5, SHOW_WIDE = 10;   // 5개가 넘는 신호는 두 칸 너비(벤토)로 키우고 10개까지 바로 보인다
-  const weakHelp = "순위는 올랐지만 가격은 아직 내리고 있거나 힘이 빠진 산업입니다. 덜 빠져서 순위만 오른 것일 수 있으니 추세부터 확인해야 합니다.";
+  const weakHelp = "순위는 올랐지만 가격은 아직 내리고 있거나 힘이 빠진 산업입니다. 덜 빠져서 순위만 오른 것일 수 있어서 추세를 먼저 확인하는 편이 낫습니다.";
   function renderSignals(d) {
     // 강세 신호 3종은 한 줄, 주의 신호 2종은 그 아래 한 줄. 0개인 카드는 한 줄로 접는다.
     const rows = [
@@ -308,7 +308,7 @@
         { t: "RS 신고가", c: "var(--good)", help: "시장 대비 강도(RS선)가 1년 중 최고인 산업" },
       ] },
       { title: "주의 신호", groups: [
-        { t: "50일선 돌파", c: "var(--accent)", help: "바구니 지수가 오늘 50일선 위로 올라온 산업 · 추세가 막 바뀌기 시작한 것일 수 있습니다" },
+        { t: "50일선 돌파", c: "var(--accent)", help: "바구니 지수가 오늘 50일선 위로 올라온 산업으로, 추세가 막 바뀌기 시작했을 수 있습니다" },
         { t: "약화 경고", c: "var(--down)", any: ["상위권 이탈", "50일선 이탈"], help: "상위 25%에서 밀려났거나 50일선 아래로 내려간 산업" },
       ] },
     ];
@@ -430,7 +430,7 @@
         $("#exSub").textContent = "네이버 업종"; return;
       }
       if (!nv.periods_available.includes(k)) {
-        el.innerHTML = `<p class="empty">네이버 업종의 ${PLABEL[k]} 등락률은 매일 쌓은 기록을 이어 붙여 계산합니다. 기록이 ${k.replace("ret", "")}거래일 쌓이면 보여 드리겠습니다(지금 ${nv.days_recorded}일치).<br>1일 등락률은 지금 바로 보실 수 있습니다.</p>`;
+        el.innerHTML = `<p class="empty">네이버 업종의 ${PLABEL[k]} 등락률은 매일 쌓은 기록을 이어 붙여 계산합니다. 기록이 ${k.replace("ret", "")}거래일 쌓이면 보여 드리겠습니다(지금 ${nv.days_recorded}일치).<br>1일 등락률은 지금도 볼 수 있습니다.</p>`;
         $("#exSub").textContent = `네이버 업종 · ${nv.basis_date} 종가 기준`; return;
       }
       tree = naverTree(nv, k);

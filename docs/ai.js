@@ -456,7 +456,7 @@
       <div class="chart-legend"><span><i style="background:var(--ai-a)"></i>Anthropic</span><span><i style="background:var(--ai-o)"></i>OpenAI</span><span><i style="background:var(--ai-other);opacity:.5"></i>흐린 막대 = 진행 중인 주</span></div>
       <div id="aiWalTok"></div>
       <p class="foot-note">위 그래프는 합이 늘 100%라 비중만 알 수 있습니다. 이 그래프는 실제 사용량(OpenRouter 실측)이어서 막대 높이로 총량이 어떻게 변하는지 봅니다.</p>
-      ${more("wal", "자세히 보기 · 모델별 구성, 다른 카드와 다른 점, 숫자의 출처", `      <div class="ai-wal-why"><b>다른 카드와 다른 점</b> ① 묶음의 매출은 회사 전체 실적이라 몇 주에 한 번씩 바뀝니다. 이 카드는 OpenRouter API에서 두 회사 모델에 쓴 돈의 비중이어서, 새 모델이 나오면 그 주에 바로 움직입니다. 바로 아래 오픈웨이트 vs 클로즈드는 기준이 다릅니다. Vercel 자료로 모든 회사를 나눈 것입니다.</div>
+      ${more("wal", "자세히 보기 · 모델별 구성, 다른 카드와 다른 점, 숫자의 출처", `      <div class="ai-wal-why"><b>다른 카드와 다른 점</b> ① 묶음의 매출은 회사 전체 실적이라 몇 주에 한 번씩 바뀝니다. 이 카드는 OpenRouter API에서 두 회사 모델에 쓴 돈의 비중이어서, 새 모델이 나오면 그 주에 바로 움직입니다. 바로 아래 오픈웨이트 vs 클로즈드는 Vercel 자료로 모든 회사를 나눈 것이라 기준이 다릅니다.</div>
       <div class="ai-oc">
         <div class="ai-ock wal"><span>지출 점유율 (${md(L.week)} 주, 공식)</span><b><span style="color:var(--ai-a)">Anthropic ${Math.round(aL)}%</span> : <span style="color:var(--ai-o)">OpenAI ${Math.round(100 - aL)}%</span></b><small>${esc(D.meta.published || "")}${chg(dA)}</small></div>
         <div class="ai-ock wal"><span>OpenAI 고점과 지금</span><b>${Math.round(100 - D.aSum(pk))}% → ${Math.round(100 - aL)}%</b><small>${md(pk.week)} 주가 고점이었고, 그 뒤로 ${Math.round((100 - D.aSum(pk)) - (100 - aL))}%p 내려왔습니다.</small></div>
@@ -585,7 +585,7 @@
       ["총액 방식 · 순액 방식", "클라우드 파트너(아마존·구글·마이크로소프트)를 거쳐 판 금액을 어떻게 잡느냐가 다릅니다. <b>총액</b>은 고객이 낸 돈 전체를 매출로 잡고 파트너 몫은 비용으로 뺍니다(Anthropic). <b>순액</b>은 파트너 몫을 뺀 자기 몫만 매출로 잡습니다(OpenAI). 같은 장사를 해도 총액 쪽 숫자가 크게 나오니, 두 회사를 그대로 비교하거나 더하면 안 됩니다."],
       ["연말 목표", "회사가 투자를 받는 과정에서 투자자에게 밝힌 연말 런레이트 기대치입니다. 실적이 아니라 전망이어서 그래프에서는 속 빈 점과 점선으로 그립니다."],
       ["신뢰도 (확실·유력·추측·공시)", "Epoch AI가 숫자마다 붙인 확실성 등급(Confident·Likely·Speculative)을 옮긴 것입니다. <b>확실, 유력, 추측</b> 순으로 근거가 약해집니다. 회사 발표처럼 출처가 분명하면 높게, 간접 근거로 추정한 숫자면 낮게 매깁니다. <b>공시</b>는 이 탭이 따로 붙인 등급으로, 상장 서류에 실린 숫자에 붙습니다."],
-      ["보간", "보도와 보도 사이처럼 숫자가 없는 날의 값을 채워 넣는 일입니다. 이 탭은 그 사이에 <b>매일 같은 비율로 자랐다</b>고 가정하고 채웁니다(로그 보간). 두 회사의 보도 날짜가 서로 달라서, 합산하려면 같은 날짜로 맞춰야 하기 때문입니다."],
+      ["보간", "보도와 보도 사이처럼 숫자가 없는 날의 값을 채워 넣는 일입니다. 두 회사의 보도 날짜가 서로 달라서 합산하려면 같은 날짜로 맞춰야 하는데, 이 탭은 그 사이에 <b>매일 같은 비율로 자랐다</b>고 가정하고 채웁니다(로그 보간)."],
       ["전분기 대비 (QoQ)", "이번 분기 값이 바로 앞 분기보다 몇 % 늘었는지 나타냅니다. 계절을 타는 업종은 1년 전 같은 분기와 비교(YoY)하지만, AI 회사는 워낙 빨리 커서 전분기와 비교해야 흐름이 더 잘 보입니다."],
     ]],
     ["성장 속도 (기울기)", [
@@ -661,7 +661,7 @@
         <div class="ai-ock" style="border-left-color:var(--ink)"><span>전체 혼합(SDLLMTK)</span><b>$${L.blend.toFixed(2)}</b><small>실제 쓰인 양으로 가중한 평균${ch("blend")}</small></div>
       </div>
       <div id="aiPrice"></div>
-      <p class="foot-note">Silicon Data가 매일 내는 LLM 추론 토큰 가격 지수입니다. <b>전체 혼합</b>은 실제로 쓰인 양으로 가중한 평균이라 가격을 내리지 않아도 싼 모델 쪽으로 옮겨 가면 내려갑니다. 그래서 오픈웨이트·클로즈드 지수와 같이 보면 ‘값을 내린 것’과 ‘싼 모델로 옮겨 간 것’을 나눠 볼 수 있습니다. 클로즈드가 몇 배 비싼지(가격 배수)는 위 ‘토큰당 가격’ 칸에 Vercel 실제 지출 기준과 나란히 적었습니다. 정식 자료(API·블룸버그 SDLLMTK)는 유료여서 <a href="${esc(si.url)}" target="_blank" rel="noopener">상품 페이지</a>에 공개된 최근 7일 값을 하루 두 번 받아 쌓고 있습니다. 기록이 ${ymd(h[0].date)}부터인 것도 그 때문입니다.</p>`;
+      <p class="foot-note">Silicon Data가 매일 내는 LLM 추론 토큰 가격 지수입니다. <b>전체 혼합</b>은 실제로 쓰인 양으로 가중한 평균이라 가격을 내리지 않아도 싼 모델 쪽으로 옮겨 가면 내려갑니다. 그래서 오픈웨이트·클로즈드 지수와 같이 보면 ‘값을 내린 것’과 ‘싼 모델로 옮겨 간 것’을 나눠 볼 수 있습니다. 클로즈드가 몇 배 비싼지(가격 배수)는 위 ‘토큰당 가격’ 칸에 Vercel 실제 지출 기준과 나란히 적었습니다. 정식 자료(API·블룸버그 SDLLMTK)는 유료여서 <a href="${esc(si.url)}" target="_blank" rel="noopener">상품 페이지</a>에 공개된 최근 7일 값을 하루 두 번 받아 쌓고 있어서, 기록도 ${ymd(h[0].date)}부터 있습니다.</p>`;
   }
 
   // ---------- 2) 오픈웨이트 vs 클로즈드(토큰·지출)

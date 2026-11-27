@@ -97,10 +97,10 @@
     if (pending) {
       if (mine && mine.status === "completed") {
         save(null);
-        if (mine.conclusion === "success") { await readStatus(); onDone(); flash("갱신 완료 · 새 데이터를 불러왔습니다", "ok"); }
-        else flash("갱신에 실패했습니다 · 실행 기록에서 이유를 볼 수 있습니다", "bad", mine.html_url);
-      } else if (Date.now() - pending.at > MAX_WAIT) { save(null); flash("실행을 확인하지 못했습니다 · 실행 기록을 열어 확인해 주십시오", "bad", WF_URL); }
-      else { paint(mine ? { text: `수집 중 · ${mins(Date.parse(mine.created_at))}분째 (보통 1~2분)`, cls: "busy", url: mine.html_url } : { text: "GitHub 창에서 ‘Run workflow’를 눌러 주십시오 · 시작되면 진행 상황을 여기에 보여 드립니다", cls: "busy", url: WF_URL }); pollT = setTimeout(follow, 20000); }
+        if (mine.conclusion === "success") { await readStatus(); onDone(); flash("갱신을 마치고 새 데이터를 불러왔습니다", "ok"); }
+        else flash("갱신에 실패했습니다. 실행 기록에서 이유를 볼 수 있습니다", "bad", mine.html_url);
+      } else if (Date.now() - pending.at > MAX_WAIT) { save(null); flash("실행을 확인하지 못했습니다. 실행 기록을 열어 확인해 주십시오", "bad", WF_URL); }
+      else { paint(mine ? { text: `수집 중 · ${mins(Date.parse(mine.created_at))}분째 (보통 1~2분)`, cls: "busy", url: mine.html_url } : { text: "GitHub 창에서 ‘Run workflow’를 눌러 주십시오. 시작되면 진행 상황을 여기에 보여 드립니다", cls: "busy", url: WF_URL }); pollT = setTimeout(follow, 20000); }
       return;
     }
     if (active) { paint({ text: `자동 갱신 진행 중 · ${mins(Date.parse(active.created_at))}분째`, cls: "busy", url: active.html_url }); pollT = setTimeout(follow, 30000); }
@@ -134,7 +134,7 @@
     const btn = $("#runNow");
     if (btn) btn.onclick = () => {
       window.open(WF_URL, "_blank", "noopener");
-      save({ at: Date.now() }); paint({ text: "GitHub 창에서 ‘Run workflow’를 눌러 주십시오 · 시작되면 진행 상황을 여기에 보여 드립니다", cls: "busy", url: WF_URL });
+      save({ at: Date.now() }); paint({ text: "GitHub 창에서 ‘Run workflow’를 눌러 주십시오. 시작되면 진행 상황을 여기에 보여 드립니다", cls: "busy", url: WF_URL });
       pollT = setTimeout(follow, 15000);
     };
   }

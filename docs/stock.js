@@ -37,7 +37,7 @@
     "상승 추세": ["s2", "이동평균선이 50일·150일·200일 순서로 가지런하고 200일선도 오르고 있습니다. 가장 좋은 상태입니다."],
     "상승 전환 시도": ["s2t", "가격이 50일선과 200일선 위로 올라왔지만 이동평균선은 아직 순서대로 늘어서지 않았습니다. 막 오르기 시작하는 단계일 수 있습니다."],
     "상승 둔화": ["", "가격은 50일선 아래로 내려왔지만 200일선은 아직 오르고 있습니다. 힘이 빠지는 구간입니다."],
-    "하락 추세": ["s4", "가격이 200일선 아래에 있고 200일선도 내려가고 있습니다. 피하는 게 좋습니다."],
+    "하락 추세": ["s4", "가격이 200일선 아래에 있고 200일선도 내려가고 있습니다. 피하는 편이 낫습니다."],
     "바닥 다지기": ["", "뚜렷한 방향 없이 횡보하는 구간입니다."],
   };
   // 상황판의 다섯 단계를 와인스타인 Stage 1~4 번호로(레이더 배지와 같은 이름). 상승 전환 시도는 1에서 2로 넘어가는 중.
@@ -400,7 +400,7 @@
       ${m ? `<section class="sk-sec" id="skStat"><h4>🛡️ 상태와 위험 관리</h4>${statHtml}</section>` : ""}
       ${hxHtml}${supHtml}${indHtml}${secHtml}${prHtml}
       ${!m ? `<p class="sk-note">이 종목은 산업 강도판의 세부 산업(바구니)에 들어 있지 않아서 수익률·추세·RS 값이 없습니다.${KR ? " 수급 표도 바구니에 든 종목만 모읍니다." : ""}</p>` : ""}
-      ${none ? `<p class="sk-none">이 종목은 상황판에 모인 정보가 많지 않습니다. 아래 링크에서 더 보실 수 있습니다.</p>` : ""}
+      ${none ? `<p class="sk-none">이 종목은 상황판에 모인 정보가 많지 않아서 아래 링크에서 더 볼 수 있습니다.</p>` : ""}
       <section class="sk-sec" id="skLinks"><h4>🔗 바깥에서 더 보기</h4><div class="sk-links">${links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener noreferrer">${t} ↗</a>`).join("")}</div></section>`;
     $$(".sk-ind[data-ind]", box).forEach((b) => b.addEventListener("click", () => {
       const bd = window.__isBoard && window.__isBoard();
@@ -578,7 +578,7 @@
         ["50일선이 150일·200일선 위", a50 != null && a150 != null && a200 != null ? a50 > a150 && a50 > a200 : null, ""],
         ["가격이 50일선 위", a50 != null ? x > a50 : null, a50 ? `50일선 대비 ${pct((x / a50 - 1) * 100)}` : ""],
         ["52주 저점보다 30% 이상 위", w.length > 60 ? x >= lo * 1.3 : null, `저점 대비 ${pct((x / lo - 1) * 100)}`],
-        ["52주 고점에서 25% 이내", w.length > 60 ? x >= hi * 0.75 : null, `고점 대비 ${pct((x / hi - 1) * 100)}`],
+        ["52주 고점에서 15% 이내", w.length > 60 ? x >= hi * 0.85 : null, `고점 대비 ${pct((x / hi - 1) * 100)}`],
         ["RS 지수 70 이상", m && m.rs_rating != null ? m.rs_rating >= 70 : null, m && m.rs_rating != null ? `RS ${m.rs_rating}` : ""],
       ];
       const ok = T.filter((t) => t[1] === true).length, known = T.filter((t) => t[1] != null).length;

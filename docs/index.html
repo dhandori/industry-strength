@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>시장 상황판</title>
-<meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여주는 추세추종용 대시보드">
+<meta name="description" content="한국·미국 세부 산업의 강도를 매일 순위로 보여 주는 추세추종용 대시보드">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M7 22l6-7 5 4 7-9' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="style.css?v=1bef0cd141">
+<link rel="stylesheet" href="style.css?v=0387950f55">
 <link rel="stylesheet" href="macro.css?v=425cfff500">
 <link rel="stylesheet" href="ai.css?v=31313a9d45">
 <link rel="stylesheet" href="pairs.css?v=20aaadff0e">
@@ -22,7 +22,7 @@
 <header class="top">
   <div class="top-inner">
     <div class="brand">
-      <h1>시장 상황판 <a class="xlink" href="https://dhandori.github.io/wamo-choochoo-dashboard/radar.html" title="시장 판단·주도 업종·종목 찾기를 보는 화면">WAMO 레이더 ↗</a></h1>
+      <h1>시장 상황판</h1>
       <p class="meta" id="meta">불러오는 중…</p>
     </div>
     <div class="top-controls">
@@ -117,7 +117,7 @@
       </div>
     </div>
     <div id="flow" class="flow"></div>
-    <p class="foot-note"><b>강도</b>는 한 분류에 속한 세부 산업들의 종합 순위를 0점(꼴찌)~100점(1위)으로 바꿔 평균한 값입니다. 날마다 들쭉날쭉한 것을 줄이려고 고른 기간에 맞춰 이동평균을 냈습니다(5일은 그대로, 20일은 5일, 60일은 10일, 200일은 20일 평균). 지도에서 <b>오른쪽 위</b>는 이미 강한데 더 강해지는 분류이고, <b>왼쪽 위</b>는 약했다가 힘이 붙고 있는 분류입니다. ‘큰 분류 흐름’의 선은 모든 분류가 고른 기간 첫날 강도에서 똑같이 출발하도록 맞춰 그렸습니다. 그래서 그 뒤로 얼마나 오르내렸는지 서로 견줄 수 있습니다. 이름 아래 작은 <b>20일·60일·200일</b> 숫자는 고른 기간과 상관없이 늘 함께 보여 주는 다른 기간의 변화로, 짧은 흐름과 긴 흐름이 같은 방향인지 확인할 때 쓰시면 됩니다. 순위 이동 그림에서 <b>빈 점</b>은 기간이 시작될 때 자리이고 <b>찬 점</b>은 지금 자리입니다. <b>추세↑</b>는 가격도 함께 오르는 산업이고, <b>가격↓</b>는 순위만 올랐을 뿐 가격 추세는 아직 약한 산업입니다. 분류를 누르면 아래 순위표가 그 분류만 남도록 걸러지고, 세부 산업을 누르면 상세 화면이 열립니다.</p>
+    <p class="foot-note"><b>강도</b>는 한 분류에 속한 세부 산업들의 종합 순위를 0점(꼴찌)~100점(1위)으로 바꿔 평균한 값입니다. 날마다 들쭉날쭉한 것을 줄이려고 고른 기간에 맞춰 이동평균을 냈습니다(5일은 그대로, 20일은 5일, 60일은 10일, 200일은 20일 평균). 지도에서 <b>오른쪽 위</b>는 이미 강한데 더 강해지는 분류이고, <b>왼쪽 위</b>는 약했다가 힘이 붙고 있는 분류입니다. ‘큰 분류 흐름’의 선은 모든 분류가 고른 기간 첫날 강도에서 똑같이 출발하도록 맞춰 그려서, 그 뒤로 얼마나 오르내렸는지 서로 견줄 수 있습니다. 이름 아래 작은 <b>20일·60일·200일</b> 숫자는 고른 기간과 상관없이 늘 함께 보여 주는 다른 기간의 변화라서, 짧은 흐름과 긴 흐름이 같은 방향인지 확인할 수 있습니다. 순위 이동 그림에서 <b>빈 점</b>은 기간이 시작될 때 자리이고 <b>찬 점</b>은 지금 자리입니다. <b>추세↑</b>는 가격도 함께 오르는 산업이고, <b>가격↓</b>는 순위만 올랐을 뿐 가격 추세는 아직 약한 산업입니다. 분류를 누르면 아래 순위표가 그 분류만 남도록 걸러지고, 세부 산업을 누르면 상세 화면이 열립니다.</p>
   </section>
 
   <div class="two-col">
@@ -129,7 +129,7 @@
     <section class="card" aria-labelledby="br-h">
       <div class="card-head"><h2 id="br-h">산업 폭 <span class="sub">50일선 위 산업 비율</span></h2></div>
       <div id="breadthChart" class="chart sm"></div>
-      <p class="foot-note">이 선이 오르면 강세가 여러 산업으로 퍼지고 있는 것이고, 내리면 일부 산업만 버티고 있는 것입니다.</p>
+      <p class="foot-note">이 선이 오르면 강세가 여러 산업으로 퍼지고 있고, 내리면 일부 산업만 버티고 있습니다.</p>
     </section>
   </div>
 
@@ -142,7 +142,7 @@
       </div>
     </div>
     <div id="stageMix" class="sm"></div>
-    <p class="foot-note"><b>상승 추세</b> = 가격 &gt; 50일선 &gt; 150일선 &gt; 200일선, 200일선 상승, 고점 -25% 안(순위표·종목 상세와 같은 기준). 큰 분류는 겹친 종목을 한 번만 세고, 세부 산업은 5종목 이상인 곳만 보여 줍니다. 바구니가 작아서 한두 종목만 움직여도 비율이 크게 바뀌니 오른쪽 종목 수를 같이 보십시오. 큰 분류를 누르면 순위표가 그 분류로 걸러지고, 세부 산업을 누르면 상세 화면이 열립니다.</p>
+    <p class="foot-note"><b>상승 추세</b> = 가격 &gt; 50일선 &gt; 150일선 &gt; 200일선, 200일선 상승, 고점 대비 -15% 이내(순위표·종목 상세와 같은 기준). 큰 분류는 겹친 종목을 한 번만 세고, 세부 산업은 5종목 이상인 곳만 보여 줍니다. 바구니가 작아서 한두 종목만 움직여도 비율이 크게 바뀌니 오른쪽 종목 수를 같이 보십시오. 큰 분류를 누르면 순위표가 그 분류로 걸러지고, 세부 산업을 누르면 상세 화면이 열립니다.</p>
   </section>
 
   <section class="card" aria-labelledby="rank-h">
@@ -283,7 +283,7 @@
           <dt>RS 지수</dt>
           <dd>1~99 사이의 숫자로, 최근 1년 수익률(최근 3개월에 40%, 6·9·12개월에 20%씩 가중)을 같은 시장의 다른 산업과 견준 등수를 백분위로 바꾼 값입니다. 오닐(IBD)의 RS 등급과 같은 방식이고, 80 이상이면 시장에서 상위 20% 안에 드는 강한 산업입니다. 5·20·60일로 매기는 종합 강도보다 더 긴 흐름을 봅니다.</dd>
           <dt>RS선</dt>
-          <dd>산업 바구니 지수를 시장 지수로 나눈 선입니다. 구성 종목 가운데 코스닥 종목이 절반을 넘으면 코스닥150과, 아니면 코스피200과 비교합니다(미국은 나스닥100·S&amp;P 500). 선이 오르면 시장보다 강한 것이고, RS선이 신고가를 냈다면 시장 대비 강도가 1년 중 가장 높은 상태입니다.</dd>
+          <dd>산업 바구니 지수를 시장 지수로 나눈 선입니다. 구성 종목 가운데 코스닥 종목이 절반을 넘으면 코스닥150과, 아니면 코스피200과 비교합니다(미국은 나스닥100·S&amp;P 500). 선이 오르면 시장보다 강하고, RS선이 신고가를 냈다면 시장 대비 강도가 1년 중 가장 높은 상태입니다.</dd>
           <dt id="guide-supply">수급 (한국만)</dt>
           <dd>외국인과 기관이 그 산업 종목을 사고 있는지, 팔고 있는지 봅니다. 한국 시장은 외국인·기관 매매가 주가 방향을 크게 좌우하기 때문에, 가격이 오를 때 이들도 같이 사는지 확인하는 용도로 씁니다.
             <ul class="sup-guide">
@@ -309,7 +309,7 @@
           <dd><b>상승 추세</b>: 이동평균선이 위에서부터 50일·150일·200일 순서로 가지런히 놓여 있고(정배열) 200일선도 오르고 있습니다. 가장 좋은 상태입니다.<br>
           <b>상승 전환 시도</b>: 가격이 50일선과 200일선 위로 올라왔지만 이동평균선 정렬은 아직 덜 됐습니다. 하락을 끝내고 오르기 시작하는 초입일 수 있습니다.<br>
           <b>상승 둔화</b>: 가격이 50일선 아래로 내려왔지만 200일선 위에 있고, 200일선은 아직 오르고 있습니다. 오르던 힘이 빠지는 구간입니다.<br>
-          <b>하락 추세</b>: 가격이 200일선 아래에 있고 200일선도 내려가고 있습니다. 피하는 게 좋습니다.<br>
+          <b>하락 추세</b>: 가격이 200일선 아래에 있고 200일선도 내려가고 있습니다. 피하는 편이 낫습니다.<br>
           <b>바닥 다지기</b>: 위 어디에도 들지 않는 경우로, 대개 하락한 뒤 횡보하는 구간입니다.</dd>
         </dl>
         <p class="small-print">세부 산업은 구성 종목을 <b>같은 비중</b>으로 묶은 바구니 지수입니다. 매일 구성 종목의 하루 수익률을 평균해 이어 붙입니다(종가 기준, 분할 반영, 배당 미반영). 한국 분류는 WAMO 산업 분류표(기업 제품 기준)를 따랐고, 미국은 직접 분류했습니다. 데이터: Yahoo Finance(실패 시 네이버·stooq). 투자 판단에 참고할 자료이며 매수·매도 추천이 아닙니다.</p>
@@ -336,7 +336,7 @@
       <h2 id="hxs-h">최근 신고가가 자주 나온 업종 <span class="sub">업종별 52주 신고가 횟수 · 최근 5거래일과 그 전 5거래일 비교 · 열 제목을 누르면 정렬됩니다</span></h2>
     </div>
     <div class="hx-wrap" id="hxStrong"></div>
-    <p class="foot-note"><b>횟수</b>는 그 업종 종목들이 52주 신고가를 낸 횟수를 모두 더한 값입니다. 한 종목이 3일 연속 신고가를 내면 3번으로 셉니다. <b>증감</b>이 ▲이면 신고가가 늘고 있고, ▼이면 줄고 있습니다. <b>업종 내 비율</b>은 그 업종 전체 종목 가운데 최근 5거래일에 한 번이라도 신고가를 낸 종목의 비율입니다. 이 비율이 높을수록 대장주 하나가 아니라 <b>업종 전체가 함께</b> 오르고 있는 것입니다(종목이 3개 미만인 업종은 –로 표시).</p>
+    <p class="foot-note"><b>횟수</b>는 그 업종 종목들이 52주 신고가를 낸 횟수를 모두 더한 값입니다. 한 종목이 3일 연속 신고가를 내면 3번으로 셉니다. <b>증감</b>이 ▲이면 신고가가 늘고 있고, ▼이면 줄고 있습니다. <b>업종 내 비율</b>은 그 업종 전체 종목 가운데 최근 5거래일에 한 번이라도 신고가를 낸 종목의 비율입니다. 이 비율이 높을수록 대장주 하나가 아니라 <b>업종 전체가 함께</b> 오르고 있습니다(종목이 3개 미만인 업종은 –로 표시).</p>
   </section>
 
   <section class="card" aria-labelledby="hxh-h">
@@ -351,7 +351,7 @@
     </div>
     <div class="heat-wrap"><div id="hxHeat" class="heat hx-heat"></div></div>
     <button class="toggle" id="hxHeatMore" style="margin-top:10px" hidden></button>
-    <p class="foot-note">칸 안 숫자는 그날 그 업종에서 나온 신고가 종목 수입니다. 한 줄에 색이 며칠 이어지면 그 업종에서 신고가가 꾸준히 나오고 있다고 보면 됩니다. 맨 오른쪽 테두리 칸이 가장 최근 거래일입니다.</p>
+    <p class="foot-note">칸 안 숫자는 그날 그 업종에서 나온 신고가 종목 수입니다. 한 줄에 색이 며칠 이어지면 그 업종에서 신고가가 꾸준히 나오고 있습니다. 맨 오른쪽 테두리 칸이 가장 최근 거래일입니다.</p>
   </section>
 
   <section class="card" aria-labelledby="hxd-h">
@@ -495,25 +495,25 @@
   </div>
 </div>
 <script src="links.js?v=41cf324f28"></script>
-<script src="refresh.js?v=5e40c1397f"></script>
-<script src="flow.js?v=b48925effa"></script>
-<script src="rsbox.js?v=37d9da78c2"></script>
-<script src="stock.js?v=fb6e46c2a4"></script>
-<script src="supply.js?v=cbf1392cdc"></script>
-<script src="app.js?v=c1adc0b776"></script>
+<script src="refresh.js?v=2d5fe52567"></script>
+<script src="flow.js?v=0d059e3574"></script>
+<script src="rsbox.js?v=17d2bbb32a"></script>
+<script src="stock.js?v=4a3a8b2952"></script>
+<script src="supply.js?v=911a8d55f3"></script>
+<script src="app.js?v=e9702922a0"></script>
 <script src="sectorflow.js?v=0badd2955b"></script>
 <script src="highs.js?v=df8f5a5d9e"></script>
-<script src="econ.js?v=464aac9c0d"></script>
-<script src="putcall.js?v=dd12b2a9af"></script>
-<script src="updownvol.js?v=d90bdcfb5e"></script>
-<script src="krfng.js?v=0514b8f41a"></script>
-<script src="macro.js?v=ad534ec84f"></script>
-<script src="ai.js?v=1a6acf41ab"></script>
-<script src="infra.js?v=3b513cc69a"></script>
+<script src="econ.js?v=1c265eeef3"></script>
+<script src="putcall.js?v=688fd2b4fb"></script>
+<script src="updownvol.js?v=d0fa752f35"></script>
+<script src="krfng.js?v=f41b99d74f"></script>
+<script src="macro.js?v=8d01702149"></script>
+<script src="ai.js?v=e34d8f7c9a"></script>
+<script src="infra.js?v=9a359b8889"></script>
 <script src="chips.js?v=2fe7e42477"></script>
 <script src="pairs.js?v=e7cebd6a79"></script>
-<script src="positioning.js?v=b2edc87392"></script>
+<script src="positioning.js?v=62667b0236"></script>
 <script src="tabtimes.js?v=df77f06358"></script>
-<script src="ui.js?v=6162406ccf"></script>
+<script src="ui.js?v=aff9373179"></script>
 </body>
 </html>
