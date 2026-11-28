@@ -66,6 +66,8 @@ def item(y, n, k, drift, seed, rs=None, al=False, vol=True, t=None, ia=None):
         # 화면의 RS선 칸: 첫 값 100에서 출발해 오르내리는 선
         it["rl"] = [round(100 * (1 + drift * 0.5) ** i * (1 + 0.02 * math.sin(i / 9 + seed)), 1) for i in range(len(c))]
         it["rb"] = "S&P500" if k == "미국" else "코스피"
+        # 날짜별 RS 등급(2026-11-28): NVDA 는 60거래일 내내 그 등급, 나머지는 최근 25거래일만 그 등급(앞은 70)
+        it["rg"] = [rs] * 60 if y == "NVDA" else [70] * 35 + [rs] * 25
     if t:
         it["t"] = t
     if ia:
@@ -615,9 +617,9 @@ def main():
                     pg.click("#secs button.all")
                 pg.evaluate("window.scrollTo(0, 0)")
                 pg.wait_for_timeout(300)
-                # RS: 등급·20일 변화·RS선 신고가를 딱지 하나로, 차트 아래 RS선 칸(캔버스가 그만큼 높다)
+                # RS: 등급·20일 변화·80 이상 유지 일수·RS선 신고가를 딱지 하나로, 차트 아래 RS선 칸(캔버스가 그만큼 높다)
                 nv = pg.locator(".card", has_text="NVIDIA").first.inner_text()
-                if "RS 90 ▲12 · 신고가" not in nv:
+                if "RS 90 ▲12 · 80 이상 60일+ · 신고가" not in nv:
                     problems.append(f"{label} RS 딱지 '{[x for x in nv.split(chr(10)) if 'RS' in x]}'")
                 if "rl" not in (pg.locator(".card[data-y=NVDA] canvas").get_attribute("class") or ""):
                     problems.append(f"{label} RS선 칸 캔버스 없음")
@@ -667,6 +669,16 @@ def main():
                 look("걸러 보기", ["NVIDIA", "SK하이닉스"])
                 if pg.inner_text("#secs button[data-s='0'] small") != "2":
                     problems.append(f"{label} 걸러 보기: 섹터 버튼 숫자가 화면 종목 수와 다름")
+                # RS 80 50일 유지(2026-11-28): 60거래일 내내 80 이상인 NVDA 만 남고, 딱지에 유지 일수가 붙는다
+                pg.evaluate("setHidden(false)")
+                pg.click("#chips .clr")
+                pg.evaluate("setHidden(false)")
+                pg.click("#fbtn")
+                pg.locator("#panel .wrap button", has_text="RS 80 50일 유지").first.click()
+                pg.click("#panel .foot .go")
+                look("RS 80 50일 유지", ["NVIDIA"])
+                if "80 이상 60일+" not in pg.inner_text(".card[data-y=NVDA] .bd"):
+                    problems.append(f"{label} RS 딱지에 80 이상 유지 일수가 없음")
                 # 조건 초기화: 정렬까지 걸었다가 한 번에 처음으로
                 pg.evaluate("setHidden(false)")
                 pg.click("#sbtn")

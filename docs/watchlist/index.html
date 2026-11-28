@@ -558,7 +558,10 @@ function draw(cv, it0){
   g.strokeStyle = "#e3e5ea"; g.strokeRect(0.5, padT + 0.5, pW - 1, H - xH - padT - 1);
 }
 // RS선 칸: 선이 오르면 시장보다 강해지는 중. 점선은 1년 중 RS선 최고 자리, 파란 점은 오늘이 그 신고가일 때.
-const RSC = "#1d4ed8";
+const RSC = "#1d4ed8", RSC_HOT = "#ea580c", RSC_LOW = "#a3a9b5", RSC_OLD = "#9db4e8";
+// RS 80 이상 연속 유지 일수(오늘부터 거꾸로). 기록(rg) 전체가 80 이상이면 기록 길이를 돌려준다. 기록이 없으면 null
+const rsStreak = it => { const rg = it.rg; if (!rg || !rg.length) return null; let k = 0; for (let i = rg.length - 1; i >= 0 && rg[i] >= 80; i--) k++; return k; };
+const streakTxt = it => { const k = rsStreak(it); return k == null || k < 1 ? "" : k >= it.rg.length ? `80 이상 ${k}일+` : `80 이상 ${k}일째`; };
 function drawRs(g, it0, it, rl, X, n, pW, top, rsH, rgap){
   const vals = rl.filter(v => v != null), best = Math.max(...it0.rl.filter(v => v != null));
   let a = Math.min(...vals), b = Math.max(...vals);
@@ -572,13 +575,19 @@ function drawRs(g, it0, it, rl, X, n, pW, top, rsH, rgap){
   const low = head.length && Math.max(...head) > a + (b - a) * 0.55;
   g.font = "600 12px -apple-system,BlinkMacSystemFont,sans-serif"; g.textAlign = "left"; g.textBaseline = low ? "bottom" : "top";
   g.fillStyle = "#6b7280"; g.fillText("RS선 · " + (it0.rb || "시장 지수") + " 대비", 7, low ? top + rsH - 2 : top + 2);
-  g.strokeStyle = RSC; g.lineWidth = 1.4; g.lineJoin = "round"; g.beginPath();
-  let on = false;
-  rl.forEach((v, i) => { if (v == null){ on = false; return; } on ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)); on = true; });
-  g.stroke();
+  // RS 등급 기록(rg, 최근 60거래일)이 있으면 그날 등급으로 선을 칠한다(2026-11-28): 95 이상 주황, 80 이상 파랑, 80 미만 회색.
+  // 기록이 없는 앞쪽(또는 옛 자료)은 옅은 파랑으로 그린다.
+  const off = it0.c.length - n, rg = it0.rg || [], rgOff = it0.c.length - rg.length;
+  const colAt = i => { const gr = rg[off + i - rgOff]; return gr == null ? RSC_OLD : gr >= RS_HOT ? RSC_HOT : gr >= 80 ? RSC : RSC_LOW; };
+  g.lineWidth = 1.4; g.lineJoin = "round"; g.lineCap = "round";
+  for (let i = 1; i < rl.length; i++){
+    if (rl[i] == null || rl[i - 1] == null) continue;
+    g.strokeStyle = colAt(i); g.beginPath(); g.moveTo(X(i - 1), Y(rl[i - 1])); g.lineTo(X(i), Y(rl[i])); g.stroke();
+  }
+  g.lineCap = "butt";
   if (it0.rsh && rl[n - 1] != null){ g.fillStyle = RSC; g.beginPath(); g.arc(X(n - 1), Y(rl[n - 1]), 3.2, 0, Math.PI * 2); g.fill(); }
   if (it0.rs != null){
-    g.font = "700 12px -apple-system,BlinkMacSystemFont,sans-serif"; g.fillStyle = it0.rs >= 80 ? RSC : "#4b5563";
+    g.font = "700 12px -apple-system,BlinkMacSystemFont,sans-serif"; g.fillStyle = it0.rs >= RS_HOT ? RSC_HOT : it0.rs >= 80 ? RSC : "#4b5563";
     g.fillText("RS " + it0.rs, pW + 5, top + 2);
     const ar = rsArrow(it0).trim();
     if (ar){ g.font = "600 12px -apple-system,BlinkMacSystemFont,sans-serif"; g.fillStyle = it0.rsd > 0 ? UPW : DNW; g.fillText(ar, pW + 5, top + 18); }
@@ -811,6 +820,8 @@ const CONDS = [
   ["hi","신고가 임박",it => it.ph >= -5],
   ["rs8","RS 80 이상",it => it.rs >= 80],
   ["rs895","RS 80~95",it => it.rs >= 80 && it.rs <= 95],
+  ["r20","RS 80 20일 유지",it => rsStreak(it) >= 20],
+  ["r50","RS 80 50일 유지",it => rsStreak(it) >= 50],
   ["rsh","RS선 신고가",it => !!it.rsh],
   ["ia","인더스트리 액션",it => !!it.ia],
   ["v2","거래량 2배 이상",it => it.m.vr >= 2],
@@ -845,6 +856,8 @@ const DEF = {
     "그리고 RS선이 올라오고 있는지, RS 80 이상을 계속 유지하고 있는지를 같이 확인합니다.\n\n" +
     "RS가 오래 높게 갈 수 있는지는 펀더멘털로 따로 봅니다: ① 메가트렌드에 속하는지 ② 이익 성장(그로스)이 계속 상향되는지 ③ 실적 추정치 리비전이 위로 가는지 ④ TAM(전체 시장 규모)이 커지는지. " +
     "RS는 시장이 이 펀더멘털을 주가로 확인해 주고 있다는 표시입니다. 그래서 이 넷을 갖춘 종목이 RS를 길게 유지하고, 그렇지 않은 높은 RS는 테마로 잠깐 튄 경우가 많습니다.",
+  r20: "최근 20거래일 동안 RS 등급이 하루도 빠짐없이 80 이상이었던 종목입니다. 반짝 오른 종목이 아니라 한 달 내내 시장보다 강했던 종목만 남습니다. 날짜별 등급은 그날까지의 주가로 다시 줄 세운 값입니다.",
+  r50: "최근 50거래일(약 2.5개월) 동안 RS 등급이 하루도 빠짐없이 80 이상이었던 종목입니다. 시장이 오래 확인해 준 강한 종목만 남습니다.",
   rs895: "RS 80~95: RS 80 이상이면서 95를 넘지 않는 종목입니다. 시장보다 확실히 강하면서도 반짝 테마로 과하게 튄 종목(95 이상)은 뺀 구간입니다. 정렬로 고르면 이 구간 종목이 RS 높은 순으로 앞에 오고, 나머지는 뒤로 갑니다.",
   rsd: "RS 등급이 20거래일 전보다 얼마나 오르내렸는지 봅니다. 크게 올랐다면 최근 들어 시장보다 강해지기 시작한 종목입니다.",
   vr: "오늘 거래량 ÷ 직전 20거래일 평균 거래량. 2배면 평소의 두 배가 거래됐다는 뜻입니다.",
@@ -919,7 +932,9 @@ const TIP = {
     (it.ia.d <= 5 ? `상위권에 새로 들어온 지 ${it.ia.d}거래일째입니다.` : `상위권에 ${it.ia.d}거래일째 머물러 있습니다.`) +
     (it.ia.b != null ? ` 이 업종 종목의 ${it.ia.b}%가 50일선 위에 있습니다.` : "") + "\n\n" + DEF.ia,
   rs: it => (it.rs >= RS_HOT ? `⚠ RS ${RS_HOT} 이상입니다. 반짝 테마로 한꺼번에 튄 것일 수 있어 조심하는 편이 낫습니다.\n\n` : "") + `RS ${it.rs}: 상장 시장 지수보다 강한 정도가 차트북 주식 중 상위 ${Math.max(1, 100 - it.rs)}% 안에 듭니다.` +
-    (it.rsd != null ? ` 20거래일 전에는 ${it.rs - it.rsd}${iyeot(it.rs - it.rsd)}(${it.rsd > 0 ? "+" : ""}${it.rsd}).` : "") + "\n\n" + DEF.rs,
+    (it.rsd != null ? ` 20거래일 전에는 ${it.rs - it.rsd}${iyeot(it.rs - it.rsd)}(${it.rsd > 0 ? "+" : ""}${it.rsd}).` : "") +
+    (rsStreak(it) != null ? (rsStreak(it) ? ` RS 80 이상을 ${rsStreak(it) >= it.rg.length ? "최근 " + it.rg.length + "거래일 내내" : rsStreak(it) + "거래일째"} 유지하고 있습니다.` : " 오늘 RS가 80 아래입니다.") : "") +
+    "\n\n" + DEF.rs,
   vr: it => `오늘 거래량이 직전 20거래일 평균의 ${it.m.vr.toFixed(1)}배입니다. 평소보다 거래가 몰렸다는 뜻입니다.`,
   // 새 신호·숫자 줄(2026-11-23). 숫자 뒤 조사가 받침에 따라 갈리지 않게 '입니다'나 괄호로 끝맺는다
   pp: it => "오늘 포켓 피봇이 나왔습니다.\n\n" + DEF.pp,
@@ -993,7 +1008,7 @@ function fillCard(el){
   // RS 등급·20일 변화·RS선 신고가를 딱지 하나로(RS로 정렬 중이면 등급은 노란 딱지에 있으니 신고가만). 오늘 처음 신고가면 '신고가 돌파'
   const rsTxt = nrs ? "신고가 돌파" : "신고가", rsDef = nrs ? "RS선 신고가 돌파: " + DEF.n_rsh : "RS선 신고가: " + DEF.rsh;
   const hot = it.rs >= RS_HOT;
-  if (it.rs != null && EFF !== "rs" && EFF !== "rs895") bd.appendChild(span((hot ? "rw" : it.rs >= 80 || it.rsh ? "rh" : "") + (nrs ? " nw" : ""), "RS " + it.rs + (hot ? " ⚠" : "") + rsArrow(it) + (it.rsh ? " · " + rsTxt : ""),
+  if (it.rs != null && EFF !== "rs" && EFF !== "rs895") bd.appendChild(span((hot ? "rw" : it.rs >= 80 || it.rsh ? "rh" : "") + (nrs ? " nw" : ""), "RS " + it.rs + (hot ? " ⚠" : "") + rsArrow(it) + (streakTxt(it) ? " · " + streakTxt(it) : "") + (it.rsh ? " · " + rsTxt : ""),
     TIP.rs(it) + (it.rsh ? "\n\n" + rsDef : "")));
   else if (it.rsh) bd.appendChild(span(nrs ? "rh nw" : "rh", "RS선 " + rsTxt, rsDef));
   if (it.m.vr >= 2 && EFF !== "vr") bd.appendChild(span("vh", "거래량 " + it.m.vr.toFixed(1) + "배", TIP.vr(it)));
@@ -1433,7 +1448,7 @@ const GUIDE_RS = `<summary>📈 RS선 보는 법<small>차트 아래 파란 선<
 <p><b>⑥ RS 등급은 이렇게 씁니다(반복해서 보기)</b><br>
 · <b>RS가 가장 중요합니다.</b> 오닐 연구에서 큰 상승을 시작하기 직전 대박 종목의 RS는 평균 87이었고, RS 70 미만에서 출발한 대박 종목은 거의 없었습니다.<br>
 · <b>80 이상</b>을 봅니다. 다만 <b>95 이상(⚠)</b>은 반짝 테마로 한꺼번에 튄 경우가 많아 오히려 조심합니다. 정렬·걸러보기의 'RS 80~95'로 그 구간만 볼 수 있습니다.<br>
-· RS선이 올라오고 있는지, RS 80 이상을 계속 유지하는지를 같이 확인합니다.<br>
+· RS선이 올라오고 있는지, RS 80 이상을 계속 유지하는지를 같이 확인합니다. RS선은 그날 등급에 따라 <b style="color:#1d4ed8">80 이상 파랑</b>, <b style="color:#a3a9b5">80 미만 회색</b>, <b style="color:#ea580c">95 이상 주황</b>으로 칠합니다(최근 60거래일, 그 앞은 옅은 파랑). 걸러보기 'RS 80 20일 유지'·'RS 80 50일 유지'로 꾸준히 강한 종목만 남길 수 있습니다.<br>
 · RS가 오래 높게 갈 수 있는지는 펀더멘털로 봅니다: 메가트렌드에 속하는지, 이익 성장이 계속 상향되는지, 실적 추정치 리비전이 위로 가는지, TAM이 커지는지. RS는 시장이 이 펀더멘털을 주가로 확인해 주고 있다는 표시입니다.</p>
 </div>`;
 function guide(){
@@ -1626,7 +1641,7 @@ function panel(){
       const [k, , f, , sg] = cd;
       if (sg) return;   // 새로 생긴 신호는 아래 묶음에
       // RS·거래량이 없는 탭(매크로)에서는 그 단추를 숨긴다. 인더스트리 액션은 매크로만 빼고 늘 보인다(0개여도)
-      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "rs895" || k === "rsh" || k === "v2" || k === "tt")) return;
+      if (!all.some(f) && !ST.c.includes(k) && (k === "rs8" || k === "rs895" || k === "r20" || k === "r50" || k === "rsh" || k === "v2" || k === "tt")) return;
       if (k === "ia" && CUR === "macro" && !ST.c.includes(k)) return;
       one(wc, cd);
     });

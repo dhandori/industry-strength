@@ -155,6 +155,7 @@ def is_stock(tab_id, sym):
 BENCH = {"KS": "^KS11", "KQ": "^KQ11", "T": "^N225", "TW": "^TWII", "TWO": "^TWII", "HK": "^HSI",
          "SS": "000001.SS", "SZ": "000001.SS"}
 RS_BACK = 20  # RS 변화를 보는 거래일
+RS_HIST = 60  # 날짜별 RS 등급을 남기는 거래일 수(2026-11-28: RS 80 이상 20·50거래일 유지 확인용)
 # 화면의 RS선 칸 제목에 쓰는 비교 지수 이름
 BENCH_NAME = {"^GSPC": "S&P500", "^KS11": "코스피", "^KQ11": "코스닥", "^N225": "닛케이225", "^TWII": "대만 가권",
               "^HSI": "항셍", "000001.SS": "상하이종합"}
@@ -198,6 +199,7 @@ def _grade(pairs):
 def add_rs(tabs_out):
     """종목마다 rs(1~99, 시장 지수 대비 강도), rsd(20거래일 전 등급과의 차이), rsh(RS선이 1년 신고가면 True)를 붙인다.
     화면의 RS선 칸을 위해 rl(RS선, 저장된 첫 값 = 100, 종가와 같은 길이)과 rb(비교 지수 이름)도 붙인다(2026-11-21).
+    rg 는 최근 60거래일 날짜별 RS 등급이다(RS 80 이상 유지 일수·RS선 색칠용, 2026-11-28).
     대상이 아닌 항목은 이 칸들을 지운다."""
     bench = {it["y"]: it for tab_id, sections in tabs_out for s in sections for it in s["items"]
              if it["y"] in BENCH.values() or it["y"] == "^GSPC"}
@@ -205,7 +207,7 @@ def add_rs(tabs_out):
     for tab_id, sections in tabs_out:
         for s in sections:
             for it in s["items"]:
-                for k in ("rs", "rsd", "rsh", "rl", "rb"):
+                for k in ("rs", "rsd", "rsh", "rl", "rb", "rg"):
                     it.pop(k, None)
                 if is_stock(tab_id, it["y"]):
                     ln = rs_line(it, bench.get(bench_of(it["y"])))
@@ -213,6 +215,8 @@ def add_rs(tabs_out):
                         lines.append((ln, it))
     now = _grade((rs_score(ln), it) for ln, it in lines)
     old = _grade((rs_score(ln[:-RS_BACK]), it) for ln, it in lines)
+    # 날짜별 등급: k 거래일 전까지의 RS선만으로 그날 전체 종목을 다시 줄 세운다(20일 전 등급과 같은 방식)
+    hist = [now] + [_grade((rs_score(ln[:-k]), it) for ln, it in lines if len(ln) > k) for k in range(1, RS_HIST)]
     for ln, it in lines:
         if id(it) not in now:
             continue
@@ -221,6 +225,8 @@ def add_rs(tabs_out):
             it["rsd"] = it["rs"] - old[id(it)]
         it["rsh"] = ln[-1] >= max(x for x in ln if x)
         it["rl"] = rs_store(ln, len(it["c"]))
+        # rg: 최근 RS_HIST 거래일의 RS 등급(오래된 날 → 오늘, 마지막 값 = rs). 등급을 못 매긴 날은 None
+        it["rg"] = [hist[k].get(id(it)) for k in range(min(RS_HIST, len(ln)) - 1, -1, -1)]
         it["rb"] = BENCH_NAME.get(bench_of(it["y"]), "")
     return len(now)
 

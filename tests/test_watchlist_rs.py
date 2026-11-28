@@ -37,6 +37,17 @@ class RsTest(unittest.TestCase):
         self.assertEqual((a["rb"], c["rb"]), ("S&P500", "코스피"))
         self.assertTrue(all("rl" not in m for m in macro))
 
+    def test_grade_history_for_rs80_streak(self):
+        # rg: 최근 60거래일 날짜별 등급, 오늘 값은 rs 와 같다. 내내 가장 강한 종목은 내내 99
+        a, b, c = item("AAA", 0.5), item("BBB", 0.0), item("CCC", -0.3)
+        tabs, macro = self.tabs([a, b, c], us=0.0)
+        wf.add_rs(tabs)
+        self.assertEqual(len(a["rg"]), wf.RS_HIST)
+        self.assertEqual(a["rg"][-1], a["rs"])
+        self.assertTrue(all(g == 99 for g in a["rg"]))
+        self.assertTrue(all(g == 1 for g in c["rg"]))
+        self.assertTrue(all("rg" not in m for m in macro))
+
     def test_change_over_20_days(self):
         # 앞쪽엔 빠지다가 최근 20일 급등한 종목은 등급이 맨 아래에서 맨 위로 오른다
         up = {"y": "UP", "c": [100 - i * 0.13 for i in range(231)] + [70 * 1.03 ** i for i in range(1, 21)]}
