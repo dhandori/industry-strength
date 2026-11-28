@@ -269,6 +269,7 @@ main > h2 small{display:block;margin:4px 0 0;font-size:12.5px;font-weight:500;co
 .kv span{white-space:nowrap;cursor:help;text-decoration:underline dotted;text-decoration-color:rgba(55,65,81,.4);text-underline-offset:3px}
 .kv b{font-weight:700;color:var(--text)}
 .kv .far b{color:#c2410c}
+.kv .hv b{color:#c4161c}
 /* 52주 범위 막대: 왼쪽 끝이 52주 최저 종가, 오른쪽 끝이 최고 종가, 점이 지금 */
 canvas{display:block;width:100%;height:300px;margin-top:4px}
 @media (min-width:900px){ canvas{height:345px} }
@@ -535,6 +536,12 @@ function draw(cv, it0){
       g.fillRect(X(i) - bw/2, top + volH - h, bw, h);
     }
     g.globalAlpha = 1;
+    // 50일 평균 거래량 선(2026-11-28): 1년 치 전체로 구해 보이는 기간만 그린다. 직전 50거래일이 모두 있을 때만
+    { const va = volAvg(it0, 50), off = it0.c.length - n;
+      g.strokeStyle = VAC; g.lineWidth = 1.3; g.lineJoin = "round"; g.beginPath(); let on = false;
+      for (let i = 0; i < n; i++){ const a = va[off + i]; if (a == null){ on = false; continue; }
+        const y = top + volH - Math.min(a, vmax) / vmax * volH; on ? g.lineTo(X(i), y) : g.moveTo(X(i), y); on = true; }
+      g.stroke(); }
     // 포켓 피봇 자리(종목만): 그날 거래량 막대 바로 위에 보라 점
     if (it0.k){
       const pf = ppFlags(it0), off = it0.c.length - n;
@@ -655,6 +662,19 @@ function ppAt(it, j){
 // 차트의 포켓 피봇 점: 날마다 한 번만 계산해 둔다(차트를 그릴 때만)
 const ppFlags = it => it._pf || (it._pf = it.c.map((_, i) => ppAt(it, i)));
 const PPC = "#7c3aed";
+// k일 평균 거래량: i번째 날까지 k거래일(그날 포함) 평균. 거래가 없던 날(0)이 끼면 비운다. 차트를 그릴 때 한 번만 계산해 둔다
+const VAC = "#374151";
+function volAvg(it, k){
+  const key = "_va" + k; if (it[key]) return it[key];
+  const v = it.v || [], out = new Array(v.length).fill(null);
+  let s = 0, z = 0;
+  for (let i = 0; i < v.length; i++){
+    const x = v[i] > 0 ? v[i] : 0; s += x; if (!(v[i] > 0)) z++;
+    if (i >= k){ const y = v[i - k] > 0 ? v[i - k] : 0; s -= y; if (!(v[i - k] > 0)) z--; }
+    if (i >= k - 1 && !z) out[i] = s / k;
+  }
+  return (it[key] = out);
+}
 function trendMetrics(it){
   const c = it.c, n = c.length, j = n - 1, last = c[j], m = it.m;
   const s50 = sma(c, 50, j), tc = ttAt(it, 0);
@@ -672,6 +692,16 @@ function trendMetrics(it){
     let ts = 0, tn = 0;
     for (let i = Math.max(0, n - 21); i < j; i++) if (it.v[i] > 0){ ts += c[i] * it.v[i]; tn++; }
     if (tn) m.tv20 = ts / tn;
+    // 직전 50거래일 평균 거래대금(오늘 제외, 2026-11-28)
+    ts = 0; tn = 0;
+    for (let i = Math.max(0, n - 51); i < j; i++) if (it.v[i] > 0){ ts += c[i] * it.v[i]; tn++; }
+    if (tn >= 40) m.tv50 = ts / tn;
+  }
+  // 거래량 ÷ 직전 50거래일 평균 거래량(오늘 제외, 2026-11-28). 40일 이상 거래가 있을 때만
+  if (it.v && it.v[j] > 0){
+    let vs = 0, vn = 0;
+    for (let i = Math.max(0, n - 51); i < j; i++) if (it.v[i] > 0){ vs += it.v[i]; vn++; }
+    if (vn >= 40){ m.va50 = vs / vn; m.vr50 = it.v[j] / m.va50; }
   }
   m.pp = ppAt(it, j);
   // 변동성 수축: 최근 10거래일 고저 폭 ÷ 최근 50거래일 고저 폭(작을수록 좁게 다지는 중)
@@ -895,7 +925,13 @@ const TIP = {
       (d <= 0 ? "추세추종에서는 큰 거래량을 실으며 50일선을 깨면 파는 신호로 봅니다." : "종가가 50일선 아래라 추세가 약해진 상태입니다."); },
   tv: it => { const m = it.m, u = ccy(it.y)[1];
     return `오늘 거래대금은 ${money(m.tv)} ${u}입니다(종가 × 거래량으로 어림한 값).` +
-      (m.tv20 ? ` 최근 20거래일 평균(${money(m.tv20)} ${u})의 ${(m.tv / m.tv20).toFixed(1)}배입니다.` : ""); },
+      (m.tv20 ? ` 최근 20거래일 평균(${money(m.tv20)} ${u})의 ${(m.tv / m.tv20).toFixed(1)}배입니다.` : "") +
+      (m.tv50 ? ` 최근 50거래일 평균(${money(m.tv50)} ${u})과 비교하면 ${(m.tv / m.tv50).toFixed(1)}배입니다.` : ""); },
+  v50: it => { const m = it.m;
+    return `오늘 거래량(${money(lastOf(it.v))}주)이 직전 50거래일 평균(${money(m.va50)}주)의 ${m.vr50.toFixed(1)}배입니다. 차트 거래량 칸의 회색 선이 50일 평균입니다.\n\n` +
+      (m.vr50 >= 1.4 ? "오닐 기준으로 돌파하는 날 거래량이 50일 평균보다 40% 이상 많으면 큰손이 들어온 돌파로 봅니다. 내린 날이면 반대로 큰 매도로 봅니다."
+        : m.vr50 < 0.7 ? "평소보다 거래가 크게 줄었습니다. 베이스 안에서 이렇게 마르면 팔 사람이 줄었다는 뜻으로 봅니다."
+        : "평소 수준의 거래량입니다."); },
 };
 // 카드는 처음엔 빈 껍데기만 만든다(높이는 .card 의 contain-intrinsic-size 로 어림). 화면 가까이 오면 fillCard 가 속을 채운다.
 // 누를 때마다 카드 수백~천여 장의 딱지·숫자 줄을 한꺼번에 다시 만들던 것이 버벅임의 큰 원인이었다(2026-11-24)
@@ -916,6 +952,7 @@ function fillCard(el){
     `<canvas data-i="${idx}"${it.rl ? ' class="rl"' : ""}></canvas>` +
     `<div class="lg"><span>지수이동평균(EMA)</span>${EMA.map(([k,c]) => `<span class="lw"><i style="border-color:${c}"></i>${k}일</span>`).join("")}` +
     `<span class="lw">거래량 <i class="bx" style="background:${UP}"></i>오른 날 <i class="bx" style="background:${DN}"></i>내린 날</span>` +
+    (it.v.some(v => v > 0) ? `<span class="lw"><i style="border-color:${VAC}"></i>50일 평균</span>` : "") +
     (it.k && it.v.some(v => v > 0) ? `<span class="lw lpp"><i class="pp"></i>포켓 피봇</span>` : "") +
     `<span class="lr">${+ld.slice(2,4)}/${+ld.slice(4,6)} 종가 기준</span></div>`;
   const lpp = el.querySelector(".lpp"); if (lpp) lpp.title = DEF.pp;
@@ -956,6 +993,7 @@ function fillCard(el){
     if (m.adr != null) add("하루 변동", m.adr.toFixed(1) + "%", TIP.adr(it));
     if (m.sd != null) add("10일 저점", m.sd.toFixed(1) + "% 아래", TIP.sd(it), m.sd > 10 ? "far" : "");
     if (m.s50){ const d = (m.s50 / lastOf(it.c) - 1) * 100; add("50일선", Math.abs(d).toFixed(1) + "% " + (d <= 0 ? "아래" : "위"), TIP.d50(it)); }
+    if (m.vr50 != null) add("거래량", "50일 평균 " + m.vr50.toFixed(1) + "배", TIP.v50(it), m.vr50 >= 1.4 ? "hv" : "");
     if (m.tv != null) add("거래대금", money(m.tv) + " " + ccy(it.y)[1], TIP.tv(it));
     if (kv.children.length) el.querySelector(".hd").appendChild(kv);
   }
