@@ -84,6 +84,13 @@ def check(page, base, market, view, label):
             problems.append(f"마켓 브레스 줄이 안 보임: {shown!r}")
         if market == "JP" and shown:
             problems.append("일본에 마켓 브레스 줄이 보임(값이 없어야 함)")
+        # 지표 이름을 누르면 풀이 창(#tip)이 뜬다(휴대폰에서도)
+        if market in ("KR", "US") and shown:
+            page.locator("#mbStrip .mb-k", has_text="ADL").click()
+            page.wait_for_timeout(200)
+            tiptext = page.evaluate("() => { const t = document.querySelector('#tip'); return t && !t.hidden ? t.textContent : ''; }")
+            if "등락주선" not in tiptext:
+                problems.append(f"마켓 브레스 ADL을 눌러도 풀이가 안 뜸: {tiptext[:40]!r}")
     selected = page.evaluate("() => [...document.querySelectorAll('.view-tabs [aria-selected=\"true\"]')].map(b => b.dataset.view)")
     if selected != [view]:
         problems.append(f"선택된 탭이 {selected} (기대 {view})")

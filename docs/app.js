@@ -320,7 +320,8 @@
       const ar = (d) => (d > 0 ? "↗" : d < 0 ? "↘" : d === 0 ? "→" : "");
       const dc = (d) => (d > 0 ? "up" : d < 0 ? "down" : "");
       const num = (x, k) => (x == null ? "–" : x.toFixed(k));
-      const item = (label, val, d, tip) => `<span class="mb-i" title="${esc(tip)}"><span class="mb-k">${label}</span> <b class="${dc(d)}">${val} ${ar(d)}</b></span>`;
+      // 지표 이름은 누르면(휴대폰) 또는 마우스를 올리면(PC) 풀이 창이 뜨는 단추다(2026-11-28 사용자 지적: title 말풍선은 눌러도 안 뜸)
+      const item = (label, val, d, tip) => `<span class="mb-i"><button type="button" class="mb-k" data-help="${esc(tip)}">${label}</button> <b class="${dc(d)}">${val} ${ar(d)}</b></span>`;
       const help = (t, label) => `<button class="help" type="button" aria-label="${label} 뜻" data-help="${esc(t)}">?</button>`;
       box.innerHTML = `<div class="mb-head"><span class="k">마켓 브레스${help(MB_HELP.all, "마켓 브레스")}</span>
           <span class="badge ${tone}"><span class="dot"></span>${esc(v.label || "–")}</span>
@@ -331,7 +332,8 @@
           ${item("200일선 위 종목", num(mb.above200Pct, 0) + "%", mb.above200Dir, MB_HELP.a200)}</div>
         <div class="mb-means"><span>신고가 비율: 1년 최고가를 새로 쓴 종목 비중</span><span>ADL: 오른 종목 수 − 내린 종목 수의 누적(오르면 많은 종목이 함께 오름)</span><span>200일선 위: 장기 상승 추세 종목 비중</span></div>
         <div class="mb-text">${esc(v.text || "")}</div>`;
-      $$(".help", box).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); showHelp(b, b.dataset.help); }));
+      $$(".help, .mb-k", box).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); showHelp(b, b.dataset.help); }));
+      $$(".mb-k", box).forEach((b) => b.addEventListener("mouseenter", () => { if (matchMedia("(hover: hover)").matches) showHelp(b, b.dataset.help); }));
       box.hidden = false;
     });
   }
