@@ -64,10 +64,10 @@ def log(*a):
     print("[macro_jp]", *a, flush=True)
 
 
-def get(url: str, tries: int = 3, **kw) -> requests.Response:
+def get(url: str, tries: int = 3, timeout: int = 60, **kw) -> requests.Response:
     for k in range(tries):
         try:
-            r = requests.get(url, headers=UA, timeout=60, **kw)
+            r = requests.get(url, headers=UA, timeout=timeout, **kw)
             r.raise_for_status()
             return r
         except requests.RequestException:
@@ -111,7 +111,9 @@ def mof_jgb() -> dict[str, dict[date, float]]:
 
 def fred(sid: str, start: date) -> dict[date, float]:
     out = {}
-    for line in get(f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}&cosd={start:%Y-%m-%d}").text.splitlines()[1:]:
+    # FRED 는 GitHub 서버에서도 자주 시간 초과가 난다(2026-11-16 60초×3번 = 3분 낭비). 예비 경로(야후 ^TNX)가 있으니 한 번만 짧게 묻는다.
+    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}&cosd={start:%Y-%m-%d}"
+    for line in get(url, tries=1, timeout=20).text.splitlines()[1:]:
         d, _, v = line.partition(",")
         try:
             out[date.fromisoformat(d)] = float(v)
