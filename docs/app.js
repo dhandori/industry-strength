@@ -292,6 +292,48 @@
         <div class="tile-bar" role="img" aria-label="50일선 위 산업 비율"><i class="s2" style="width:${brNow == null ? 0 : Math.min(100, brNow).toFixed(1)}%"></i></div>
         <div class="d">20거래일 전 ${brPrev == null ? "–" : brPrev.toFixed(0) + "%"}${brNow != null && brPrev != null ? ` (${brNow >= brPrev ? "▲" : "▼"}${Math.abs(brNow - brPrev).toFixed(0)}%p)` : ""}</div></div>`;
     $$(".help", $("#tiles")).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); showHelp(b, b.dataset.help); }));
+    renderBreadthStrip();
+  }
+
+  // ---------- 마켓 브레스 한 줄(2026-11-28): 레이더 '시장 날씨'가 계산한 값(wamo_trend.json)을 받아 타일 아래 짧게 보여 준다.
+  // 같은 dhandori.github.io 주소라 바로 읽힌다. 못 받거나 그 시장 값이 없으면 줄을 숨긴다.
+  const MB_SRC = "/wamo-choochoo-dashboard/wamo_trend.json";
+  let mbLoad = null;
+  const MB_HELP = {
+    nh: "52주 신고가 비율: 전체 종목 가운데 오늘 1년 최고가를 새로 쓴 종목의 비중입니다. 높을수록 주도주가 많습니다.",
+    adl: "ADL(등락주선): 날마다 오른 종목 수에서 내린 종목 수를 빼서 계속 더한 선입니다. 지수는 큰 종목 몇 개에 끌려가지만 ADL은 종목마다 한 표라 시장 전체 분위기를 보여 줍니다. 숫자는 최근 20거래일 동안 움직인 크기입니다.",
+    a200: "200일선 위 종목 비율: 장기 상승 추세(200일선 위)에 있는 종목의 비중입니다. 50% 아래면 약한 시장입니다.",
+    all: "지수가 올라도 시장이 건강하지 않을 수 있습니다. 소수 대형주가 지수를 끌어올리는 동안 나머지 종목은 빠질 수 있어서, 52주 신고가 비율·ADL·200일선 위 종목 비율을 같이 봐야 합니다. 지수는 오르는데 셋 가운데 둘 이상이 나빠지면 '속이 빈 상승'으로 봅니다. 값은 와모 레이더 '시장 날씨'와 같습니다."
+  };
+  function renderBreadthStrip() {
+    let box = $("#mbStrip");
+    if (!box) { box = document.createElement("section"); box.id = "mbStrip"; box.className = "mb-strip"; box.setAttribute("aria-label", "마켓 브레스"); $("#tiles").after(box); }
+    box.hidden = true;
+    const market = state.market;
+    mbLoad = mbLoad || fetch(MB_SRC, { cache: "no-store" }).then((res) => (res.ok ? res.json() : null)).catch(() => null);
+    mbLoad.then((j) => {
+      if (state.market !== market) return;
+      const mb = j && j.markets && j.markets[market] && j.markets[market].weather && j.markets[market].weather.marketBreadth;
+      if (!mb || mb.status !== "OK") return;
+      const v = mb.verdict || {}, a = mb.adl || {};
+      const tone = { DIVERGENCE: "down", WEAK: "down", HEALTHY: "up", POSITIVE: "up" }[v.key] || "neutral";
+      const ar = (d) => (d > 0 ? "↗" : d < 0 ? "↘" : d === 0 ? "→" : "");
+      const dc = (d) => (d > 0 ? "up" : d < 0 ? "down" : "");
+      const num = (x, k) => (x == null ? "–" : x.toFixed(k));
+      const item = (label, val, d, tip) => `<span class="mb-i" title="${esc(tip)}"><span class="mb-k">${label}</span> <b class="${dc(d)}">${val} ${ar(d)}</b></span>`;
+      const help = (t, label) => `<button class="help" type="button" aria-label="${label} 뜻" data-help="${esc(t)}">?</button>`;
+      box.innerHTML = `<div class="mb-head"><span class="k">마켓 브레스${help(MB_HELP.all, "마켓 브레스")}</span>
+          <span class="badge ${tone}"><span class="dot"></span>${esc(v.label || "–")}</span>
+          ${mb.indexChangePct != null ? `<span class="mb-sub">지수 ${mb.lookback}일 ${fmtPct(mb.indexChangePct)}</span>` : ""}
+          <a class="mb-link" href="/wamo-choochoo-dashboard/radar.html?market=${market}&tab=trend&sub=weather">레이더에서 자세히 ›</a></div>
+        <div class="mb-items">${item("52주 신고가 비율", num(mb.newHighPct, 1) + "%", mb.newHighDir, MB_HELP.nh)}
+          ${item("ADL 20일", (a.change > 0 ? "+" : "") + (a.change == null ? "–" : a.change), a.dir, MB_HELP.adl)}
+          ${item("200일선 위 종목", num(mb.above200Pct, 0) + "%", mb.above200Dir, MB_HELP.a200)}</div>
+        <div class="mb-means"><span>신고가 비율: 1년 최고가를 새로 쓴 종목 비중</span><span>ADL: 오른 종목 수 − 내린 종목 수의 누적(오르면 많은 종목이 함께 오름)</span><span>200일선 위: 장기 상승 추세 종목 비중</span></div>
+        <div class="mb-text">${esc(v.text || "")}</div>`;
+      $$(".help", box).forEach((b) => b.addEventListener("click", (e) => { e.stopPropagation(); showHelp(b, b.dataset.help); }));
+      box.hidden = false;
+    });
   }
 
   // ---------- signals

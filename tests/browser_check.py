@@ -2,7 +2,7 @@
 
 저장소에 있는 그날 자료(docs/data)로 돈다. 그래서 종목·숫자를 가정하지 않고, 어느 날 자료로도 지켜져야 하는 것만 본다:
 스크립트 오류 없음, 받지 못한 파일 없음, 가로 넘침 없음, 화면에 undefined·NaN 같은 깨진 값 없음, 탭 내용이 비어 있지 않음.
-바깥 요청은 통제한다: 매크로 자료(와모 대시보드)는 tests/fixtures/wamo_macro.json, GitHub API·방문 집계는 빈 응답.
+바깥 요청은 통제한다: 매크로 자료(와모 대시보드)는 tests/fixtures/wamo_macro.json, 마켓 브레스(레이더 시장 날씨)는 tests/fixtures/wamo_trend.json(일본 값 없음 → 줄 숨김), GitHub API·방문 집계는 빈 응답.
 
   python tests/browser_check.py            전부
   python tests/browser_check.py US-ai      이름에 이 글자가 든 화면만
@@ -77,6 +77,13 @@ def check(page, base, market, view, label):
         problems.append("깨진 값: " + " | ".join(b.replace("\n", " ") for b in bad))
     if got["tiny"]:
         problems.append(f"12px보다 작은 글씨 {got['tiny']}곳")
+    # 마켓 브레스 한 줄(2026-11-28): 산업 강도 첫 화면 타일 아래. 한국·미국은 보이고, 값이 없는 일본은 숨는다.
+    if view == "strength":
+        shown = page.evaluate("() => { const b = document.querySelector('#mbStrip'); return b && !b.hidden ? b.innerText : null; }")
+        if market in ("KR", "US") and not (shown and "마켓 브레스" in shown and "ADL" in shown):
+            problems.append(f"마켓 브레스 줄이 안 보임: {shown!r}")
+        if market == "JP" and shown:
+            problems.append("일본에 마켓 브레스 줄이 보임(값이 없어야 함)")
     selected = page.evaluate("() => [...document.querySelectorAll('.view-tabs [aria-selected=\"true\"]')].map(b => b.dataset.view)")
     if selected != [view]:
         problems.append(f"선택된 탭이 {selected} (기대 {view})")
@@ -90,6 +97,7 @@ def main(argv):
     threading.Thread(target=server.serve_forever, daemon=True).start()
     base = f"http://127.0.0.1:{server.server_port}"
     macro = (ROOT / "tests/fixtures/wamo_macro.json").read_text(encoding="utf-8")
+    trend = (ROOT / "tests/fixtures/wamo_trend.json").read_text(encoding="utf-8")
     failed = 0
     with sync_playwright() as pw:
         browser = pw.chromium.launch()
@@ -102,6 +110,8 @@ def main(argv):
                                               timezone_id="Asia/Seoul", is_mobile=label == "phone", has_touch=label == "phone")
                 context.route("**/wamo-choochoo-dashboard/wamo_macro.json*",
                               lambda route: route.fulfill(status=200, content_type="application/json", body=macro))
+                context.route("**/wamo-choochoo-dashboard/wamo_trend.json*",
+                              lambda route: route.fulfill(status=200, content_type="application/json", body=trend))
                 context.route("https://api.github.com/**", lambda route: route.fulfill(status=200, content_type="application/json", body='{"workflow_runs":[]}'))
                 context.route(re.compile(r"goatcounter|gc\.zgo\.at"), lambda route: route.fulfill(status=200, content_type="text/javascript", body=""))
                 page = context.new_page()

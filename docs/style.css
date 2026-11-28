@@ -946,3 +946,18 @@ section.card.clipped > .clip-more { display: block; position: absolute; z-index:
     linear-gradient(to right, rgba(0, 0, 0, .16), transparent) left center / 12px 100% no-repeat scroll,
     linear-gradient(to left, rgba(0, 0, 0, .16), transparent) right center / 12px 100% no-repeat scroll;
 }
+
+/* 마켓 브레스 한 줄(2026-11-28): 시장 상태 타일 바로 아래 */
+.mb-strip { margin-top: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; box-shadow: var(--shadow); }
+.mb-strip[hidden] { display: none; }
+.mb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.mb-head .k { font-size: 12.5px; color: var(--ink-2); font-weight: 600; }
+.mb-sub { font-size: 12.5px; color: var(--muted); }
+.mb-link { margin-left: auto; font-size: 12.5px; color: var(--accent); text-underline-offset: 2px; }
+.mb-items { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 6px; }
+.mb-i { font-size: 13px; cursor: help; white-space: nowrap; }
+.mb-k { color: var(--ink-2); text-decoration: underline dotted; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.mb-i b { font-variant-numeric: tabular-nums; }
+.mb-i b.up { color: var(--good); } .mb-i b.down { color: var(--down); }
+.mb-means { display: flex; flex-wrap: wrap; gap: 2px 14px; margin-top: 4px; font-size: 12px; color: var(--muted); }
+.mb-text { margin-top: 4px; font-size: 12.5px; color: var(--ink-2); line-height: 1.5; }
